@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
+import { validateUsernameFormat } from '@/lib/username-validation'
 
 const prisma = new PrismaClient()
 
@@ -15,6 +16,7 @@ export async function PUT(request: Request) {
 
     const { 
       name, 
+      username,
       bio, 
       phone, 
       location, 
@@ -24,11 +26,32 @@ export async function PUT(request: Request) {
       preferredJobTypes 
     } = await request.json()
 
-    // @ts-expect-error - Prisma types need regeneration after schema changes
+    // Validate username if provided
+    if (username && username !== session.user.username) {
+      const formatValidation = validateUsernameFormat(username)
+      if (!formatValidation.isValid) {
+        return NextResponse.json({ 
+          error: formatValidation.error 
+        }, { status: 400 })
+      }
+
+      // Check if username is already taken
+      const existingUser = await prisma.user.findUnique({
+        where: { username }
+      })
+
+      if (existingUser && existingUser.email !== session.user.email) {
+        return NextResponse.json({ 
+          error: 'Username is already taken' 
+        }, { status: 400 })
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
       data: {
         name,
+        username,
         bio,
         phone,
         location,
@@ -45,18 +68,13 @@ export async function PUT(request: Request) {
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
+        username: updatedUser.username,
         bio: updatedUser.bio,
-        // @ts-expect-error - New fields not yet in type definitions
         phone: updatedUser.phone,
-        // @ts-expect-error - New fields not yet in type definitions
         location: updatedUser.location,
-        // @ts-expect-error - New fields not yet in type definitions
         website: updatedUser.website,
-        // @ts-expect-error - New fields not yet in type definitions
         skills: updatedUser.skills,
-        // @ts-expect-error - New fields not yet in type definitions
         experience: updatedUser.experience,
-        // @ts-expect-error - New fields not yet in type definitions
         preferredJobTypes: updatedUser.preferredJobTypes,
         role: updatedUser.role,
       }
@@ -81,15 +99,13 @@ export async function GET() {
         id: true,
         name: true,
         email: true,
+        username: true,
         bio: true,
         phone: true,
         location: true,
         website: true,
-        // @ts-expect-error - New fields not yet in type definitions
         skills: true,
-        // @ts-expect-error - New fields not yet in type definitions
         experience: true,
-        // @ts-expect-error - New fields not yet in type definitions
         preferredJobTypes: true,
         role: true,
         createdAt: true,

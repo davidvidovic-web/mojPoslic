@@ -32,6 +32,11 @@ export async function GET(
       where: { id: job.cityId }
     }) : null
 
+    // Fetch category separately
+    const category = job.categoryId ? await prisma.category.findUnique({
+      where: { id: job.categoryId }
+    }) : null
+
     // Fetch posted by user
     const postedBy = await prisma.user.findUnique({
       where: { id: job.postedById },
@@ -51,16 +56,31 @@ export async function GET(
       requirements: job.requirements,
       benefits: job.benefits,
       salary: job.salary,
+      salaryType: job.salaryType,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
       type: job.type,
       jobType: job.type, // Alias for compatibility
       email: job.email,
       website: job.website,
       applicationUrl: job.applicationUrl,
+      application_url: job.applicationUrl, // Alias for compatibility
       contactEmail: job.contactEmail,
+      contact_email: job.contactEmail, // Alias for compatibility
+      jobAddress: job.jobAddress,
+      job_address: job.jobAddress, // Alias for compatibility
+      jobLatitude: job.jobLatitude,
+      job_latitude: job.jobLatitude, // Alias for compatibility
+      jobLongitude: job.jobLongitude,
+      job_longitude: job.jobLongitude, // Alias for compatibility
+      startDate: job.startDate,
+      start_date: job.startDate, // Alias for compatibility
       isFeatured: job.isFeatured,
       tags: job.tags,
       expiresAt: job.expiresAt,
+      expires_at: job.expiresAt, // Alias for compatibility
       isActive: job.isActive,
+      posted_by: job.postedById, // Alias for compatibility
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
       posted_at: job.createdAt, // Alias for compatibility
@@ -70,6 +90,13 @@ export async function GET(
         name_bs: city.nameBS,
         name_en: city.nameEN,
         name: city.nameEN || city.nameBS // Convenience field
+      } : null,
+      category: category ? {
+        id: category.id,
+        key: category.key,
+        name_bs: category.nameBS,
+        name_en: category.nameEN,
+        name: category.nameEN || category.nameBS // Convenience field
       } : null,
       postedBy
     }

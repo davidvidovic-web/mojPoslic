@@ -16,9 +16,30 @@ interface JobCardProps {
 export function JobCard({ job }: JobCardProps) {
   const router = useRouter()
 
-  const formatSalary = (salary?: string) => {
-    if (!salary) return null
-    return salary
+  const formatSalary = (job: Job) => {
+    // If we have structured salary data
+    if (job.salaryMin && job.salaryMax && job.salaryType) {
+      const min = job.salaryMin.toLocaleString()
+      const max = job.salaryMax.toLocaleString()
+      const type = job.salaryType === 'hourly' ? '/hr' : 
+                   job.salaryType === 'daily' ? '/day' :
+                   job.salaryType === 'weekly' ? '/week' :
+                   job.salaryType === 'monthly' ? '/month' : ''
+      return `${min}-${max} BAM${type}`
+    }
+    
+    // If we only have minimum salary
+    if (job.salaryMin && job.salaryType) {
+      const min = job.salaryMin.toLocaleString()
+      const type = job.salaryType === 'hourly' ? '/hr' : 
+                   job.salaryType === 'daily' ? '/day' :
+                   job.salaryType === 'weekly' ? '/week' :
+                   job.salaryType === 'monthly' ? '/month' : ''
+      return `From ${min} BAM${type}`
+    }
+    
+    // Fallback to legacy salary field
+    return job.salary || null
   }
 
   const formatDate = (dateString: string) => {
@@ -87,10 +108,10 @@ export function JobCard({ job }: JobCardProps) {
               {job.city?.name || 'Remote'}
             </Badge>
             
-            {formatSalary(job.salary) && (
+            {formatSalary(job) && (
               <Badge variant="outline" className="text-xs">
                 <DollarSign className="h-3 w-3 mr-1" />
-                {formatSalary(job.salary)}
+                {formatSalary(job)}
               </Badge>
             )}
           </div>

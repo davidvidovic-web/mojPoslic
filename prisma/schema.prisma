@@ -32,9 +32,17 @@ enum SalaryType {
   monthly
 }
 
+enum JobStatus {
+  active
+  inactive
+  completed
+  expired
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  username  String?  @unique
   name      String
   password  String?  // For email/password auth
   role      UserRole @default(employee)
@@ -146,6 +154,7 @@ model JobListing {
   tags          Json?     // JSON array of tags
   startDate     DateTime? @map("start_date")   // When the job/work should start
   expiresAt     DateTime? @map("expires_at")
+  status        JobStatus @default(active)   // Job status: active, inactive, completed, expired
   
   // Location fields
   jobAddress    String?   @map("job_address")    // Full address of the job location

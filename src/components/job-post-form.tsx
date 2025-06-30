@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CitiesFilter } from "@/components/cities-filter"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { LocationPicker } from "@/components/ui/location-picker"
 import { CreateJobData } from "@/types/job"
@@ -103,10 +104,13 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     sortOrder: number
   }>>([])
   const { user } = useAuth()
+  const [includeStartTime, setIncludeStartTime] = useState(false)
   const [formData, setFormData] = useState<CreateJobData>({
     title: '',
     company: '',
     description: '',
+    requirements: '',
+    benefits: '',
     type: 'quick_job',
     city_id: '',
     category_id: '',
@@ -116,6 +120,8 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     salaryMax: undefined,
     website: '',
     email: '',
+    contact_email: '',
+    application_url: '',
     start_date: undefined,
     job_address: undefined,
     job_latitude: undefined,
@@ -208,6 +214,13 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       return
     }
 
+    // Ensure we have an email (either from form or user)
+    const contactEmail = formData.email || user.email
+    if (!contactEmail) {
+      toast.error('A contact email is required to post a job')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -224,8 +237,19 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           city_id: formData.city_id,
           category_id: formData.category_id || null,
           salary: formData.salary || null,
+          salaryType: formData.salaryType || null,
+          salaryMin: formData.salaryMin || null,
+          salaryMax: formData.salaryMax || null,
           website: formData.website || null,
-          email: formData.email || null
+          email: formData.email || user.email, // Use form email or fallback to user email
+          start_date: formData.start_date || null,
+          job_address: formData.job_address || null,
+          job_latitude: formData.job_latitude || null,
+          job_longitude: formData.job_longitude || null,
+          requirements: formData.requirements || null,
+          benefits: formData.benefits || null,
+          contact_email: formData.contact_email || formData.email || user.email,
+          application_url: formData.application_url || formData.website || null
         })
       })
 
@@ -247,6 +271,8 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
         title: '',
         company: '',
         description: '',
+        requirements: '',
+        benefits: '',
         type: 'quick_job',
         city_id: '',
         category_id: '',
@@ -256,6 +282,8 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
         salaryMax: undefined,
         website: '',
         email: '',
+        contact_email: '',
+        application_url: '',
         start_date: undefined,
         job_address: undefined,
         job_latitude: undefined,
@@ -410,7 +438,23 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="start-date">Start Date & Time (Optional)</Label>
+          <Label htmlFor="start-date">Start Date (Optional)</Label>
+          
+          {/* Checkbox to control time inclusion */}
+          <div className="flex items-center space-x-2 mb-2">
+            <Checkbox
+              id="include-time"
+              checked={includeStartTime}
+              onCheckedChange={(checked: boolean) => setIncludeStartTime(checked)}
+            />
+            <Label 
+              htmlFor="include-time" 
+              className="text-sm font-normal cursor-pointer"
+            >
+              Include specific time
+            </Label>
+          </div>
+
           <DateTimePicker
             value={formData.start_date ? new Date(formData.start_date) : undefined}
             onChange={(date) => {
@@ -419,17 +463,31 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
                 toast.error('Start date cannot be in the past')
                 return
               }
-              setFormData({ 
-                ...formData, 
-                start_date: date ? date.toISOString() : undefined 
-              })
+              
+              // If time is not included, set to beginning of day
+              if (date && !includeStartTime) {
+                const dateOnly = new Date(date)
+                dateOnly.setHours(0, 0, 0, 0)
+                setFormData({ 
+                  ...formData, 
+                  start_date: dateOnly.toISOString() 
+                })
+              } else {
+                setFormData({ 
+                  ...formData, 
+                  start_date: date ? date.toISOString() : undefined 
+                })
+              }
             }}
-            placeholder="When should this work start?"
+            placeholder={includeStartTime ? "When should this work start?" : "Pick a start date"}
             className="w-full"
-            showTime={true}
+            showTime={includeStartTime}
           />
           <p className="text-sm text-muted-foreground">
-            Specify when this job or project should begin (cannot be in the past)
+            {includeStartTime 
+              ? "Specify when this job or project should begin with exact time (cannot be in the past)"
+              : "Specify the date when this job or project should begin"
+            }
           </p>
         </div>
 
@@ -571,6 +629,28 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="requirements">Requirements (Optional)</Label>
+          <Textarea
+            id="requirements"
+            placeholder="List the skills, experience, and qualifications needed..."
+            rows={3}
+            value={formData.requirements || ''}
+            onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="benefits">Benefits (Optional)</Label>
+          <Textarea
+            id="benefits"
+            placeholder="Describe benefits, perks, and what makes this opportunity special..."
+            rows={3}
+            value={formData.benefits || ''}
+            onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="website">Company Website (Optional)</Label>
@@ -590,6 +670,29 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
               type="email"
               value={formData.email || ''}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="contact-email">Alternative Contact Email (Optional)</Label>
+            <Input
+              id="contact-email"
+              placeholder="hr@company.com"
+              type="email"
+              value={formData.contact_email || ''}
+              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="application-url">Application Portal URL (Optional)</Label>
+            <Input
+              id="application-url"
+              placeholder="https://company.com/apply"
+              type="url"
+              value={formData.application_url || ''}
+              onChange={(e) => setFormData({ ...formData, application_url: e.target.value })}
             />
           </div>
         </div>

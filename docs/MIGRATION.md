@@ -46,6 +46,24 @@ To test the migration:
    - Job posting form
    - City selection
    - Tag functionality
+4. Run the test suite:
+   ```bash
+   # Run all tests
+   npm test
+   
+   # Run job posting specific tests
+   npm test -- job-posting-feature
+   npm test -- job-post-form.test
+   ```
+
+### Test Coverage
+
+The job posting feature includes comprehensive tests:
+- **Feature Tests**: Core business logic validation
+- **Component Tests**: UI interaction and form validation
+- **End-to-end workflows**: Complete job posting scenarios
+
+See `docs/JOB_POSTING_TESTS.md` for detailed testing documentation.
 
 ### Environment Variables
 

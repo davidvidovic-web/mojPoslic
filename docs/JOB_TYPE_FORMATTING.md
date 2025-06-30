@@ -22,8 +22,7 @@ Enhanced job type display across the application to show human-readable formats 
 All components now show formatted job types instead of raw database values:
 
 #### Job Cards
-- **`job-card-new.tsx`**: Updated main job card component
-- **`job-card.tsx`**: Updated grid view job card  
+- **`job-card.tsx`**: Updated main job card component  
 - **`job-card-list.tsx`**: Updated list view job card
 
 #### Dashboard Components
@@ -70,7 +69,6 @@ All components now show formatted job types instead of raw database values:
 
 ## Files Modified
 - `/src/lib/job-utils.ts` (new utility library)
-- `/src/components/job-card-new.tsx`
 - `/src/components/job-card.tsx`  
 - `/src/components/job-card-list.tsx`
 - `/src/components/dashboard/admin-dashboard.tsx`

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 import { validatePassword } from '@/lib/password-validation'
+import { validateUsernameFormat, generateUsernameSuggestions } from '@/lib/username-validation'
 
 const prisma = new PrismaClient()
 
@@ -19,11 +20,62 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, role = 'employee' } = await request.json()
+    const { email, password, name, username: providedUsername, role = 'employee' } = await request.json()
 
     if (!email || !password || !name) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Generate username if not provided
+    let username = providedUsername
+    if (!username) {
+      const suggestions = generateUsernameSuggestions(name, email)
+      
+      // Try to find an available username from suggestions
+      for (const suggestion of suggestions) {
+        const existingUser = await prisma.user.findUnique({
+          where: { username: suggestion }
+        })
+        
+        if (!existingUser) {
+          username = suggestion
+          break
+        }
+      }
+      
+      // If no suggestion worked, generate a unique one with timestamp
+      if (!username) {
+        const baseName = name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+        const timestamp = Date.now().toString().slice(-6)
+        let candidateUsername = `${baseName}${timestamp}`
+        
+        // Make sure it's valid format
+        if (candidateUsername.length < 3) {
+          candidateUsername = `user${timestamp}`
+        }
+        
+        // Double-check it's unique
+        const existingUser = await prisma.user.findUnique({
+          where: { username: candidateUsername }
+        })
+        
+        if (!existingUser) {
+          username = candidateUsername
+        } else {
+          // Last resort: add random suffix
+          username = `user${Date.now().toString()}`
+        }
+      }
+    }
+
+    // Username format validation
+    const usernameValidation = validateUsernameFormat(username)
+    if (!usernameValidation.isValid) {
+      return NextResponse.json(
+        { error: usernameValidation.error },
         { status: 400 }
       )
     }
@@ -48,16 +100,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
+    // Check if user already exists (email or username)
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { username }
+        ]
+      }
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists' },
-        { status: 400 }
-      )
+      if (existingUser.email === email) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 400 }
+        )
+      } else {
+        return NextResponse.json(
+          { error: 'Username is already taken' },
+          { status: 400 }
+        )
+      }
     }
 
     // Hash password
@@ -67,6 +131,7 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         email,
+        username,
         name,
         password: hashedPassword,
         role: role as 'admin' | 'employer' | 'employee',

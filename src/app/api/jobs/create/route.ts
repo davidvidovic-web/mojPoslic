@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+// Use a simple Prisma client for this endpoint
+const simplePrisma = new PrismaClient()
+
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== Job Creation API Called ===')
+    
     const session = await getServerSession(authOptions)
+    console.log('Session:', session ? { userId: session.user?.id, email: session.user?.email } : 'No session')
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -15,13 +21,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Request body:', JSON.stringify(body, null, 2))
     const {
       title,
       company,
       description,
       type,
       city_id,
-      // category_id, // TODO: Implement after schema sync
+      category_id,
       salary,
       salaryType,
       salaryMin,
@@ -40,11 +47,59 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!title || !company || !description || !city_id || !email) {
+      console.log('Missing required fields:', { title: !!title, company: !!company, description: !!description, city_id: !!city_id, email: !!email })
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
+
+    console.log('=== Resolving City ===')
+    // Resolve city key to city ID
+    const city = await simplePrisma.city.findUnique({
+      where: { key: city_id },
+      select: { id: true, key: true }
+    })
+    console.log('City lookup result:', city)
+
+    if (!city) {
+      return NextResponse.json(
+        { error: `City with key '${city_id}' not found` },
+        { status: 400 }
+      )
+    }
+
+    console.log('=== Resolving Category ===')
+    // Resolve category key/ID to category ID if provided
+    let resolvedCategoryId = null
+    if (category_id) {
+      console.log('Looking up category:', category_id)
+      // Try to find by ID first (for new format), then by key (for backward compatibility)
+      let category = await simplePrisma.category.findUnique({
+        where: { id: category_id },
+        select: { id: true, key: true }
+      })
+      console.log('Category lookup by ID result:', category)
+
+      // If not found by ID, try to find by key
+      if (!category) {
+        console.log('Not found by ID, trying by key...')
+        category = await simplePrisma.category.findUnique({
+          where: { key: category_id },
+          select: { id: true, key: true }
+        })
+        console.log('Category lookup by key result:', category)
+      }
+
+      if (!category) {
+        return NextResponse.json(
+          { error: `Category with key/id '${category_id}' not found` },
+          { status: 400 }
+        )
+      }
+      resolvedCategoryId = category.id
+    }
+    console.log('Resolved category ID:', resolvedCategoryId)
 
     // Validate start date is not in the past
     if (start_date) {
@@ -87,29 +142,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const job = await prisma.jobListing.create({
-      data: {
-        title,
-        company,
-        description,
-        type,
-        cityId: city_id,
-        // categoryId: category_id || null, // TODO: Fix after schema sync
-        salary: salaryString || null,
-        website: website || null,
-        email,
-        // startDate: start_date ? new Date(start_date) : null, // TODO: Enable after schema sync
-        jobAddress: job_address || null,
-        jobLatitude: job_latitude || null,
-        jobLongitude: job_longitude || null,
-        requirements: requirements || null,
-        benefits: benefits || null,
-        contactEmail: contact_email || null,
-        applicationUrl: application_url || null,
-        postedById: session.user.id,
-        isActive: true
-      }
+    console.log('=== Creating Job ===')
+    const jobData = {
+      title,
+      company,
+      description,
+      type,
+      cityId: city.id, // Use resolved city ID
+      categoryId: resolvedCategoryId,
+      salary: salaryString || null,
+      salaryType: salaryType || null,
+      salaryMin: salaryMin || null,
+      salaryMax: salaryMax || null,
+      website: website || null,
+      email,
+      startDate: start_date ? new Date(start_date) : null,
+      jobAddress: job_address || null,
+      jobLatitude: job_latitude || null,
+      jobLongitude: job_longitude || null,
+      requirements: requirements || null,
+      benefits: benefits || null,
+      contactEmail: contact_email || null,
+      applicationUrl: application_url || null,
+      postedById: session.user.id,
+      isActive: true
+    }
+    console.log('Job data to create:', JSON.stringify(jobData, null, 2))
+
+    const job = await simplePrisma.jobListing.create({
+      data: jobData
     })
+
+    console.log('Job created successfully:', job.id)
 
     return NextResponse.json({
       success: true,
@@ -117,16 +181,33 @@ export async function POST(request: NextRequest) {
         ...job,
         posted_at: job.createdAt.toISOString(),
         city_id: job.cityId,
-        category_id: null // TODO: Fix after schema sync
+        category_id: job.categoryId,
+        start_date: job.startDate ? job.startDate.toISOString() : null,
+        job_address: job.jobAddress,
+        job_latitude: job.jobLatitude,
+        job_longitude: job.jobLongitude,
+        contact_email: job.contactEmail,
+        application_url: job.applicationUrl
       }
     })
   } catch (error) {
     console.error('Error creating job:', error)
+    
+    // Log more detailed error information
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create job', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Failed to create job', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    await simplePrisma.$disconnect()
   }
 }

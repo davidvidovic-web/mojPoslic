@@ -9,9 +9,19 @@ export async function GET() {
     const activeJobsCount = await prisma.jobListing.count({
       where: {
         isActive: true,
-        expiresAt: {
-          gt: new Date() // Only count jobs that haven't expired
-        }
+        OR: [
+          { expiresAt: null }, // Jobs without expiration
+          { expiresAt: { gt: new Date() } } // Jobs that haven't expired
+        ]
+      }
+    })
+
+    // Get completed jobs count (for now, use a placeholder approach)
+    // This will be updated once the database migration is complete
+    const completedJobsCount = await prisma.jobListing.count({
+      where: {
+        isActive: false,
+        description: { contains: '[Status: COMPLETED]' }
       }
     })
 
@@ -35,18 +45,11 @@ export async function GET() {
     // Get total registered users count
     const totalUsersCount = await prisma.user.count()
 
-    // Calculate success rate (this is a placeholder - you can adjust the logic)
-    // For now, let's calculate it as a percentage of active jobs vs total jobs
-    const totalJobsCount = await prisma.jobListing.count()
-    const successRate = totalJobsCount > 0 
-      ? Math.round((activeJobsCount / totalJobsCount) * 100) 
-      : 95 // Default fallback
-
     const stats = {
       activeJobs: activeJobsCount,
       employers: employersCount,
       totalUsers: totalUsersCount,
-      successRate: Math.min(successRate, 98) // Cap at 98% for realism
+      finishedJobs: completedJobsCount // Return completed jobs as finishedJobs
     }
 
     return NextResponse.json(stats)
@@ -58,7 +61,7 @@ export async function GET() {
       activeJobs: 66,
       employers: 25,
       totalUsers: 150,
-      successRate: 95
+      finishedJobs: 12 // Default fallback for finished jobs
     })
   } finally {
     await prisma.$disconnect()

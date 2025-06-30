@@ -10,6 +10,7 @@ interface AuthContextType {
     id: string
     name?: string | null
     email?: string | null
+    username?: string | null
     role: UserRole
   } | null
   loading: boolean

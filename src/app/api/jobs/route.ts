@@ -23,23 +23,29 @@ export async function GET() {
       }
     })
 
+    const categories = await simplePrisma.category.findMany({
+      where: {
+        isActive: true
+      }
+    })
+
     // Manually join the data
     const transformedJobs = jobs.map(job => {
       const city = cities.find(c => c.id === job.cityId)
+      const category = categories.find(c => c.id === job.categoryId)
       
       return {
         ...job,
         posted_at: job.createdAt.toISOString(),
-        // start_date: job.startDate ? job.startDate.toISOString() : null, // TODO: Enable after schema sync
-        start_date: null, // TODO: Add startDate field after schema sync
-        // job_address: job.jobAddress, // TODO: Enable after schema sync
-        // job_latitude: job.jobLatitude, // TODO: Enable after schema sync  
-        // job_longitude: job.jobLongitude, // TODO: Enable after schema sync
-        job_address: null, // TODO: Add location fields after schema sync
-        job_latitude: null,
-        job_longitude: null,
+        start_date: job.startDate ? job.startDate.toISOString() : null,
+        job_address: job.jobAddress,
+        job_latitude: job.jobLatitude, 
+        job_longitude: job.jobLongitude,
+        application_url: job.applicationUrl,
+        contact_email: job.contactEmail,
+        expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
         city_id: job.cityId,
-        category_id: null, // Will be null for now until schema is fixed
+        category_id: job.categoryId,
         city: city ? {
           id: city.id,
           key: city.key,
@@ -52,7 +58,16 @@ export async function GET() {
           sort_order: city.sortOrder,
           is_active: city.isActive
         } : undefined,
-        category: null // Will be null for now until schema is fixed
+        category: category ? {
+          id: category.id,
+          key: category.key,
+          name_bs: category.nameBS,
+          name_en: category.nameEN,
+          name: category.nameEN || category.nameBS,
+          is_popular: category.isPopular,
+          sort_order: category.sortOrder,
+          is_active: category.isActive
+        } : undefined
       }
     })
 

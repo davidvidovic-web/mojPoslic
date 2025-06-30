@@ -143,7 +143,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               <Briefcase className="h-5 w-5" />
             </div>
             <h1 className="text-3xl font-bold">
-              Poslić.ba
+              Poslić
             </h1>
           </div>
           <h2 className="text-xl font-semibold">Welcome</h2>

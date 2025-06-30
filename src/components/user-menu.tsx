@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard } from 'lucide-react'
+import { LayoutDashboard, User, LogOut } from 'lucide-react'
 
 export function UserMenu() {
   const { user } = useAuth()
@@ -63,6 +63,11 @@ export function UserMenu() {
             <p className="text-sm font-medium leading-none">
               {user.name || 'User'}
             </p>
+            {user.username && (
+              <p className="text-xs leading-none text-muted-foreground">
+                @{user.username}
+              </p>
+            )}
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -79,7 +84,7 @@ export function UserMenu() {
           Dashboard
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/settings')}>
-          <span className="mr-2">👤</span>
+          <User className="mr-2 h-4 w-4" />
           Profile & Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -87,7 +92,7 @@ export function UserMenu() {
           className="text-destructive focus:text-destructive"
           onClick={handleSignOut}
         >
-          <span className="mr-2">🚪</span>
+          <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>

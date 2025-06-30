@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { JobCard } from "./job-card"
 import { JobCardList } from "./job-card-list"
+import { JobCardListSkeleton, JobCardSkeleton } from "./job-card-skeleton"
 import { Job } from "@/types/job"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -84,15 +85,91 @@ export function JobList({ refreshTrigger }: JobListProps) {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="flex justify-center mb-2">
-              <Briefcase className="h-10 w-10 text-muted-foreground" />
+      <div className="space-y-6">
+        {/* Filters skeleton */}
+        <div className="space-y-6">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">🔍</span>
+                <Input
+                  placeholder="Search jobs, companies, skills, or categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-border/50"
+                />
+              </div>
+              <CitiesFilter
+                value={cityFilter}
+                onChange={setCityFilter}
+                placeholder="All locations"
+                className="sm:w-64"
+              />
+              <CategoriesFilter
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                placeholder="All categories"
+                className="sm:w-64"
+              />
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="sm:w-48 border-border/50">
+                  <SelectValue placeholder="Job Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="full-time">Full Time</SelectItem>
+                  <SelectItem value="part-time">Part Time</SelectItem>
+                  <SelectItem value="contract">Contract</SelectItem>
+                  <SelectItem value="remote">Remote</SelectItem>
+                  <SelectItem value="quick-job">Quick Job</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-muted-foreground">Loading jobs...</p>
+          </div>
+          
+          {/* View controls skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Loading jobs...
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center border border-border/40 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 px-3"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 px-3"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Job skeletons */}
+        {viewMode === 'list' ? (
+          <div className="space-y-4">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <JobCardListSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <JobCardSkeleton key={index} />
+            ))}
+          </div>
+        )}
       </div>
     )
   }

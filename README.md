@@ -1,4 +1,4 @@
-# Poslić.ba - Simple Job Board App
+# Poslić - Simple Job Board App
 
 A modern job board application built with Next.js, shadcn/ui, and Supabase.
 

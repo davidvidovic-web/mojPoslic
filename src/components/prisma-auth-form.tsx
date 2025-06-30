@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PasswordStrengthIndicator, usePasswordValidation } from '@/components/password-strength-indicator'
+import { UsernameInput } from '@/components/ui/username-input'
 import { Eye, EyeOff } from 'lucide-react'
 
 type UserRole = 'employee' | 'employer' | 'admin'
@@ -18,6 +19,7 @@ interface FormData {
   email: string
   password: string
   name: string
+  username: string
   role: UserRole
 }
 
@@ -34,6 +36,7 @@ export function PrismaAuthForm() {
     email: '',
     password: '',
     name: '',
+    username: '',
     role: 'employee'
   })
 
@@ -219,6 +222,15 @@ export function PrismaAuthForm() {
                   required
                 />
               </div>
+              
+              <UsernameInput
+                value={formData.username}
+                onChange={(value) => handleInputChange('username', value)}
+                name={formData.name}
+                email={formData.email}
+                label="Username (optional)"
+              />
+              
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
                 <Input

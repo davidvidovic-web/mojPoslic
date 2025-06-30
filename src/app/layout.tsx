@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Poslić.ba - Find Your Dream Job",
-  description: "Poslić.ba - A modern job board for Bosnia and Herzegovina built with Next.js, shadcn/ui, and Prisma",
+  title: "Poslić - Find Your Dream Job",
+  description: "Poslić - A modern job board for Bosnia and Herzegovina built with Next.js, shadcn/ui, and Prisma",
 };
 
 export default function RootLayout({

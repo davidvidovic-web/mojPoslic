@@ -16,12 +16,17 @@ import {
   ArrowLeft,
   Briefcase,
   Clock,
-  Users
+  Users,
+  User,
+  Tag,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react"
 import { Job } from "@/types/job"
 import { useAuth } from "@/contexts/prisma-auth-context"
 import { toast } from "sonner"
 import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
+import { JobLocationMap } from "@/components/job-location-map"
 
 export default function JobDetailPage() {
   const params = useParams()
@@ -117,6 +122,32 @@ ${user.name || user.email}`
     return date.toLocaleDateString()
   }
 
+  const formatSalary = (job: Job) => {
+    // If we have structured salary data
+    if (job.salaryMin && job.salaryMax && job.salaryType) {
+      const min = job.salaryMin.toLocaleString()
+      const max = job.salaryMax.toLocaleString()
+      const type = job.salaryType === 'hourly' ? '/hr' : 
+                   job.salaryType === 'daily' ? '/day' :
+                   job.salaryType === 'weekly' ? '/week' :
+                   job.salaryType === 'monthly' ? '/month' : ''
+      return `${min} - ${max} BAM${type}`
+    }
+    
+    // If we only have minimum salary
+    if (job.salaryMin && job.salaryType) {
+      const min = job.salaryMin.toLocaleString()
+      const type = job.salaryType === 'hourly' ? '/hr' : 
+                   job.salaryType === 'daily' ? '/day' :
+                   job.salaryType === 'weekly' ? '/week' :
+                   job.salaryType === 'monthly' ? '/month' : ''
+      return `From ${min} BAM${type}`
+    }
+    
+    // Fallback to legacy salary field
+    return job.salary || null
+  }
+
   const getTypeVariant = getJobTypeBadgeVariant
 
   if (loading) {
@@ -186,10 +217,22 @@ ${user.name || user.email}`
                         <Calendar className="h-4 w-4" />
                         Posted {formatDate(job.posted_at)}
                       </div>
-                      {job.salary && (
+                      {job.category && (
+                        <div className="flex items-center gap-1">
+                          <Tag className="h-4 w-4" />
+                          {job.category.name}
+                        </div>
+                      )}
+                      {formatSalary(job) && (
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          {job.salary}
+                          {formatSalary(job)}
+                        </div>
+                      )}
+                      {job.posted_by && (
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          Posted by employer
                         </div>
                       )}
                     </div>
@@ -264,6 +307,73 @@ ${user.name || user.email}`
                 </CardContent>
               </Card>
             )}
+
+            {/* Job Location */}
+            {(job.job_address || (job.job_latitude && job.job_longitude)) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Job Location
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {job.job_address && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <p className="text-sm">{job.job_address}</p>
+                    </div>
+                  )}
+                  
+                  {job.job_latitude && job.job_longitude && (
+                    <JobLocationMap
+                      latitude={job.job_latitude}
+                      longitude={job.job_longitude}
+                      address={job.job_address}
+                      jobTitle={job.title}
+                      company={job.company}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Job Timeline */}
+            {(job.start_date || job.expires_at) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {job.start_date && (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium">Start Date</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(job.start_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {job.expires_at && (
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <div>
+                        <p className="text-sm font-medium">Application Deadline</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(job.expires_at)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -307,7 +417,19 @@ ${user.name || user.email}`
                   <span>{job.city?.name || 'Remote'}</span>
                 </div>
                 
-                {job.contact_email && (
+                {job.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={`mailto:${job.email}`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {job.email}
+                    </a>
+                  </div>
+                )}
+                
+                {job.contact_email && job.contact_email !== job.email && (
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <a 
@@ -319,7 +441,21 @@ ${user.name || user.email}`
                   </div>
                 )}
                 
-                {job.application_url && (
+                {job.website && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    <a 
+                      href={job.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Company Website
+                    </a>
+                  </div>
+                )}
+                
+                {job.application_url && job.application_url !== job.website && (
                   <div className="flex items-center gap-2 text-sm">
                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
                     <a 
@@ -328,7 +464,7 @@ ${user.name || user.email}`
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800"
                     >
-                      Company Website
+                      Application Portal
                     </a>
                   </div>
                 )}
@@ -346,12 +482,32 @@ ${user.name || user.email}`
                   <Badge variant={getTypeVariant(job.type)}>{formatJobType(job.type)}</Badge>
                 </div>
                 
+                {job.category && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Category</span>
+                      <span className="text-sm font-medium">{job.category.name}</span>
+                    </div>
+                  </>
+                )}
+                
                 <Separator />
                 
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Posted</span>
                   <span className="text-sm">{formatDate(job.posted_at)}</span>
                 </div>
+                
+                {job.start_date && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Start Date</span>
+                      <span className="text-sm">{new Date(job.start_date).toLocaleDateString()}</span>
+                    </div>
+                  </>
+                )}
                 
                 {job.expires_at && (
                   <>
@@ -363,12 +519,22 @@ ${user.name || user.email}`
                   </>
                 )}
                 
-                {job.salary && (
+                {formatSalary(job) && (
                   <>
                     <Separator />
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Salary</span>
-                      <span className="text-sm font-medium">{job.salary}</span>
+                      <span className="text-sm font-medium">{formatSalary(job)}</span>
+                    </div>
+                  </>
+                )}
+
+                {job.job_address && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between items-start">
+                      <span className="text-sm text-muted-foreground">Address</span>
+                      <span className="text-sm text-right max-w-[200px]">{job.job_address}</span>
                     </div>
                   </>
                 )}

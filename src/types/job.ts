@@ -69,6 +69,8 @@ export interface CreateJobData {
   category_id?: string
   type: 'quick_job' | 'full_time' | 'part_time' | 'remote'
   description: string
+  requirements?: string
+  benefits?: string
   salary?: string // Legacy text field
   salaryType?: 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' // New salary type field
   salaryMin?: number // Minimum salary amount
@@ -79,5 +81,7 @@ export interface CreateJobData {
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
   job_longitude?: number // Longitude coordinate
+  contact_email?: string
+  application_url?: string
   tags?: string[] // Keep for backward compatibility but deprecated
 }

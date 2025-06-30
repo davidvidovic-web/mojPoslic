@@ -55,12 +55,43 @@ export function getJobTypeBadgeVariant(type: string): "default" | "secondary" | 
 
 /**
  * Formats salary information to human-readable format
- * @param salary - The salary string
+ * @param job - The job object or legacy salary string
  * @returns Formatted salary string or null if not provided
  */
-export function formatSalary(salary?: string): string | null {
-  if (!salary) return null
-  return salary
+export function formatSalary(job: string | { salaryMin?: number; salaryMax?: number; salaryType?: string; salary?: string } | undefined): string | null {
+  // Handle legacy string input for backward compatibility
+  if (typeof job === 'string') {
+    return job || null
+  }
+  
+  // Handle job object with new salary structure
+  if (typeof job === 'object' && job !== null) {
+    // If we have structured salary data
+    if (job.salaryMin && job.salaryMax && job.salaryType) {
+      const min = job.salaryMin.toLocaleString()
+      const max = job.salaryMax.toLocaleString()
+      const type = job.salaryType === 'hourly' ? '/hr' : 
+                   job.salaryType === 'daily' ? '/day' :
+                   job.salaryType === 'weekly' ? '/week' :
+                   job.salaryType === 'monthly' ? '/month' : ''
+      return `${min} - ${max} BAM${type}`
+    }
+    
+    // If we only have minimum salary
+    if (job.salaryMin && job.salaryType) {
+      const min = job.salaryMin.toLocaleString()
+      const type = job.salaryType === 'hourly' ? '/hr' : 
+                   job.salaryType === 'daily' ? '/day' :
+                   job.salaryType === 'weekly' ? '/week' :
+                   job.salaryType === 'monthly' ? '/month' : ''
+      return `From ${min} BAM${type}`
+    }
+    
+    // Fallback to legacy salary field
+    return job.salary || null
+  }
+  
+  return null
 }
 
 /**

@@ -14,16 +14,18 @@ import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import { User, Moon, Sun, Monitor, Shield, UserCircle } from 'lucide-react'
 import { ChangePasswordForm } from '@/components/change-password-form'
+import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 
 interface UserProfile {
   name: string
   email: string
+  username?: string
   bio?: string
   role: string
   phone?: string
   location?: string
   website?: string
-  skills?: string
+  skills?: string[]  // Changed to array for UI
   experience?: string
   preferredJobTypes?: string[]
 }
@@ -31,31 +33,66 @@ interface UserProfile {
 export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme } = useTheme()
+  
+  // Helper functions for skills conversion
+  const stringToSkillsArray = (skillsString: string): string[] => {
+    if (!skillsString) return []
+    return skillsString.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0)
+  }
+  
+  const skillsArrayToString = (skillsArray: string[]): string => {
+    return skillsArray.join(', ')
+  }
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
+    username: '',
     bio: '',
     role: 'employee',
     phone: '',
     location: '',
     website: '',
-    skills: '',
+    skills: [],
     experience: '',
     preferredJobTypes: []
   })
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const data = await response.json()
+          // Handle the nested user object from API response
+          const profileData = data.user || data
+          setProfile(prev => ({
+            ...prev,
+            bio: profileData.bio || '',
+            phone: profileData.phone || '',
+            location: profileData.location || '', 
+            website: profileData.website || '',
+            skills: stringToSkillsArray(profileData.skills || ''),
+            experience: profileData.experience || '',
+            preferredJobTypes: profileData.preferredJobTypes || []
+          }))
+        }
+      } catch (error) {
+        console.error('Failed to load profile data:', error)
+      }
+    }
+
     if (user) {
       setProfile({
         name: user.name || '',
         email: user.email || '',
+        username: user.username || '',
         bio: '', // Will be loaded from API
         role: user.role || 'employee',
         phone: '',
         location: '',
         website: '',
-        skills: '',
+        skills: [],
         experience: '',
         preferredJobTypes: []
       })
@@ -63,29 +100,6 @@ export default function SettingsPage() {
       loadProfileData()
     }
   }, [user])
-
-  const loadProfileData = async () => {
-    try {
-      const response = await fetch('/api/user/profile')
-      if (response.ok) {
-        const data = await response.json()
-        // Handle the nested user object from API response
-        const profileData = data.user || data
-        setProfile(prev => ({
-          ...prev,
-          bio: profileData.bio || '',
-          phone: profileData.phone || '',
-          location: profileData.location || '', 
-          website: profileData.website || '',
-          skills: profileData.skills || '',
-          experience: profileData.experience || '',
-          preferredJobTypes: profileData.preferredJobTypes || []
-        }))
-      }
-    } catch (error) {
-      console.error('Failed to load profile data:', error)
-    }
-  }
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,11 +113,12 @@ export default function SettingsPage() {
         },
         body: JSON.stringify({
           name: profile.name,
+          username: profile.username,
           bio: profile.bio,
           phone: profile.phone,
           location: profile.location,
           website: profile.website,
-          skills: profile.skills,
+          skills: skillsArrayToString(profile.skills || []),
           experience: profile.experience,
           preferredJobTypes: profile.preferredJobTypes,
         }),
@@ -248,17 +263,12 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Professional Information</h3>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="skills">Skills</Label>
-                  <Textarea
-                    id="skills"
-                    value={profile.skills}
-                    onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
-                    placeholder="List your skills (e.g., JavaScript, React, Node.js, Handyman, Plumbing, etc.)"
-                    rows={2}
-                  />
-                  <p className="text-xs text-muted-foreground">Separate skills with commas</p>
-                </div>
+                <SkillsBubbleInput
+                  value={profile.skills || []}
+                  onChange={(skills) => setProfile({ ...profile, skills })}
+                  placeholder="Add your skills..."
+                  maxSkills={15}
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="experience">Experience</Label>
