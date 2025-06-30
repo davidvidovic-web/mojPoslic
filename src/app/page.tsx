@@ -1,95 +1,116 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+import { JobList } from "@/components/job-list"
+import { HeroStats } from "@/components/hero-stats"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { Briefcase } from "lucide-react"
 
 export default function Home() {
+  // Use an interval to refresh jobs periodically (alternative to direct callback)
+  // This ensures new jobs posted from the header will appear
+  
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="space-y-4">
+              <Badge 
+                variant="secondary" 
+                className="text-sm font-medium px-3 py-1"
+              >
+                🚀 Quick • Simple • Free job posting
+              </Badge>
+              
+              <h2 className="text-5xl md:text-6xl font-bold leading-tight">
+                Post & Find
+                <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
+                  Quick Jobs
+                </span>
+              </h2>
+              
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                The fastest way to post quick jobs and find reliable workers in Bosnia. 
+                Simple, free, and trusted by thousands.
+              </p>
+            </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+            {/* Stats */}
+            <HeroStats />
+          </div>
+        </div>
+        
+      </section>
+
+      <Separator className="container mx-auto" />
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-12">
+        <div className="space-y-8">
+          <div className="text-center space-y-4">
+            <h3 className="text-3xl font-bold">Latest Opportunities</h3>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Browse through our curated list of job openings and find the perfect match for your skills and experience.
+            </p>
+          </div>
+          
+          <JobList />
         </div>
       </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="border-t bg-background/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted border">
+                  <Briefcase className="h-4 w-4" />
+                </div>
+                <span className="font-bold">Poslić.ba</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Quick, simple & free job posting platform for Bosnia and Herzegovina.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="font-medium">For Workers</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition-colors">Find Quick Jobs</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Daily Work</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Hourly Jobs</a></li>
+              </ul>
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="font-medium">For Employers</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition-colors">Post Quick Jobs</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Find Workers</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">100% Free</a></li>
+              </ul>
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="font-medium">Company</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <Separator className="my-8" />
+          
+          <div className="text-center text-sm text-default-600">
+            <p>&copy; 2025 Poslić.ba. Built with Next.js, shadcn/ui, and Prisma.</p>
+          </div>
+        </div>
       </footer>
-    </div>
-  );
+    </>
+  )
 }

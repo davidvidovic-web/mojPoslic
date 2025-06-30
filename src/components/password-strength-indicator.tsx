@@ -1,0 +1,153 @@
+'use client'
+
+import { useMemo } from 'react'
+import { CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  validatePassword,
+  getPasswordStrengthColor,
+  getPasswordStrengthBgColor,
+  getPasswordStrengthText,
+  type PasswordRequirement
+} from '@/lib/password-validation'
+
+interface PasswordStrengthIndicatorProps {
+  password: string
+  userInfo?: {
+    name?: string
+    email?: string
+    company?: string
+  }
+  showRequirements?: boolean
+  showStrengthBar?: boolean
+  className?: string
+}
+
+export function PasswordStrengthIndicator({
+  password,
+  userInfo,
+  showRequirements = true,
+  showStrengthBar = true,
+  className
+}: PasswordStrengthIndicatorProps) {
+  const strength = useMemo(() => {
+    if (!password) return null
+    return validatePassword(password, userInfo)
+  }, [password, userInfo])
+
+  if (!password || !strength) {
+    return null
+  }
+
+  const getRequirementIcon = (requirement: PasswordRequirement) => {
+    if (requirement.met) {
+      return <CheckCircle className="h-4 w-4 text-green-500" />
+    }
+    
+    switch (requirement.severity) {
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />
+      default:
+        return <Info className="h-4 w-4 text-gray-400" />
+    }
+  }
+
+  const getRequirementTextColor = (requirement: PasswordRequirement) => {
+    if (requirement.met) {
+      return 'text-green-600 dark:text-green-400'
+    }
+    
+    switch (requirement.severity) {
+      case 'error':
+        return 'text-red-600 dark:text-red-400'
+      case 'warning':
+        return 'text-yellow-600 dark:text-yellow-400'
+      default:
+        return 'text-gray-600 dark:text-gray-400'
+    }
+  }
+
+  return (
+    <div className={cn('space-y-3', className)}>
+      {/* Strength Bar */}
+      {showStrengthBar && (
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-medium">Password Strength</span>
+            <span className={cn('font-medium', getPasswordStrengthColor(strength.level))}>
+              {getPasswordStrengthText(strength.level)} ({strength.score}%)
+            </span>
+          </div>
+          
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div
+              className={cn(
+                'h-2 rounded-full transition-all duration-300',
+                getPasswordStrengthBgColor(strength.level)
+              )}
+              style={{ width: `${strength.score}%` }}
+            />
+          </div>
+          
+          {!strength.isValid && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Please meet all required criteria for a secure password
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Requirements List */}
+      {showRequirements && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Password Requirements:
+          </h4>
+          
+          <div className="space-y-1">
+            {strength.requirements.map((requirement) => (
+              <div key={requirement.id} className="flex items-center gap-2 text-sm">
+                {getRequirementIcon(requirement)}
+                <span className={getRequirementTextColor(requirement)}>
+                  {requirement.label}
+                  {requirement.severity === 'warning' && (
+                    <span className="ml-1 text-xs text-gray-500">(optional)</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">Security Tips:</p>
+                <ul className="space-y-1">
+                  <li>• Use a unique password you haven&apos;t used elsewhere</li>
+                  <li>• Consider using a passphrase with multiple words</li>
+                  <li>• Avoid personal information like names or birthdays</li>
+                  <li>• Enable two-factor authentication when available</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Hook for easy password validation
+export function usePasswordValidation(password: string, userInfo?: {
+  name?: string
+  email?: string
+  company?: string
+}) {
+  return useMemo(() => {
+    if (!password) return null
+    return validatePassword(password, userInfo)
+  }, [password, userInfo])
+}

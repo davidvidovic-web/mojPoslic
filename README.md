@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Poslić.ba - Simple Job Board App
+
+A modern job board application built with Next.js, shadcn/ui, and Supabase.
+
+## Features
+
+- 📋 Browse job listings with search and filters
+- 💼 Post new job opportunities  
+- 🎨 Beautiful, responsive UI with shadcn/ui components
+- 🔍 Search jobs by title, company, or description
+- 📍 Filter by location and job type
+- 💰 Salary range display
+- 🔗 Direct application links or email contact
+- 📱 Mobile-friendly design
+- 🔐 User authentication with email/password and social login (Google, Apple)
+- 👤 User profiles with role-based access control
+- 🏙️ City-based job filtering
+- � Dark/Light mode support
+- 👥 Three user types: Admin, Employer, and Employee
+
+## User Roles
+
+### 👤 Employee (Default)
+- Browse and search job listings
+- Apply to jobs via external links or email
+- View all public job information
+
+### 🏢 Employer
+- All employee features
+- Post new job opportunities
+- Manage job postings
+- Access employer dashboard
+
+### 👑 Admin
+- All employer features
+- Full system access
+- User management capabilities
+- Platform oversight
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **UI Components**: shadcn/ui with Radix UI primitives
+- **Styling**: Tailwind CSS with custom theming
+- **Typography**: Inter font family from Google Fonts
+- **Icons**: Lucide React
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth with OAuth (Google, Apple)
+- **Theme**: next-themes for dark/light mode
+- **Notifications**: Sonner
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ 
+- A Supabase account and project
+
+### 1. Clone and Install
+
+```bash
+git clone <your-repo-url>
+cd poslici
+npm install
+```
+
+### 2. Set up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to Settings > API to get your project URL and anon key
+3. In the SQL Editor, run the following SQL files in order:
+   - `database/profiles.sql` - Creates user profiles and role system
+   - `seed-data.sql` - Creates job listings schema and sample data
+4. Configure OAuth providers (optional):
+   - Go to Authentication > Providers
+   - Enable Google and/or Apple OAuth
+   - Add your OAuth app credentials
+
+### 3. Environment Variables
+
+Copy the `.env.example` file to `.env.local` and update with your Supabase credentials:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see your job board!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Schema
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app uses the following tables:
 
-## Learn More
+- `cities` - Cities where jobs are located
+- `job_listings` - Job postings with company, location, salary, etc.
+- `profiles` - User profiles linked to auth.users
+- `job_applications` - Applications submitted by users
+- `saved_jobs` - Jobs saved by users for later
 
-To learn more about Next.js, take a look at the following resources:
+See `MIGRATION.md` for detailed schema information and migration instructions.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Authentication
+- Navigate to `/login` to sign in or create an account
+- Use email/password or sign in with Google/Apple
+- User profiles are automatically created on first login
 
-## Deploy on Vercel
+### Viewing Jobs
+- Browse all active job listings on the homepage
+- Use the search bar to find specific jobs
+- Filter by location and job type
+- Click "Apply Now" to apply via external link or email
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Posting Jobs
+- Sign in and click "Post a Job" in the header
+- Fill out the job posting form with company details
+- Jobs are immediately visible after posting
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+The app can be deployed to Vercel, Netlify, or any platform that supports Next.js:
+
+```bash
+npm run build
+npm start
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - feel free to use this project for personal or commercial purposes.
