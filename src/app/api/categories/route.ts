@@ -56,7 +56,7 @@ export async function GET() {
       }))
     }))
 
-    return NextResponse.json(formattedCategories)
+    return NextResponse.json({ categories: formattedCategories })
   } catch (error) {
     console.error('Error fetching categories:', error)
     return NextResponse.json(

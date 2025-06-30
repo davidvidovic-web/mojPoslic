@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, User, LogOut } from 'lucide-react'
+import { LayoutDashboard, User, LogOut, Crown, Building2 } from 'lucide-react'
 
 export function UserMenu() {
   const { user } = useAuth()
@@ -32,13 +32,40 @@ export function UserMenu() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
-        return '👑 Admin'
+        return (
+          <span className="flex items-center gap-1">
+            <Crown className="h-3 w-3" />
+            Admin
+          </span>
+        )
       case 'employer':
-        return '🏢 Employer'
+        return (
+          <span className="flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            Employer
+          </span>
+        )
+      case 'company':
+        return (
+          <span className="flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            Company
+          </span>
+        )
       case 'employee':
-        return '👤 Employee'
+        return (
+          <span className="flex items-center gap-1">
+            <User className="h-3 w-3" />
+            Employee
+          </span>
+        )
       default:
-        return '👤 User'
+        return (
+          <span className="flex items-center gap-1">
+            <User className="h-3 w-3" />
+            User
+          </span>
+        )
     }
   }
 

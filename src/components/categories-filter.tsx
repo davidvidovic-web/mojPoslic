@@ -43,7 +43,7 @@ export function CategoriesFilter({
         throw new Error('Failed to fetch categories')
       }
       const data = await response.json()
-      setCategories(data)
+      setCategories(data.categories || data) // Handle both formats for backwards compatibility
     } catch (error) {
       console.error('Error fetching categories:', error)
     } finally {

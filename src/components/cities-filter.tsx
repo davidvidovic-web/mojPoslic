@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Globe } from 'lucide-react'
 
 interface City {
   id: string
@@ -36,7 +37,9 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
         throw new Error('Failed to fetch cities')
       }
       const data = await response.json()
-      setCities(data)
+      // Handle both old format (direct array) and new format (nested in cities property)
+      const citiesArray = Array.isArray(data) ? data : (data.cities || [])
+      setCities(citiesArray)
     } catch (error) {
       console.error('Error fetching cities:', error)
     } finally {
@@ -62,7 +65,7 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
             {specialCities.map((city) => (
               <SelectItem key={city.id} value={city.key}>
                 <span className="flex items-center gap-2">
-                  {city.key === 'remote' && <span>🌍</span>}
+                  {city.key === 'remote' && <Globe className="h-4 w-4" />}
                   {city.nameEN}
                   {city.nameBS !== city.nameEN && (
                     <span className="text-muted-foreground text-sm">({city.nameBS})</span>

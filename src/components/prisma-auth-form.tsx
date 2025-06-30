@@ -289,6 +289,7 @@ export function PrismaAuthForm() {
                   <SelectContent>
                     <SelectItem value="employee">Job Seeker</SelectItem>
                     <SelectItem value="employer">Employer</SelectItem>
+                    <SelectItem value="company">Company</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

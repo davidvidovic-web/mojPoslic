@@ -142,14 +142,10 @@ const benefits = [
 ]
 
 const jobTypes = ['full_time', 'part_time', 'contract', 'remote']
+const transportationOptions = ['provided', 'not_provided', 'employee_responsible', 'compensated']
 
 function getRandomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
-}
-
-function getRandomElements<T>(array: T[], count: number): T[] {
-  const shuffled = [...array].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
 }
 
 function getRandomSalary(): string {
@@ -181,6 +177,12 @@ function generateApplicationUrl(company: string, jobId: number): string {
     .replace(/\s+/g, '')
     .replace(/[^a-z0-9]/g, '')
   return `https://careers.${domain}.ba/positions/${jobId}`
+}
+
+function getRandomTransportationAmount(): number | null {
+  // Generate random amounts between 50-500 BAM for compensated transportation
+  const amounts = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+  return getRandomElement(amounts)
 }
 
 async function seedManyJobs() {
@@ -227,6 +229,10 @@ async function seedManyJobs() {
       const city = getRandomElement(cities)
       const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'contract' | 'remote'
       
+      // Generate transportation data
+      const transportation = getRandomElement(transportationOptions) as 'provided' | 'not_provided' | 'employee_responsible' | 'compensated'
+      const transportationAmount = transportation === 'compensated' ? getRandomTransportationAmount() : null
+      
       // Create more realistic posting dates (spread over last 3 months)
       const daysAgo = Math.floor(Math.random() * 90)
       const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
@@ -236,6 +242,8 @@ async function seedManyJobs() {
         company,
         cityId: city.id,
         type,
+        transportation,
+        transportationAmount,
         description: getRandomElement(descriptions),
         requirements: getRandomElement(requirements),
         benefits: getRandomElement(benefits),

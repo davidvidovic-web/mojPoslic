@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { JobCard } from '@/components/job-card'
 import { Search, Bookmark, TrendingUp, Clock, Heart } from 'lucide-react'
-import { formatJobType } from '@/lib/job-utils'
+import { formatJobType, formatEmployerName } from '@/lib/job-utils'
 
 interface JobApplication {
   id: string
@@ -274,7 +274,7 @@ export function EmployeeDashboard() {
                           <div>
                             <h4 className="font-semibold">{application.job.title}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {application.job.company}
+                              {formatEmployerName(application.job.company)}
                             </p>
                           </div>
                           <Badge className={getStatusColor(application.status)}>
@@ -313,7 +313,7 @@ export function EmployeeDashboard() {
                     {savedJobs.map((job) => (
                       <div key={job.id} className="border rounded-lg p-4">
                         <h4 className="font-semibold mb-1">{job.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-2">{job.company}</p>
+                        <p className="text-sm text-muted-foreground mb-2">{formatEmployerName(job.company)}</p>
                         <div className="flex items-center justify-between">
                           <Badge variant="secondary">{formatJobType(job.type)}</Badge>
                           <Button size="sm">Apply Now</Button>

@@ -23,6 +23,14 @@ const employers = [
   { name: 'Vladimir Đorđević', email: 'vladimir@ecommerce.ba', company: 'E-commerce Plus' }
 ]
 
+const companies = [
+  { name: 'BiH Tech Solutions', email: 'info@bihtech.ba', companyName: 'BiH Tech Solutions' },
+  { name: 'Sarajevo Digital', email: 'contact@sarajevodigital.ba', companyName: 'Sarajevo Digital' },
+  { name: 'Mostar Innovation Hub', email: 'hello@mostarhub.ba', companyName: 'Mostar Innovation Hub' },
+  { name: 'Tuzla Development Center', email: 'info@tuzladev.ba', companyName: 'Tuzla Development Center' },
+  { name: 'Banja Luka Software', email: 'contact@blsoftware.ba', companyName: 'Banja Luka Software' }
+]
+
 const jobSeekers = [
   { name: 'Petar Marković', email: 'petar.markovic@gmail.com' },
   { name: 'Milena Stanić', email: 'milena.stanic@outlook.com' },
@@ -48,7 +56,7 @@ const jobSeekers = [
 
 async function seedUsers() {
   try {
-    console.log('👥 Starting to seed employers and job seekers...\n')
+    console.log('👥 Starting to seed users for all types...\n')
 
     const defaultPassword = await bcrypt.hash('password123', 12)
 
@@ -76,6 +84,33 @@ async function seedUsers() {
         }
       } catch (error) {
         console.log(`❌ Failed to create employer ${employer.email}:`, error)
+      }
+    }
+
+    // Create companies
+    console.log('\n🏛️  Creating company accounts...')
+    for (const company of companies) {
+      try {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: company.email }
+        })
+
+        if (!existingUser) {
+          await prisma.user.create({
+            data: {
+              name: company.name,
+              email: company.email,
+              password: defaultPassword,
+              role: 'company',
+              companyName: company.companyName
+            }
+          })
+          console.log(`✅ Created company: ${company.name}`)
+        } else {
+          console.log(`⚠️  Company already exists: ${company.email}`)
+        }
+      } catch (error) {
+        console.log(`❌ Failed to create company ${company.email}:`, error)
       }
     }
 
@@ -108,14 +143,16 @@ async function seedUsers() {
     // Show final statistics
     console.log('\n📊 Final user statistics:')
     const totalUsers = await prisma.user.count()
-    const employers = await prisma.user.count({ where: { role: 'employer' } })
-    const employees = await prisma.user.count({ where: { role: 'employee' } })
-    const admins = await prisma.user.count({ where: { role: 'admin' } })
+    const employerCount = await prisma.user.count({ where: { role: 'employer' } })
+    const employeeCount = await prisma.user.count({ where: { role: 'employee' } })
+    const companyCount = await prisma.user.count({ where: { role: 'company' } })
+    const adminCount = await prisma.user.count({ where: { role: 'admin' } })
 
     console.log(`   • Total users: ${totalUsers}`)
-    console.log(`   • Employers: ${employers}`)
-    console.log(`   • Job seekers: ${employees}`)
-    console.log(`   • Admins: ${admins}`)
+    console.log(`   • Employers: ${employerCount}`)
+    console.log(`   • Companies: ${companyCount}`)
+    console.log(`   • Job seekers: ${employeeCount}`)
+    console.log(`   • Admins: ${adminCount}`)
 
     console.log('\n🎉 User seeding completed successfully!')
 

@@ -1,19 +1,55 @@
 'use client'
 
 import { useRouter } from "next/navigation"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Calendar, ExternalLink, DollarSign, Building2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Edit, Car } from "lucide-react"
+import { toast } from "sonner"
 import { Job } from "@/types/job"
-import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatEmployerName } from "@/lib/job-utils"
+import { useAuth } from "@/contexts/prisma-auth-context"
+import { MultiStepJobForm } from "@/components/job-post-form/multi-step-job-form"
 
 interface JobCardListProps {
   job: Job
+  onJobUpdated?: () => void
 }
 
-export function JobCardList({ job }: JobCardListProps) {
+export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
   const router = useRouter()
+  const { user } = useAuth()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [applicationCount, setApplicationCount] = useState<number | null>(null)
+
+  // Check if the current user owns this job
+  const isOwner = user && job.posted_by === user.id
+  
+  // Check application count for owner's jobs
+  const checkApplicationCount = useCallback(async () => {
+    if (!isOwner) return
+    
+    try {
+      const response = await fetch(`/api/jobs/${job.id}/applications`)
+      if (response.ok) {
+        const data = await response.json()
+        setApplicationCount(data.applicationCount || 0)
+      }
+    } catch (error) {
+      console.error('Error checking application count:', error)
+    }
+  }, [isOwner, job.id])
+
+  // Load application count when component mounts (for owner's jobs)
+  useEffect(() => {
+    if (isOwner) {
+      checkApplicationCount()
+    }
+  }, [isOwner, checkApplicationCount])
+
+  const canEdit = isOwner && (applicationCount === null || applicationCount === 0)
 
   const formatSalary = (job: Job) => {
     // If we have structured salary data
@@ -61,6 +97,17 @@ export function JobCardList({ job }: JobCardListProps) {
     router.push(`/jobs/${job.id}`)
   }
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    setIsEditDialogOpen(true)
+  }
+
+  const handleJobUpdated = () => {
+    setIsEditDialogOpen(false)
+    onJobUpdated?.()
+    toast.success('Job updated successfully!')
+  }
+
   return (
     <Card 
       className="hover:shadow-md transition-all duration-200 cursor-pointer border-border/40"
@@ -72,7 +119,7 @@ export function JobCardList({ job }: JobCardListProps) {
           {/* Header Section - Company logo, title, and company name */}
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-lg bg-muted border flex items-center justify-center font-bold text-lg shrink-0">
-              {job.company.charAt(0).toUpperCase()}
+              {formatEmployerName(job.company).charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-lg leading-tight mb-1">
@@ -80,7 +127,7 @@ export function JobCardList({ job }: JobCardListProps) {
               </h3>
               <div className="flex items-center text-muted-foreground text-sm">
                 <Building2 className="h-4 w-4 mr-1" />
-                <span className="font-medium">{job.company}</span>
+                <span className="font-medium">{formatEmployerName(job.company)}</span>
               </div>
             </div>
           </div>
@@ -114,6 +161,13 @@ export function JobCardList({ job }: JobCardListProps) {
               </Badge>
             )}
             
+            {job.transportation && (
+              <Badge variant="outline" className="text-xs">
+                <Car className="h-3 w-3 mr-1" />
+                {formatTransportation(job.transportation, job.transportation_amount)}
+              </Badge>
+            )}
+            
             <Badge variant="outline" className="text-xs">
               <Calendar className="h-3 w-3 mr-1" />
               {formatDate(job.posted_at)}
@@ -122,17 +176,56 @@ export function JobCardList({ job }: JobCardListProps) {
           
           {/* Apply Button - Full width on mobile, auto width on larger screens */}
           <div className="pt-2">
-            <Button 
-              onClick={handleApply}
-              size="sm"
-              className="w-full sm:w-auto"
-            >
-              View Details
-              <ExternalLink className="h-3 w-3 ml-1" />
-            </Button>
+            {isOwner ? (
+              <div className="flex gap-2 w-full">
+                {canEdit && (
+                  <Button 
+                    onClick={handleEdit}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit Job
+                  </Button>
+                )}
+                <Button 
+                  onClick={handleApply}
+                  size="sm"
+                  className="flex-1"
+                >
+                  View Details
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleApply}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                View Details & Apply
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Job Posting</DialogTitle>
+          </DialogHeader>
+          <MultiStepJobForm
+            initialData={job}
+            isEditMode={true}
+            jobId={job.id}
+            onJobPosted={handleJobUpdated}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

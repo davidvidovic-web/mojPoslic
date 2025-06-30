@@ -1,4 +1,6 @@
-export type UserRole = 'admin' | 'employer' | 'employee'
+import { UserRole as PrismaUserRole } from '@prisma/client'
+
+export type UserRole = PrismaUserRole
 
 export interface UserProfile {
   id: string
@@ -8,7 +10,7 @@ export interface UserProfile {
   created_at: string
   updated_at: string
   avatar_url?: string
-  company_name?: string // For employers
+  company_name?: string // For employers and companies
   position?: string // For employees
   bio?: string
 }

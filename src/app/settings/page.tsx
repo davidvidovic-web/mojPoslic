@@ -6,13 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
-import { User, Moon, Sun, Monitor, Shield, UserCircle } from 'lucide-react'
+import { User, Moon, Sun, Monitor, Shield, UserCircle, Crown, Building2, Trash2, Lock, BookOpen, Mail } from 'lucide-react'
 import { ChangePasswordForm } from '@/components/change-password-form'
 import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 
@@ -28,6 +28,7 @@ interface UserProfile {
   skills?: string[]  // Changed to array for UI
   experience?: string
   preferredJobTypes?: string[]
+  createdAt?: string
 }
 
 export default function SettingsPage() {
@@ -43,6 +44,39 @@ export default function SettingsPage() {
   const skillsArrayToString = (skillsArray: string[]): string => {
     return skillsArray.join(', ')
   }
+
+  const formatMemberSince = (dateString?: string): string => {
+    if (!dateString) return 'Unknown'
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    } catch {
+      return 'Unknown'
+    }
+  }
+
+  const getAccountStatus = () => {
+    // For now, all accounts are active. In the future, you could add logic for:
+    // - Email verification status
+    // - Account deletion pending status
+    // - Suspended accounts, etc.
+    
+    // You can extend this to check actual user status from the database
+    // For example:
+    // if (!user.emailVerified) return { status: 'pending', label: 'Waiting on Verification', variant: 'secondary' }
+    // if (user.deletionScheduled) return { status: 'deletion', label: 'Set for Deletion', variant: 'destructive' }
+    // if (user.suspended) return { status: 'suspended', label: 'Suspended', variant: 'destructive' }
+    
+    return {
+      status: 'active',
+      label: 'Active',
+      variant: 'default' as const
+    }
+  }
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
@@ -54,7 +88,8 @@ export default function SettingsPage() {
     website: '',
     skills: [],
     experience: '',
-    preferredJobTypes: []
+    preferredJobTypes: [],
+    createdAt: undefined
   })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -74,7 +109,8 @@ export default function SettingsPage() {
             website: profileData.website || '',
             skills: stringToSkillsArray(profileData.skills || ''),
             experience: profileData.experience || '',
-            preferredJobTypes: profileData.preferredJobTypes || []
+            preferredJobTypes: profileData.preferredJobTypes || [],
+            createdAt: profileData.createdAt
           }))
         }
       } catch (error) {
@@ -94,7 +130,8 @@ export default function SettingsPage() {
         website: '',
         skills: [],
         experience: '',
-        preferredJobTypes: []
+        preferredJobTypes: [],
+        createdAt: undefined
       })
       // Load additional profile data
       loadProfileData()
@@ -140,13 +177,99 @@ export default function SettingsPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
-        return <Badge variant="destructive">👑 Admin</Badge>
+        return (
+          <Badge variant="destructive" className="flex items-center">
+            <Crown className="h-3 w-3 mr-1" aria-hidden="true" />
+            Admin
+          </Badge>
+        )
       case 'employer':
-        return <Badge variant="default">🏢 Employer</Badge>
+        return (
+          <Badge variant="default" className="flex items-center">
+            <Building2 className="h-3 w-3 mr-1" aria-hidden="true" />
+            Employer
+          </Badge>
+        )
+      case 'company':
+        return (
+          <Badge variant="default" className="flex items-center">
+            <Building2 className="h-3 w-3 mr-1" aria-hidden="true" />
+            Company
+          </Badge>
+        )
       case 'employee':
-        return <Badge variant="secondary">👤 Employee</Badge>
+        return (
+          <Badge variant="secondary" className="flex items-center">
+            <User className="h-3 w-3 mr-1" aria-hidden="true" />
+            Employee
+          </Badge>
+        )
       default:
-        return <Badge variant="outline">👤 User</Badge>
+        return (
+          <Badge variant="outline" className="flex items-center">
+            <User className="h-3 w-3 mr-1" aria-hidden="true" />
+            User
+          </Badge>
+        )
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    // First confirmation
+    const firstConfirm = window.confirm(
+      'WARNING: Account Deletion\n\n' +
+      'You are about to permanently delete your account.\n\n' +
+      'This will immediately and permanently delete:\n' +
+      '• Your profile and account data\n' +
+      '• All your job postings\n' +
+      '• All your job applications\n' +
+      '• All associated data\n\n' +
+      'THIS ACTION CANNOT BE UNDONE!\n\n' +
+      'Are you sure you want to continue?'
+    )
+
+    if (!firstConfirm) {
+      toast.info('Account deletion cancelled')
+      return
+    }
+
+    // Second confirmation with typing requirement
+    const confirmation = window.prompt(
+      'Final Confirmation Required\n\n' +
+      'To proceed with account deletion, please type exactly:\n\n' +
+      'DELETE MY ACCOUNT\n\n' +
+      '(case sensitive)'
+    )
+
+    if (confirmation !== 'DELETE MY ACCOUNT') {
+      toast.error('Account deletion cancelled - confirmation text did not match exactly')
+      return
+    }
+
+    // Show loading state
+    toast.loading('Deleting your account...', { id: 'account-deletion' })
+
+    try {
+      const response = await fetch('/api/user/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        toast.success('Account deleted successfully. Redirecting...', { id: 'account-deletion' })
+        // Sign out and redirect after a short delay
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 2000)
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to delete account', { id: 'account-deletion' })
+      }
+    } catch (error) {
+      console.error('Account deletion error:', error)
+      toast.error('An error occurred while deleting your account', { id: 'account-deletion' })
     }
   }
 
@@ -247,64 +370,67 @@ export default function SettingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={profile.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  <SimpleRichTextEditor
+                    value={profile.bio || ''}
+                    onChange={(value) => setProfile({ ...profile, bio: value })}
                     placeholder="Tell us about yourself..."
-                    rows={3}
+                    className="min-h-[100px]"
                   />
                 </div>
               </div>
 
               <Separator />
 
-              {/* Professional Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Professional Information</h3>
-                
-                <SkillsBubbleInput
-                  value={profile.skills || []}
-                  onChange={(skills) => setProfile({ ...profile, skills })}
-                  placeholder="Add your skills..."
-                  maxSkills={15}
-                />
+              {/* Professional Information - Only show for employees */}
+              {/* Employers and companies don't need skills, experience, or job preferences */}
+              {profile.role === 'employee' && (
+                <>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Professional Information</h3>
+                    
+                    <SkillsBubbleInput
+                      value={profile.skills || []}
+                      onChange={(skills) => setProfile({ ...profile, skills })}
+                      placeholder="Add your skills..."
+                      maxSkills={15}
+                    />
 
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Experience</Label>
-                  <Textarea
-                    id="experience"
-                    value={profile.experience}
-                    onChange={(e) => setProfile({ ...profile, experience: e.target.value })}
-                    placeholder="Describe your work experience..."
-                    rows={3}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="experience">Experience</Label>
+                      <SimpleRichTextEditor
+                        value={profile.experience || ''}
+                        onChange={(value) => setProfile({ ...profile, experience: value })}
+                        placeholder="Describe your work experience..."
+                        className="min-h-[100px]"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label>Preferred Job Types</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {['quick_job', 'full_time', 'part_time', 'remote'].map((jobType) => (
-                      <label key={jobType} className="flex items-center space-x-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={profile.preferredJobTypes?.includes(jobType)}
-                          onChange={(e) => {
-                            const updatedTypes = e.target.checked
-                              ? [...(profile.preferredJobTypes || []), jobType]
-                              : (profile.preferredJobTypes || []).filter(type => type !== jobType)
-                            setProfile({ ...profile, preferredJobTypes: updatedTypes })
-                          }}
-                        />
-                        <span>{jobType.replace('_', ' ').split(' ').map(word => 
-                          word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-                      </label>
-                    ))}
+                    <div className="space-y-2">
+                      <Label>Preferred Job Types</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {['quick_job', 'full_time', 'part_time', 'remote'].map((jobType) => (
+                          <label key={jobType} className="flex items-center space-x-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={profile.preferredJobTypes?.includes(jobType)}
+                              onChange={(e) => {
+                                const updatedTypes = e.target.checked
+                                  ? [...(profile.preferredJobTypes || []), jobType]
+                                  : (profile.preferredJobTypes || []).filter(type => type !== jobType)
+                                setProfile({ ...profile, preferredJobTypes: updatedTypes })
+                              }}
+                            />
+                            <span>{jobType.replace('_', ' ').split(' ').map(word => 
+                              word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <Separator />
+                  <Separator />
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label>Account Type</Label>
@@ -340,12 +466,24 @@ export default function SettingsPage() {
                 <div>
                   <Label className="text-sm font-medium">Member Since</Label>
                   <p className="text-sm text-muted-foreground">
-                    Unknown
+                    {formatMemberSince(profile.createdAt)}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium">Account Status</Label>
-                  <Badge variant="default" className="ml-2">Active</Badge>
+                  <Label className="text-sm font-medium">Account Type</Label>
+                  <div className="flex items-center mt-1">
+                    {getRoleBadge(profile.role)}
+                  </div>
+                </div>
+              </div>
+              <Separator />
+              <div>
+                <Label className="text-sm font-medium">Account Status</Label>
+                <div className="flex items-center mt-1">
+                  <Badge variant={getAccountStatus().variant} className="flex items-center">
+                    <Shield className="h-3 w-3 mr-1" aria-hidden="true" />
+                    {getAccountStatus().label}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -426,6 +564,46 @@ export default function SettingsPage() {
                   <p>• We do not share your personal information with third parties</p>
                 </div>
               </div>
+
+              <Separator />
+
+              {/* Account Deletion */}
+              <div className="space-y-4">
+                <Label className="text-destructive">Danger Zone</Label>
+                <div className="border border-destructive/20 rounded-lg p-4 space-y-3 bg-destructive/5">
+                  <div>
+                    <h4 className="font-medium text-destructive">Delete Account</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                    <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                      <li>• All your profile information will be deleted</li>
+                      <li>• All your job postings will be removed</li>
+                      <li>• All your job applications will be deleted</li>
+                      <li>• You will be logged out immediately</li>
+                    </ul>
+                  </div>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleDeleteAccount}
+                    disabled={profile.role === 'admin'}
+                    className="w-full sm:w-auto flex items-center"
+                  >
+                    {profile.role === 'admin' ? (
+                      <>
+                        <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Admin accounts cannot be deleted
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Delete My Account
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -441,11 +619,13 @@ export default function SettingsPage() {
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="outline" disabled>
-                  📚 Help Center (Coming Soon)
+                <Button variant="outline" disabled className="flex items-center">
+                  <BookOpen className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Help Center (Coming Soon)
                 </Button>
-                <Button variant="outline" disabled>
-                  📧 Contact Support (Coming Soon)
+                <Button variant="outline" disabled className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Contact Support (Coming Soon)
                 </Button>
               </div>
             </div>

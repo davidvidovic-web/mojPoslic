@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LogIn, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { UserRole } from '@prisma/client'
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
@@ -50,11 +51,13 @@ export default function DashboardPage() {
 
   // Render role-specific dashboard
   switch (user.role) {
-    case 'admin':
+    case UserRole.admin:
       return <AdminDashboard />
-    case 'employer':
+    case UserRole.employer:
       return <EmployerDashboard />
-    case 'employee':
+    case UserRole.company:
+      return <EmployerDashboard /> // Companies use the same dashboard as employers
+    case UserRole.employee:
       return <EmployeeDashboard />
     default:
       return (

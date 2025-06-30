@@ -4,7 +4,7 @@ import { JobList } from "@/components/job-list";
 import HeroStats from "@/components/hero-stats";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Zap } from "lucide-react";
 
 export default function Home() {
   // Use an interval to refresh jobs periodically (alternative to direct callback)
@@ -19,9 +19,10 @@ export default function Home() {
             <div className="space-y-4">
               <Badge
                 variant="secondary"
-                className="text-sm font-medium px-3 py-1"
+                className="text-sm font-medium px-3 py-1 flex items-center gap-1 w-fit mx-auto"
               >
-                🚀 Quick • Simple • Free
+                <Zap className="h-4 w-4" />
+                Quick • Simple • Free
               </Badge>
 
               <h2 className="text-5xl md:text-6xl font-bold leading-tight">

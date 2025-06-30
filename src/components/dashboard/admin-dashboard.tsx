@@ -21,16 +21,17 @@ import {
   Crown,
   Eye,
   EyeOff,
-  Star
+  Star,
+  Car
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatJobType } from '@/lib/job-utils'
+import { formatJobType, formatTransportation } from '@/lib/job-utils'
 
 interface AdminUser {
   id: string
   email: string
   name: string
-  role: 'admin' | 'employer' | 'employee'
+  role: 'admin' | 'employer' | 'employee' | 'company'
   companyName?: string
   createdAt: string
   _count: {
@@ -45,6 +46,8 @@ interface AdminJob {
   description: string
   type: string
   salary?: string
+  transportation?: string
+  transportation_amount?: number
   email: string
   website?: string
   isActive: boolean
@@ -257,7 +260,7 @@ export function AdminDashboard() {
         throw new Error('Failed to update user role')
       }
 
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as 'admin' | 'employer' | 'employee' } : u))
+      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as 'admin' | 'employer' | 'employee' | 'company' } : u))
       toast.success('User role updated successfully')
     } catch (error) {
       console.error('Error updating user role:', error)
@@ -370,6 +373,7 @@ export function AdminDashboard() {
     switch (role) {
       case 'admin': return 'destructive'
       case 'employer': return 'default'
+      case 'company': return 'default'
       case 'employee': return 'secondary'
       default: return 'outline'
     }
@@ -610,6 +614,12 @@ export function AdminDashboard() {
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="font-semibold">{job.title}</h4>
                           <Badge variant="secondary">{formatJobType(job.type)}</Badge>
+                          {job.transportation && (
+                            <Badge variant="outline" className="text-xs">
+                              <Car className="h-3 w-3 mr-1" />
+                              {formatTransportation(job.transportation, job.transportation_amount)}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-1">{job.company}</p>
                         <p className="text-sm text-muted-foreground">{job.city?.name || 'Remote'}</p>

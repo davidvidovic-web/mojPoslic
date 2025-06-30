@@ -20,12 +20,13 @@ import {
   User,
   Tag,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Car
 } from "lucide-react"
 import { Job } from "@/types/job"
 import { useAuth } from "@/contexts/prisma-auth-context"
 import { toast } from "sonner"
-import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatEmployerName } from "@/lib/job-utils"
 import { JobLocationMap } from "@/components/job-location-map"
 
 export default function JobDetailPage() {
@@ -87,10 +88,10 @@ export default function JobDetailPage() {
       } 
       // If there's a contact email, open email client
       else if (job.contact_email) {
-        const subject = `Application for ${job.title} at ${job.company}`
+        const subject = `Application for ${job.title} at ${formatEmployerName(job.company)}`
         const body = `Dear Hiring Manager,
 
-I am interested in applying for the ${job.title} position at ${job.company}. 
+I am interested in applying for the ${job.title} position at ${formatEmployerName(job.company)}. 
 
 Please find my resume attached and let me know if you need any additional information.
 
@@ -195,13 +196,13 @@ ${user.name || user.email}`
               <CardHeader>
                 <div className="flex items-start gap-4">
                   <div className="w-16 h-16 rounded-xl bg-muted border flex items-center justify-center font-bold text-xl">
-                    {job.company.charAt(0).toUpperCase()}
+                    {formatEmployerName(job.company).charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h1 className="text-2xl font-bold">{job.title}</h1>
-                        <p className="text-lg text-muted-foreground mt-1">{job.company}</p>
+                        <p className="text-lg text-muted-foreground mt-1">{formatEmployerName(job.company)}</p>
                       </div>
                       <Badge variant={getTypeVariant(job.type)}>
                         {formatJobType(job.type)}
@@ -229,6 +230,12 @@ ${user.name || user.email}`
                           {formatSalary(job)}
                         </div>
                       )}
+                      {job.transportation && (
+                        <div className="flex items-center gap-1">
+                          <Car className="h-4 w-4" />
+                          {formatTransportation(job.transportation, job.transportation_amount)}
+                        </div>
+                      )}
                       {job.posted_by && (
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
@@ -250,9 +257,10 @@ ${user.name || user.email}`
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose max-w-none">
-                  <p className="whitespace-pre-wrap">{job.description}</p>
-                </div>
+                <div 
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: job.description }}
+                />
               </CardContent>
             </Card>
 
@@ -266,9 +274,10 @@ ${user.name || user.email}`
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose max-w-none">
-                    <p className="whitespace-pre-wrap">{job.requirements}</p>
-                  </div>
+                  <div 
+                    className="prose max-w-none"
+                    dangerouslySetInnerHTML={{ __html: job.requirements }}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -283,9 +292,10 @@ ${user.name || user.email}`
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose max-w-none">
-                    <p className="whitespace-pre-wrap">{job.benefits}</p>
-                  </div>
+                  <div 
+                    className="prose max-w-none"
+                    dangerouslySetInnerHTML={{ __html: job.benefits }}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -339,12 +349,12 @@ ${user.name || user.email}`
             )}
 
             {/* Job Timeline */}
-            {(job.start_date || job.expires_at) && (
+            {(job.start_date || job.start_time || job.duration || job.expires_at) && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    Timeline
+                    Schedule & Timeline
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -355,6 +365,19 @@ ${user.name || user.email}`
                         <p className="text-sm font-medium">Start Date</p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(job.start_date).toLocaleDateString()}
+                          {job.start_time && ` at ${new Date(`2000-01-01T${job.start_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {job.duration && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium">Expected Duration</p>
+                        <p className="text-sm text-muted-foreground">
+                          {job.duration.replace('_', ' ').replace(/(\d+)/, '$1 ').toLowerCase()}
                         </p>
                       </div>
                     </div>
@@ -525,6 +548,16 @@ ${user.name || user.email}`
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Salary</span>
                       <span className="text-sm font-medium">{formatSalary(job)}</span>
+                    </div>
+                  </>
+                )}
+
+                {job.transportation && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Transportation</span>
+                      <span className="text-sm font-medium">{formatTransportation(job.transportation, job.transportation_amount)}</span>
                     </div>
                   </>
                 )}

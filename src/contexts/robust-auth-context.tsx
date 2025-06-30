@@ -135,7 +135,7 @@ export function RobustAuthProvider({ children }: { children: React.ReactNode }) 
   }
 
   const isAdmin = profile?.role === 'admin'
-  const isEmployer = profile?.role === 'employer'
+  const isEmployer = profile?.role === 'employer' || profile?.role === 'company'
   const isEmployee = profile?.role === 'employee'
 
   useEffect(() => {

@@ -3,9 +3,8 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from '@/lib/prisma'
+import { UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-
-type UserRole = 'admin' | 'employer' | 'employee'
 
 export const authOptions: NextAuthOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

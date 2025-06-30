@@ -82,6 +82,18 @@ const benefits = [
 
 const jobTypes = ['full_time', 'part_time', 'contract', 'remote']
 
+const transportationOptions = ['provided', 'not_provided', 'employee_responsible', 'compensated']
+
+function getRandomTransportation(): { transportation: string, amount?: number } {
+  const option = getRandomElement(transportationOptions)
+  if (option === 'compensated') {
+    // Generate random compensation amount between 20-100 BAM
+    const amount = Math.floor(Math.random() * 81) + 20 // 20-100
+    return { transportation: option, amount }
+  }
+  return { transportation: option }
+}
+
 function getRandomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
 }
@@ -159,6 +171,7 @@ async function seedJobs() {
       const city = getRandomElement(cities)
       const category = Math.random() > 0.1 ? getRandomElement(categories) : null // 90% chance of having a category
       const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'contract' | 'remote'
+      const transportationData = getRandomTransportation()
       
       const jobData = {
         title,
@@ -174,6 +187,8 @@ async function seedJobs() {
         website: Math.random() > 0.3 ? generateWebsite(company) : null, // 70% chance of website
         applicationUrl: Math.random() > 0.5 ? `https://apply.${company.toLowerCase().replace(/\s+/g, '')}.ba/jobs/${i + 1}` : null,
         contactEmail: Math.random() > 0.7 ? generateEmail(company) : null,
+        transportation: transportationData.transportation,
+        transportationAmount: transportationData.amount || null,
         isFeatured: Math.random() > 0.8, // 20% chance of being featured
         postedById: defaultUser.id,
         isActive: true,

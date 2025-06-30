@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { JobPostForm } from "@/components/job-post-form"
+import { MultiStepJobForm } from "@/components/job-post-form/multi-step-job-form"
 import { UserMenu } from "@/components/user-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/contexts/prisma-auth-context"
@@ -63,7 +63,7 @@ export function Header() {
                       <DialogHeader>
                         <DialogTitle>Post a Job - Free & Easy</DialogTitle>
                       </DialogHeader>
-                      <JobPostForm onJobPosted={handleJobPosted} />
+                      <MultiStepJobForm onJobPosted={handleJobPosted} />
                     </DialogContent>
                   </Dialog>
                 )}

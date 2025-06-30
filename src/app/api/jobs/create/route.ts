@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { formatEmployerName } from '@/lib/job-utils'
 
 // Use a simple Prisma client for this endpoint
 const simplePrisma = new PrismaClient()
@@ -20,11 +21,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get the user's name to format as employer name
+    const user = await simplePrisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true }
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Format employer name as "FirstName L."
+    const formattedEmployerName = formatEmployerName(user.name)
+
     const body = await request.json()
     console.log('Request body:', JSON.stringify(body, null, 2))
     const {
       title,
-      company,
       description,
       type,
       city_id,
@@ -36,6 +52,10 @@ export async function POST(request: NextRequest) {
       website,
       email,
       start_date,
+      start_time,
+      duration,
+      transportation,
+      transportation_amount,
       job_address,
       job_latitude,
       job_longitude,
@@ -45,9 +65,9 @@ export async function POST(request: NextRequest) {
       application_url
     } = body
 
-    // Validate required fields
-    if (!title || !company || !description || !city_id || !email) {
-      console.log('Missing required fields:', { title: !!title, company: !!company, description: !!description, city_id: !!city_id, email: !!email })
+    // Validate required fields (company is no longer required as we generate it)
+    if (!title || !description || !city_id || !email) {
+      console.log('Missing required fields:', { title: !!title, description: !!description, city_id: !!city_id, email: !!email })
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -145,7 +165,7 @@ export async function POST(request: NextRequest) {
     console.log('=== Creating Job ===')
     const jobData = {
       title,
-      company,
+      company: formattedEmployerName, // Use formatted employer name instead of company field
       description,
       type,
       cityId: city.id, // Use resolved city ID
@@ -157,6 +177,10 @@ export async function POST(request: NextRequest) {
       website: website || null,
       email,
       startDate: start_date ? new Date(start_date) : null,
+      startTime: start_time || null,
+      duration: duration || null,
+      transportation: transportation || null,
+      transportationAmount: transportation_amount || null,
       jobAddress: job_address || null,
       jobLatitude: job_latitude || null,
       jobLongitude: job_longitude || null,
@@ -183,6 +207,10 @@ export async function POST(request: NextRequest) {
         city_id: job.cityId,
         category_id: job.categoryId,
         start_date: job.startDate ? job.startDate.toISOString() : null,
+        start_time: start_time,
+        duration: duration,
+        transportation: transportation,
+        transportation_amount: transportation_amount,
         job_address: job.jobAddress,
         job_latitude: job.jobLatitude,
         job_longitude: job.jobLongitude,

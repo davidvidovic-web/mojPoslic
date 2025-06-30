@@ -149,3 +149,73 @@ export function formatStartDate(dateString?: string): string | null {
   // For farther dates, show the actual date with time
   return `Starts ${date.toLocaleDateString()} at ${timeFormat}`
 }
+
+/**
+ * Formats transportation information to human-readable format
+ * @param transportation - The transportation string ('provided', 'not_provided', 'employee_responsible', 'compensated')
+ * @param amount - The compensation amount if transportation is 'compensated'
+ * @returns Human-readable transportation information
+ */
+export function formatTransportation(transportation?: string, amount?: number): string | null {
+  if (!transportation) return null
+  
+  switch (transportation) {
+    case 'provided':
+      return 'Transportation provided'
+    case 'not_provided':
+      return 'Transportation not provided'
+    case 'employee_responsible':
+      return 'Employee responsible for transportation'
+    case 'compensated':
+      return amount ? `Transportation compensation: ${amount} BAM` : 'Transportation compensation provided'
+    default:
+      // Fallback: capitalize first letter and replace underscores with spaces
+      return transportation.charAt(0).toUpperCase() + transportation.slice(1).replace(/_/g, ' ')
+  }
+}
+
+/**
+ * Gets the icon for transportation information
+ * @param transportation - The transportation string
+ * @returns Icon component name or null
+ */
+export function getTransportationIcon(transportation?: string): string | null {
+  if (!transportation) return null
+  
+  switch (transportation) {
+    case 'provided':
+      return 'Car' // Car icon for provided transportation
+    case 'not_provided':
+      return 'Ban' // Ban icon for not provided
+    case 'employee_responsible':
+      return 'User' // User icon for employee responsible
+    case 'compensated':
+      return 'DollarSign' // DollarSign icon for compensation
+    default:
+      return 'Car' // Default to car icon
+  }
+}
+
+/**
+ * Formats employer name to "FirstName L." format for privacy
+ * @param fullName - The full name of the employer
+ * @returns Formatted name (e.g., "John D." from "John Doe")
+ */
+export function formatEmployerName(fullName?: string): string {
+  if (!fullName || typeof fullName !== 'string') {
+    return 'Anonymous Employer'
+  }
+  
+  const nameParts = fullName.trim().split(' ')
+  
+  if (nameParts.length === 1) {
+    // If only one name part, return it as is
+    return nameParts[0]
+  }
+  
+  // Get first name and first letter of last name
+  const firstName = nameParts[0]
+  const lastNameInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase()
+  
+  return `${firstName} ${lastNameInitial}.`
+}

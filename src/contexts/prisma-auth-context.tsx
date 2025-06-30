@@ -2,8 +2,7 @@
 
 import { createContext, useContext } from 'react'
 import { SessionProvider, useSession } from 'next-auth/react'
-
-type UserRole = 'admin' | 'employer' | 'employee'
+import { UserRole } from '@prisma/client'
 
 interface AuthContextType {
   user: {
@@ -18,6 +17,7 @@ interface AuthContextType {
   isAdmin: boolean
   isEmployer: boolean
   isEmployee: boolean
+  isCompany: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -27,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isEmployer: false,
   isEmployee: false,
+  isCompany: false,
 })
 
 export const useAuth = () => {
@@ -47,9 +48,10 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
     return user?.role === role
   }
   
-  const isAdmin = user?.role === 'admin'
-  const isEmployer = user?.role === 'employer'
-  const isEmployee = user?.role === 'employee'
+  const isAdmin = user?.role === UserRole.admin
+  const isEmployer = user?.role === UserRole.employer || user?.role === UserRole.company
+  const isEmployee = user?.role === UserRole.employee
+  const isCompany = user?.role === UserRole.company
 
   return (
     <AuthContext.Provider value={{
@@ -58,7 +60,8 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
       hasRole,
       isAdmin,
       isEmployer,
-      isEmployee
+      isEmployee,
+      isCompany
     }}>
       {children}
     </AuthContext.Provider>

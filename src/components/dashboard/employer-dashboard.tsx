@@ -2,41 +2,69 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/prisma-auth-context'
-import { supabase } from '@/lib/supabase'
 import { Job } from '@/types/job'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { JobPostForm } from '@/components/job-post-form'
-import { Briefcase, Plus, Edit, Trash2, Eye, MapPin, Calendar, DollarSign } from 'lucide-react'
+import { MultiStepJobForm } from '@/components/job-post-form/multi-step-job-form'
+import { Briefcase, Plus, Edit, Trash2, Eye, MapPin, Calendar, DollarSign, Car } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatJobType } from '@/lib/job-utils'
+import { formatJobType, formatTransportation } from '@/lib/job-utils'
 
 export function EmployerDashboard() {
   const { user } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingJob, setEditingJob] = useState<Job | null>(null)
+  const [jobApplicationCounts, setJobApplicationCounts] = useState<Record<string, number>>({})
 
   useEffect(() => {
     const fetchMyJobs = async () => {
       if (!user) return
 
       try {
-        const { data, error } = await supabase
-          .from('job_listings')
-          .select(`
-            *,
-            city:cities(*)
-          `)
-          .eq('posted_by', user.id)
-          .order('created_at', { ascending: false })
+        const response = await fetch('/api/jobs/my-jobs', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
 
-        if (error) throw error
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
         setJobs(data || [])
+        
+        // Fetch application counts for each job
+        if (data && Array.isArray(data)) {
+          const counts: Record<string, number> = {}
+          await Promise.all(
+            data.map(async (job: Job) => {
+              try {
+                const appResponse = await fetch(`/api/jobs/${job.id}/applications`)
+                if (appResponse.ok) {
+                  const appData = await appResponse.json()
+                  counts[job.id] = appData.applicationCount || 0
+                }
+              } catch (error) {
+                console.error(`Error fetching applications for job ${job.id}:`, error)
+                counts[job.id] = 0
+              }
+            })
+          )
+          setJobApplicationCounts(counts)
+        }
       } catch (error) {
-        console.error('Error fetching jobs:', error)
+        console.error('Error fetching jobs:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        })
         toast.error('Failed to load your jobs')
       } finally {
         setLoading(false)
@@ -47,44 +75,62 @@ export function EmployerDashboard() {
   }, [user])
 
   const handleJobPosted = () => {
+    setIsDialogOpen(false)
     // Re-fetch jobs when a new job is posted
-    // We need to recreate the fetch function here since it's now inside useEffect
     const refetchJobs = async () => {
       if (!user) return
-
       try {
-        const { data, error } = await supabase
-          .from('job_listings')
-          .select(`
-            *,
-            city:cities(*)
-          `)
-          .eq('posted_by', user.id)
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
-        setJobs(data || [])
+        const response = await fetch('/api/jobs/my-jobs')
+        if (response.ok) {
+          const data = await response.json()
+          setJobs(data || [])
+        }
       } catch (error) {
-        console.error('Error fetching jobs:', error)
-        toast.error('Failed to load your jobs')
+        console.error('Error refetching jobs after posting:', error)
       }
     }
-    
     refetchJobs()
-    setIsDialogOpen(false)
     toast.success('Job posted successfully!')
+  }
+
+  const handleEditJob = (job: Job) => {
+    setEditingJob(job)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditComplete = () => {
+    setIsEditDialogOpen(false)
+    setEditingJob(null)
+    // Refresh jobs list
+    const fetchJobs = async () => {
+      if (!user) return
+      try {
+        const response = await fetch('/api/jobs/my-jobs')
+        if (response.ok) {
+          const data = await response.json()
+          setJobs(data || [])
+        }
+      } catch (error) {
+        console.error('Error refreshing jobs:', error)
+      }
+    }
+    fetchJobs()
   }
 
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm('Are you sure you want to delete this job posting?')) return
 
     try {
-      const { error } = await supabase
-        .from('job_listings')
-        .delete()
-        .eq('id', jobId)
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       
       setJobs(jobs.filter(job => job.id !== jobId))
       toast.success('Job deleted successfully')
@@ -138,7 +184,7 @@ export function EmployerDashboard() {
                 <DialogHeader>
                   <DialogTitle>Post a New Job</DialogTitle>
                 </DialogHeader>
-                <JobPostForm onJobPosted={handleJobPosted} />
+                <MultiStepJobForm onJobPosted={handleJobPosted} />
               </DialogContent>
             </Dialog>
           </div>
@@ -209,6 +255,20 @@ export function EmployerDashboard() {
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="text-lg font-semibold">{job.title}</h3>
                             <Badge variant="secondary">{formatJobType(job.type)}</Badge>
+                            {job.transportation && (
+                              <Badge variant="outline" className="text-xs">
+                                <Car className="h-3 w-3 mr-1" />
+                                {formatTransportation(job.transportation, job.transportation_amount)}
+                              </Badge>
+                            )}
+                            {typeof jobApplicationCounts[job.id] === 'number' && (
+                              <Badge 
+                                variant={jobApplicationCounts[job.id] > 0 ? "default" : "outline"}
+                                className="text-xs"
+                              >
+                                {jobApplicationCounts[job.id]} application{jobApplicationCounts[job.id] !== 1 ? 's' : ''}
+                              </Badge>
+                            )}
                           </div>
                           
                           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
@@ -249,13 +309,30 @@ export function EmployerDashboard() {
                         </div>
                         
                         <div className="flex items-center gap-2 ml-4">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          {jobApplicationCounts[job.id] === 0 ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditJob(job)}
+                              title="Edit job posting"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              disabled
+                              title={`Cannot edit - ${jobApplicationCounts[job.id]} application(s) received`}
+                            >
+                              <Edit className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          )}
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => handleDeleteJob(job.id)}
+                            title="Delete job posting"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -268,6 +345,46 @@ export function EmployerDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Job Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="hidden">
+              Edit Job
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Job Posting</DialogTitle>
+            </DialogHeader>
+            {editingJob && (
+              <MultiStepJobForm 
+                initialData={{
+                  title: editingJob.title,
+                  description: editingJob.description,
+                  type: editingJob.type,
+                  city_id: editingJob.city_id,
+                  category_id: editingJob.category_id || '',
+                  salary: editingJob.salary || '',
+                  salaryType: editingJob.salaryType,
+                  salaryMin: editingJob.salaryMin,
+                  salaryMax: editingJob.salaryMax,
+                  website: editingJob.website || '',
+                  email: editingJob.email,
+                  contact_email: editingJob.email,
+                  application_url: editingJob.website || '',
+                  start_date: editingJob.start_date,
+                  job_address: editingJob.job_address,
+                  job_latitude: editingJob.job_latitude,
+                  job_longitude: editingJob.job_longitude
+                }}
+                isEditMode={true}
+                jobId={editingJob.id}
+                onJobPosted={handleEditComplete}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

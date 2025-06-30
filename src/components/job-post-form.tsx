@@ -107,7 +107,6 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   const [includeStartTime, setIncludeStartTime] = useState(false)
   const [formData, setFormData] = useState<CreateJobData>({
     title: '',
-    company: '',
     description: '',
     requirements: '',
     benefits: '',
@@ -204,7 +203,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       return
     }
 
-    if (!formData.title || !formData.company || !formData.description || !formData.city_id) {
+    if (!formData.title || !formData.description || !formData.city_id) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -231,7 +230,6 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
         },
         body: JSON.stringify({
           title: formData.title,
-          company: formData.company,
           description: formData.description,
           type: formData.type,
           city_id: formData.city_id,
@@ -269,7 +267,6 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       // Reset form
       setFormData({
         title: '',
-        company: '',
         description: '',
         requirements: '',
         benefits: '',
@@ -305,27 +302,15 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="job-title">Job Title *</Label>
-            <Input
-              id="job-title"
-              placeholder="Enter job title"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="company">Company *</Label>
-            <Input
-              id="company"
-              placeholder="Enter company name"
-              required
-              value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="job-title">Job Title *</Label>
+          <Input
+            id="job-title"
+            placeholder="Enter job title"
+            required
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -16,7 +16,7 @@ export async function GET() {
       ],
     })
 
-    return NextResponse.json(cities)
+    return NextResponse.json({ cities })
   } catch (error) {
     console.error('Error fetching cities:', error)
     return NextResponse.json(

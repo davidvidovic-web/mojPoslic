@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Briefcase, User, Building } from 'lucide-react'
+import { Briefcase, User, Building, Mail, Lock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { UserRole } from '@/types/user'
@@ -187,7 +187,14 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               className="w-full"
               disabled={loading}
             >
-              <span className="text-lg mr-2">🍎</span>
+              <svg
+                className="mr-2 h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z"/>
+                <path d="M15.53 3.83c.893-1.09 1.491-2.58 1.326-4.105-1.281.052-2.847.916-3.766 2.03-.832.956-1.56 2.471-1.365 3.899 1.454.104 2.96-.739 3.805-1.824z"/>
+              </svg>
               Continue with Apple
             </Button>
           </div>
@@ -208,7 +215,10 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">📧 Email</Label>
+                  <Label htmlFor="login-email" className="flex items-center">
+                    <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Email
+                  </Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -219,7 +229,10 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">🔒 Password</Label>
+                  <Label htmlFor="login-password" className="flex items-center">
+                    <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Password
+                  </Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -244,7 +257,12 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">👤 Full Name</Label>
+                  <Label htmlFor="signup-name">
+                    <div className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      Full Name
+                    </div>
+                  </Label>
                   <Input
                     id="signup-name"
                     type="text"
@@ -255,7 +273,12 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-role">👔 I am a...</Label>
+                  <Label htmlFor="signup-role">
+                    <div className="flex items-center gap-1">
+                      <Briefcase className="h-4 w-4" />
+                      I am a...
+                    </div>
+                  </Label>
                   <Select value={signupRole} onValueChange={(value) => setSignupRole(value as UserRole)}>
                     <SelectTrigger id="signup-role">
                       <SelectValue placeholder="Select your role" />
@@ -273,11 +296,22 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                           Employer - Posting jobs
                         </div>
                       </SelectItem>
+                      <SelectItem value="company">
+                        <div className="flex items-center">
+                          <Building className="h-4 w-4 mr-2" />
+                          Company - Business account
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">📧 Email</Label>
+                  <Label htmlFor="signup-email">
+                    <div className="flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </div>
+                  </Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -288,7 +322,12 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">🔒 Password</Label>
+                  <Label htmlFor="signup-password">
+                    <div className="flex items-center gap-1">
+                      <Lock className="h-4 w-4" />
+                      Password
+                    </div>
+                  </Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -302,7 +341,12 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">🔒 Confirm Password</Label>
+                  <Label htmlFor="confirm-password">
+                    <div className="flex items-center gap-1">
+                      <Lock className="h-4 w-4" />
+                      Confirm Password
+                    </div>
+                  </Label>
                   <Input
                     id="confirm-password"
                     type="password"

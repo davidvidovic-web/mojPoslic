@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CitiesFilter } from "@/components/cities-filter"
 import { CategoriesFilter } from "@/components/categories-filter"
-import { Briefcase, List, LayoutGrid, ChevronLeft, ChevronRight } from "lucide-react"
+import { Briefcase, List, LayoutGrid, ChevronLeft, ChevronRight, Search } from "lucide-react"
 
 interface JobListProps {
   refreshTrigger?: number
@@ -91,7 +91,9 @@ export function JobList({ refreshTrigger }: JobListProps) {
           <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">🔍</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                  <Search className="h-4 w-4" />
+                </span>
                 <Input
                   placeholder="Search jobs, companies, skills, or categories..."
                   value={searchTerm}
@@ -181,7 +183,9 @@ export function JobList({ refreshTrigger }: JobListProps) {
         <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">🔍</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                <Search className="h-4 w-4" />
+              </span>
               <Input
                 placeholder="Search jobs, companies, skills, or categories..."
                 value={searchTerm}
@@ -299,13 +303,13 @@ export function JobList({ refreshTrigger }: JobListProps) {
           {viewMode === 'list' ? (
             <div className="space-y-4">
               {paginatedJobs.map((job) => (
-                <JobCardList key={job.id} job={job} />
+                <JobCardList key={job.id} job={job} onJobUpdated={fetchJobs} />
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {paginatedJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <JobCard key={job.id} job={job} onJobUpdated={fetchJobs} />
               ))}
             </div>
           )}
