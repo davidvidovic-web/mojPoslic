@@ -15,8 +15,8 @@ interface AuthContextType {
   loading: boolean
   hasRole: (role: UserRole) => boolean
   isAdmin: boolean
-  isEmployer: boolean
-  isEmployee: boolean
+  isClient: boolean
+  isTasker: boolean
   isCompany: boolean
 }
 
@@ -25,8 +25,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   hasRole: () => false,
   isAdmin: false,
-  isEmployer: false,
-  isEmployee: false,
+  isClient: false,
+  isTasker: false,
   isCompany: false,
 })
 
@@ -45,13 +45,28 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
   const user = session?.user || null
   
   const hasRole = (role: UserRole): boolean => {
-    return user?.role === role
+    return checkRole(role.toString(), user?.role)
   }
   
-  const isAdmin = user?.role === UserRole.admin
-  const isEmployer = user?.role === UserRole.employer || user?.role === UserRole.company
-  const isEmployee = user?.role === UserRole.employee
-  const isCompany = user?.role === UserRole.company
+  // Using safe role checking function to avoid type issues
+  const checkRole = (expectedRole: string, userRole?: string | null): boolean => {
+    if (!userRole) return false
+    
+    // Handle both old and new role names during transition
+    if (expectedRole === 'client') {
+      return userRole === 'client' || userRole === 'employer'
+    }
+    if (expectedRole === 'tasker') {
+      return userRole === 'tasker' || userRole === 'employee'
+    }
+    
+    return userRole === expectedRole
+  }
+  
+  const isAdmin = checkRole('admin', user?.role)
+  const isClient = checkRole('client', user?.role) || checkRole('company', user?.role)
+  const isTasker = checkRole('tasker', user?.role)
+  const isCompany = checkRole('company', user?.role)
 
   return (
     <AuthContext.Provider value={{
@@ -59,8 +74,8 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
       loading,
       hasRole,
       isAdmin,
-      isEmployer,
-      isEmployee,
+      isClient,
+      isTasker,
       isCompany
     }}>
       {children}

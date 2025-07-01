@@ -81,15 +81,17 @@ export async function GET() {
     const userCounts = {
       total: 0,
       admin: 0,
-      employer: 0,
-      employee: 0
+      client: 0,
+      tasker: 0,
+      company: 0
     }
 
     userStats.forEach(stat => {
       userCounts.total += stat._count.id
       if (stat.role === 'admin') userCounts.admin = stat._count.id
-      if (stat.role === 'employer') userCounts.employer = stat._count.id
-      if (stat.role === 'employee') userCounts.employee = stat._count.id
+      if (stat.role === 'client') userCounts.client = stat._count.id
+      if (stat.role === 'tasker') userCounts.tasker = stat._count.id
+      if (stat.role === 'company') userCounts.company = stat._count.id
     })
 
     const stats = {

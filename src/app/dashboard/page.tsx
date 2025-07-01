@@ -2,17 +2,37 @@
 
 import { useAuth } from '@/contexts/prisma-auth-context'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
-import { EmployerDashboard } from '@/components/dashboard/employer-dashboard'
-import { EmployeeDashboard } from '@/components/dashboard/employee-dashboard'
+import { ClientDashboard } from '@/components/dashboard/client-dashboard'
+import { CompanyDashboard } from '@/components/dashboard/company-dashboard'
+import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LogIn, Shield } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { UserRole } from '@prisma/client'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Handle payment success/cancellation
+  useEffect(() => {
+    const payment = searchParams.get('payment')
+    const sessionId = searchParams.get('session_id')
+    
+    if (payment === 'success' && sessionId) {
+      toast.success('Payment successful! Your connections have been added to your account.')
+      // Clean up URL
+      router.replace('/dashboard')
+    } else if (payment === 'cancelled') {
+      toast.error('Payment was cancelled.')
+      // Clean up URL
+      router.replace('/dashboard')
+    }
+  }, [searchParams, router])
 
   if (loading) {
     return (
@@ -49,16 +69,34 @@ export default function DashboardPage() {
     )
   }
 
-  // Render role-specific dashboard
+  // Render role-specific dashboard with admin override
+  const dashboardView = searchParams.get('view') || 'default'
+  
+  // Admin can access any dashboard view
+  if (user.role === UserRole.admin) {
+    switch (dashboardView) {
+      case 'client':
+      case 'client':
+        return <ClientDashboard />
+      case 'company':
+        return <CompanyDashboard />
+      case 'tasker':
+      case 'tasker':
+        return <TaskerDashboard />
+      case 'admin':
+      default:
+        return <AdminDashboard />
+    }
+  }
+  
+  // Regular users get their role-specific dashboard
   switch (user.role) {
-    case UserRole.admin:
-      return <AdminDashboard />
-    case UserRole.employer:
-      return <EmployerDashboard />
-    case UserRole.company:
-      return <EmployerDashboard /> // Companies use the same dashboard as employers
-    case UserRole.employee:
-      return <EmployeeDashboard />
+    case 'client':
+      return <ClientDashboard />
+    case 'company':
+      return <CompanyDashboard />
+    case 'tasker':
+      return <TaskerDashboard />
     default:
       return (
         <div className="min-h-screen flex items-center justify-center p-4">

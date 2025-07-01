@@ -13,7 +13,7 @@ import { Plus, LogIn } from "lucide-react"
 
 export function Header() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const { user, loading, isEmployer, isAdmin } = useAuth()
+  const { user, loading, isClient, isAdmin } = useAuth()
   const router = useRouter()
 
   const handleJobPosted = () => {
@@ -48,7 +48,7 @@ export function Header() {
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
             ) : user ? (
               <>
-                {(isEmployer || isAdmin) && (
+                {(isClient || isAdmin) && (
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 

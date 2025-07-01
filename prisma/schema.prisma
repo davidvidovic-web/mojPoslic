@@ -8,28 +8,31 @@ datasource db {
 }
 
 model User {
-  id                String        @id @default(cuid())
-  email             String        @unique
-  username          String?       @unique
-  name              String
-  password          String?
-  role              UserRole      @default(employee)
-  avatarUrl         String?       @map("avatar_url")
-  companyName       String?       @map("company_name")
-  position          String?
-  bio               String?
-  skills            String?
-  experience        String?
-  preferredJobTypes String[]      @default([]) @map("preferred_job_types")
-  phone             String?
-  website           String?
-  location          String?
-  createdAt         DateTime      @default(now()) @map("created_at")
-  updatedAt         DateTime      @updatedAt @map("updated_at")
-  accounts          Account[]
-  applications      Application[]
-  postedJobs        JobListing[]  @relation("JobPoster")
-  sessions          Session[]
+  id                     String              @id @default(cuid())
+  email                  String              @unique
+  username               String?             @unique
+  name                   String
+  password               String?
+  role                   UserRole            @default(tasker)
+  avatarUrl              String?             @map("avatar_url")
+  companyName            String?             @map("company_name")
+  position               String?
+  bio                    String?
+  skills                 String?
+  experience             String?
+  preferredJobTypes      String[]            @default([]) @map("preferred_job_types")
+  phone                  String?
+  website                String?
+  location               String?
+  connections            Int                 @default(10)
+  connectionsLastRefresh DateTime?           @map("connections_last_refresh")
+  createdAt              DateTime            @default(now()) @map("created_at")
+  updatedAt              DateTime            @updatedAt @map("updated_at")
+  accounts               Account[]
+  applications           Application[]
+  connectionHistory      ConnectionHistory[]
+  postedJobs             JobListing[]        @relation("JobPoster")
+  sessions               Session[]
 
   @@map("users")
 }
@@ -90,43 +93,43 @@ model City {
 }
 
 model JobListing {
-  id             String        @id @default(cuid())
-  title          String
-  company        String
-  cityId         String        @map("city_id")
-  categoryId     String?       @map("category_id")
-  type           JobType
-  description    String
-  requirements   String?
-  benefits       String?
-  salary         String?
-  salaryType     SalaryType?   @map("salary_type")
-  salaryMin      Int?          @map("salary_min")
-  salaryMax      Int?          @map("salary_max")
-  email          String
-  website        String?
-  applicationUrl String?       @map("application_url")
-  contactEmail   String?       @map("contact_email")
-  isFeatured     Boolean       @default(false) @map("is_featured")
-  tags           Json?
-  startDate      DateTime?     @map("start_date")
-  startTime      String?       @map("start_time")
-  duration       String?       @map("duration")
-  transportation String        @map("transportation") @default("not_provided")
-  transportationAmount Int?    @map("transportation_amount")
-  expiresAt      DateTime?     @map("expires_at")
-  status         JobStatus     @default(active)
-  jobAddress     String?       @map("job_address")
-  jobLatitude    Float?        @map("job_latitude")
-  jobLongitude   Float?        @map("job_longitude")
-  isActive       Boolean       @default(true) @map("is_active")
-  postedById     String        @map("posted_by_id")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
-  applications   Application[]
-  category       Category?     @relation(fields: [categoryId], references: [id])
-  city           City          @relation(fields: [cityId], references: [id])
-  postedBy       User          @relation("JobPoster", fields: [postedById], references: [id])
+  id                   String        @id @default(cuid())
+  title                String
+  company              String
+  cityId               String        @map("city_id")
+  categoryId           String?       @map("category_id")
+  type                 JobType
+  description          String
+  requirements         String?
+  benefits             String?
+  salary               String?
+  salaryType           SalaryType?   @map("salary_type")
+  salaryMin            Int?          @map("salary_min")
+  salaryMax            Int?          @map("salary_max")
+  email                String
+  website              String?
+  applicationUrl       String?       @map("application_url")
+  contactEmail         String?       @map("contact_email")
+  isFeatured           Boolean       @default(false) @map("is_featured")
+  tags                 Json?
+  startDate            DateTime?     @map("start_date")
+  startTime            String?       @map("start_time")
+  duration             String?       @map("duration")
+  transportation       String        @default("not_provided") @map("transportation")
+  transportationAmount Int?          @map("transportation_amount")
+  expiresAt            DateTime?     @map("expires_at")
+  status               JobStatus     @default(active)
+  jobAddress           String?       @map("job_address")
+  jobLatitude          Float?        @map("job_latitude")
+  jobLongitude         Float?        @map("job_longitude")
+  isActive             Boolean       @default(true) @map("is_active")
+  postedById           String        @map("posted_by_id")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+  applications         Application[]
+  category             Category?     @relation(fields: [categoryId], references: [id])
+  city                 City          @relation(fields: [cityId], references: [id])
+  postedBy             User          @relation("JobPoster", fields: [postedById], references: [id])
 
   @@map("job_listings")
 }
@@ -168,17 +171,39 @@ model Category {
   @@map("categories")
 }
 
+model ConnectionHistory {
+  id          String           @id @default(cuid())
+  userId      String           @map("user_id")
+  action      ConnectionAction
+  amount      Int
+  description String?
+  jobId       String?          @map("job_id")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("connection_history")
+}
+
+enum ConnectionAction {
+  MONTHLY_REFRESH
+  INITIAL_SIGNUP
+  JOB_APPLICATION
+  JOB_POST_EMPLOYER
+  JOB_POST_COMPANY
+  ADMIN_ADJUSTMENT
+  PURCHASE
+}
+
 enum UserRole {
   admin
-  employer
-  employee
+  client
+  tasker
   company
 }
 
 enum JobType {
   full_time
   part_time
-  contract
   remote
   quick_job
 }

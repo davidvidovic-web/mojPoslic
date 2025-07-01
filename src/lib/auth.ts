@@ -1,14 +1,18 @@
 import { NextAuthOptions } from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
+// PrismaAdapter conflicts with credentials provider in NextAuth v4
+// import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { prisma } from '@/lib/prisma'
-import { UserRole } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
+// Create a separate PrismaClient instance for auth to avoid extension conflicts
+const authPrisma = new PrismaClient()
+
 export const authOptions: NextAuthOptions = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: PrismaAdapter(prisma) as any,
+  debug: process.env.NODE_ENV === 'development',
+  // Don't use adapter with credentials provider
+  // adapter: PrismaAdapter(authPrisma),
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -17,35 +21,55 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
+        console.log('🔍 NextAuth authorize called with:', { 
+          email: credentials?.email, 
+          hasPassword: !!credentials?.password 
         })
-
-        if (!user || !user.password) {
+        
+        if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Missing credentials:', { email: !!credentials?.email, password: !!credentials?.password })
           return null
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
+        try {
+          // Try to find user by email or username
+          const user = await authPrisma.user.findFirst({
+            where: {
+              OR: [
+                { email: credentials.email },
+                { username: credentials.email }
+              ]
+            }
+          })
 
-        if (!isPasswordValid) {
+          if (!user || !user.password) {
+            console.log('❌ User not found or no password:', { userFound: !!user, hasPassword: !!user?.password })
+            return null
+          }
+
+          console.log('✅ User found:', { email: user.email, role: user.role })
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            console.log('❌ Invalid password for user:', user.email)
+            return null
+          }
+
+          console.log('✅ Login successful for user:', user.email)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            username: user.username,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error('❌ Auth error:', error)
           return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          username: user.username,
-          role: user.role,
         }
       }
     }),
@@ -60,6 +84,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id
         token.role = (user as { role: UserRole }).role
         token.username = (user as { username?: string }).username
       }
@@ -67,7 +92,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!
+        session.user.id = token.id as string
         session.user.role = token.role as UserRole
         session.user.username = token.username as string
       }
@@ -99,6 +124,7 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT {
+    id?: string
     username?: string
     role: UserRole
   }

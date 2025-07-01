@@ -1,4 +1,4 @@
-import { PrismaAuthForm } from '@/components/prisma-auth-form'
+import { AuthForm } from '@/components/auth-form'
 
 export default function LoginPage() {
   return (
@@ -15,7 +15,7 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <PrismaAuthForm />
+        <AuthForm />
       </div>
     </div>
   )

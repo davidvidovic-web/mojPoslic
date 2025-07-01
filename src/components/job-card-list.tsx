@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Edit, Car } from "lucide-react"
 import { toast } from "sonner"
 import { Job } from "@/types/job"
-import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatEmployerName } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
 import { useAuth } from "@/contexts/prisma-auth-context"
 import { MultiStepJobForm } from "@/components/job-post-form/multi-step-job-form"
 
@@ -119,7 +119,7 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
           {/* Header Section - Company logo, title, and company name */}
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-lg bg-muted border flex items-center justify-center font-bold text-lg shrink-0">
-              {formatEmployerName(job.company).charAt(0).toUpperCase()}
+              {formatClientName(job.company).charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-lg leading-tight mb-1">
@@ -127,7 +127,7 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
               </h3>
               <div className="flex items-center text-muted-foreground text-sm">
                 <Building2 className="h-4 w-4 mr-1" />
-                <span className="font-medium">{formatEmployerName(job.company)}</span>
+                <span className="font-medium">{formatClientName(job.company)}</span>
               </div>
             </div>
           </div>

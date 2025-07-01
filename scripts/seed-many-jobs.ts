@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -141,8 +141,8 @@ const benefits = [
   'Competitive base salary plus commission structure\n• Health, dental, and vision insurance\n• Laptop and home office setup allowance\n• Quarterly team bonuses and recognition programs\n• Access to industry events and networking opportunities\n• Career advancement with clear promotion criteria'
 ]
 
-const jobTypes = ['full_time', 'part_time', 'contract', 'remote']
-const transportationOptions = ['provided', 'not_provided', 'employee_responsible', 'compensated']
+const jobTypes = ['full_time', 'part_time', 'remote', 'quick_job']
+const transportationOptions = ['provided', 'not_provided', 'tasker_responsible', 'compensated']
 
 function getRandomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
@@ -201,16 +201,16 @@ async function seedManyJobs() {
 
     // Get or create a default user to post jobs
     let defaultUser = await prisma.user.findFirst({
-      where: { role: 'employer' }
+      where: { role: 'client' as UserRole }
     })
 
     if (!defaultUser) {
-      console.log('Creating default employer user...')
+      console.log('Creating default client user...')
       defaultUser = await prisma.user.create({
         data: {
-          email: 'employer@example.com',
-          name: 'Default Employer',
-          role: 'employer',
+          email: 'client@example.com',
+          name: 'Default Client',
+          role: 'client' as UserRole,
           companyName: 'Sample Company'
         }
       })
@@ -227,10 +227,10 @@ async function seedManyJobs() {
       const title = getRandomElement(jobTitles)
       const company = getRandomElement(companies)
       const city = getRandomElement(cities)
-      const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'contract' | 'remote'
+      const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'remote' | 'quick_job'
       
       // Generate transportation data
-      const transportation = getRandomElement(transportationOptions) as 'provided' | 'not_provided' | 'employee_responsible' | 'compensated'
+      const transportation = getRandomElement(transportationOptions) as 'provided' | 'not_provided' | 'tasker_responsible' | 'compensated'
       const transportationAmount = transportation === 'compensated' ? getRandomTransportationAmount() : null
       
       // Create more realistic posting dates (spread over last 3 months)

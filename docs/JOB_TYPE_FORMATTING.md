@@ -10,7 +10,6 @@ Enhanced job type display across the application to show human-readable formats 
   - `full-time` / `full_time` → "Full Time"
   - `part-time` / `part_time` → "Part Time" 
   - `quick-job` / `quick_job` → "Quick Job"
-  - `contract` → "Contract"
   - `remote` → "Remote"
   - Fallback for unknown types: capitalize and replace hyphens/underscores with spaces
 
@@ -64,7 +63,6 @@ All components now show formatted job types instead of raw database values:
 | `part_time`    | Part Time     |
 | `quick-job`    | Quick Job     |
 | `quick_job`    | Quick Job     |
-| `contract`     | Contract      |
 | `remote`       | Remote        |
 
 ## Files Modified

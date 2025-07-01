@@ -25,12 +25,12 @@ export async function GET() {
       }
     })
 
-    // Get unique employers count (users with role 'employer' or who have posted jobs)
-    const employersCount = await prisma.user.count({
+    // Get unique clients count (users with role 'client' or who have posted jobs)
+    const clientsCount = await prisma.user.count({
       where: {
         OR: [
-          { role: 'employer' },
-          { role: 'admin' }, // Admins can also be considered employers
+          { role: 'client' },
+          { role: 'admin' }, // Admins can also be considered clients
           {
             postedJobs: {
               some: {
@@ -47,7 +47,7 @@ export async function GET() {
 
     const stats = {
       activeJobs: activeJobsCount,
-      employers: employersCount,
+      clients: clientsCount,
       totalUsers: totalUsersCount,
       finishedJobs: completedJobsCount // Return completed jobs as finishedJobs
     }
@@ -59,7 +59,7 @@ export async function GET() {
     // Return fallback stats in case of error
     return NextResponse.json({
       activeJobs: 66,
-      employers: 25,
+      clients: 25,
       totalUsers: 150,
       finishedJobs: 12 // Default fallback for finished jobs
     })

@@ -109,7 +109,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">For Employers</h4>
+              <h4 className="font-medium">For Clients</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a

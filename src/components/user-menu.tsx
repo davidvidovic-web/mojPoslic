@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/prisma-auth-context'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -13,11 +14,31 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, User, LogOut, Crown, Building2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { LayoutDashboard, User, LogOut, Zap } from 'lucide-react'
 
 export function UserMenu() {
   const { user } = useAuth()
   const router = useRouter()
+  const [connections, setConnections] = useState<number>(0)
+
+  // Fetch user connections
+  useEffect(() => {
+    const fetchConnections = async () => {
+      if (user) {
+        try {
+          const response = await fetch('/api/user/connections')
+          if (response.ok) {
+            const data = await response.json()
+            setConnections(data.connections || 0)
+          }
+        } catch (error) {
+          console.error('Error fetching connections:', error)
+        }
+      }
+    }
+    fetchConnections()
+  }, [user])
 
   if (!user) {
     return null
@@ -28,46 +49,6 @@ export function UserMenu() {
     .map((name: string) => name[0])
     .join('')
     .toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'
-
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return (
-          <span className="flex items-center gap-1">
-            <Crown className="h-3 w-3" />
-            Admin
-          </span>
-        )
-      case 'employer':
-        return (
-          <span className="flex items-center gap-1">
-            <Building2 className="h-3 w-3" />
-            Employer
-          </span>
-        )
-      case 'company':
-        return (
-          <span className="flex items-center gap-1">
-            <Building2 className="h-3 w-3" />
-            Company
-          </span>
-        )
-      case 'employee':
-        return (
-          <span className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            Employee
-          </span>
-        )
-      default:
-        return (
-          <span className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            User
-          </span>
-        )
-    }
-  }
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' })
@@ -87,28 +68,29 @@ export function UserMenu() {
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user.name || 'User'}
-            </p>
             {user.username && (
               <p className="text-xs leading-none text-muted-foreground">
                 @{user.username}
               </p>
             )}
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+            <p className="text-base font-semibold leading-none">
+              {(user.name || 'User').toUpperCase()}
             </p>
-            {user.role && (
-              <p className="text-xs leading-none text-muted-foreground font-medium">
-                {getRoleBadge(user.role)}
-              </p>
-            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push('/dashboard')}>
           <LayoutDashboard className="mr-2 h-4 w-4" />
           Dashboard
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/dashboard#connections')}>
+          <Zap className="mr-2 h-4 w-4" />
+          <span className="flex items-center justify-between w-full">
+            Connections
+            <Badge variant="secondary" className="ml-2">
+              {connections}
+            </Badge>
+          </span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/settings')}>
           <User className="mr-2 h-4 w-4" />

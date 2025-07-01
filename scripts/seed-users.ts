@@ -1,11 +1,11 @@
 #!/usr/bin/env tsx
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
-const employers = [
+const clients = [
   { name: 'Marko Petrović', email: 'marko@techcorp.ba', company: 'TechCorp BiH' },
   { name: 'Ana Jovanović', email: 'ana@webdev.ba', company: 'WebDev Studio' },
   { name: 'Stefan Nikolić', email: 'stefan@digitalinnovations.ba', company: 'Digital Innovations' },
@@ -60,30 +60,30 @@ async function seedUsers() {
 
     const defaultPassword = await bcrypt.hash('password123', 12)
 
-    // Create employers
-    console.log('🏢 Creating employers...')
-    for (const employer of employers) {
+    // Create clients
+    console.log('🏢 Creating clients...')
+    for (const client of clients) {
       try {
         const existingUser = await prisma.user.findUnique({
-          where: { email: employer.email }
+          where: { email: client.email }
         })
 
         if (!existingUser) {
           await prisma.user.create({
             data: {
-              name: employer.name,
-              email: employer.email,
+              name: client.name,
+              email: client.email,
               password: defaultPassword,
-              role: 'employer',
-              companyName: employer.company
+              role: 'client' as UserRole,
+              companyName: client.company
             }
           })
-          console.log(`✅ Created employer: ${employer.name} (${employer.company})`)
+          console.log(`✅ Created client: ${client.name} (${client.company})`)
         } else {
-          console.log(`⚠️  Employer already exists: ${employer.email}`)
+          console.log(`⚠️  Client already exists: ${client.email}`)
         }
       } catch (error) {
-        console.log(`❌ Failed to create employer ${employer.email}:`, error)
+        console.log(`❌ Failed to create client ${client.email}:`, error)
       }
     }
 
@@ -101,7 +101,7 @@ async function seedUsers() {
               name: company.name,
               email: company.email,
               password: defaultPassword,
-              role: 'company',
+              role: 'client' as UserRole,
               companyName: company.companyName
             }
           })
@@ -128,7 +128,7 @@ async function seedUsers() {
               name: jobSeeker.name,
               email: jobSeeker.email,
               password: defaultPassword,
-              role: 'employee'
+              role: 'tasker' as UserRole
             }
           })
           console.log(`✅ Created job seeker: ${jobSeeker.name}`)
@@ -143,15 +143,15 @@ async function seedUsers() {
     // Show final statistics
     console.log('\n📊 Final user statistics:')
     const totalUsers = await prisma.user.count()
-    const employerCount = await prisma.user.count({ where: { role: 'employer' } })
-    const employeeCount = await prisma.user.count({ where: { role: 'employee' } })
-    const companyCount = await prisma.user.count({ where: { role: 'company' } })
+    const clientCount = await prisma.user.count({ where: { role: 'client' as UserRole } })
+    const taskerCount = await prisma.user.count({ where: { role: 'tasker' as UserRole } })
+    const companyCount = await prisma.user.count({ where: { role: 'client' as UserRole } })
     const adminCount = await prisma.user.count({ where: { role: 'admin' } })
 
     console.log(`   • Total users: ${totalUsers}`)
-    console.log(`   • Employers: ${employerCount}`)
+    console.log(`   • Clients: ${clientCount}`)
     console.log(`   • Companies: ${companyCount}`)
-    console.log(`   • Job seekers: ${employeeCount}`)
+    console.log(`   • Job seekers: ${taskerCount}`)
     console.log(`   • Admins: ${adminCount}`)
 
     console.log('\n🎉 User seeding completed successfully!')

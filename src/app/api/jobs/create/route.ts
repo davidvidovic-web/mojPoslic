@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { formatEmployerName } from '@/lib/job-utils'
+import { formatClientName } from '@/lib/job-utils'
 
 // Use a simple Prisma client for this endpoint
 const simplePrisma = new PrismaClient()
@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the user's name to format as employer name
+    // Get the user's info including role for connection cost calculation
     const user = await simplePrisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true }
+      select: { name: true, role: true }
     })
 
     if (!user) {
@@ -34,8 +34,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Format employer name as "FirstName L."
-    const formattedEmployerName = formatEmployerName(user.name)
+    // Check user's connections using raw SQL (since TypeScript types might not be updated)
+    const connectionResult = await simplePrisma.$queryRaw`
+      SELECT connections 
+      FROM users 
+      WHERE id = ${session.user.id}
+    ` as Array<{ connections: number }>
+
+    if (!connectionResult || connectionResult.length === 0) {
+      return NextResponse.json(
+        { error: 'Could not fetch user connections' },
+        { status: 500 }
+      )
+    }
+
+    const currentConnections = connectionResult[0].connections || 0
+
+    // Calculate connection cost based on user role
+    let connectionCost = 3 // Default for clients
+    if (user.role === 'company') {
+      connectionCost = 4
+    } else if (user.role === 'client') {
+      connectionCost = 3
+    }
+
+    // Check if user has enough connections
+    if (currentConnections < connectionCost) {
+      return NextResponse.json({ 
+        error: `Insufficient connections. You need ${connectionCost} connections to post a job as ${user.role}, but you only have ${currentConnections}.`,
+        requiredConnections: connectionCost,
+        currentConnections
+      }, { status: 400 })
+    }
+
+    // Format client name as "FirstName L."
+    const formattedClientName = formatClientName(user.name)
 
     const body = await request.json()
     console.log('Request body:', JSON.stringify(body, null, 2))
@@ -165,7 +198,7 @@ export async function POST(request: NextRequest) {
     console.log('=== Creating Job ===')
     const jobData = {
       title,
-      company: formattedEmployerName, // Use formatted employer name instead of company field
+      company: formattedClientName, // Use formatted client name instead of company field
       description,
       type,
       cityId: city.id, // Use resolved city ID
@@ -193,14 +226,36 @@ export async function POST(request: NextRequest) {
     }
     console.log('Job data to create:', JSON.stringify(jobData, null, 2))
 
-    const job = await simplePrisma.jobListing.create({
-      data: jobData
+    // Create job and spend connections in a transaction
+    const job = await simplePrisma.$transaction(async (tx) => {
+      // Create the job
+      const createdJob = await tx.jobListing.create({
+        data: jobData
+      })
+
+      // Spend connections using raw SQL
+      await tx.$executeRaw`
+        UPDATE users 
+        SET connections = connections - ${connectionCost}
+        WHERE id = ${session.user.id}
+      `
+
+      // Log connection usage using raw SQL
+      const actionType = user.role === 'company' ? 'JOB_POST_COMPANY' : 'JOB_POST_CLIENT'
+      await tx.$executeRaw`
+        INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
+        VALUES (gen_random_uuid()::text, ${session.user.id}, ${actionType}, ${-connectionCost}, ${'Posted job as ' + user.role}, ${createdJob.id}, NOW())
+      `
+
+      return createdJob
     })
 
-    console.log('Job created successfully:', job.id)
+    console.log('Job created successfully with connections spent:', job.id)
 
     return NextResponse.json({
       success: true,
+      connectionsSpent: connectionCost,
+      remainingConnections: currentConnections - connectionCost,
       job: {
         ...job,
         posted_at: job.createdAt.toISOString(),

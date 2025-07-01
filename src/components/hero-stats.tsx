@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsData {
   activeJobs: number;
-  employers: number;
+  clients: number;
   totalUsers: number;
   finishedJobs: number;
 }
@@ -109,7 +109,7 @@ const HeroStatsComponent = () => {
           <AnimatedNumber value={stats.employers} suffix="+" />
         </div>
         <div className="text-sm text-muted-foreground">
-          Registered Employers
+          Registered Clients
         </div>
       </div>
 

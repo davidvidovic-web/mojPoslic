@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
+import { 
+  getJobById, 
+  getCityById, 
+  getCategoryById, 
+  getUserBasicInfo,
+  applyToJob,
+  updateJobStatus,
+  errorResponse
+} from '../utils'
 
 const prisma = new PrismaClient()
 
@@ -14,40 +23,22 @@ export async function GET(
     const jobId = id
 
     if (!jobId) {
-      return NextResponse.json({ error: 'Job ID is required' }, { status: 400 })
+      return errorResponse('Job ID is required', 400)
     }
 
-    // Fetch the job first
-    const job = await prisma.jobListing.findFirst({
-      where: {
-        id: jobId,
-        isActive: true
-      }
-    })
+    // Fetch the job
+    const job = await getJobById(jobId)
 
     if (!job) {
-      return NextResponse.json({ error: 'Job not found' }, { status: 404 })
+      return errorResponse('Job not found', 404)
     }
 
-    // Fetch city separately
-    const city = job.cityId ? await prisma.city.findUnique({
-      where: { id: job.cityId }
-    }) : null
-
-    // Fetch category separately
-    const category = job.categoryId ? await prisma.category.findUnique({
-      where: { id: job.categoryId }
-    }) : null
-
-    // Fetch posted by user
-    const postedBy = await prisma.user.findUnique({
-      where: { id: job.postedById },
-      select: {
-        id: true,
-        name: true,
-        email: true
-      }
-    })
+    // Fetch related data
+    const [city, category, postedBy] = await Promise.all([
+      getCityById(job.cityId),
+      getCategoryById(job.categoryId),
+      getUserBasicInfo(job.postedById)
+    ])
 
     // Transform the data to match the expected format
     const transformedJob = {

@@ -5,12 +5,10 @@ import { JobCard } from "./job-card"
 import { JobCardList } from "./job-card-list"
 import { JobCardListSkeleton, JobCardSkeleton } from "./job-card-skeleton"
 import { Job } from "@/types/job"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CitiesFilter } from "@/components/cities-filter"
-import { CategoriesFilter } from "@/components/categories-filter"
-import { Briefcase, List, LayoutGrid, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { JobFilters } from "./job-list/job-filters"
+import { JobsViewControls } from "./job-list/jobs-view-controls"
+import { JobsEmptyState } from "./job-list/jobs-empty-state"
+import { JobsPagination } from "./job-list/jobs-pagination"
 
 interface JobListProps {
   refreshTrigger?: number
@@ -83,79 +81,44 @@ export function JobList({ refreshTrigger }: JobListProps) {
     setCurrentPage(1)
   }, [searchTerm, cityFilter, categoryFilter, typeFilter])
 
+  const hasActiveFilters = searchTerm !== '' || 
+    cityFilter !== 'all' || 
+    categoryFilter !== 'all' || 
+    typeFilter !== 'all'
+
+  const clearAllFilters = () => {
+    setSearchTerm('')
+    setCityFilter('all')
+    setCategoryFilter('all')
+    setTypeFilter('all')
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
         {/* Filters skeleton */}
         <div className="space-y-6">
-          <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                  <Search className="h-4 w-4" />
-                </span>
-                <Input
-                  placeholder="Search jobs, companies, skills, or categories..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-border/50"
-                />
-              </div>
-              <CitiesFilter
-                value={cityFilter}
-                onChange={setCityFilter}
-                placeholder="All locations"
-                className="sm:w-64"
-              />
-              <CategoriesFilter
-                value={categoryFilter}
-                onChange={setCategoryFilter}
-                placeholder="All categories"
-                className="sm:w-64"
-              />
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="sm:w-48 border-border/50">
-                  <SelectValue placeholder="Job Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="full-time">Full Time</SelectItem>
-                  <SelectItem value="part-time">Part Time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="remote">Remote</SelectItem>
-                  <SelectItem value="quick-job">Quick Job</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <JobFilters
+            searchTerm=""
+            setSearchTerm={() => {}}
+            cityFilter="all"
+            setCityFilter={() => {}}
+            categoryFilter="all"
+            setCategoryFilter={() => {}}
+            typeFilter="all"
+            setTypeFilter={() => {}}
+          />
           
-          {/* View controls skeleton */}
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Loading jobs...
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border border-border/40 rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="h-8 px-3"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="h-8 px-3"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <JobsViewControls
+            filteredJobsCount={0}
+            startIndex={0}
+            endIndex={0}
+            jobsPerPage={JOBS_PER_PAGE}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            hasActiveFilters={false}
+            onClearFilters={() => {}}
+          />
         </div>
 
         {/* Job skeletons */}
@@ -180,124 +143,35 @@ export function JobList({ refreshTrigger }: JobListProps) {
     <div className="space-y-6">
       {/* Filters */}
       <div className="space-y-6">
-        <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                <Search className="h-4 w-4" />
-              </span>
-              <Input
-                placeholder="Search jobs, companies, skills, or categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-border/50"
-              />
-            </div>
-            <CitiesFilter
-              value={cityFilter}
-              onChange={setCityFilter}
-              placeholder="All locations"
-              className="sm:w-64"
-            />
-            <CategoriesFilter
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              placeholder="All categories"
-              className="sm:w-64"
-            />
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="sm:w-48 border-border/50">
-                <SelectValue placeholder="Job Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="full-time">Full Time</SelectItem>
-                <SelectItem value="part-time">Part Time</SelectItem>
-                <SelectItem value="contract">Contract</SelectItem>
-                <SelectItem value="remote">Remote</SelectItem>
-                <SelectItem value="quick-job">Quick Job</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <JobFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          cityFilter={cityFilter}
+          setCityFilter={setCityFilter}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+        />
         
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{filteredJobs.length}</span> job{filteredJobs.length !== 1 ? 's' : ''} found
-            {filteredJobs.length > JOBS_PER_PAGE && (
-              <span> • Showing {startIndex + 1}-{Math.min(endIndex, filteredJobs.length)} of {filteredJobs.length}</span>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* View Toggle */}
-            <div className="flex items-center border border-border/40 rounded-lg p-1">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="h-8 px-3"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="h-8 px-3"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {(searchTerm || (cityFilter && cityFilter !== 'all') || (categoryFilter && categoryFilter !== 'all') || (typeFilter && typeFilter !== 'all')) && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('')
-                  setCityFilter('all')
-                  setCategoryFilter('all')
-                  setTypeFilter('all')
-                }}
-                className="border-border/50"
-              >
-                Clear filters
-              </Button>
-            )}
-          </div>
-        </div>
+        <JobsViewControls
+          filteredJobsCount={filteredJobs.length}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          jobsPerPage={JOBS_PER_PAGE}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={clearAllFilters}
+        />
       </div>
 
       {/* Job Display */}
       {filteredJobs.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="w-20 h-20 mx-auto rounded-full bg-secondary flex items-center justify-center">
-              <Briefcase className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-semibold">No jobs found</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {searchTerm || (cityFilter && cityFilter !== 'all') || (categoryFilter && categoryFilter !== 'all') || (typeFilter && typeFilter !== 'all')
-                ? "We couldn't find any jobs matching your criteria. Try adjusting your search filters or check back later for new opportunities." 
-                : "No jobs have been posted yet. Be the first to post a job opportunity!"}
-            </p>
-            {(searchTerm || (cityFilter && cityFilter !== 'all') || (categoryFilter && categoryFilter !== 'all') || (typeFilter && typeFilter !== 'all')) && (
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm('')
-                  setCityFilter('all')
-                  setCategoryFilter('all')
-                  setTypeFilter('all')
-                }}
-                className="border-border/50"
-              >
-                Clear all filters
-              </Button>
-            )}
-          </div>
-        </div>
+        <JobsEmptyState
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={clearAllFilters}
+        />
       ) : (
         <>
           {viewMode === 'list' ? (
@@ -314,66 +188,11 @@ export function JobList({ refreshTrigger }: JobListProps) {
             </div>
           )}
           
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-8">
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="border-border/50"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                
-                {/* Page numbers */}
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className="w-8 h-8 p-0 border-border/50"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="border-border/50"
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <JobsPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </>
       )}
     </div>

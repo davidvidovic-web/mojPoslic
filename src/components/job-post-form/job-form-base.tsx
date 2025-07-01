@@ -1,193 +1,81 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/contexts/prisma-auth-context'
-import { toast } from 'sonner'
-import { ChevronLeft, ChevronRight, Send } from 'lucide-react'
-
+import { useJobFormState } from './use-job-form-state'
+import { useJobFormNavigation } from './use-job-form-navigation'
 import { StepIndicator } from './step-indicator'
 import { BasicDetailsStep } from './basic-details-step'
 import { LocationTransportationCompensationStep } from './location-transportation-compensation-step'
 import { ReviewStep } from './review-step'
-import { 
-  JobFormStep, 
-  getNextStep, 
-  getPreviousStep, 
-  getStepIndex 
-} from './types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface JobFormBaseProps {
   initialData?: Partial<CreateJobData>
   isEditMode?: boolean
   onSubmit: (formData: CreateJobData) => Promise<void>
   onCancel?: () => void
-  submitButtonText: string
-  submittingText: string
+  submitButtonText?: string
+  submittingText?: string
 }
 
-export function JobFormBase({ 
-  initialData, 
-  isEditMode = false, 
-  onSubmit, 
+export function JobFormBase({
+  initialData,
+  isEditMode = false,
+  onSubmit,
   onCancel,
-  submitButtonText,
-  submittingText
+  submitButtonText = 'Submit',
+  submittingText = 'Submitting...'
 }: JobFormBaseProps) {
-  const { user } = useAuth()
-  const [currentStep, setCurrentStep] = useState<JobFormStep>('basic-details')
-  const [completedSteps, setCompletedSteps] = useState<Set<JobFormStep>>(new Set())
-  const [stepValidations, setStepValidations] = useState<Record<JobFormStep, boolean>>({
-    'basic-details': false,
-    'location-compensation': false,
-    'review': true // Always valid
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  const [formData, setFormData] = useState<CreateJobData>({
-    title: initialData?.title || '',
-    company: initialData?.company || '',
-    description: initialData?.description || '',
-    requirements: initialData?.requirements || '',
-    benefits: initialData?.benefits || '',
-    type: initialData?.type || 'quick_job',
-    city_id: initialData?.city_id || '',
-    category_id: initialData?.category_id || '',
-    salary: initialData?.salary || '',
-    salaryType: initialData?.salaryType,
-    salaryMin: initialData?.salaryMin,
-    salaryMax: initialData?.salaryMax,
-    website: initialData?.website || '',
-    email: initialData?.email || '',
-    start_date: initialData?.start_date,
-    start_time: initialData?.start_time,
-    duration: initialData?.duration,
-    transportation: initialData?.transportation,
-    job_address: initialData?.job_address || '',
-    job_latitude: initialData?.job_latitude,
-    job_longitude: initialData?.job_longitude,
-    application_url: initialData?.application_url || '',
-    contact_email: initialData?.contact_email || '',
+  const {
+    currentStep,
+    setCurrentStep,
+    completedSteps,
+    setCompletedSteps,
+    stepValidations,
+    isSubmitting,
+    setIsSubmitting,
+    formData,
+    updateFormData,
+    handleBasicDetailsValidation,
+    handleLocationCompensationValidation,
+    handleReviewValidation,
+    isCurrentStepValid
+  } = useJobFormState({ initialData, isEditMode })
+
+  const {
+    canGoPrevious,
+    canGoNext,
+    handleNext,
+    handlePrevious,
+    handleStepClick
+  } = useJobFormNavigation({
+    currentStep,
+    setCurrentStep,
+    completedSteps,
+    setCompletedSteps,
+    stepValidations,
+    isEditMode
   })
 
-  const updateFormData = useCallback((updates: Partial<CreateJobData>) => {
-    setFormData(prev => ({ ...prev, ...updates }))
-  }, [])
-
-  const handleStepValidation = useCallback((step: JobFormStep, isValid: boolean) => {
-    setStepValidations(prev => ({ ...prev, [step]: isValid }))
-  }, [])
-
-  const handleBasicDetailsValidation = useCallback((isValid: boolean) => {
-    handleStepValidation('basic-details', isValid)
-  }, [handleStepValidation])
-
-  const handleLocationCompensationValidation = useCallback((isValid: boolean) => {
-    handleStepValidation('location-compensation', isValid)
-  }, [handleStepValidation])
-
-  const handleReviewValidation = useCallback((isValid: boolean) => {
-    handleStepValidation('review', isValid)
-  }, [handleStepValidation])
-
-  const isCurrentStepValid = stepValidations[currentStep]
-  // In edit mode, allow navigation regardless of validation
-  // In create mode, require validation to proceed
-  const canGoNext = isEditMode ? getNextStep(currentStep) !== null : (isCurrentStepValid && getNextStep(currentStep) !== null)
-  const canGoPrevious = getPreviousStep(currentStep) !== null
-
-  const handleNext = () => {
-    // In edit mode, allow navigation without validation
-    if (isEditMode) {
-      const nextStep = getNextStep(currentStep)
-      if (nextStep) {
-        setCurrentStep(nextStep)
-      }
-      return
-    }
+  const handleFormSubmit = async () => {
+    if (!isCurrentStepValid && currentStep !== 'review') return
     
-    // In create mode, require validation
-    if (!isCurrentStepValid) return
-    
-    const nextStep = getNextStep(currentStep)
-    if (nextStep) {
-      setCompletedSteps(prev => new Set([...prev, currentStep]))
-      setCurrentStep(nextStep)
-    }
-  }
-
-  const handlePrevious = () => {
-    const previousStep = getPreviousStep(currentStep)
-    if (previousStep) {
-      setCurrentStep(previousStep)
-    }
-  }
-
-  const handleStepClick = (step: JobFormStep) => {
-    // In edit mode, allow unrestricted navigation between steps
-    if (isEditMode) {
-      setCurrentStep(step)
-      return
-    }
-    
-    // In create mode, only allow clicking on completed steps or the next immediate step
-    const stepIndex = getStepIndex(step)
-    const currentIndex = getStepIndex(currentStep)
-    
-    if (completedSteps.has(step) || stepIndex <= currentIndex) {
-      setCurrentStep(step)
-    }
-  }
-
-  const validateFormData = (): string[] => {
-    const missingFields: string[] = []
-    
-    if (!formData.title?.trim()) missingFields.push('Job Title')
-    if (!formData.company?.trim()) missingFields.push('Company Name')
-    if (!formData.description?.trim()) missingFields.push('Job Description')
-    if (!formData.city_id) missingFields.push('Location')
-    if (!formData.category_id) missingFields.push('Category')
-    
-    const contactEmail = formData.email || user?.email
-    if (!contactEmail) missingFields.push('Contact Email')
-
-    return missingFields
-  }
-
-  const handleSubmit = async () => {
-    if (!user) {
-      toast.error('You must be logged in to post a job')
-      return
-    }
-
-    // Comprehensive validation with specific error messages
-    const missingFields = validateFormData()
-
-    if (missingFields.length > 0) {
-      const message = `Please fill in the following required fields: ${missingFields.join(', ')}`
-      toast.error(message)
-      
-      // Navigate to the first step that has missing required fields
-      if (missingFields.some(field => ['Job Title', 'Company Name', 'Job Description', 'Category'].includes(field))) {
-        setCurrentStep('basic-details')
-      } else if (missingFields.some(field => ['Location'].includes(field))) {
-        setCurrentStep('location-compensation')
-      }
-      
-      return
-    }
-
     setIsSubmitting(true)
-
     try {
       await onSubmit(formData)
     } catch (error) {
-      console.error('Error submitting form:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Form submission error:', error)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleFormDataUpdate = (updates: Partial<CreateJobData>) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      updateFormData(key as keyof CreateJobData, value)
+    })
   }
 
   const renderCurrentStep = () => {
@@ -196,7 +84,7 @@ export function JobFormBase({
         return (
           <BasicDetailsStep
             formData={formData}
-            onChange={updateFormData}
+            onChange={handleFormDataUpdate}
             onValidation={handleBasicDetailsValidation}
           />
         )
@@ -204,7 +92,7 @@ export function JobFormBase({
         return (
           <LocationTransportationCompensationStep
             formData={formData}
-            onChange={updateFormData}
+            onChange={handleFormDataUpdate}
             onValidation={handleLocationCompensationValidation}
           />
         )
@@ -220,90 +108,77 @@ export function JobFormBase({
     }
   }
 
+  const isLastStep = currentStep === 'review'
+
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {isEditMode && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center gap-2 text-blue-800">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-sm font-medium">Edit Mode</span>
+    <div className="max-w-4xl mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {isEditMode ? 'Edit Job Posting' : 'Create New Job Posting'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <StepIndicator
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+            stepValidations={stepValidations}
+            isEditMode={isEditMode}
+            onStepClick={handleStepClick}
+          />
+
+          <div className="mt-8">
+            {renderCurrentStep()}
           </div>
-          <p className="text-xs text-blue-600 mt-1">
-            You can navigate freely between steps. Required fields will be validated when you update the job.
-          </p>
-        </div>
-      )}
-      
-      <StepIndicator
-        currentStep={currentStep}
-        completedSteps={completedSteps}
-        stepValidations={stepValidations}
-        isEditMode={isEditMode}
-        onStepClick={handleStepClick}
-      />
 
-      <div className="bg-background border rounded-lg p-6 min-h-[600px]">
-        {renderCurrentStep()}
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center gap-2">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={!canGoPrevious}
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {currentStep !== 'review' ? (
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={!canGoNext}
-              className="flex items-center gap-2"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting || (!isEditMode && !isCurrentStepValid)}
-              className="flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  {submittingText}
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  {submitButtonText}
-                </>
+          <div className="flex justify-between items-center mt-8 pt-6 border-t">
+            <div className="flex gap-2">
+              {canGoPrevious && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={isSubmitting}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
               )}
-            </Button>
-          )}
-        </div>
-      </div>
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              {!isLastStep ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={!canGoNext || isSubmitting}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleFormSubmit}
+                  disabled={isSubmitting || (!isEditMode && !isCurrentStepValid)}
+                >
+                  {isSubmitting ? submittingText : submitButtonText}
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

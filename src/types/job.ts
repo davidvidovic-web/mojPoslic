@@ -47,8 +47,8 @@ export interface Job {
   start_date?: string // When the job/work should start
   start_time?: string // What time the job should start (e.g., "09:00", "14:30")
   duration?: string // How long the job will take (e.g., "1_day", "3_days", "1_week", "1_month")
-  transportation?: 'provided' | 'not_provided' | 'employee_responsible' | 'compensated' // Transportation arrangement
-  transportation_amount?: number // Amount if employer compensates for transportation
+  transportation?: 'provided' | 'not_provided' | 'tasker_responsible' | 'compensated' // Transportation arrangement
+  transportation_amount?: number // Amount if client compensates for transportation
   expires_at?: string // When the job posting expires
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
@@ -83,8 +83,8 @@ export interface CreateJobData {
   start_date?: string // When the job/work should start
   start_time?: string // What time the job should start (e.g., "09:00", "14:30")
   duration?: string // How long the job will take (e.g., "1_day", "3_days", "1_week", "1_month")
-  transportation?: 'provided' | 'not_provided' | 'employee_responsible' | 'compensated' // Transportation arrangement
-  transportation_amount?: number // Amount if employer compensates for transportation
+  transportation?: 'provided' | 'not_provided' | 'tasker_responsible' | 'compensated' // Transportation arrangement
+  transportation_amount?: number // Amount if client compensates for transportation
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
   job_longitude?: number // Longitude coordinate

@@ -1,14 +1,14 @@
 # Job Fetching Fix Documentation
 
 ## Problem
-The employer dashboard was showing "Error fetching jobs: {}" because it was trying to fetch jobs from Supabase while the application uses Prisma with NextAuth for authentication. This created a mismatch where:
+The employer dashboard was showing "Error fetching jobs: {}" because it was trying to fetch jobs directly from the database while the application uses Prisma with NextAuth for authentication. This created a mismatch where:
 
 1. User authentication was handled by NextAuth with Prisma
-2. Job fetching was attempted through Supabase 
+2. Job fetching was attempted through direct database calls
 3. User IDs didn't match between the two systems
 
 ## Solution
-Replaced Supabase calls in the employer dashboard with Prisma-based API endpoints:
+Replaced direct database calls in the employer dashboard with Prisma-based API endpoints:
 
 ### 1. Created `/api/jobs/my-jobs` endpoint
 - **File**: `/src/app/api/jobs/my-jobs/route.ts`

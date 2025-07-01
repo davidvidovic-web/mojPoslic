@@ -15,8 +15,6 @@ export function formatJobType(type: string): string {
     case 'part-time':
     case 'part_time':
       return 'Part Time'
-    case 'contract':
-      return 'Contract'
     case 'remote':
       return 'Remote'
     case 'quick-job':
@@ -41,8 +39,6 @@ export function getJobTypeBadgeVariant(type: string): "default" | "secondary" | 
     case 'part-time':
     case 'part_time':
       return 'secondary'
-    case 'contract':
-      return 'outline'
     case 'remote':
       return 'default'
     case 'quick-job':
@@ -152,7 +148,7 @@ export function formatStartDate(dateString?: string): string | null {
 
 /**
  * Formats transportation information to human-readable format
- * @param transportation - The transportation string ('provided', 'not_provided', 'employee_responsible', 'compensated')
+ * @param transportation - The transportation string ('provided', 'not_provided', 'tasker_responsible', 'compensated')
  * @param amount - The compensation amount if transportation is 'compensated'
  * @returns Human-readable transportation information
  */
@@ -165,7 +161,8 @@ export function formatTransportation(transportation?: string, amount?: number): 
     case 'not_provided':
       return 'Transportation not provided'
     case 'employee_responsible':
-      return 'Employee responsible for transportation'
+    case 'tasker_responsible':
+      return 'Tasker responsible for transportation'
     case 'compensated':
       return amount ? `Transportation compensation: ${amount} BAM` : 'Transportation compensation provided'
     default:
@@ -188,7 +185,8 @@ export function getTransportationIcon(transportation?: string): string | null {
     case 'not_provided':
       return 'Ban' // Ban icon for not provided
     case 'employee_responsible':
-      return 'User' // User icon for employee responsible
+    case 'tasker_responsible':
+      return 'User' // User icon for tasker responsible
     case 'compensated':
       return 'DollarSign' // DollarSign icon for compensation
     default:
@@ -197,13 +195,13 @@ export function getTransportationIcon(transportation?: string): string | null {
 }
 
 /**
- * Formats employer name to "FirstName L." format for privacy
- * @param fullName - The full name of the employer
+ * Formats client name to "FirstName L." format for privacy
+ * @param fullName - The full name of the client
  * @returns Formatted name (e.g., "John D." from "John Doe")
  */
-export function formatEmployerName(fullName?: string): string {
+export function formatClientName(fullName?: string): string {
   if (!fullName || typeof fullName !== 'string') {
-    return 'Anonymous Employer'
+    return 'Anonymous Client'
   }
   
   const nameParts = fullName.trim().split(' ')

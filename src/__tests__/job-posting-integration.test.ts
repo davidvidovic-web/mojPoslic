@@ -380,7 +380,7 @@ describe('Job Posting Integration Tests', () => {
         title: 'Project Setup',
         company: 'StartupCo',
         description: 'One-time project setup',
-        type: 'contract',
+        type: 'quick_job',
         city_id: 'sarajevo',
         email: 'contact@startup.com',
         salaryType: 'fixed',
@@ -591,7 +591,7 @@ describe('Job Posting Integration Tests', () => {
     })
 
     it('should ensure all job types are supported', async () => {
-      const jobTypes = ['quick_job', 'full_time', 'part_time', 'contract', 'remote']
+      const jobTypes = ['quick_job', 'full_time', 'part_time', 'remote']
       
       for (const jobType of jobTypes) {
         mockPrisma.jobListing.create.mockResolvedValue({

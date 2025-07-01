@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -80,9 +80,9 @@ const benefits = [
   'Performance bonuses\n• Transportation allowance\n• Meal vouchers\n• Social events\n• Continuing education support'
 ]
 
-const jobTypes = ['full_time', 'part_time', 'contract', 'remote']
+const jobTypes = ['full_time', 'part_time', 'remote', 'quick_job']
 
-const transportationOptions = ['provided', 'not_provided', 'employee_responsible', 'compensated']
+const transportationOptions = ['provided', 'not_provided', 'tasker_responsible', 'compensated']
 
 function getRandomTransportation(): { transportation: string, amount?: number } {
   const option = getRandomElement(transportationOptions)
@@ -146,16 +146,16 @@ async function seedJobs() {
 
     // Get or create a default user to post jobs
     let defaultUser = await prisma.user.findFirst({
-      where: { role: 'employer' }
+      where: { role: 'client' as UserRole }
     })
 
     if (!defaultUser) {
-      console.log('Creating default employer user...')
+      console.log('Creating default client user...')
       defaultUser = await prisma.user.create({
         data: {
-          email: 'employer@example.com',
-          name: 'Default Employer',
-          role: 'employer',
+          email: 'client@example.com',
+          name: 'Default Client',
+          role: 'client' as UserRole,
           companyName: 'Sample Company'
         }
       })
@@ -170,7 +170,7 @@ async function seedJobs() {
       const company = getRandomElement(companies)
       const city = getRandomElement(cities)
       const category = Math.random() > 0.1 ? getRandomElement(categories) : null // 90% chance of having a category
-      const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'contract' | 'remote'
+      const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'remote' | 'quick_job'
       const transportationData = getRandomTransportation()
       
       const jobData = {

@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 import { seedBosnianCities } from './seed-cities'
 import { seedCategories } from './seed-categories'
 import { seedUsers } from './seed-users'
@@ -35,8 +35,8 @@ async function seedAll() {
     console.log('📊 Final database summary:')
     
     const totalUsers = await prisma.user.count()
-    const employerCount = await prisma.user.count({ where: { role: 'employer' } })
-    const employeeCount = await prisma.user.count({ where: { role: 'employee' } })
+    const clientCount = await prisma.user.count({ where: { role: 'client' as UserRole } })
+    const taskerCount = await prisma.user.count({ where: { role: 'tasker' as UserRole } })
     const companyCount = await prisma.user.count({ where: { role: 'company' } })
     const adminCount = await prisma.user.count({ where: { role: 'admin' } })
     
@@ -48,9 +48,9 @@ async function seedAll() {
     const totalCategories = await prisma.category.count()
 
     console.log(`   👥 Users: ${totalUsers} total`)
-    console.log(`      • Employers: ${employerCount}`)
+    console.log(`      • Clients: ${clientCount}`)
     console.log(`      • Companies: ${companyCount}`)
-    console.log(`      • Job seekers: ${employeeCount}`)
+    console.log(`      • Job seekers: ${taskerCount}`)
     console.log(`      • Admins: ${adminCount}`)
     console.log(`   💼 Jobs: ${totalJobs} total (${activeJobs} active, ${featuredJobs} featured)`)
     console.log(`   📍 Cities: ${totalCities}`)

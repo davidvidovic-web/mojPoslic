@@ -1,12 +1,19 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
 import { UserProfile, UserRole } from '@/types/user'
+import { signOut, useSession } from 'next-auth/react'
+import { Session } from 'next-auth'
+
+// Define types for our auth context
+interface AuthUser {
+  id: string
+  email: string
+  name?: string
+}
 
 interface RobustAuthContextType {
-  user: User | null
+  user: AuthUser | null
   session: Session | null
   profile: UserProfile | null
   loading: boolean
@@ -15,8 +22,8 @@ interface RobustAuthContextType {
   ensureProfile: () => Promise<UserProfile | null>
   hasRole: (role: UserRole) => boolean
   isAdmin: boolean
-  isEmployer: boolean
-  isEmployee: boolean
+  isClient: boolean
+  isTasker: boolean
 }
 
 const RobustAuthContext = createContext<RobustAuthContextType>({
@@ -29,8 +36,8 @@ const RobustAuthContext = createContext<RobustAuthContextType>({
   ensureProfile: async () => null,
   hasRole: () => false,
   isAdmin: false,
-  isEmployer: false,
-  isEmployee: false,
+  isClient: false,
+  isTasker: false,
 })
 
 export const useRobustAuth = () => {
@@ -42,67 +49,58 @@ export const useRobustAuth = () => {
 }
 
 export function RobustAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const { data: session, status } = useSession()
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      const response = await fetch(`/api/user/profile?userId=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-      if (error) {
-        console.error('Error fetching profile:', error)
+      if (!response.ok) {
+        console.error('Error fetching profile:', response.statusText)
         return null
       }
 
-      return data as UserProfile
+      const data = await response.json()
+      return data.profile
     } catch (error) {
       console.error('Error fetching profile:', error)
       return null
     }
   }
 
-  const createProfileForUser = async (user: User): Promise<UserProfile | null> => {
+  const createProfileForUser = async (userId: string, email: string, name?: string): Promise<UserProfile | null> => {
     try {
-      console.log('Creating profile for user:', user.id)
+      console.log('Creating profile for user:', userId)
       
-      // Try using the manual profile creation function
-      const { data, error } = await supabase.rpc('create_profile_for_user', {
-        user_id: user.id,
-        user_email: user.email,
-        user_name: user.user_metadata?.name || user.email,
-        user_role: user.user_metadata?.role || 'employee'
+      // Use Prisma-based API route to create a profile
+      const response = await fetch('/api/user/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          email,
+          name: name || email,
+          role: 'tasker' // Default role
+        }),
       })
 
-      if (error) {
-        console.error('Error creating profile with function:', error)
-        
-        // Fallback: direct insert
-        const { data: insertData, error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            name: user.user_metadata?.name || user.email || '',
-            role: (user.user_metadata?.role as UserRole) || 'employee'
-          })
-          .select()
-          .single()
-
-        if (insertError) {
-          console.error('Error creating profile with direct insert:', insertError)
-          return null
-        }
-
-        return insertData as UserProfile
+      if (!response.ok) {
+        console.error('Error creating profile:', response.statusText)
+        return null
       }
 
-      return data as UserProfile
+      const data = await response.json()
+      return data.profile
     } catch (error) {
       console.error('Error creating profile:', error)
       return null
@@ -116,7 +114,7 @@ export function RobustAuthProvider({ children }: { children: React.ReactNode }) 
     
     if (!userProfile) {
       console.log('No profile found, creating one...')
-      userProfile = await createProfileForUser(user)
+      userProfile = await createProfileForUser(user.id, user.email, user.name)
     }
 
     setProfile(userProfile)
@@ -135,66 +133,45 @@ export function RobustAuthProvider({ children }: { children: React.ReactNode }) 
   }
 
   const isAdmin = profile?.role === 'admin'
-  const isEmployer = profile?.role === 'employer' || profile?.role === 'company'
-  const isEmployee = profile?.role === 'employee'
+  const isClient = profile?.role === 'client'
+  const isTasker = profile?.role === 'tasker'
 
   useEffect(() => {
-    let mounted = true
+    if (status === 'loading') return
 
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return
-
-      setSession(session)
-      setUser(session?.user ?? null)
+    if (session && session.user) {
+      // Set user from NextAuth session
+      setUser({
+        id: session.user.id || '',
+        email: session.user.email || '',
+        name: session.user.name || undefined
+      })
       
-      if (session?.user) {
-        let userProfile = await fetchUserProfile(session.user.id)
-        
-        // If no profile exists, try to create one
-        if (!userProfile) {
-          userProfile = await createProfileForUser(session.user)
+      // Fetch user profile
+      fetchUserProfile(session.user.id || '').then(userProfile => {
+        if (userProfile) {
+          setProfile(userProfile)
+        } else {
+          // Create profile if none exists
+          createProfileForUser(
+            session.user.id || '', 
+            session.user.email || '', 
+            session.user.name || undefined
+          ).then(newProfile => {
+            setProfile(newProfile)
+          })
         }
-        
-        setProfile(userProfile)
-      }
-      
+        setLoading(false)
+      })
+    } else {
+      setUser(null)
+      setProfile(null)
       setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return
-
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        let userProfile = await fetchUserProfile(session.user.id)
-        
-        // If no profile exists, try to create one
-        if (!userProfile) {
-          userProfile = await createProfileForUser(session.user)
-        }
-        
-        setProfile(userProfile)
-      } else {
-        setProfile(null)
-      }
-      
-      setLoading(false)
-    })
-
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
     }
-  }, [])
+  }, [session, status])
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/login' })
     setProfile(null)
   }
 
@@ -204,13 +181,13 @@ export function RobustAuthProvider({ children }: { children: React.ReactNode }) 
       session, 
       profile, 
       loading, 
-      signOut, 
+      signOut: handleSignOut, 
       refreshProfile,
       ensureProfile,
       hasRole,
       isAdmin,
-      isEmployer,
-      isEmployee
+      isClient,
+      isTasker
     }}>
       {children}
     </RobustAuthContext.Provider>

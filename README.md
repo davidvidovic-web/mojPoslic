@@ -1,6 +1,6 @@
 # Poslić - Simple Job Board App
 
-A modern job board application built with Next.js, shadcn/ui, and Supabase.
+A modern job board application built with Next.js, shadcn/ui, and PostgreSQL.
 
 ## Features
 
@@ -16,23 +16,23 @@ A modern job board application built with Next.js, shadcn/ui, and Supabase.
 - 👤 User profiles with role-based access control
 - 🏙️ City-based job filtering
 - � Dark/Light mode support
-- 👥 Three user types: Admin, Employer, and Employee
+- 👥 Three user types: Admin, Client, and Tasker
 
 ## User Roles
 
-### 👤 Employee (Default)
+### 👤 Tasker (Default)
 - Browse and search job listings
 - Apply to jobs via external links or email
 - View all public job information
 
-### 🏢 Employer
-- All employee features
+### 🏢 Client
+- All tasker features
 - Post new job opportunities
 - Manage job postings
-- Access employer dashboard
+- Access client dashboard
 
 ### 👑 Admin
-- All employer features
+- All client features
 - Full system access
 - User management capabilities
 - Platform oversight
@@ -44,8 +44,8 @@ A modern job board application built with Next.js, shadcn/ui, and Supabase.
 - **Styling**: Tailwind CSS with custom theming
 - **Typography**: Inter font family from Google Fonts
 - **Icons**: Lucide React
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth with OAuth (Google, Apple)
+- **Database**: PostgreSQL
+- **Authentication**: NextAuth.js
 - **Theme**: next-themes for dark/light mode
 - **Notifications**: Sonner
 
@@ -54,7 +54,7 @@ A modern job board application built with Next.js, shadcn/ui, and Supabase.
 ### Prerequisites
 
 - Node.js 18+ 
-- A Supabase account and project
+- A PostgreSQL database
 
 ### 1. Clone and Install
 
@@ -64,25 +64,21 @@ cd poslici
 npm install
 ```
 
-### 2. Set up Supabase
+### 2. Set up the Database
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to Settings > API to get your project URL and anon key
-3. In the SQL Editor, run the following SQL files in order:
+1. Create a PostgreSQL database
+2. In the database console, run the following SQL files in order:
    - `database/profiles.sql` - Creates user profiles and role system
-   - `seed-data.sql` - Creates job listings schema and sample data
-4. Configure OAuth providers (optional):
-   - Go to Authentication > Providers
-   - Enable Google and/or Apple OAuth
-   - Add your OAuth app credentials
+   - `database/seed-data.sql` - Creates job listings schema and sample data
+3. Configure your database connection string in the environment variables
 
 ### 3. Environment Variables
 
-Copy the `.env.example` file to `.env.local` and update with your Supabase credentials:
+Copy the `.env.example` file to `.env.local` and update with your database credentials:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+DATABASE_URL=postgresql://username:password@localhost:5432/poslic
+NEXTAUTH_SECRET=your_nextauth_secret
 ```
 
 ### 4. Run the Development Server

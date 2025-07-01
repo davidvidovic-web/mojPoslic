@@ -50,12 +50,11 @@ describe('Job Posting Feature', () => {
         'quick_job',
         'full_time', 
         'part_time',
-        'contract',
         'remote'
       ]
 
       validJobTypes.forEach(type => {
-        expect(['quick_job', 'full_time', 'part_time', 'contract', 'remote']).toContain(type)
+        expect(['quick_job', 'full_time', 'part_time', 'remote']).toContain(type)
       })
     })
 
@@ -333,7 +332,6 @@ describe('Job Posting Feature', () => {
         'quick_job',
         'full_time',
         'part_time', 
-        'contract',
         'remote'
       ]
 

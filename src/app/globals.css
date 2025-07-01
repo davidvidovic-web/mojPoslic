@@ -28,25 +28,25 @@
   }
  
   .dark {
-    /* Dark mode - Softer, less harsh colors */
-    --background: 222 15% 7%;          /* Very dark blue-gray instead of pure black */
+    /* Dark mode - Softer, less harsh colors with improved readability */
+    --background: 222 15% 9%;          /* Slightly lighter background */
     --foreground: 0 0% 95%;            /* Slightly off-white instead of pure white */
-    --card: 222 15% 10%;               /* Dark blue-gray cards */
+    --card: 222 15% 12%;               /* Lighter dark blue-gray cards */
     --card-foreground: 0 0% 95%;       /* Slightly off-white text */
-    --popover: 222 15% 10%;            /* Dark blue-gray */
+    --popover: 222 15% 12%;            /* Lighter dark blue-gray */
     --popover-foreground: 0 0% 95%;    /* Slightly off-white text */
     --primary: 0 0% 95%;               /* Off-white primary */
-    --primary-foreground: 222 15% 7%;  /* Dark background color text */
-    --secondary: 222 15% 15%;          /* Lighter dark gray */
+    --primary-foreground: 222 15% 9%;  /* Dark background color text */
+    --secondary: 222 15% 18%;          /* Lighter secondary */
     --secondary-foreground: 0 0% 90%;  /* Light gray text */
-    --muted: 222 15% 18%;              /* Lighter muted gray */
-    --muted-foreground: 0 0% 65%;      /* More readable light gray text */
-    --accent: 222 15% 20%;             /* Lighter accent gray */
+    --muted: 222 15% 22%;              /* Much lighter muted gray */
+    --muted-foreground: 0 0% 70%;      /* More readable light gray text */
+    --accent: 222 15% 25%;             /* Lighter accent gray */
     --accent-foreground: 0 0% 95%;     /* Off-white text */
     --destructive: 0 62% 50%;          /* Red for destructive actions */
     --destructive-foreground: 0 0% 95%; /* Off-white text */
-    --border: 222 15% 20%;             /* Lighter border for better visibility */
-    --input: 222 15% 12%;              /* Slightly lighter input background */
+    --border: 222 15% 25%;             /* Much lighter border for better visibility */
+    --input: 222 15% 15%;              /* Lighter input background */
     --ring: 0 0% 95%;                  /* Off-white focus ring */
   }
 }

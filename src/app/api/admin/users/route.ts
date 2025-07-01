@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -82,33 +82,73 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const { userId, role } = await request.json()
+    const body = await request.json()
+    const { userId, role } = body
+    
+    console.log('Updating user role:', { userId, role })
 
     if (!userId || !role) {
+      console.error('Missing required fields:', { userId, role })
       return NextResponse.json(
         { error: 'User ID and role are required' },
         { status: 400 }
       )
     }
 
-    const updatedUser = await prisma.user.update({
+    // Validate role value
+    const validRoles = ['admin', 'client', 'tasker', 'company']
+    if (!validRoles.includes(role)) {
+      console.error('Invalid role provided:', role)
+      return NextResponse.json(
+        { error: 'Invalid role value' },
+        { status: 400 }
+      )
+    }
+
+    console.log('Looking up user before update:', userId)
+    const userBeforeUpdate = await prisma.user.findUnique({
       where: { id: userId },
-      data: { role },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        companyName: true,
-        createdAt: true
-      }
+      select: { id: true, email: true, role: true }
     })
+    console.log('User before update:', userBeforeUpdate)
+
+    // Convert the string role to a proper Prisma enum value
+    // We'll use the Prisma raw query to update the role to avoid type issues
+    const updatedUser = await prisma.$queryRaw`
+      UPDATE users 
+      SET role = ${role}::user_role 
+      WHERE id = ${userId}
+      RETURNING id, email, name, role, company_name as "companyName", created_at as "createdAt"
+    `
+    
+    // Extract the first result from the raw query
+    const result = Array.isArray(updatedUser) ? updatedUser[0] : updatedUser
+    
+    console.log('User after update with raw query:', result)
+    
+    console.log('User after update:', updatedUser)
 
     return NextResponse.json(updatedUser)
   } catch (error) {
     console.error('Error updating user role:', error)
+    
+    // Add more detailed error information
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+      
+      // Check for Prisma-specific error properties without using 'any'
+      // @ts-expect-error - Bypassing TypeScript checks for Prisma error properties
+      if (error.code) {
+        // @ts-expect-error - Accessing Prisma error properties
+        console.error('Error code:', error.code)
+        // @ts-expect-error - Accessing Prisma error properties
+        console.error('Error meta:', error.meta)
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update user role' },
+      { error: 'Failed to update user role', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   } finally {
