@@ -4,6 +4,41 @@ import { validateUsernameFormat } from '@/lib/username-validation'
 
 const prisma = new PrismaClient()
 
+export async function GET(request: NextRequest) {
+  try {
+    const email = request.nextUrl.searchParams.get('email')
+    
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      )
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { name: true },
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ name: user.name })
+  } catch (error) {
+    console.error('Error checking username:', error)
+    return NextResponse.json(
+      { error: 'Failed to check username' },
+      { status: 500 }
+    )
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { username } = await request.json()

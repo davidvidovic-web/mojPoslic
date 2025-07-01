@@ -67,3 +67,83 @@
     text-wrap: balance;
   }
 }
+
+/* Custom Toast Styling */
+@layer components {
+  /* Success toasts - Green */
+  [data-sonner-toast][data-type="success"] {
+    @apply bg-green-50 border-green-200 text-green-800;
+  }
+  
+  [data-sonner-toast][data-type="success"] [data-icon] {
+    @apply text-green-600;
+  }
+  
+  .dark [data-sonner-toast][data-type="success"] {
+    @apply bg-green-900/20 border-green-800/30 text-green-100;
+  }
+  
+  .dark [data-sonner-toast][data-type="success"] [data-icon] {
+    @apply text-green-400;
+  }
+
+  /* Error toasts - Red */
+  [data-sonner-toast][data-type="error"] {
+    @apply bg-red-50 border-red-200 text-red-800;
+  }
+  
+  [data-sonner-toast][data-type="error"] [data-icon] {
+    @apply text-red-600;
+  }
+  
+  .dark [data-sonner-toast][data-type="error"] {
+    @apply bg-red-900/20 border-red-800/30 text-red-100;
+  }
+  
+  .dark [data-sonner-toast][data-type="error"] [data-icon] {
+    @apply text-red-400;
+  }
+
+  /* Warning toasts - Orange */
+  [data-sonner-toast][data-type="warning"] {
+    @apply bg-orange-50 border-orange-200 text-orange-800;
+  }
+  
+  [data-sonner-toast][data-type="warning"] [data-icon] {
+    @apply text-orange-600;
+  }
+  
+  .dark [data-sonner-toast][data-type="warning"] {
+    @apply bg-orange-900/20 border-orange-800/30 text-orange-100;
+  }
+  
+  .dark [data-sonner-toast][data-type="warning"] [data-icon] {
+    @apply text-orange-400;
+  }
+
+  /* Info toasts - Blue */
+  [data-sonner-toast][data-type="info"] {
+    @apply bg-blue-50 border-blue-200 text-blue-800;
+  }
+  
+  [data-sonner-toast][data-type="info"] [data-icon] {
+    @apply text-blue-600;
+  }
+  
+  .dark [data-sonner-toast][data-type="info"] {
+    @apply bg-blue-900/20 border-blue-800/30 text-blue-100;
+  }
+  
+  .dark [data-sonner-toast][data-type="info"] [data-icon] {
+    @apply text-blue-400;
+  }
+
+  /* Default toast styling */
+  [data-sonner-toast] {
+    @apply rounded-lg border shadow-lg p-4 max-w-sm font-medium;
+  }
+  
+  [data-sonner-toast] [data-close-button] {
+    @apply opacity-60 hover:opacity-100 transition-opacity;
+  }
+}

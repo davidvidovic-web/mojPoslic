@@ -34,6 +34,13 @@ export default function DashboardPage() {
     }
   }, [searchParams, router])
 
+  // Redirect to profile setup if not completed
+  useEffect(() => {
+    if (user && !user.profileSetupCompleted) {
+      router.push('/profile-setup')
+    }
+  }, [user, router])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -65,6 +72,18 @@ export default function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    )
+  }
+
+  // Show loading while redirecting to profile setup if not completed
+  if (user && !user.profileSetupCompleted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Setting up your profile...</p>
+        </div>
       </div>
     )
   }

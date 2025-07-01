@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { User, Mail, Lock } from 'lucide-react'
-import { toast } from 'sonner'
-import { UserRole } from '@/types/user'
-import { RoleSelectionSection } from './role-selection-section'
+import { showToast } from '@/lib/toast'
+import { useRouter } from 'next/navigation'
+import { PasswordStrengthIndicator, usePasswordValidation } from '@/components/password-strength-indicator'
 
 interface SignupFormSectionProps {
   loading: boolean
@@ -20,8 +20,6 @@ interface SignupFormSectionProps {
   setConfirmPassword: (password: string) => void
   signupName: string
   setSignupName: (name: string) => void
-  signupRole: UserRole
-  setSignupRole: (role: UserRole) => void
 }
 
 export function SignupFormSection({ 
@@ -35,15 +33,27 @@ export function SignupFormSection({
   confirmPassword,
   setConfirmPassword,
   signupName,
-  setSignupName,
-  signupRole,
-  setSignupRole
+  setSignupName
 }: SignupFormSectionProps) {
+  const router = useRouter()
+  
+  // Validate password strength
+  const passwordValidation = usePasswordValidation(signupPassword, {
+    name: signupName,
+    email: signupEmail
+  })
+  
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (signupPassword !== confirmPassword) {
-      toast.error("Passwords don't match")
+      showToast.error("Passwords don't match")
+      return
+    }
+
+    // Check password strength
+    if (passwordValidation && !passwordValidation.isValid) {
+      showToast.error("Please meet all password requirements")
       return
     }
 
@@ -60,20 +70,23 @@ export function SignupFormSection({
           email: signupEmail,
           password: signupPassword,
           name: signupName,
-          role: signupRole,
         }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to sign up')
+        throw new Error(errorData.error || errorData.message || 'Failed to sign up')
       }
 
-      toast.success('Account created successfully! You can now log in.')
+      showToast.success('Account created successfully! Please log in to continue.')
+      
+      // Redirect to login page instead of auto-login to avoid session issues
+      router.push('/login?registered=true')
+      
       onSuccess?.()
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign up'
-      toast.error(errorMessage)
+      showToast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -97,11 +110,6 @@ export function SignupFormSection({
           required
         />
       </div>
-      
-      <RoleSelectionSection 
-        signupRole={signupRole}
-        setSignupRole={setSignupRole}
-      />
       
       <div className="space-y-2">
         <Label htmlFor="signup-email">
@@ -135,8 +143,20 @@ export function SignupFormSection({
           autoCapitalize="none"
           autoComplete="new-password"
           required
-          minLength={6}
+          minLength={8}
         />
+        {signupPassword && (
+          <PasswordStrengthIndicator
+            password={signupPassword}
+            userInfo={{
+              name: signupName,
+              email: signupEmail
+            }}
+            showRequirements={true}
+            showStrengthBar={true}
+            className="mt-3"
+          />
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirm-password">
@@ -154,13 +174,18 @@ export function SignupFormSection({
           autoCapitalize="none"
           autoComplete="new-password"
           required
-          minLength={6}
+          minLength={8}
         />
+        {confirmPassword && signupPassword !== confirmPassword && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Passwords don&apos;t match
+          </p>
+        )}
       </div>
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={loading}
+        disabled={loading || (passwordValidation && !passwordValidation.isValid) || signupPassword !== confirmPassword}
       >
         {loading ? 'Creating account...' : 'Create Account'}
       </Button>

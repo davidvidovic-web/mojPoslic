@@ -1,19 +1,61 @@
 import { NextAuthOptions } from 'next-auth'
-// PrismaAdapter conflicts with credentials provider in NextAuth v4
-// import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import EmailProvider from 'next-auth/providers/email'
 import GoogleProvider from 'next-auth/providers/google'
 import { PrismaClient, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { emailService } from './email'
 
 // Create a separate PrismaClient instance for auth to avoid extension conflicts
 const authPrisma = new PrismaClient()
 
 export const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
-  // Don't use adapter with credentials provider
-  // adapter: PrismaAdapter(authPrisma),
+  adapter: PrismaAdapter(authPrisma),
   providers: [
+    EmailProvider({
+      server: {
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      },
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      sendVerificationRequest: async ({ identifier: email, url }) => {
+        console.log('🔗 Sending magic link to:', email)
+        
+        // Modify the callback URL to point to our set-password page
+        const setPasswordUrl = url.replace('/callback', '/set-password')
+        console.log('🔗 Magic link URL:', setPasswordUrl)
+        
+        // Extract user name from database if exists
+        let userName = 'there'
+        try {
+          const user = await authPrisma.user.findUnique({
+            where: { email },
+            select: { name: true }
+          })
+          if (user?.name) {
+            userName = user.name
+          }
+        } catch (error) {
+          console.log('Could not fetch user name:', error)
+        }
+
+        const result = await emailService.sendMagicLink({
+          email,
+          name: userName,
+          url: setPasswordUrl,
+        })
+
+        if (!result.success) {
+          throw new Error(`Failed to send verification email: ${result.error}`)
+        }
+      },
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -66,6 +108,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             username: user.username,
             role: user.role,
+            profileSetupCompleted: user.profileSetupCompleted,
           }
         } catch (error) {
           console.error('❌ Auth error:', error)
@@ -87,6 +130,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.role = (user as { role: UserRole }).role
         token.username = (user as { username?: string }).username
+        token.profileSetupCompleted = (user as { profileSetupCompleted?: boolean }).profileSetupCompleted
       }
       return token
     },
@@ -95,12 +139,15 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
         session.user.username = token.username as string
+        session.user.profileSetupCompleted = token.profileSetupCompleted as boolean
       }
       return session
     },
   },
   pages: {
     signIn: '/login',
+    verifyRequest: '/auth/check-email',
+    error: '/auth/error',
   },
 }
 
@@ -113,12 +160,14 @@ declare module 'next-auth' {
       image?: string | null
       username?: string | null
       role: UserRole
+      profileSetupCompleted?: boolean
     }
   }
 
   interface User {
     username?: string | null
     role: UserRole
+    profileSetupCompleted?: boolean
   }
 }
 
@@ -127,5 +176,6 @@ declare module 'next-auth/jwt' {
     id?: string
     username?: string
     role: UserRole
+    profileSetupCompleted?: boolean
   }
 }

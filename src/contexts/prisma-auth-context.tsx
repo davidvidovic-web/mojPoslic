@@ -11,6 +11,7 @@ interface AuthContextType {
     email?: string | null
     username?: string | null
     role: UserRole
+    profileSetupCompleted?: boolean
   } | null
   loading: boolean
   hasRole: (role: UserRole) => boolean

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Mail, Lock } from 'lucide-react'
 import { signIn } from 'next-auth/react'
-import { toast } from 'sonner'
+import { showToast } from '@/lib/toast'
 
 interface LoginFormSectionProps {
   loading: boolean
@@ -47,7 +47,7 @@ export function LoginFormSection({
       }
 
       if (result?.ok) {
-        toast.success('Successfully logged in!')
+        showToast.success('Successfully logged in!')
         onSuccess?.()
       } else {
         throw new Error('Login failed')
@@ -55,7 +55,7 @@ export function LoginFormSection({
     } catch (error: unknown) {
       console.error('Login exception:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to log in'
-      toast.error(errorMessage)
+      showToast.error(errorMessage)
     } finally {
       setLoading(false)
     }

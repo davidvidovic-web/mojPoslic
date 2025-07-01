@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                     String              @id @default(cuid())
+  email                  String              @unique
+  username               String?             @unique
+  name                   String
+  password               String?
+  role                   UserRole            @default(tasker)
+  profileSetupCompleted  Boolean             @default(false)
+  avatarUrl              String?
+  companyName            String?
+  position               String?
+  bio                    String?
+  skills                 String?
+  experience             String?
+  preferredJobTypes      String[]            @default([])
+  phone                  String?
+  website                String?
+  location               String?
+  connections            Int                 @default(10)
+  connectionsLastRefresh DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  accounts               Account[]
+  applications           Application[]
+  connectionHistory      ConnectionHistory[]
+  postedJobs             JobListing[]        @relation("JobPoster")
+  sessions               Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model City {
+  id          String       @id @default(cuid())
+  key         String       @unique
+  nameBS      String
+  nameEN      String
+  latitude    Float?
+  longitude   Float?
+  isSpecial   Boolean      @default(false)
+  sortOrder   Int
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  jobListings JobListing[]
+
+  @@map("cities")
+}
+
+model JobListing {
+  id                   String        @id @default(cuid())
+  title                String
+  company              String
+  cityId               String
+  categoryId           String?
+  type                 JobType
+  description          String
+  requirements         String?
+  benefits             String?
+  salary               String?
+  salaryType           SalaryType?
+  salaryMin            Int?
+  salaryMax            Int?
+  email                String
+  website              String?
+  applicationUrl       String?
+  contactEmail         String?
+  isFeatured           Boolean       @default(false)
+  tags                 String?
+  startDate            DateTime?
+  startTime            String?
+  duration             String?
+  transportation       String        @default("not_provided")
+  transportationAmount Int?
+  expiresAt            DateTime?
+  status               JobStatus     @default(active)
+  jobAddress           String?
+  jobLatitude          Float?
+  jobLongitude         Float?
+  isActive             Boolean       @default(true)
+  postedById           String
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  applications         Application[]
+  category             Category?     @relation(fields: [categoryId], references: [id])
+  city                 City          @relation(fields: [cityId], references: [id])
+  postedBy             User          @relation("JobPoster", fields: [postedById], references: [id])
+
+  @@map("job_listings")
+}
+
+model Application {
+  id        String     @id @default(cuid())
+  jobId     String
+  userId    String
+  status    String     @default("pending")
+  message   String?
+  resume    String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  job       JobListing @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  key         String       @unique
+  nameBS      String
+  nameEN      String
+  description String?
+  icon        String?
+  color       String?
+  parentId    String?
+  sortOrder   Int          @default(0)
+  isActive    Boolean      @default(true)
+  isPopular   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryHierarchy")
+  jobListings JobListing[]
+}
+
+model ConnectionHistory {
+  id          String           @id @default(cuid())
+  userId      String
+  action      ConnectionAction
+  amount      Int
+  description String?
+  jobId       String?
+  createdAt   DateTime         @default(now())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

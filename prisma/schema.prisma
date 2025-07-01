@@ -3,8 +3,47 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum UserRole {
+  admin
+  client
+  tasker
+  company
+}
+
+enum JobType {
+  full_time
+  part_time
+  remote
+  quick_job
+}
+
+enum SalaryType {
+  fixed
+  hourly
+  daily
+  weekly
+  monthly
+}
+
+enum JobStatus {
+  active
+  inactive
+  completed
+  expired
+}
+
+enum ConnectionAction {
+  MONTHLY_REFRESH
+  INITIAL_SIGNUP
+  JOB_APPLICATION
+  JOB_POST_EMPLOYER
+  JOB_POST_COMPANY
+  ADMIN_ADJUSTMENT
+  PURCHASE
 }
 
 model User {
@@ -14,13 +53,14 @@ model User {
   name                   String
   password               String?
   role                   UserRole            @default(tasker)
+  profileSetupCompleted  Boolean             @default(false) @map("profile_setup_completed")
   avatarUrl              String?             @map("avatar_url")
   companyName            String?             @map("company_name")
   position               String?
   bio                    String?
   skills                 String?
   experience             String?
-  preferredJobTypes      String[]            @default([]) @map("preferred_job_types")
+  preferredJobTypes      String              @default("") @map("preferred_job_types")
   phone                  String?
   website                String?
   location               String?
@@ -111,7 +151,7 @@ model JobListing {
   applicationUrl       String?       @map("application_url")
   contactEmail         String?       @map("contact_email")
   isFeatured           Boolean       @default(false) @map("is_featured")
-  tags                 Json?
+  tags                 String?
   startDate            DateTime?     @map("start_date")
   startTime            String?       @map("start_time")
   duration             String?       @map("duration")
@@ -182,43 +222,4 @@ model ConnectionHistory {
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("connection_history")
-}
-
-enum ConnectionAction {
-  MONTHLY_REFRESH
-  INITIAL_SIGNUP
-  JOB_APPLICATION
-  JOB_POST_EMPLOYER
-  JOB_POST_COMPANY
-  ADMIN_ADJUSTMENT
-  PURCHASE
-}
-
-enum UserRole {
-  admin
-  client
-  tasker
-  company
-}
-
-enum JobType {
-  full_time
-  part_time
-  remote
-  quick_job
-}
-
-enum SalaryType {
-  fixed
-  hourly
-  daily
-  weekly
-  monthly
-}
-
-enum JobStatus {
-  active
-  inactive
-  completed
-  expired
 }

@@ -1,20 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { Briefcase } from 'lucide-react'
-import { UserRole } from '@/types/user'
 import { SocialLoginSection } from './auth/social-login-section'
 import { LoginFormSection } from './auth/login-form-section'
 import { SignupFormSection } from './auth/signup-form-section'
+import { MagicLinkSignupForm } from './auth/magic-link-signup-form'
 
 interface AuthFormProps {
   onSuccess?: () => void
 }
 
 export function AuthForm({ onSuccess }: AuthFormProps) {
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -22,7 +24,15 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const [signupPassword, setSignupPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [signupName, setSignupName] = useState('')
-  const [signupRole, setSignupRole] = useState<UserRole>('tasker')
+  const [activeTab, setActiveTab] = useState('login')
+
+  // Set initial tab from URL parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['login', 'signup', 'magic'].includes(tab)) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -53,10 +63,11 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
           </div>
 
           {/* Email/Password Forms */}
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="magic">Magic Link</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
@@ -84,8 +95,14 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                 setConfirmPassword={setConfirmPassword}
                 signupName={signupName}
                 setSignupName={setSignupName}
-                signupRole={signupRole}
-                setSignupRole={setSignupRole}
+              />
+            </TabsContent>
+
+            <TabsContent value="magic">
+              <MagicLinkSignupForm
+                loading={loading}
+                setLoading={setLoading}
+                onSuccess={onSuccess}
               />
             </TabsContent>
           </Tabs>

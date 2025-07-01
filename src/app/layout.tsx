@@ -25,7 +25,21 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>
           <div className="min-h-screen bg-background">
-            <Toaster position="top-right" />
+            <Toaster 
+              position="top-right" 
+              richColors
+              closeButton
+              duration={4000}
+              theme="system"
+              toastOptions={{
+                style: {
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                },
+                className: 'toast-custom',
+              }}
+            />
             <Header />
             {children}
           </div>

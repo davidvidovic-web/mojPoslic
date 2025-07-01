@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, UserRole } from '@prisma/client'
 import { validatePassword } from '@/lib/password-validation'
 import { validateUsernameFormat, generateUsernameSuggestions } from '@/lib/username-validation'
 
@@ -20,7 +20,7 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, username: providedUsername, role = 'tasker' } = await request.json()
+    const { email, password, name, username: providedUsername } = await request.json()
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -134,7 +134,8 @@ export async function POST(request: NextRequest) {
         username,
         name,
         password: hashedPassword,
-        role: role as 'admin' | 'client' | 'tasker',
+        role: 'tasker' as UserRole, // Default role, will be updated in profile setup
+        profileSetupCompleted: false
       }
     })
 

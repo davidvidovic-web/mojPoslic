@@ -8,6 +8,7 @@ export interface UserProfile {
   name: string
   username?: string
   role: UserRole
+  profileSetupCompleted?: boolean
   created_at: string
   updated_at: string
   avatar_url?: string
@@ -21,5 +22,6 @@ export interface AuthUser {
   name: string
   username?: string
   role: UserRole
+  profileSetupCompleted?: boolean
   profile?: UserProfile
 }

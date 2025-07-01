@@ -38,6 +38,14 @@ const JOB_TYPES = [
     description: 'Remote work opportunities',
     isPopular: true,
     sortOrder: 4
+  },
+  {
+    key: 'contract' as const,
+    nameEN: 'Contract',
+    nameBS: 'Ugovorni Rad',
+    description: 'Contract-based work',
+    isPopular: false,
+    sortOrder: 5
   }
 ] as const
 
