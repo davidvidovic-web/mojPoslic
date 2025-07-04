@@ -1,12 +1,12 @@
 # mojPoslić - Modern Job Board App
 
-A production-ready job board application built with Next.js 15, React 19, TypeScript, and TailwindCSS v4.
+A production-ready job board application built with Next.js 15, React 19, TypeScript, and TailwindCSS v3.
 
 ## ✨ Features
 
 - 📋 Browse and search job listings with advanced filters
 - 💼 Post job opportunities with rich text editor
-- 🎨 Beautiful, responsive UI with shadcn/ui components and TailwindCSS v4
+- 🎨 Beautiful, responsive UI with shadcn/ui components and TailwindCSS v3
 - 🔍 Real-time search with location and salary filtering
 - 📍 Location-based job discovery with city extraction
 - 💰 Salary range display and filtering
@@ -48,7 +48,7 @@ A production-ready job board application built with Next.js 15, React 19, TypeSc
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript 5.8
-- **Styling**: TailwindCSS v4 with CSS custom properties
+- **Styling**: TailwindCSS v3 with CSS custom properties
 - **UI Components**: shadcn/ui with Radix UI primitives
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth v5 with multiple OAuth providers
@@ -215,7 +215,7 @@ npm start
 
 ### Theme Configuration
 - Edit colors in `src/app/globals.css` using CSS custom properties
-- TailwindCSS v4 configuration with `@theme` directive
+- TailwindCSS v3 configuration in `tailwind.config.js`
 - Automatic dark/light mode with system preference detection
 
 ### Component Customization
@@ -250,4 +250,4 @@ MIT License - feel free to use this project for personal or commercial purposes.
 
 ---
 
-Built with ❤️ using Next.js, TailwindCSS v4, and modern web technologies.
+Built with ❤️ using Next.js, TailwindCSS v3, and modern web technologies.
