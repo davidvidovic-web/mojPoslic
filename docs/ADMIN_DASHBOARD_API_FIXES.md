@@ -210,42 +210,37 @@ const jobs = await prisma.jobListing.findMany({
 - City fields: `nameEN` and `nameBS` (not `name_en`, `name_bs`, or `name`)
 - Category fields: `nameEN` and `nameBS` (not `name_en`, `name_bs`, or `name`)
 
-## TypeScript Fixes
-Added proper eslint-disable comments for Prisma type handling:
+### 9. Job Description HTML Rendering Fix
+**Problem**: Job descriptions displaying visible HTML tags like `<p>` instead of formatted text
+- Job descriptions are stored as HTML content (from rich text editor)
+- Components were rendering HTML as plain text using `{job.description}`
+- This caused visible `<p>`, `<br>`, and other HTML tags in the UI
+
+**Solution**:
+Fixed job card components to properly render HTML content:
+
 ```typescript
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const formattedCategories = categories.map((category: any) => ({
-  // ...
-}))
+// Before: Plain text rendering (shows HTML tags)
+<p className="text-sm text-muted-foreground line-clamp-2">
+  {job.description}
+</p>
+
+// After: Proper HTML rendering
+<div 
+  className="text-sm text-muted-foreground line-clamp-2 prose prose-sm max-w-none"
+  dangerouslySetInnerHTML={{ __html: job.description }}
+/>
 ```
 
-## Database Schema Alignment
-All APIs now correctly align with the Prisma schema:
+**Files Updated**:
+- `/src/components/job-card-list.tsx` - Main job listing cards
+- `/src/components/dashboard/client/job-card.tsx` - Client dashboard job cards  
+- `/src/components/job-card-new.tsx` - New job card component
 
-| Database Field | Prisma Field | API Response |
-|---------------|--------------|--------------|
-| `name_bs` | `nameBS` | `nameBS` |
-| `name_en` | `nameEN` | `nameEN` |
-| `job_listings` table | `jobListing` model | - |
-| `categories` table | `category` model | - |
-| `cities` table | `city` model | - |
+**Benefits**:
+- Job descriptions now display properly formatted text
+- HTML tags are no longer visible to users
+- Consistent with other job detail components that already use `dangerouslySetInnerHTML`
+- Added `prose` classes for better typography
 
-## Connections Management System
-The connections management system is now fully functional:
-
-### Features:
-- **User Selection**: Dropdown to select any user
-- **Amount Input**: Numeric input for connection amount
-- **Reason Field**: Optional reason for granting connections
-- **User List**: Display all users with current connection counts
-- **Real-time Updates**: Refresh user list after granting connections
-
-### API Endpoints:
-- `GET /api/admin/connections` - Fetch all users with connection balances
-- `POST /api/admin/connections` - Grant connections to a user
-
-### Validation:
-- Admin role required
-- User ID must be provided
-- Amount must be a valid number
-- Connection history logging for audit trail
+## Security Considerations

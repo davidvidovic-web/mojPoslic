@@ -43,9 +43,10 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
               )}
             </div>
             
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-              {job.description}
-            </p>
+            <div 
+              className="text-sm text-muted-foreground mb-3 line-clamp-2 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: job.description }}
+            />
             
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center">

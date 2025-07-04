@@ -16,7 +16,7 @@ A modern job board application built with Next.js, shadcn/ui, and PostgreSQL.
 - 👤 User profiles with role-based access control
 - 🏙️ City-based job filtering
 - � Dark/Light mode support
-- 👥 Three user types: Admin, Client, and Tasker
+- 👥 Three user types: Admin, Company, Client, and Tasker
 
 ## User Roles
 

@@ -41,9 +41,10 @@ export function JobCard({ job }: JobCardProps) {
       
       <CardContent className="flex-1 space-y-4 pt-0 px-6">
         <div>
-          <p className="text-sm line-clamp-3 text-muted-foreground">
-            {job.description}
-          </p>
+          <div 
+            className="text-sm line-clamp-3 text-muted-foreground prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: job.description }}
+          />
         </div>
 
         <div className="space-y-3">

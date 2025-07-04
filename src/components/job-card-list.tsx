@@ -133,9 +133,10 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
           </div>
           
           {/* Description */}
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-            {job.description}
-          </p>
+          <div 
+            className="text-sm text-muted-foreground line-clamp-2 leading-relaxed prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: job.description }}
+          />
           
           {/* Badge Section - Better mobile spacing */}
           <div className="flex flex-wrap items-center gap-2">
