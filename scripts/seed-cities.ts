@@ -122,7 +122,6 @@ const bosnianCities: CityData[] = [
   { key: 'istočno-sarajevo', nameBS: 'Istočno Sarajevo', nameEN: 'Istočno Sarajevo', sortOrder: 85 },
   { key: 'sokolac', nameBS: 'Sokolac', nameEN: 'Sokolac', sortOrder: 86 },
   { key: 'han-pijesak', nameBS: 'Han Pijesak', nameEN: 'Han Pijesak', sortOrder: 87 },
-  { key: 'vlasenica', nameBS: 'Vlasenica', nameEN: 'Vlasenica', sortOrder: 88 },
   { key: 'ključ', nameBS: 'Ključ', nameEN: 'Ključ', sortOrder: 89 },
   { key: 'sanski-most', nameBS: 'Sanski Most', nameEN: 'Sanski Most', sortOrder: 90 },
   { key: 'petrovac', nameBS: 'Petrovac', nameEN: 'Petrovac', sortOrder: 91 },
@@ -154,7 +153,8 @@ async function seedBosnianCities() {
     let skipped = 0
     
     for (const cityData of bosnianCities) {
-      const existingCity = existingCities.find(city => city.key === cityData.key)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const existingCity = existingCities.find((city: any) => city.key === cityData.key)
       
       if (existingCity) {
         // Update existing city if data has changed

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { #getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 import { 
   getJobById, 
@@ -109,7 +108,7 @@ export async function DELETE(
 ) {
   try {
     // Get the current session
-    const session = await #getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -164,7 +163,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await #getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user?.id) {
       return NextResponse.json(

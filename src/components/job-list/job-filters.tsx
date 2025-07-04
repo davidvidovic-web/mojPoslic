@@ -59,10 +59,10 @@ export function JobFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="quick-job">Quick Job</SelectItem>
             <SelectItem value="full-time">Full Time</SelectItem>
             <SelectItem value="part-time">Part Time</SelectItem>
             <SelectItem value="remote">Remote</SelectItem>
-            <SelectItem value="quick-job">Quick Job</SelectItem>
           </SelectContent>
         </Select>
       </div>

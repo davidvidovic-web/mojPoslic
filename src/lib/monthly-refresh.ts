@@ -62,7 +62,7 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
               // Log the refresh
               await tx.$executeRaw`
                 INSERT INTO connection_history (id, user_id, action, amount, description, created_at)
-                VALUES (gen_random_uuid()::text, ${user.id}, 'MONTHLY_REFRESH', ${MONTHLY_CONNECTIONS}, 'Automatic monthly connections refresh', NOW())
+                VALUES (gen_random_uuid()::text, ${user.id}, 'MONTHLY_REFRESH'::"ConnectionAction", ${MONTHLY_CONNECTIONS}, 'Automatic monthly connections refresh', NOW())
               `
             })
 

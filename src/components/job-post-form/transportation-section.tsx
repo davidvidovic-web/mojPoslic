@@ -76,7 +76,7 @@ export function TransportationSection({ formData, onChange }: TransportationSect
           <li>• Clear transportation arrangements increase application rates</li>
           <li>• Consider offering transportation or compensation for remote job locations</li>
           <li>• Transportation compensation can help attract more candidates</li>
-          <li>• Mention if parking is available for employees who drive</li>
+          <li>• Mention if parking is available for taskers who drive</li>
           <li>• Include public transport accessibility information if relevant</li>
         </ul>
       </div>

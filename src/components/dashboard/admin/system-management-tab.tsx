@@ -1,12 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/ui/pagination'
-import { Shield } from 'lucide-react'
+import { Shield, Users } from 'lucide-react'
+import { toast } from 'sonner'
+import { ConnectionGrantHistory } from './connection-grant-history'
 
 interface AdminCategory {
   id: string
@@ -30,27 +35,95 @@ interface AdminCity {
   createdAt: string
 }
 
-interface AdminJobType {
-  key: string
-  nameEN: string
-  nameBS: string
-  description: string
-  isPopular: boolean
-  sortOrder: number
-  jobCount: number
+interface ConnectionUser {
+  id: string
+  email: string
+  name: string
+  role: string
+  connections: number
+  companyName?: string
 }
 
 interface SystemManagementTabProps {
   categories: AdminCategory[]
   cities: AdminCity[]
-  jobTypes: AdminJobType[]
 }
 
-export function SystemManagementTab({ categories, cities, jobTypes }: SystemManagementTabProps) {
+export function SystemManagementTab({ categories, cities }: SystemManagementTabProps) {
   const [systemActiveTab, setSystemActiveTab] = useState('categories')
+  const [connectionUsers, setConnectionUsers] = useState<ConnectionUser[]>([])
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [connectionAmount, setConnectionAmount] = useState('')
+  const [reason, setReason] = useState('')
+  const [loadingConnections, setLoadingConnections] = useState(false)
+  const [grantingConnections, setGrantingConnections] = useState(false)
   const [categoryPage, setCategoryPage] = useState(1)
   const [cityPage, setCityPage] = useState(1)
   const itemsPerPage = 10
+
+  // Load users for connections management
+  useEffect(() => {
+    if (systemActiveTab === 'connections') {
+      fetchUsersForConnections()
+    }
+  }, [systemActiveTab])
+
+  const fetchUsersForConnections = async () => {
+    setLoadingConnections(true)
+    try {
+      const response = await fetch('/api/admin/users')
+      if (response.ok) {
+        const users = await response.json()
+        setConnectionUsers(users.data || users)
+      } else {
+        toast.error('Failed to load users')
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      toast.error('Failed to load users')
+    } finally {
+      setLoadingConnections(false)
+    }
+  }
+
+  const handleGrantConnections = async () => {
+    if (!selectedUserId || !connectionAmount || isNaN(Number(connectionAmount))) {
+      toast.error('Please select a user and enter a valid connection amount')
+      return
+    }
+
+    setGrantingConnections(true)
+    try {
+      const response = await fetch('/api/admin/connections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: selectedUserId,
+          amount: parseInt(connectionAmount),
+          reason: reason || 'Admin grant'
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Connections granted successfully')
+        setSelectedUserId('')
+        setConnectionAmount('')
+        setReason('')
+        // Refresh user list
+        fetchUsersForConnections()
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to grant connections')
+      }
+    } catch (error) {
+      console.error('Error granting connections:', error)
+      toast.error('Failed to grant connections')
+    } finally {
+      setGrantingConnections(false)
+    }
+  }
 
   const paginatedCategories = categories.slice(
     (categoryPage - 1) * itemsPerPage,
@@ -79,7 +152,8 @@ export function SystemManagementTab({ categories, cities, jobTypes }: SystemMana
             <TabsList>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="cities">Cities</TabsTrigger>
-              <TabsTrigger value="types">Job Types</TabsTrigger>
+              <TabsTrigger value="connections">Connections</TabsTrigger>
+              <TabsTrigger value="history">Connection History</TabsTrigger>
             </TabsList>
 
             <TabsContent value="categories">
@@ -156,28 +230,129 @@ export function SystemManagementTab({ categories, cities, jobTypes }: SystemMana
               </div>
             </TabsContent>
 
-            <TabsContent value="types">
-              <div className="space-y-4">
+            <TabsContent value="connections">
+              <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Job Type Management</h3>
-                  <p className="text-sm text-muted-foreground">Job types are predefined enum values and cannot be modified.</p>
+                  <h3 className="text-lg font-semibold">Connection Management</h3>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <span className="text-sm text-muted-foreground">
+                      Grant connections to users
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {jobTypes.map((type) => (
-                    <div key={type.key} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{type.nameEN}</h4>
-                          <span className="text-sm text-muted-foreground">({type.nameBS})</span>
-                          {type.isPopular && <Badge variant="default" className="text-xs">Popular</Badge>}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{type.description}</p>
-                        <p className="text-xs text-muted-foreground">Jobs using this type: {type.jobCount}</p>
+
+                {/* Grant Connections Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Grant Connections</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="user-select">Select User</Label>
+                        <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a user..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {connectionUsers.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                <div className="flex flex-col">
+                                  <span>{user.name || user.email}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {user.role} • {user.connections} connections
+                                    {user.companyName && ` • ${user.companyName}`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="connection-amount">Connection Amount</Label>
+                        <Input
+                          id="connection-amount"
+                          type="number"
+                          min="1"
+                          value={connectionAmount}
+                          onChange={(e) => setConnectionAmount(e.target.value)}
+                          placeholder="Number of connections"
+                        />
                       </div>
                     </div>
-                  ))}
+                    <div className="space-y-2">
+                      <Label htmlFor="reason">Reason (Optional)</Label>
+                      <Input
+                        id="reason"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        placeholder="Reason for granting connections..."
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleGrantConnections}
+                      disabled={grantingConnections || !selectedUserId || !connectionAmount}
+                      className="w-full"
+                    >
+                      {grantingConnections ? 'Granting...' : 'Grant Connections'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* User List */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">User Connections</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={fetchUsersForConnections}
+                      disabled={loadingConnections}
+                    >
+                      {loadingConnections ? 'Loading...' : 'Refresh'}
+                    </Button>
+                  </div>
+                  
+                  {loadingConnections ? (
+                    <div className="text-center py-8">
+                      <div className="text-muted-foreground">Loading users...</div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {connectionUsers.map((user) => (
+                        <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium">{user.name || 'Unknown'}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {user.role}
+                              </Badge>
+                              <span className="text-sm font-medium text-primary">
+                                {user.connections} connections
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            {user.companyName && (
+                              <p className="text-xs text-muted-foreground">Company: {user.companyName}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {connectionUsers.length === 0 && (
+                        <div className="text-center py-8">
+                          <div className="text-muted-foreground">No users found.</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="history">
+              <ConnectionGrantHistory />
             </TabsContent>
           </Tabs>
         </CardContent>

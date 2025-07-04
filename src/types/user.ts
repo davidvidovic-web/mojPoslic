@@ -12,7 +12,7 @@ export interface UserProfile {
   created_at: string
   updated_at: string
   avatar_url?: string
-  position?: string // For employees
+  position?: string // For taskers
   bio?: string
 }
 

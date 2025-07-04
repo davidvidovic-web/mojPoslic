@@ -14,6 +14,12 @@ export interface UseJobFormStateProps {
 
 export function useJobFormState({ initialData, isEditMode = false }: UseJobFormStateProps) {
   const { user } = useAuth()
+  
+  // Check if user can post all job types (companies and admins)
+  const canPostAllJobTypes = user?.role === 'company' || user?.role === 'admin'
+  
+  // Set default job type based on user role
+  const defaultJobType = canPostAllJobTypes ? (initialData?.type || 'quick_job') : 'quick_job'
   const [currentStep, setCurrentStep] = useState<JobFormStep>('basic-details')
   const [completedSteps, setCompletedSteps] = useState<Set<JobFormStep>>(new Set())
   const [stepValidations, setStepValidations] = useState<Record<JobFormStep, boolean>>({
@@ -27,7 +33,7 @@ export function useJobFormState({ initialData, isEditMode = false }: UseJobFormS
     title: initialData?.title || '',
     city_id: initialData?.city_id || '',
     category_id: initialData?.category_id || '',
-    type: initialData?.type || 'full_time',
+    type: defaultJobType,
     description: initialData?.description || '',
     requirements: initialData?.requirements || '',
     benefits: initialData?.benefits || '',

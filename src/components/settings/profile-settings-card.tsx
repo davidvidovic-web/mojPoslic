@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 import { User } from 'lucide-react'
 import { toast } from 'sonner'
-import { useRobustAuth } from '@/contexts/robust-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 
 interface UserProfile {
   name: string
@@ -28,11 +28,11 @@ interface UserProfile {
 }
 
 export function ProfileSettingsCard() {
-  const { profile: authProfile, loading: authLoading } = useRobustAuth()
+  const { user: authProfile, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
-    role: 'employee'
+    role: 'tasker'
   })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -44,7 +44,7 @@ export function ProfileSettingsCard() {
         email: authProfile.email || '',
         username: authProfile.username || '',
         bio: authProfile.bio || '',
-        role: authProfile.role || 'employee',
+        role: authProfile.role || 'tasker',
         phone: authProfile.position || '', // Map position to phone for now
         location: '',
         website: '',

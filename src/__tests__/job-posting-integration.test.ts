@@ -61,9 +61,9 @@ describe('Job Posting Integration Tests', () => {
 
   const mockUser = {
     id: 'user-123',
-    email: 'employer@example.com',
-    name: 'Test Employer',
-    role: 'employer'
+    email: 'client@example.com',
+    name: 'Test Client',
+    role: 'client'
   }
 
   const mockSession = {

@@ -1,7 +1,7 @@
 # Transportation Feature Implementation Summary
 
 ## Overview
-Successfully implemented a comprehensive transportation field enhancement to the job posting workflow. The feature allows employers to specify transportation arrangements (provided, not provided, or employee responsible) and displays this information consistently across all job views.
+Successfully implemented a comprehensive transportation field enhancement to the job posting workflow. The feature allows clients to specify transportation arrangements (provided, not provided, or tasker responsible) and displays this information consistently across all job views.
 
 ## What Was Implemented
 
@@ -49,7 +49,7 @@ The feature supports three transportation arrangements:
 
 1. **"provided"** → Displays as "Transportation provided" with 🚗 emoji
 2. **"not_provided"** → Displays as "Transportation not provided" with 🚫 emoji  
-3. **"employee_responsible"** → Displays as "Employee responsible for transportation" with 🚶 emoji
+3. **"tasker_responsible"** → Displays as "Tasker responsible for transportation" with 🚶 emoji
 
 ## User Experience
 - **Job Posting Form**: Step 2 now includes transportation selection alongside location and compensation
@@ -63,7 +63,7 @@ The feature supports three transportation arrangements:
 ### Form Integration
 ```typescript
 // Transportation field in form data
-transportation?: 'provided' | 'not_provided' | 'employee_responsible'
+transportation?: 'provided' | 'not_provided' | 'tasker_responsible'
 ```
 
 ### API Handling

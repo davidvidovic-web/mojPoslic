@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsData {
   activeJobs: number;
-  employers: number;
+  clients: number;
   totalUsers: number;
   finishedJobs: number;
 }
@@ -14,7 +14,7 @@ interface StatsData {
 const SiteStats = () => {
   const [stats, setStats] = useState<StatsData>({
     activeJobs: 0,
-    employers: 0,
+    clients: 0,
     totalUsers: 0,
     finishedJobs: 0,
   });
@@ -106,7 +106,7 @@ const SiteStats = () => {
           <Building className="h-7 w-7 text-purple-600 dark:text-purple-400" />
         </div>
         <div className="text-3xl font-bold flex items-center justify-center">
-          <AnimatedNumber value={stats.employers} suffix="+" />
+          <AnimatedNumber value={stats.clients} suffix="+" />
         </div>
         <div className="text-sm text-muted-foreground font-medium">
           Registered Clients

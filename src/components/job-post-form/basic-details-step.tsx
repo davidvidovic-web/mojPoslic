@@ -32,24 +32,30 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
   const [selectedParentCategory, setSelectedParentCategory] = useState('')
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
 
-  // Check if user is a company (can post full-time/part-time/remote jobs with benefits/requirements)
-  const isCompany = user?.role === 'company'
+  // Check if user can post all job types (companies and admins)
+  const canPostAllJobTypes = user?.role === 'company' || user?.role === 'admin'
 
-  // Clear requirements and benefits for non-company users
+  // Clear requirements and benefits for non-company/non-admin users and auto-set job type
   useEffect(() => {
-    if (!isCompany) {
+    if (!canPostAllJobTypes) {
+      const updates: Partial<CreateJobData> = {}
+      
+      // Clear requirements and benefits
       if (formData.requirements || formData.benefits) {
-        onChange({ 
-          requirements: '', 
-          benefits: '',
-          // Also reset job type if it's company-only
-          ...(formData.type && ['full_time', 'part_time', 'remote'].includes(formData.type) 
-            ? { type: 'quick_job' } 
-            : {})
-        })
+        updates.requirements = ''
+        updates.benefits = ''
+      }
+      
+      // Auto-set to quick_job if not already set or if it's a company-only job type
+      if (!formData.type || ['full_time', 'part_time', 'remote'].includes(formData.type)) {
+        updates.type = 'quick_job'
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        onChange(updates)
       }
     }
-  }, [isCompany, formData.requirements, formData.benefits, formData.type, onChange])
+  }, [canPostAllJobTypes, formData.requirements, formData.benefits, formData.type, onChange])
 
   // Load categories
   useEffect(() => {
@@ -101,15 +107,15 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
     onValidation(isValid)
   }, [formData.title, formData.description, formData.category_id, formData.type, onValidation])
 
-  // Separate effect to handle job type validation for non-company users
+  // Separate effect to handle job type validation for non-company/non-admin users
   useEffect(() => {
-    if (!isCompany && formData.type && ['full_time', 'part_time', 'remote'].includes(formData.type) && !hasResetJobType.current) {
+    if (!canPostAllJobTypes && formData.type && ['full_time', 'part_time', 'remote'].includes(formData.type) && !hasResetJobType.current) {
       hasResetJobType.current = true
       onChange({ type: 'quick_job' })
-    } else if (isCompany || !['full_time', 'part_time', 'remote'].includes(formData.type || '')) {
+    } else if (canPostAllJobTypes || !['full_time', 'part_time', 'remote'].includes(formData.type || '')) {
       hasResetJobType.current = false
     }
-  }, [isCompany, formData.type, onChange])
+  }, [canPostAllJobTypes, formData.type, onChange])
 
   return (
     <div className="space-y-6">
@@ -127,29 +133,22 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="job-type">Job Type *</Label>
-          <Select value={formData.type || ''} onValueChange={(value) => onChange({ type: value as 'quick_job' | 'full_time' | 'part_time' | 'remote' })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select job type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="quick_job">Quick Job</SelectItem>
-              {isCompany && (
-                <>
-                  <SelectItem value="full_time">Full-time</SelectItem>
-                  <SelectItem value="part_time">Part-time</SelectItem>
-                  <SelectItem value="remote">Remote</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-          {!isCompany && (
-            <p className="text-xs text-muted-foreground">
-              Only companies can post full-time, part-time, and remote positions.
-            </p>
-          )}
-        </div>
+        {canPostAllJobTypes && (
+          <div className="space-y-2">
+            <Label htmlFor="job-type">Job Type *</Label>
+            <Select value={formData.type || ''} onValueChange={(value) => onChange({ type: value as 'quick_job' | 'full_time' | 'part_time' | 'remote' })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select job type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="quick_job">Quick Job</SelectItem>
+                <SelectItem value="full_time">Full-time</SelectItem>
+                <SelectItem value="part_time">Part-time</SelectItem>
+                <SelectItem value="remote">Remote</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {/* Category Selection */}
@@ -239,8 +238,8 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           </p>
         </div>
 
-        {/* Requirements and Benefits - Only for companies */}
-        {isCompany && (
+        {/* Requirements and Benefits - Only for companies and admins */}
+        {canPostAllJobTypes && (
           <>
             <div className="space-y-2">
               <Label htmlFor="requirements">

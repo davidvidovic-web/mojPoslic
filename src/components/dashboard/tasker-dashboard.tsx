@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRobustAuth } from '@/contexts/robust-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { Job } from '@/types/job'
 import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { TaskerStatsCards } from './tasker/tasker-stats-cards'
@@ -18,7 +18,7 @@ interface JobApplication {
 }
 
 export function TaskerDashboard() {
-  const { user } = useRobustAuth()
+  const { user } = useAuth()
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])

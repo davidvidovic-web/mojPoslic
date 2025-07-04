@@ -11,7 +11,7 @@ import {
   Car
 } from "lucide-react"
 import { Job } from "@/types/job"
-import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatEmployerName } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
 
 interface JobHeaderProps {
   job: Job
@@ -27,13 +27,13 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
       <CardHeader>
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-xl bg-muted border flex items-center justify-center font-bold text-xl">
-            {formatEmployerName(job.company).charAt(0).toUpperCase()}
+            {formatClientName(job.company).charAt(0).toUpperCase()}
           </div>
           <div className="flex-1">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold">{job.title}</h1>
-                <p className="text-lg text-muted-foreground mt-1">{formatEmployerName(job.company)}</p>
+                <p className="text-lg text-muted-foreground mt-1">{formatClientName(job.company)}</p>
               </div>
               <Badge variant={getTypeVariant(job.type)}>
                 {formatJobType(job.type)}

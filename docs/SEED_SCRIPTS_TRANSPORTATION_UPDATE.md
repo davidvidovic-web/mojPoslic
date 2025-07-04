@@ -8,7 +8,7 @@ All seed scripts have been reviewed and updated to include the new transportatio
 ### 1. `/scripts/seed-jobs.ts` ✅
 - **Status**: Already updated with transportation fields
 - **Features**: 
-  - Random transportation options: `provided`, `not_provided`, `employee_responsible`, `compensated`
+  - Random transportation options: `provided`, `not_provided`, `tasker_responsible`, `compensated`
   - Dynamic amount generation (50-300 BAM) for `compensated` option
   - Integrated into existing job creation workflow
 
@@ -76,7 +76,7 @@ All seed scripts now randomly assign one of these transportation options:
 
 1. **`provided`** - Company provides transportation
 2. **`not_provided`** - No transportation provided
-3. **`employee_responsible`** - Employee handles own transportation
+3. **`tasker_responsible`** - Tasker handles own transportation
 4. **`compensated`** - Company compensates for transportation costs
    - When selected, includes random amount between 50-500 BAM
 
@@ -98,7 +98,7 @@ Sample output from latest seeded jobs:
 - System Administrator: not_provided
 - Full Stack Developer: compensated (59 BAM)
 - Graphic Designer: provided
-- DevOps Engineer: employee_responsible
+- DevOps Engineer: tasker_responsible
 - Business Analyst: provided
 - Product Manager: compensated (96 BAM)
 ```

@@ -1,11 +1,11 @@
 # Dashboard System Documentation
 
 ## Overview
-The mojPoslić application now features a comprehensive dashboard system with role-based access control. Each user type (Admin, Employer, Employee) has a customized dashboard tailored to their specific needs and permissions.
+The mojPoslić application now features a comprehensive dashboard system with role-based access control. Each user type (Admin, Client, Tasker) has a customized dashboard tailored to their specific needs and permissions.
 
 ## Dashboard Features
 
-### 🏢 **Employer Dashboard** (`/dashboard` for employers)
+### 🏢 **Client Dashboard** (`/dashboard` for clients)
 **Purpose**: Manage job postings and track recruitment efforts
 
 **Features**:
@@ -25,7 +25,7 @@ The mojPoslić application now features a comprehensive dashboard system with ro
 - Integrated job posting form
 - Responsive grid layout
 
-### 👤 **Employee Dashboard** (`/dashboard` for employees)
+### 👤 **Tasker Dashboard** (`/dashboard` for taskers)
 **Purpose**: Track job applications and discover new opportunities
 
 **Features**:
@@ -50,7 +50,7 @@ The mojPoslić application now features a comprehensive dashboard system with ro
 **Features**:
 - **User Management**:
   - View all registered users
-  - Change user roles (Employee → Employer → Admin)
+  - Change user roles (Tasker → Client → Admin)
   - Delete user accounts
   - User search and filtering
   - User statistics by role
@@ -59,7 +59,7 @@ The mojPoslić application now features a comprehensive dashboard system with ro
   - Delete inappropriate job postings
   - Edit job details (coming soon)
   - Job search and filtering
-- **Platform Statistics**: Total users, employers, jobs, and growth metrics
+- **Platform Statistics**: Total users, clients, jobs, and growth metrics
 - **Role-based Actions**: Prevent self-deletion, role management
 
 **Key Components**:
@@ -79,8 +79,8 @@ src/
 ├── components/
 │   ├── dashboard/
 │   │   ├── admin-dashboard.tsx      # Admin management interface
-│   │   ├── employer-dashboard.tsx   # Employer job management
-│   │   └── employee-dashboard.tsx   # Employee application tracking
+│   │   ├── client-dashboard.tsx   # Client job management
+│   │   └── tasker-dashboard.tsx   # Tasker application tracking
 │   ├── role-based.tsx              # Role-based conditional rendering
 │   └── user-menu.tsx               # Updated with dashboard link
 └── types/
@@ -98,8 +98,8 @@ src/
 // Dashboard routing logic
 switch (profile.role) {
   case 'admin': return <AdminDashboard />
-  case 'employer': return <EmployerDashboard />
-  case 'employee': return <EmployeeDashboard />
+  case 'client': return <ClientDashboard />
+  case 'tasker': return <TaskerDashboard />
 }
 ```
 
@@ -119,8 +119,8 @@ switch (profile.role) {
 - Unauthenticated users redirected to login page
 
 ### Permissions
-- **Employees**: Read-only access to jobs, application tracking
-- **Employers**: Can manage own job postings, view applications
+- **Taskers**: Read-only access to jobs, application tracking
+- **Clients**: Can manage own job postings, view applications
 - **Admins**: Full platform access, user/job management
 
 ### Security
@@ -132,7 +132,7 @@ switch (profile.role) {
 1. **Application System**: Full job application workflow
 2. **Analytics**: Advanced reporting and insights
 3. **Notifications**: Real-time updates and alerts
-4. **Messaging**: Direct communication between employers/employees
+4. **Messaging**: Direct communication between clients/taskers
 5. **Profile Management**: Enhanced user profile editing
 6. **Bulk Operations**: Batch job/user management for admins
 7. **Export Features**: Data export for reporting
@@ -140,16 +140,16 @@ switch (profile.role) {
 
 ## Usage Examples
 
-### Employer Workflow
-1. Login as employer
+### Client Workflow
+1. Login as client
 2. Access dashboard via user menu
 3. View job posting statistics
 4. Create new job posting
 5. Manage existing job listings
 6. Track job performance
 
-### Employee Workflow
-1. Login as employee
+### Tasker Workflow
+1. Login as tasker
 2. Access dashboard via user menu
 3. Review application status
 4. Browse recommended jobs

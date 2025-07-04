@@ -12,7 +12,7 @@ jest.mock('@/contexts/auth-context', () => ({
     user: {
       id: 'test-user-id',
       email: 'test@example.com',
-      role: 'employer'
+      role: 'client'
     }
   })
 }))

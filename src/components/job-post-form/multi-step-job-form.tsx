@@ -10,6 +10,7 @@ interface MultiStepJobFormProps {
   jobId?: string
   onJobPosted?: () => void
   onCancel?: () => void
+  showCard?: boolean
 }
 
 export function MultiStepJobForm({ 
@@ -17,7 +18,8 @@ export function MultiStepJobForm({
   isEditMode = false, 
   jobId, 
   onJobPosted,
-  onCancel 
+  onCancel,
+  showCard = true
 }: MultiStepJobFormProps) {
   if (isEditMode && jobId && initialData) {
     return (
@@ -34,6 +36,7 @@ export function MultiStepJobForm({
     <JobPostForm
       initialData={initialData}
       onJobPosted={onJobPosted}
+      showCard={showCard}
     />
   )
 }

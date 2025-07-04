@@ -148,23 +148,29 @@ MIT License - feel free to use this project for personal or commercial purposes.
 - ✅ User profile management via Clerk's UserButton
 - ✅ Secure session management
 - ✅ Role-based access control integration
-- ✅ Automatic user synchronization
+- ✅ Database session storage with Prisma
 
 ### **Implementation Details:**
-- **Provider**: Clerk (latest Next.js App Router integration)
-- **Middleware**: `clerkMiddleware()` for route protection
-- **Components**: `<SignInButton>`, `<SignUpButton>`, `<UserButton>`, `<SignedIn>`, `<SignedOut>`
-- **Server Auth**: `auth()` from `@clerk/nextjs/server` for API routes
-- **Client Auth**: `useUser()` hook integrated with custom auth context
+- **Provider**: Auth.js (NextAuth v5) with multiple OAuth providers
+- **Middleware**: `auth()` function for route protection
+- **Database**: Session storage via Prisma adapter
+- **Providers**: Google OAuth, GitHub OAuth (configurable)
+- **Server Auth**: `auth()` from `@/lib/auth` for API routes
+- **Client Auth**: `useSession()` hook integrated with custom auth context
 
 ### **User Flow:**
-1. **Sign Up/Sign In**: Click buttons in header to authenticate via Clerk
-2. **Profile Setup**: Complete account type selection (client/tasker/company)
-3. **Job Posting**: Authenticated users can post jobs (free with connection system)
-4. **Dashboard Access**: Role-based access to admin and user dashboards
+1. **Sign In**: Choose provider (Google/GitHub) on custom sign-in page
+2. **Session Creation**: Auth.js creates database session via Prisma
+3. **Role Assignment**: User role stored in database and included in session
+4. **Job Posting**: Authenticated users can post jobs (free with connection system)
+5. **Dashboard Access**: Role-based access to admin and user dashboards
 
 **Environment Variables Required:**
 ```bash
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secure-secret-key
+AUTH_GOOGLE_ID=your-google-client-id
+AUTH_GOOGLE_SECRET=your-google-client-secret
+AUTH_GITHUB_ID=your-github-client-id
+AUTH_GITHUB_SECRET=your-github-client-secret
 ```

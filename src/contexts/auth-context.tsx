@@ -1,8 +1,9 @@
 'use client'
 
-import React, { createContext, useContext, ReactNode } from 'react'
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { UserRole } from '@prisma/client'
+
+type UserRole = 'admin' | 'client' | 'tasker' | 'company'
 
 interface AuthUser {
   id: string
@@ -21,6 +22,7 @@ interface AuthContextType {
   isClient: boolean
   isTasker: boolean
   isCompany: boolean
+  refreshUser: () => Promise<void>
 }
 
 // Auth.js-powered auth context
@@ -32,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   isClient: false,
   isTasker: false,
   isCompany: false,
+  refreshUser: async () => {},
 })
 
 export const useAuth = () => {
@@ -44,15 +47,52 @@ export const useAuth = () => {
 
 function AuthContextProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession()
+  const [dbUser, setDbUser] = useState<Partial<AuthUser> | null>(null)
+  const [loading, setLoading] = useState(false)
   
-  // Convert Auth.js session to our app's user format
+  // Fetch fresh user data from database
+  const fetchUserData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/user/me`)
+      if (response.ok) {
+        const userData = await response.json()
+        setDbUser({
+          profileSetupCompleted: userData.profileSetupCompleted,
+          role: userData.role, // In case role was updated
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch user data when session changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserData()
+    } else {
+      setDbUser(null)
+    }
+  }, [session?.user?.id])
+
+  // Refresh user data manually
+  const refreshUser = async () => {
+    if (session?.user?.id) {
+      await fetchUserData()
+    }
+  }
+  
+  // Convert Auth.js session to our app's user format, with database fallback
   const user: AuthUser | null = session?.user ? {
     id: session.user.id,
     name: session.user.name,
     email: session.user.email,
-    username: null, // Can be added to session if needed
-    role: session.user.role as UserRole,
-    profileSetupCompleted: false, // This should be fetched from your database
+    username: null,
+    role: (dbUser?.role as UserRole) || (session.user.role as UserRole) || 'client',
+    profileSetupCompleted: dbUser?.profileSetupCompleted ?? session.user.profileSetupCompleted ?? false,
   } : null
 
   const hasRole = (role: UserRole): boolean => {
@@ -67,12 +107,13 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
 
   const contextValue: AuthContextType = {
     user,
-    loading: status === 'loading',
+    loading: status === 'loading' || loading,
     hasRole,
     isAdmin,
     isClient,
     isTasker,
     isCompany,
+    refreshUser,
   }
 
   return (
@@ -84,7 +125,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   return (
-    <AuthContextProvider children={children}>
+    <AuthContextProvider>
       {children}
     </AuthContextProvider>
   )

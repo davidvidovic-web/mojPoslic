@@ -80,9 +80,9 @@ const benefits = [
   'Performance bonuses\n• Transportation allowance\n• Meal vouchers\n• Social events\n• Continuing education support'
 ]
 
-const jobTypes = ['full_time', 'part_time', 'remote', 'quick_job']
+const jobTypes = ['quick_job', 'full_time', 'part_time', 'remote']
 
-const transportationOptions = ['provided', 'not_provided', 'employee_responsible', 'compensated']
+const transportationOptions = ['provided', 'not_provided', 'tasker_responsible', 'compensated']
 
 function getRandomTransportation(): { transportation: string, amount?: number } {
   const option = getRandomElement(transportationOptions)
@@ -160,7 +160,7 @@ async function seedJobs() {
       const title = getRandomElement(jobTitles)
       const company = getRandomElement(companies)
       const city = getRandomElement(cities)
-      const type = getRandomElement(jobTypes) as 'full_time' | 'part_time' | 'remote' | 'quick_job'
+      const type = getRandomElement(jobTypes) as 'quick_job' | 'full_time' | 'part_time' | 'remote'
       const transportationData = getRandomTransportation()
       
       const jobData = {

@@ -7,7 +7,7 @@ import { ArrowLeft, Briefcase } from "lucide-react"
 import { Job } from "@/types/job"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
-import { formatEmployerName } from "@/lib/job-utils"
+import { formatClientName } from "@/lib/job-utils"
 import { JobHeader } from "@/components/job/job-header"
 import { JobContent } from "@/components/job/job-content"
 import { JobLocation } from "@/components/job/job-location"
@@ -74,10 +74,10 @@ export default function JobDetailPage() {
       } 
       // If there's a contact email, open email client
       else if (job.contact_email) {
-        const subject = `Application for ${job.title} at ${formatEmployerName(job.company)}`
+        const subject = `Application for ${job.title} at ${formatClientName(job.company)}`
         const body = `Dear Hiring Manager,
 
-I am interested in applying for the ${job.title} position at ${formatEmployerName(job.company)}. 
+I am interested in applying for the ${job.title} position at ${formatClientName(job.company)}. 
 
 Please find my resume attached and let me know if you need any additional information.
 

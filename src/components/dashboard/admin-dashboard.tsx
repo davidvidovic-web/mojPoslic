@@ -9,6 +9,7 @@ import { AdminStatsCards } from './admin/admin-stats-cards'
 import { UserManagementTab } from './admin/user-management-tab'
 import { JobManagementTab } from './admin/job-management-tab'
 import { SystemManagementTab } from './admin/system-management-tab'
+import { BillingManagementTab } from './admin/billing-management-tab'
 
 interface AdminUser {
   id: string
@@ -99,16 +100,6 @@ interface AdminCity {
   createdAt: string
 }
 
-interface AdminJobType {
-  key: string
-  nameEN: string
-  nameBS: string
-  description: string
-  isPopular: boolean
-  sortOrder: number
-  jobCount: number
-}
-
 export function AdminDashboard() {
   const { user } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -119,7 +110,6 @@ export function AdminDashboard() {
   // System management state
   const [categories, setCategories] = useState<AdminCategory[]>([])
   const [cities, setCities] = useState<AdminCity[]>([])
-  const [jobTypes, setJobTypes] = useState<AdminJobType[]>([])
 
   const fetchUsers = async () => {
     try {
@@ -191,20 +181,6 @@ export function AdminDashboard() {
     }
   }
 
-  const fetchJobTypes = async () => {
-    try {
-      const response = await fetch('/api/admin/types')
-      if (!response.ok) {
-        throw new Error('Failed to fetch job types')
-      }
-      const data = await response.json()
-      setJobTypes(data)
-    } catch (error) {
-      console.error('Error fetching job types:', error)
-      toast.error('Failed to load job types')
-    }
-  }
-
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
@@ -212,8 +188,7 @@ export function AdminDashboard() {
         fetchJobs(), 
         fetchStats(),
         fetchCategories(),
-        fetchCities(),
-        fetchJobTypes()
+        fetchCities()
       ])
       setLoading(false)
     }
@@ -258,6 +233,7 @@ export function AdminDashboard() {
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="jobs">Job Management</TabsTrigger>
             <TabsTrigger value="system">System Management</TabsTrigger>
+            <TabsTrigger value="billing">Billing Management</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -279,8 +255,11 @@ export function AdminDashboard() {
             <SystemManagementTab 
               categories={categories}
               cities={cities}
-              jobTypes={jobTypes}
             />
+          </TabsContent>
+
+          <TabsContent value="billing">
+            <BillingManagementTab />
           </TabsContent>
         </Tabs>
       </div>

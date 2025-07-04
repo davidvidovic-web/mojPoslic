@@ -18,6 +18,7 @@ interface JobFormBaseProps {
   onCancel?: () => void
   submitButtonText?: string
   submittingText?: string
+  showCard?: boolean
 }
 
 export function JobFormBase({
@@ -26,7 +27,8 @@ export function JobFormBase({
   onSubmit,
   onCancel,
   submitButtonText = 'Submit',
-  submittingText = 'Submitting...'
+  submittingText = 'Submitting...',
+  showCard = true
 }: JobFormBaseProps) {
   const {
     currentStep,
@@ -110,6 +112,77 @@ export function JobFormBase({
 
   const isLastStep = currentStep === 'review'
 
+  const content = (
+    <>
+      <StepIndicator
+        currentStep={currentStep}
+        completedSteps={completedSteps}
+        stepValidations={stepValidations}
+        isEditMode={isEditMode}
+        onStepClick={handleStepClick}
+      />
+
+      <div className="mt-8">
+        {renderCurrentStep()}
+      </div>
+
+      <div className="flex justify-between items-center mt-8 pt-6 border-t">
+        <div className="flex gap-2">
+          {canGoPrevious && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={isSubmitting}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
+          )}
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          {!isLastStep ? (
+            <Button
+              type="button"
+              onClick={handleNext}
+              disabled={!canGoNext || isSubmitting}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleFormSubmit}
+              disabled={isSubmitting || (!isEditMode && !isCurrentStepValid)}
+            >
+              {isSubmitting ? submittingText : submitButtonText}
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
+  )
+
+  if (!showCard) {
+    return (
+      <div className="w-full">
+        {content}
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Card>
@@ -119,64 +192,7 @@ export function JobFormBase({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <StepIndicator
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-            stepValidations={stepValidations}
-            isEditMode={isEditMode}
-            onStepClick={handleStepClick}
-          />
-
-          <div className="mt-8">
-            {renderCurrentStep()}
-          </div>
-
-          <div className="flex justify-between items-center mt-8 pt-6 border-t">
-            <div className="flex gap-2">
-              {canGoPrevious && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={isSubmitting}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Previous
-                </Button>
-              )}
-              {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              {!isLastStep ? (
-                <Button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={!canGoNext || isSubmitting}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  onClick={handleFormSubmit}
-                  disabled={isSubmitting || (!isEditMode && !isCurrentStepValid)}
-                >
-                  {isSubmitting ? submittingText : submitButtonText}
-                </Button>
-              )}
-            </div>
-          </div>
+          {content}
         </CardContent>
       </Card>
     </div>

@@ -2,7 +2,7 @@
 
 ## 🎯 **Feature Overview**
 
-Successfully enhanced the existing transportation feature to include **employer compensation for transportation** with specific amount fields. This provides employers with a flexible way to attract candidates by offering transportation reimbursement.
+Successfully enhanced the existing transportation feature to include **client compensation for transportation** with specific amount fields. This provides clients with a flexible way to attract candidates by offering transportation reimbursement.
 
 ---
 
@@ -33,7 +33,7 @@ transportation_amount INTEGER NULL  -- Amount in BAM for transportation compensa
 ### **2. TypeScript Types**
 ```typescript
 // Updated Job and CreateJobData interfaces
-transportation?: 'provided' | 'not_provided' | 'employee_responsible' | 'compensated'
+transportation?: 'provided' | 'not_provided' | 'tasker_responsible' | 'compensated'
 transportation_amount?: number  // Amount in BAM
 ```
 

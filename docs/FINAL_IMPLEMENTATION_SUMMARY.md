@@ -5,7 +5,7 @@
 ### 🎯 **Main Objectives Achieved**
 
 1. **✅ Enhanced Transportation Feature**
-   - Added `transportation` field with 4 options: `provided`, `not_provided`, `employee_responsible`, `compensated`
+   - Added `transportation` field with 4 options: `provided`, `not_provided`, `tasker_responsible`, `compensated`
    - Added `transportationAmount` field for compensation amounts (50-500 BAM)
    - Made transportation field required with default value `not_provided`
 

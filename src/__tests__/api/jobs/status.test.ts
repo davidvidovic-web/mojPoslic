@@ -53,7 +53,7 @@ describe('/api/jobs/[id]/status', () => {
 
       // Mock user role check
       mockPrisma.user.findUnique.mockResolvedValue({
-        role: 'employer',
+        role: 'client',
       })
 
       // Mock successful update
@@ -201,7 +201,7 @@ describe('/api/jobs/[id]/status', () => {
       })
 
       mockPrisma.user.findUnique.mockResolvedValue({
-        role: 'employee',
+        role: 'tasker',
       })
 
       const request = new NextRequest('http://localhost:3000/api/jobs/test-job-id/status', {

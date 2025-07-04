@@ -95,11 +95,9 @@ export default function DashboardPage() {
   if (user.role === UserRole.admin) {
     switch (dashboardView) {
       case 'client':
-      case 'client':
         return <ClientDashboard />
       case 'company':
         return <CompanyDashboard />
-      case 'tasker':
       case 'tasker':
         return <TaskerDashboard />
       case 'admin':

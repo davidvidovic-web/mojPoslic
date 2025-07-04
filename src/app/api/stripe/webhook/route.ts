@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
           // Create connection history using raw SQL to avoid TypeScript issues
           const historyResult = await prisma.$queryRaw`
             INSERT INTO connection_history (id, user_id, action, amount, description, created_at)
-            VALUES (gen_random_uuid(), ${userId}, 'PURCHASE', ${connectionsAmount}, ${packageDescription}, NOW())
+            VALUES (gen_random_uuid(), ${userId}, 'PURCHASE'::"ConnectionAction", ${connectionsAmount}, ${packageDescription}, NOW())
             RETURNING id, action, amount, description, created_at
           ` as Array<{ id: string; action: string; amount: number; description: string; created_at: Date }>
           

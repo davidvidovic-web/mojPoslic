@@ -8,9 +8,10 @@ import { JobFormBase } from './job-form-base'
 interface JobPostFormProps {
   onJobPosted?: () => void
   initialData?: Partial<CreateJobData>
+  showCard?: boolean
 }
 
-export function JobPostForm({ onJobPosted, initialData }: JobPostFormProps) {
+export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPostFormProps) {
   const { user } = useAuth()
 
   const handleSubmit = async (formData: CreateJobData) => {
@@ -24,20 +25,20 @@ export function JobPostForm({ onJobPosted, initialData }: JobPostFormProps) {
         company: formData.company,
         description: formData.description,
         type: formData.type,
-        cityId: formData.city_id,
-        categoryId: formData.category_id || null,
+        city_id: formData.city_id,
+        category_id: formData.category_id || null,
         salaryType: formData.salaryType || null,
         salaryMin: formData.salaryMin || null,
         salaryMax: formData.salaryMax || null,
         website: formData.website || null,
         email: formData.email || user?.email,
-        startDate: formData.start_date || null,
-        startTime: formData.start_time || null,
+        start_date: formData.start_date || null,
+        start_time: formData.start_time || null,
         duration: formData.duration || null,
         transportation: formData.transportation || null,
-        jobAddress: formData.job_address || null,
-        jobLatitude: formData.job_latitude || null,
-        jobLongitude: formData.job_longitude || null,
+        job_address: formData.job_address || null,
+        job_latitude: formData.job_latitude || null,
+        job_longitude: formData.job_longitude || null,
         requirements: formData.requirements || null,
         benefits: formData.benefits || null,
         application_url: formData.application_url || formData.website || null,
@@ -64,6 +65,7 @@ export function JobPostForm({ onJobPosted, initialData }: JobPostFormProps) {
       onSubmit={handleSubmit}
       submitButtonText="Submit Job Posting"
       submittingText="Submitting..."
+      showCard={showCard}
     />
   )
 }

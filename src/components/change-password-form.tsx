@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PasswordStrengthIndicator, usePasswordValidation } from '@/components/password-strength-indicator'
-import { useAuth } from '@/contexts/prisma-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Lock, Shield } from 'lucide-react'
 

@@ -1,0 +1,93 @@
+
+> mojposlic@0.1.0 build
+> next build
+
+Loading environment variables for Next.js...
+[dotenv@17.0.1] injecting env (0) from .env.local – [tip] encrypt with dotenvx: https://dotenvx.com
+✓ Stripe configuration loaded successfully
+Loading environment variables for Next.js...
+[dotenv@17.0.1] injecting env (0) from .env.local – [tip] encrypt with dotenvx: https://dotenvx.com
+✓ Stripe configuration loaded successfully
+   ▲ Next.js 15.3.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Loading environment variables for Next.js...
+[dotenv@17.0.1] injecting env (0) from .env.local – [tip] encrypt with dotenvx: https://dotenvx.com
+✓ Stripe configuration loaded successfully
+Failed to compile.
+
+./src/app/account-type/page.tsx
+Module not found: Can't resolve '@/components/ui/radio-group'
+
+https://nextjs.org/docs/messages/module-not-found
+
+./src/app/api/company/jobs/route.ts
+Error:   [31mx[0m Unexpected token `#`. Expected identifier or string
+   ,-[[36;1;4m/Users/vida/Documents/GitHub/poslic/src/app/api/company/jobs/route.ts[0m:2:1]
+ [2m1[0m | import { NextResponse } from 'next/server'
+ [2m2[0m | import { #getServerSession } from 'next-auth'
+   : [35;1m         ^[0m
+ [2m3[0m | import { authOptions } from '@/lib/auth'
+ [2m4[0m | import { PrismaClient } from '@prisma/client'
+   `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/api/company/jobs/route.ts
+
+./src/app/api/jobs/[id]/applications/route.ts
+Error:   [31mx[0m Unexpected token `#`. Expected identifier or string
+   ,-[[36;1;4m/Users/vida/Documents/GitHub/poslic/src/app/api/jobs/[id]/applications/route.ts[0m:2:1]
+ [2m1[0m | import { NextRequest, NextResponse } from 'next/server'
+ [2m2[0m | import { #getServerSession } from 'next-auth'
+   : [35;1m         ^[0m
+ [2m3[0m | import { authOptions } from '@/lib/auth'
+ [2m4[0m | import { PrismaClient } from '@prisma/client'
+   `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/api/jobs/[id]/applications/route.ts
+
+./src/app/api/jobs/[id]/apply/route.ts
+Error:   [31mx[0m Unexpected token `#`. Expected identifier or string
+   ,-[[36;1;4m/Users/vida/Documents/GitHub/poslic/src/app/api/jobs/[id]/apply/route.ts[0m:2:1]
+ [2m1[0m | import { NextResponse } from 'next/server'
+ [2m2[0m | import { #getServerSession } from 'next-auth'
+   : [35;1m         ^[0m
+ [2m3[0m | import { authOptions } from '@/lib/auth'
+ [2m4[0m | import { PrismaClient } from '@prisma/client'
+ [2m5[0m | import { getConnectionCost } from '@/lib/connections'
+   `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/api/jobs/[id]/apply/route.ts
+
+./src/app/api/jobs/[id]/status/route.ts
+Error:   [31mx[0m Unexpected token `#`. Expected identifier or string
+   ,-[[36;1;4m/Users/vida/Documents/GitHub/poslic/src/app/api/jobs/[id]/status/route.ts[0m:3:1]
+ [2m1[0m | import { NextRequest, NextResponse } from 'next/server'
+ [2m2[0m | import { PrismaClient } from '@prisma/client'
+ [2m3[0m | import { #getServerSession } from 'next-auth'
+   : [35;1m         ^[0m
+ [2m4[0m | import { authOptions } from '@/lib/auth'
+ [2m5[0m | 
+ [2m6[0m | const prisma = new PrismaClient()
+   `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/api/jobs/[id]/status/route.ts
+
+
+> Build failed because of webpack errors

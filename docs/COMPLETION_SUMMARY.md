@@ -186,17 +186,90 @@ Removed NextAuth.js and all related authentication infrastructure to prepare for
 3. Re-implement protected routes and user management
 4. Update API routes to use new authentication method
 
-## **Clerk Authentication Integration** ✅
+## **Auth.js Authentication Integration** ✅
 
-### **Installation and Setup**
-- ✅ Installed `@clerk/nextjs@^6.23.3`
-- ✅ Added Clerk environment variables to `.env.local`:
-  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-  - `CLERK_SECRET_KEY`
+### **Migration from Clerk to Auth.js**
+Successfully migrated from Clerk to Auth.js (NextAuth v5) for better control and reduced external dependencies:
+
+### **Dependencies Updated**
+- ✅ **Removed**: `@clerk/nextjs@^6.23.3`
+- ✅ **Installed**: `next-auth@beta` (Auth.js v5)
+- ✅ **Installed**: `@auth/prisma-adapter` for database integration
+
+### **Authentication Configuration**
+- ✅ Created `src/lib/auth.ts` with:
+  - Google OAuth provider configuration
+  - GitHub OAuth provider configuration
+  - Prisma adapter for database sessions
+  - Custom session callback to include user role
+  - TypeScript declarations for custom session properties
+
+### **API Integration**
+- ✅ Created `src/app/api/auth/[...nextauth]/route.ts` - Auth.js API handler
+- ✅ Updated `src/app/api/jobs/create/route.ts` to use Auth.js `auth()` function
+- ✅ Updated `src/app/api/company/stats/route.ts` to use Auth.js `auth()` function
 
 ### **Middleware Configuration**
-- ✅ Created `src/middleware.ts` using `clerkMiddleware()` from `@clerk/nextjs/server`
-- ✅ Configured proper matcher patterns for route protection
+- ✅ Updated `src/middleware.ts` to use Auth.js `auth()` function instead of `clerkMiddleware()`
+
+### **Authentication Context**
+- ✅ Updated `src/contexts/auth-context.tsx`:
+  - Replaced Clerk's `useUser()` with Auth.js `useSession()`
+  - Maintained all existing role-based authentication methods
+  - Updated user object structure to match Auth.js session format
+
+### **UI Components**
+- ✅ Updated `src/components/header.tsx`:
+  - Replaced Clerk components (`SignInButton`, `SignUpButton`, `UserButton`, `SignedIn`, `SignedOut`)
+  - Implemented custom authentication UI using Auth.js hooks
+  - Added dropdown menu for user management
+  - Integrated `signIn()`, `signOut()`, and session management
+
+### **Pages Updated**
+- ✅ Created `src/app/auth/signin/page.tsx` - Custom sign-in page with provider selection
+- ✅ Updated `src/app/account-type/page.tsx` to use `useSession()` instead of `useUser()`
+- ✅ Updated `src/app/admin/packages/page.tsx` to use `useSession()` instead of `useUser()`
+
+### **Layout Updates**
+- ✅ Updated `src/app/layout.tsx` to use `SessionProvider` instead of `ClerkProvider`
+
+### **Environment Variables**
+- ✅ **Removed Clerk variables**:
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+  - `CLERK_SECRET_KEY`
+- ✅ **Added Auth.js variables**:
+  - `NEXTAUTH_URL`
+  - `NEXTAUTH_SECRET`
+  - `AUTH_GOOGLE_ID`
+  - `AUTH_GOOGLE_SECRET`
+  - `AUTH_GITHUB_ID`
+  - `AUTH_GITHUB_SECRET`
+
+### **Database Compatibility**
+The existing Prisma schema already includes all necessary tables for Auth.js:
+- `Account` table for OAuth provider data
+- `Session` table for session management  
+- `VerificationToken` table for email verification
+- `User` table with role field for authorization
+
+### **Documentation**
+- ✅ Created `docs/AUTH_JS_MIGRATION.md` with detailed migration summary
+- ✅ Updated `.env.example` with Auth.js variables
+- ✅ Updated README.md authentication section
+
+### **Benefits of Migration**
+- **Self-Hosted**: All authentication data stays in your infrastructure
+- **No External Dependencies**: Reduced reliance on third-party services
+- **Full Control**: Complete control over authentication flow and user data
+- **Cost Effective**: No per-user pricing from external authentication service
+- **Provider Flexibility**: Easy to add/remove OAuth providers
+- **Database Integration**: Sessions stored directly in your Prisma database
+
+### **Configuration Required**
+To complete the setup:
+1. Set up OAuth applications in Google Console and GitHub
+2. Update environment variables with real OAuth credentials
+3. Test authentication flow end-to-end
 
 ### **App Router Integration**
 - ✅ Wrapped the application with `<ClerkProvider>` in `app/layout.tsx`

@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
       const actionType = user.role === 'company' ? 'JOB_POST_COMPANY' : 'JOB_POST_CLIENT'
       await tx.$executeRaw`
         INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
-        VALUES (gen_random_uuid()::text, ${userId}, ${actionType}, ${-connectionCost}, ${'Posted job as ' + user.role}, ${createdJob.id}, NOW())
+        VALUES (gen_random_uuid()::text, ${userId}, ${actionType}::"ConnectionAction", ${-connectionCost}, ${'Posted job as ' + user.role}, ${createdJob.id}, NOW())
       `
 
       return createdJob

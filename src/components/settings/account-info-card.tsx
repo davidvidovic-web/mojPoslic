@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { UserCircle, Crown, Building2, User } from 'lucide-react'
-import { useRobustAuth } from '@/contexts/robust-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 
 export function AccountInfoCard() {
-  const { profile, loading } = useRobustAuth()
+  const { user: profile, loading } = useAuth()
 
   const formatMemberSince = (dateString?: string) => {
     if (!dateString) return 'Unknown'
@@ -22,8 +22,8 @@ export function AccountInfoCard() {
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'admin': return 'Administrator'
-      case 'employer': return 'Employer'
-      case 'employee': return 'Employee'
+      case 'client': return 'Client'
+      case 'tasker': return 'Tasker'
       case 'company': return 'Company'
       default: return role
     }
@@ -32,8 +32,8 @@ export function AccountInfoCard() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin': return <Crown className="h-4 w-4" />
-      case 'employer': return <Building2 className="h-4 w-4" />
-      case 'employee': return <User className="h-4 w-4" />
+      case 'client': return <Building2 className="h-4 w-4" />
+      case 'tasker': return <User className="h-4 w-4" />
       case 'company': return <Building2 className="h-4 w-4" />
       default: return <User className="h-4 w-4" />
     }
@@ -42,8 +42,8 @@ export function AccountInfoCard() {
   const getRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (role) {
       case 'admin': return 'destructive'
-      case 'employer': return 'default'
-      case 'employee': return 'secondary'
+      case 'client': return 'default'
+      case 'tasker': return 'secondary'
       case 'company': return 'outline'
       default: return 'secondary'
     }

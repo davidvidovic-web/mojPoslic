@@ -141,7 +141,7 @@ const benefits = [
   'Competitive base salary plus commission structure\n• Health, dental, and vision insurance\n• Laptop and home office setup allowance\n• Quarterly team bonuses and recognition programs\n• Access to industry events and networking opportunities\n• Career advancement with clear promotion criteria'
 ]
 
-const jobTypes = ['full_time', 'part_time', 'remote', 'quick_job']
+const jobTypes = ['quick_job', 'full_time', 'part_time', 'remote']
 const transportationOptions = ['provided', 'not_provided', 'tasker_responsible', 'compensated']
 
 function getRandomElement<T>(array: T[]): T {
