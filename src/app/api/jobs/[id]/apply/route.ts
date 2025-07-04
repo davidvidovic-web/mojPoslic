@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { getConnectionCost } from '@/lib/connections'
 
-const prisma = new PrismaClient()
-
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await auth()
     
     if (!session?.user?.email) {
@@ -15,9 +14,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
 
     const { message, resume } = await request.json()
-    const jobId = params.id
 
-    if (!jobId) {
+    if (!id) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 })
     }
 
@@ -50,7 +48,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const existingApplication = await prisma.application.findUnique({
       where: {
         jobId_userId: {
-          jobId,
+          jobId: id,
           userId: user.id
         }
       }
@@ -65,7 +63,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       // Create the application
       const application = await tx.application.create({
         data: {
-          jobId,
+          jobId: id,
           userId: user.id,
           message: message || null,
           resume: resume || null,
@@ -83,7 +81,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       // Log connection usage using raw SQL
       await tx.$executeRaw`
         INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
-        VALUES (gen_random_uuid()::text, ${user.id}, 'JOB_APPLICATION'::"ConnectionAction", ${-connectionCost}, 'Applied for job', ${jobId}, NOW())
+        VALUES (gen_random_uuid()::text, ${user.id}, 'JOB_APPLICATION'::"ConnectionAction", ${-connectionCost}, 'Applied for job', ${id}, NOW())
       `
 
       return application

@@ -8,14 +8,28 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private resend: Resend;
+  private resend: Resend | null;
 
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.warn('RESEND_API_KEY not found. Email functionality will be disabled.');
+      this.resend = null;
+    } else {
+      this.resend = new Resend(apiKey);
+    }
   }
 
   async sendEmail({ to, subject, text, html }: EmailOptions) {
     try {
+      if (!this.resend) {
+        console.warn('Email service not available - RESEND_API_KEY not configured');
+        return {
+          success: false,
+          error: "Email service not configured"
+        };
+      }
+
       if (html) {
         const data = await this.resend.emails.send({
           from: "mojPoslić <mail@davidvidovic.com>",
@@ -46,6 +60,14 @@ class EmailService {
 
   async sendVerificationEmail(email: string, code: string) {
     try {
+      if (!this.resend) {
+        console.warn('Email service not available - RESEND_API_KEY not configured');
+        return {
+          success: false,
+          error: "Email service not configured"
+        };
+      }
+
       const data = await this.resend.emails.send({
         from: "mojPoslić <mail@davidvidovic.com>",
         to: [email],

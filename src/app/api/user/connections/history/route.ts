@@ -51,7 +51,7 @@ export async function GET() {
     const formattedHistory = history.map(entry => ({
       id: entry.id,
       action: entry.action,
-      actionLabel: formatConnectionAction(entry.action as any), // Use 'any' to avoid type issues
+      actionLabel: formatConnectionAction(entry.action as string), // Format action as string
       amount: entry.amount,
       description: entry.description,
       jobId: entry.job_id,

@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
     } = await request.json()
 
     // Validate username if provided
-    if (username && username !== session.user.username) {
+    if (username) {
       const formatValidation = validateUsernameFormat(username)
       if (!formatValidation.isValid) {
         return NextResponse.json({ 

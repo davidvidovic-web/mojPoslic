@@ -53,7 +53,7 @@ export default function SignIn() {
         showToast.success('Signed in successfully!')
         window.location.href = '/dashboard'
       }
-    } catch (error) {
+    } catch {
       showToast.error('Sign in failed')
     } finally {
       setLoading(false)

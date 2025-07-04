@@ -26,7 +26,7 @@ export async function GET() {
       _count: {
         role: true
       }
-    })
+    }) as Array<{ role: string; _count: { role: number } }>
 
     // Convert to the expected format
     const users = {
@@ -37,8 +37,7 @@ export async function GET() {
       company: 0
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    userStats.forEach((stat: any) => {
+    userStats.forEach((stat) => {
       users.total += stat._count.role
       users[stat.role as keyof typeof users] = stat._count.role
     })

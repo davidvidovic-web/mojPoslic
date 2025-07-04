@@ -68,6 +68,7 @@ export interface Job {
 // Create job data interface for form submission
 export interface CreateJobData {
   title: string
+  company?: string
   city_id: string
   category_id?: string
   type: 'quick_job' | 'full_time' | 'part_time' | 'remote'

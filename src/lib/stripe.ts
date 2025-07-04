@@ -1,28 +1,36 @@
 import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
 
-// Load environment variables if needed
-let stripeSecretKey = process.env.STRIPE_SECRET_KEY
+// Lazy-loaded Stripe instance
+let stripeInstance: Stripe | null = null
 
-// In development, provide a fallback if environment variable is not loaded
-if (!stripeSecretKey && process.env.NODE_ENV !== 'production') {
-  console.warn('STRIPE_SECRET_KEY not found in environment. Using backup key for development only.')
-  // Use the key we know works from our test
-  stripeSecretKey = 'sk_test_51QhqZaKT9svruQVBNQtWs6lG8QcbrmedyxFJPQar9uxcr8cczm80l4NQvV56GvWtrgB9oDiVIP26QOtHHA4zRIYD00KKX5c0BT'
+const getStripeInstance = (): Stripe => {
+  if (!stripeInstance) {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required')
+    }
+    
+    stripeInstance = new Stripe(stripeSecretKey, {
+      apiVersion: '2025-06-30.basil',
+      typescript: true,
+    })
+  }
+  
+  return stripeInstance
 }
 
-// Server-side Stripe instance
-export const stripe = new Stripe(stripeSecretKey || 'sk_test_invalid', {
-  apiVersion: '2025-05-28.basil',
-  typescript: true,
+// Server-side Stripe instance - use getter to avoid initialization at module load
+export const stripe = new Proxy({} as Stripe, {
+  get(target, prop) {
+    return getStripeInstance()[prop as keyof Stripe]
+  }
 })
 
 // Client-side Stripe instance
 export const getStripe = () => {
-  // Support both naming conventions for the publishable key
-  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 
-                         process.env.STRIPE_PUBLISHABLE_KEY || 
-                         'pk_test_51QhqZaKT9svruQVBbDxyOYN9UwZRIMnDABGD5HVwLuQszUymLDs0bcA6mpLKXJJ5rNFZ8u8ARUc34u40K3coZUhZ00iOJRoHzE'
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   
   if (!publishableKey) {
     console.warn('No Stripe publishable key found. Client-side Stripe functionality will not work.')

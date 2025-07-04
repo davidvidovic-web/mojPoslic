@@ -51,7 +51,7 @@ export function ProfileSettingsCard() {
         skills: [],
         experience: '',
         preferredJobTypes: [],
-        createdAt: authProfile.created_at
+        createdAt: authProfile.createdAt?.toISOString()
       })
     }
   }, [authProfile])

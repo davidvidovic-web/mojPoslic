@@ -10,8 +10,11 @@ interface AuthUser {
   name?: string | null
   email?: string | null
   username?: string | null
+  bio?: string | null
+  position?: string | null
   role: UserRole
   profileSetupCompleted?: boolean
+  createdAt?: Date
 }
 
 interface AuthContextType {

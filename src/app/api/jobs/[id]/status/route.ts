@@ -6,9 +6,10 @@ const prisma = new PrismaClient()
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
     
     if (!session?.user?.id) {
@@ -46,7 +47,7 @@ export async function PATCH(
 
     // Check if job exists and user owns it
     const existingJob = await prisma.jobListing.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { 
         id: true, 
         postedById: true, 
@@ -92,7 +93,7 @@ export async function PATCH(
       : cleanDescription
 
     const updatedJob = await prisma.jobListing.update({
-      where: { id: params.id },
+      where: { id },
       data: { 
         isActive,
         description: updatedDescription
@@ -125,11 +126,12 @@ export async function PATCH(
 // GET endpoint to retrieve current job status
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const job = await prisma.jobListing.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         title: true,

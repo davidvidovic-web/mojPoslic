@@ -9,11 +9,11 @@ import { useAuth } from '@/contexts/auth-context'
 export function AccountInfoCard() {
   const { user: profile, loading } = useAuth()
 
-  const formatMemberSince = (dateString?: string) => {
-    if (!dateString) return 'Unknown'
+  const formatMemberSince = (date?: string | Date) => {
+    if (!date) return 'Unknown'
     
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    return dateObj.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long'
     })
@@ -124,7 +124,7 @@ export function AccountInfoCard() {
           <div>
             <Label className="text-sm font-medium">Member Since</Label>
             <p className="text-sm text-muted-foreground">
-              {formatMemberSince(profile.created_at)}
+              {formatMemberSince(profile.createdAt)}
             </p>
           </div>
           

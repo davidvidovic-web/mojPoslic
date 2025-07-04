@@ -24,4 +24,5 @@ export interface AuthUser {
   role: UserRole
   profileSetupCompleted?: boolean
   profile?: UserProfile
+  createdAt?: Date
 }

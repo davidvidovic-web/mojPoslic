@@ -1,30 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Define the category type based on Prisma schema
-interface CategoryWithChildren {
-  id: string
-  key: string
-  nameBS: string
-  nameEN: string
-  isPopular: boolean
-  sortOrder: number
-  children: {
-    id: string
-    key: string
-    nameBS: string
-    nameEN: string
-    isPopular: boolean
-    sortOrder: number
-  }[]
-}
-
 export async function GET() {
   try {
     // Fetch all categories with their children
-    // Note: TypeScript doesn't recognize the category model but it works at runtime
-    // @ts-expect-error - Prisma model recognition issue
-    const categories: CategoryWithChildren[] = await prisma.category.findMany({
+    const categories = await prisma.category.findMany({
       where: {
         parentId: null, // Only get parent categories
         isActive: true
@@ -39,21 +19,21 @@ export async function GET() {
     })
 
     // Transform the data to match the expected format
-    const formattedCategories = categories.map((category) => ({
+    const formattedCategories = categories.map((category: Record<string, unknown>) => ({
       id: category.id,
       key: category.key,
       nameBS: category.nameBS,
       nameEN: category.nameEN,
       isPopular: category.isPopular,
       sortOrder: category.sortOrder,
-      children: category.children.map((child) => ({
+      children: Array.isArray(category.children) ? category.children.map((child: Record<string, unknown>) => ({
         id: child.id,
         key: child.key,
         nameBS: child.nameBS,
         nameEN: child.nameEN,
         isPopular: child.isPopular,
         sortOrder: child.sortOrder
-      }))
+      })) : []
     }))
 
     return NextResponse.json({ categories: formattedCategories })

@@ -36,7 +36,12 @@ export async function deleteJob(jobId: string, userId: string) {
 /**
  * Transform job data for API response
  */
-export function transformJobData(job: any, city: any, category: any, postedBy: any) {
+export function transformJobData(
+  job: Record<string, unknown>,
+  city: Record<string, unknown>,
+  category: Record<string, unknown>,
+  postedBy: Record<string, unknown>
+) {
   return {
     id: job.id,
     title: job.title,

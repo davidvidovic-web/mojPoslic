@@ -12,7 +12,8 @@ export interface UseJobFormStateProps {
   isEditMode?: boolean
 }
 
-export function useJobFormState({ initialData, isEditMode = false }: UseJobFormStateProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function useJobFormState({ initialData, isEditMode: _isEditMode = false }: UseJobFormStateProps) {
   const { user } = useAuth()
   
   // Check if user can post all job types (companies and admins)

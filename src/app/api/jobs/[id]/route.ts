@@ -6,8 +6,6 @@ import {
   getCityById, 
   getCategoryById, 
   getUserBasicInfo,
-  applyToJob,
-  updateJobStatus,
   errorResponse
 } from '../utils'
 

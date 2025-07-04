@@ -26,7 +26,7 @@ export async function GET() {
       _count: {
         type: true
       }
-    })
+    }) as Array<{ type: string; _count: { type: number } }>
 
     // Define job types with metadata (matching the order from job-utils.ts)
     const jobTypesData = [
@@ -42,11 +42,12 @@ export async function GET() {
 
     // Combine with job counts
     const jobTypes = jobTypesData.map(jobType => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stats = jobTypeStats.find((stat: any) => stat.type === jobType.key)
+      const stats = jobTypeStats.find(stat => stat.type === jobType.key)
+      // In Prisma groupBy, _count contains the aggregated counts
+      const count = stats?._count?.type || 0
       return {
         ...jobType,
-        jobCount: stats?._count.type || 0
+        jobCount: count
       }
     })
 
