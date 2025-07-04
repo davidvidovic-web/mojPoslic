@@ -6,12 +6,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsData {
   activeJobs: number;
-  clients: number;
+  employers: number;
   totalUsers: number;
   finishedJobs: number;
 }
 
-const HeroStatsComponent = () => {
+const SiteStats = () => {
   const [stats, setStats] = useState<StatsData>({
     activeJobs: 0,
     employers: 0,
@@ -90,50 +90,50 @@ const HeroStatsComponent = () => {
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
-      <div className="space-y-2 text-center">
-        <div className="flex items-center justify-center w-12 h-12 mx-auto rounded-xl bg-blue-100 dark:bg-blue-900">
-          <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+      <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-blue-100 dark:bg-blue-900">
+          <Briefcase className="h-7 w-7 text-blue-600 dark:text-blue-400" />
         </div>
-        <div className="text-2xl font-bold flex items-center justify-center">
+        <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.activeJobs} suffix="+" />
         </div>
-        <div className="text-sm text-muted-foreground">Active Jobs</div>
+        <div className="text-sm text-muted-foreground font-medium">Active Jobs</div>
       </div>
 
-      <div className="space-y-2 text-center">
-        <div className="flex items-center justify-center w-12 h-12 mx-auto rounded-xl bg-purple-100 dark:bg-purple-900">
-          <Building className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+      <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-purple-100 dark:bg-purple-900">
+          <Building className="h-7 w-7 text-purple-600 dark:text-purple-400" />
         </div>
-        <div className="text-2xl font-bold flex items-center justify-center">
+        <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.employers} suffix="+" />
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground font-medium">
           Registered Clients
         </div>
       </div>
 
-      <div className="space-y-2 text-center">
-        <div className="flex items-center justify-center w-12 h-12 mx-auto rounded-xl bg-orange-100 dark:bg-orange-900">
-          <Users className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+      <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-orange-100 dark:bg-orange-900">
+          <Users className="h-7 w-7 text-orange-600 dark:text-orange-400" />
         </div>
-        <div className="text-2xl font-bold flex items-center justify-center">
+        <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.totalUsers} suffix="+" />
         </div>
-        <div className="text-sm text-muted-foreground">Registered Users</div>
+        <div className="text-sm text-muted-foreground font-medium">Registered Users</div>
       </div>
 
-      <div className="space-y-2 text-center">
-        <div className="flex items-center justify-center w-12 h-12 mx-auto rounded-xl bg-green-100 dark:bg-green-900">
-          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+      <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-green-100 dark:bg-green-900">
+          <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
         </div>
-        <div className="text-2xl font-bold flex items-center justify-center">
+        <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.finishedJobs} suffix="+" />
         </div>
-        <div className="text-sm text-muted-foreground">Finished Jobs</div>
+        <div className="text-sm text-muted-foreground font-medium">Finished Jobs</div>
       </div>
     </div>
   );
 };
 
-export default HeroStatsComponent;
+export default SiteStats;

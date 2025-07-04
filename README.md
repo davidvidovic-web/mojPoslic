@@ -1,4 +1,4 @@
-# Poslić - Simple Job Board App
+# mojPoslić - Simple Job Board App
 
 A modern job board application built with Next.js, shadcn/ui, and PostgreSQL.
 
@@ -45,7 +45,7 @@ A modern job board application built with Next.js, shadcn/ui, and PostgreSQL.
 - **Typography**: Inter font family from Google Fonts
 - **Icons**: Lucide React
 - **Database**: PostgreSQL
-- **Authentication**: NextAuth.js
+- **Authentication**: Third-party authentication service (to be implemented)
 - **Theme**: next-themes for dark/light mode
 - **Notifications**: Sonner
 
@@ -60,7 +60,7 @@ A modern job board application built with Next.js, shadcn/ui, and PostgreSQL.
 
 ```bash
 git clone <your-repo-url>
-cd poslici
+cd mojposlic
 npm install
 ```
 
@@ -77,8 +77,7 @@ npm install
 Copy the `.env.example` file to `.env.local` and update with your database credentials:
 
 ```env
-DATABASE_URL=postgresql://username:password@localhost:5432/poslic
-NEXTAUTH_SECRET=your_nextauth_secret
+DATABASE_URL=postgresql://username:password@localhost:5432/mojposlic
 ```
 
 ### 4. Run the Development Server
@@ -138,3 +137,34 @@ npm start
 ## License
 
 MIT License - feel free to use this project for personal or commercial purposes.
+
+## 🔐 Authentication - **COMPLETED ✅**
+
+**mojPoslić** now uses [Clerk](https://clerk.com/) for modern, secure authentication with Next.js App Router.
+
+### **Authentication Features:**
+- ✅ Sign up/Sign in with email and password
+- ✅ Social authentication (configurable through Clerk dashboard)
+- ✅ User profile management via Clerk's UserButton
+- ✅ Secure session management
+- ✅ Role-based access control integration
+- ✅ Automatic user synchronization
+
+### **Implementation Details:**
+- **Provider**: Clerk (latest Next.js App Router integration)
+- **Middleware**: `clerkMiddleware()` for route protection
+- **Components**: `<SignInButton>`, `<SignUpButton>`, `<UserButton>`, `<SignedIn>`, `<SignedOut>`
+- **Server Auth**: `auth()` from `@clerk/nextjs/server` for API routes
+- **Client Auth**: `useUser()` hook integrated with custom auth context
+
+### **User Flow:**
+1. **Sign Up/Sign In**: Click buttons in header to authenticate via Clerk
+2. **Profile Setup**: Complete account type selection (client/tasker/company)
+3. **Job Posting**: Authenticated users can post jobs (free with connection system)
+4. **Dashboard Access**: Role-based access to admin and user dashboards
+
+**Environment Variables Required:**
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+```

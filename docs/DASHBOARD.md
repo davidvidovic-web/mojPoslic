@@ -1,7 +1,7 @@
 # Dashboard System Documentation
 
 ## Overview
-The Poslić application now features a comprehensive dashboard system with role-based access control. Each user type (Admin, Employer, Employee) has a customized dashboard tailored to their specific needs and permissions.
+The mojPoslić application now features a comprehensive dashboard system with role-based access control. Each user type (Admin, Employer, Employee) has a customized dashboard tailored to their specific needs and permissions.
 
 ## Dashboard Features
 

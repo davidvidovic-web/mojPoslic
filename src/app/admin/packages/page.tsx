@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 
 interface ConnectionPackage {
   id: string
@@ -15,6 +16,7 @@ interface ConnectionPackage {
 
 export default function AdminPackagesPage() {
   const { data: session, status } = useSession()
+  const { isAdmin } = useAuth()
   const router = useRouter()
   const [packages, setPackages] = useState<ConnectionPackage[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,13 +26,13 @@ export default function AdminPackagesPage() {
   useEffect(() => {
     if (status === 'loading') return
     
-    if (!session) {
-      router.push('/login')
+    if (!session?.user || !isAdmin) {
+      router.push('/')
       return
     }
 
     fetchPackages()
-  }, [session, status, router])
+  }, [session, isAdmin, status, router])
 
   const fetchPackages = async () => {
     try {

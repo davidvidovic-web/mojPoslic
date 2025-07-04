@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/prisma-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { Job } from '@/types/job'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { MultiStepJobForm } from '@/components/job-post-form/multi-step-job-form'

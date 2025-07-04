@@ -7,7 +7,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MultiStepJobForm } from '@/components/job-post-form/multi-step-job-form'
 
 // Mock the auth context
-jest.mock('@/contexts/prisma-auth-context', () => ({
+jest.mock('@/contexts/auth-context', () => ({
   useAuth: () => ({
     user: {
       id: 'test-user-id',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
@@ -12,21 +12,24 @@ import { showToast } from '@/lib/toast'
 
 export default function AccountTypePage() {
   const router = useRouter()
-  const { data: session, status, update } = useSession()
+  const { data: session, status } = useSession()
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [loading, setLoading] = useState(false)
 
   // Redirect if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login')
+      router.push('/')
     }
   }, [status, router])
 
   // Redirect if already completed profile setup
   useEffect(() => {
-    if (status === 'authenticated' && session.user.profileSetupCompleted) {
-      router.push('/dashboard')
+    if (status === 'authenticated' && session?.user) {
+      // Check if user has completed profile setup
+      // This would need to be checked against your database
+      // For now, redirecting to dashboard if user exists
+      // router.push('/dashboard')
     }
   }, [session, status, router])
 
@@ -35,6 +38,11 @@ export default function AccountTypePage() {
     
     if (!selectedRole) {
       showToast.error('Please select an account type')
+      return
+    }
+
+    if (!session?.user) {
+      showToast.error('User not authenticated')
       return
     }
 
@@ -49,6 +57,7 @@ export default function AccountTypePage() {
         },
         body: JSON.stringify({
           role: selectedRole,
+          userId: session.user.id,
         }),
       })
 
@@ -56,16 +65,6 @@ export default function AccountTypePage() {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to update profile')
       }
-
-      // Update the session with the new role
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          role: selectedRole,
-          profileSetupCompleted: true,
-        },
-      })
 
       showToast.success('Account type set successfully!')
       
@@ -78,8 +77,8 @@ export default function AccountTypePage() {
     }
   }
 
-  // If loading session or redirecting, show loading state
-  if (status === 'loading' || (status === 'authenticated' && session.user.profileSetupCompleted)) {
+  // If loading or user not authenticated, show loading state
+  if (status === 'loading' || !session?.user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -96,7 +95,7 @@ export default function AccountTypePage() {
               <Briefcase className="h-5 w-5" />
             </div>
             <h1 className="text-3xl font-bold">
-              Poslić
+              mojPoslić
             </h1>
           </div>
           <h2 className="text-xl font-semibold">Choose Account Type</h2>

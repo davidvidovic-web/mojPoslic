@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MapPin, Calendar, ExternalLink, DollarSign, Eye, Edit, Car } from "lucide-react"
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
-import { useAuth } from "@/contexts/prisma-auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { MultiStepJobForm } from "@/components/job-post-form/multi-step-job-form"
 import { toast } from "sonner"
 

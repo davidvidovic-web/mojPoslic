@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react'
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/contexts/prisma-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { JobFormStep } from './types'
 
 export interface UseJobFormStateProps {

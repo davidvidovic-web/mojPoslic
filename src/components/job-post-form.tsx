@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { CreateJobData } from "@/types/job"
-import { useAuth } from "@/contexts/prisma-auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 import { BasicInformationSection } from "./job-post-form/basic-information-section"
 import { JobDetailsSection } from "./job-post-form/job-details-section"

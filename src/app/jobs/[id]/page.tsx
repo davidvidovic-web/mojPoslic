@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Briefcase } from "lucide-react"
 import { Job } from "@/types/job"
-import { useAuth } from "@/contexts/prisma-auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 import { formatEmployerName } from "@/lib/job-utils"
 import { JobHeader } from "@/components/job/job-header"

@@ -1,7 +1,7 @@
 'use client'
 
 import { ThemeProvider } from "next-themes"
-import { AuthProvider } from "@/contexts/prisma-auth-context"
+import { AuthProvider } from "@/contexts/auth-context"
 
 interface ProvidersProps {
   children: React.ReactNode

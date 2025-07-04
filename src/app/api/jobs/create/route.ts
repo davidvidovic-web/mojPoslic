@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { formatClientName } from '@/lib/job-utils'
 
 // Use a simple Prisma client for this endpoint
@@ -11,19 +10,18 @@ export async function POST(request: NextRequest) {
   try {
     console.log('=== Job Creation API Called ===')
     
-    const session = await getServerSession(authOptions)
-    console.log('Session:', session ? { userId: session.user?.id, email: session.user?.email } : 'No session')
+    const session = await auth()
     
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    
+    const userId = session.user.id
 
     // Get the user's info including role for connection cost calculation
     const user = await simplePrisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { name: true, role: true }
     })
 
@@ -38,7 +36,7 @@ export async function POST(request: NextRequest) {
     const connectionResult = await simplePrisma.$queryRaw`
       SELECT connections 
       FROM users 
-      WHERE id = ${session.user.id}
+      WHERE id = ${userId}
     ` as Array<{ connections: number }>
 
     if (!connectionResult || connectionResult.length === 0) {
@@ -221,7 +219,7 @@ export async function POST(request: NextRequest) {
       benefits: benefits || null,
       contactEmail: contact_email || null,
       applicationUrl: application_url || null,
-      postedById: session.user.id,
+      postedById: userId,
       isActive: true
     }
     console.log('Job data to create:', JSON.stringify(jobData, null, 2))
@@ -237,14 +235,14 @@ export async function POST(request: NextRequest) {
       await tx.$executeRaw`
         UPDATE users 
         SET connections = connections - ${connectionCost}
-        WHERE id = ${session.user.id}
+        WHERE id = ${userId}
       `
 
       // Log connection usage using raw SQL
       const actionType = user.role === 'company' ? 'JOB_POST_COMPANY' : 'JOB_POST_CLIENT'
       await tx.$executeRaw`
         INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
-        VALUES (gen_random_uuid()::text, ${session.user.id}, ${actionType}, ${-connectionCost}, ${'Posted job as ' + user.role}, ${createdJob.id}, NOW())
+        VALUES (gen_random_uuid()::text, ${userId}, ${actionType}, ${-connectionCost}, ${'Posted job as ' + user.role}, ${createdJob.id}, NOW())
       `
 
       return createdJob

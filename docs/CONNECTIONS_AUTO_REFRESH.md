@@ -29,7 +29,7 @@ The connections system has been updated to use automatic monthly refresh instead
 ##### Option 1: Cron Job (Traditional Server)
 ```bash
 # Add to crontab - runs at 00:01 on the 1st of every month
-1 0 1 * * cd /path/to/poslic && npm run monthly-refresh
+1 0 1 * * cd /path/to/mojposlic && npm run monthly-refresh
 ```
 
 ##### Option 2: Serverless Cron (Vercel, Netlify, etc.)

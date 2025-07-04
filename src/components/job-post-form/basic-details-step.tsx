@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CreateJobData } from '@/types/job'
 import { CheckCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/prisma-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 
 interface Category {
   id: string
@@ -87,22 +87,29 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
   const availableChildCategories = selectedParent?.children || []
 
   // Validation
+  // Track if we've already reset the job type to prevent infinite loops
+  const hasResetJobType = useRef(false)
+
   useEffect(() => {
     const isValid = !!(
       formData.title?.trim() &&
-      formData.company?.trim() &&
       formData.description?.trim() &&
       formData.category_id &&
       formData.type
     )
     
-    // If user is not a company but selected a company-only job type, reset to quick_job
-    if (!isCompany && formData.type && ['full_time', 'part_time', 'remote'].includes(formData.type)) {
-      onChange({ type: 'quick_job' })
-    }
-    
     onValidation(isValid)
-  }, [formData.title, formData.company, formData.description, formData.category_id, formData.type, onValidation, isCompany, onChange])
+  }, [formData.title, formData.description, formData.category_id, formData.type, onValidation])
+
+  // Separate effect to handle job type validation for non-company users
+  useEffect(() => {
+    if (!isCompany && formData.type && ['full_time', 'part_time', 'remote'].includes(formData.type) && !hasResetJobType.current) {
+      hasResetJobType.current = true
+      onChange({ type: 'quick_job' })
+    } else if (isCompany || !['full_time', 'part_time', 'remote'].includes(formData.type || '')) {
+      hasResetJobType.current = false
+    }
+  }, [isCompany, formData.type, onChange])
 
   return (
     <div className="space-y-6">
@@ -117,16 +124,6 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
             placeholder="e.g. House Cleaning, Furniture Assembly, Garden Maintenance"
             value={formData.title}
             onChange={(e) => onChange({ title: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="company">Company/Organization *</Label>
-          <Input
-            id="company"
-            placeholder="Your company or organization name"
-            value={formData.company}
-            onChange={(e) => onChange({ company: e.target.value })}
           />
         </div>
 

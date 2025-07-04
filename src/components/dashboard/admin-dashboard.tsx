@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/prisma-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Shield } from 'lucide-react'
 import { toast } from 'sonner'

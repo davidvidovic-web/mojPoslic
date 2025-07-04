@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from "@/lib/auth"
 import { PrismaClient } from '@prisma/client'
 
 const prismaForStats = new PrismaClient()
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const userId = session.user.id
 
     // Fetch stats for the current user's job listings
     const [
@@ -21,22 +22,22 @@ export async function GET() {
       featuredJobs
     ] = await Promise.all([
       prismaForStats.jobListing.count({
-        where: { postedById: session.user.id }
+        where: { postedById: userId }
       }),
       prismaForStats.jobListing.count({
         where: { 
-          postedById: session.user.id,
+          postedById: userId,
           status: 'active'
         }
       }),
       prismaForStats.application.count({
         where: {
-          job: { postedById: session.user.id }
+          job: { postedById: userId }
         }
       }),
       prismaForStats.jobListing.count({
         where: { 
-          postedById: session.user.id,
+          postedById: userId,
           isFeatured: true
         }
       })
@@ -48,7 +49,7 @@ export async function GET() {
     
     const monthlyApplications = await prismaForStats.application.count({
       where: {
-        job: { postedById: session.user.id },
+        job: { postedById: userId },
         createdAt: { gte: thirtyDaysAgo }
       }
     })

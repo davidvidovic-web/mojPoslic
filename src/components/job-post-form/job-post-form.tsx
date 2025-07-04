@@ -1,7 +1,7 @@
 'use client'
 
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/contexts/prisma-auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
 

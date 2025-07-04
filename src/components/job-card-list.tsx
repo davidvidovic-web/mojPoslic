@@ -10,7 +10,7 @@ import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Edit, Car } from
 import { toast } from "sonner"
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
-import { useAuth } from "@/contexts/prisma-auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { MultiStepJobForm } from "@/components/job-post-form/multi-step-job-form"
 
 interface JobCardListProps {

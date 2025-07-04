@@ -31,7 +31,7 @@ class EmailService {
   async sendEmail({ to, subject, text, html }: EmailOptions) {
     try {
       const info = await this.transporter.sendMail({
-        from: `"${process.env.EMAIL_FROM_NAME || 'Poslić'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        from: `"${process.env.EMAIL_FROM_NAME || 'mojPoslić'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
         to,
         subject,
         text,
@@ -44,9 +44,9 @@ class EmailService {
   }
 
   async sendMagicLink({ email, name, url }: MagicLinkOptions) {
-    const subject = 'Complete your Poslić account setup'
-    const text = `Hi ${name},\n\nWelcome to Poslić! Please click the link below to verify your email and set up your account:\n\n${url}\n\nThis link will expire in 24 hours.\n\nIf you didn't create an account, ignore this email.\n\nBest regards,\nThe Poslić Team`
-    const html = `<p>Hi ${name},</p><p>Welcome to Poslić! Please click the link below to verify your email and set up your account:</p><p><a href="${url}">${url}</a></p><p>This link will expire in 24 hours.</p><p>If you didn't create an account, ignore this email.</p><p>Best regards,<br/>The Poslić Team</p>`
+    const subject = 'Complete your mojPoslić account setup'
+    const text = `Hi ${name},\n\nWelcome to mojPoslić! Please click the link below to verify your email and set up your account:\n\n${url}\n\nThis link will expire in 24 hours.\n\nIf you didn't create an account, ignore this email.\n\nBest regards,\nThe mojPoslić Team`
+    const html = `<p>Hi ${name},</p><p>Welcome to mojPoslić! Please click the link below to verify your email and set up your account:</p><p><a href="${url}">${url}</a></p><p>This link will expire in 24 hours.</p><p>If you didn't create an account, ignore this email.</p><p>Best regards,<br/>The mojPoslić Team</p>`
     return this.sendEmail({ to: email, subject, text, html })
   }
 }

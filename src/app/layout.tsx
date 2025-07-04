@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import React from "react";
 import { Inter } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import { Providers } from "@/components/providers";
 import { Header } from "@/components/header";
 import { Toaster } from "sonner";
@@ -11,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Poslić - Find Your Dream Job",
-  description: "Poslić - A modern job board for Bosnia and Herzegovina built with Next.js, shadcn/ui, and Prisma",
+  title: "mojPoslić - Find Your Dream Job",
+  description: "mojPoslić - A modern job board for Bosnia and Herzegovina built with Next.js, shadcn/ui, and Prisma",
 };
 
 export default function RootLayout({
@@ -23,8 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Providers>
-          <div className="min-h-screen bg-background">
+        <SessionProvider>
+          <Providers>
+            <div className="min-h-screen bg-background">
             <Toaster 
               position="top-right" 
               richColors
@@ -44,7 +47,8 @@ export default function RootLayout({
             {children}
           </div>
         </Providers>
-      </body>
-    </html>
+      </SessionProvider>
+    </body>
+  </html>
   );
 }

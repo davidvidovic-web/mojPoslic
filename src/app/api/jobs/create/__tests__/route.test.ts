@@ -1,13 +1,13 @@
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { #getServerSession } from 'next-auth'
 import { PrismaClient } from '@prisma/client'
 
 // Mock dependencies
 jest.mock('next-auth')
 jest.mock('@prisma/client')
 
-const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
+const mockGetServerSession = #getServerSession as jest.MockedFunction<typeof #getServerSession>
 const mockPrismaClient = PrismaClient as jest.MockedClass<typeof PrismaClient>
 
 // Create mock Prisma instance

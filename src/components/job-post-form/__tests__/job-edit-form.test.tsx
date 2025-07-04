@@ -4,7 +4,7 @@ import { JobEditForm } from '../job-edit-form'
 import { CreateJobData } from '@/types/job'
 
 // Mock the dependencies
-vi.mock('@/contexts/prisma-auth-context', () => ({
+vi.mock('@/contexts/auth-context', () => ({
   useAuth: () => ({
     user: {
       id: 'user-1',

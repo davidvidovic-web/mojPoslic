@@ -1,7 +1,7 @@
 "use client";
 
 import { JobList } from "@/components/job-list";
-import HeroStats from "@/components/hero-stats";
+import SiteStats from "@/components/site-stats";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Zap } from "lucide-react";
@@ -37,9 +37,6 @@ export default function Home() {
                 Bosnia. Simple, free, and trusted by thousands.
               </p>
             </div>
-
-            {/* Stats */}
-            <HeroStats />
           </div>
         </div>
       </section>
@@ -61,6 +58,21 @@ export default function Home() {
         </div>
       </main>
 
+      {/* Site Stats Section */}
+      <section className="bg-muted/30 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-8">
+            <div className="space-y-4">
+              <h3 className="text-3xl font-bold">Site Statistics</h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                See how mojPoslić is connecting workers and clients across Bosnia and Herzegovina
+              </p>
+            </div>
+            <SiteStats />
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t bg-background/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-12">
@@ -70,7 +82,7 @@ export default function Home() {
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted border">
                   <Briefcase className="h-4 w-4" />
                 </div>
-                <span className="font-bold">Poslić</span>
+                <span className="font-bold">mojPoslić</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Quick, simple & free job posting platform for Bosnia and
@@ -173,7 +185,7 @@ export default function Home() {
 
           <div className="text-center text-sm text-default-600">
             <p>
-              &copy; 2025 Poslić. Built with Next.js, shadcn/ui, and Prisma.
+              &copy; 2025 mojPoslić. Built with Next.js, shadcn/ui, and Prisma.
             </p>
           </div>
         </div>
