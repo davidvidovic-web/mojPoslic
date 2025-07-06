@@ -8,12 +8,12 @@ import { Job } from "@/types/job"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 import { formatClientName } from "@/lib/job-utils"
-import { JobHeader } from "@/components/job/job-header"
-import { JobContent } from "@/components/job/job-content"
-import { JobLocation } from "@/components/job/job-location"
-import { JobTimeline } from "@/components/job/job-timeline"
-import { JobApplicationSidebar } from "@/components/job/job-application-sidebar"
-import { JobDetailsSidebar } from "@/components/job/job-details-sidebar"
+import { JobHeader } from "@/components/jobs/job/job-header"
+import { JobContent } from "@/components/jobs/job/job-content"
+import { JobLocation } from "@/components/jobs/job/job-location"
+import { JobTimeline } from "@/components/jobs/job/job-timeline"
+import { JobApplicationSidebar } from "@/components/jobs/job/job-application-sidebar"
+import { JobDetailsSidebar } from "@/components/jobs/job/job-details-sidebar"
 
 export default function JobDetailPage() {
   const params = useParams()

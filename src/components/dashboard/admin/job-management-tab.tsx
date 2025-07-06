@@ -150,76 +150,98 @@ export function JobManagementTab({ jobs, setJobs }: JobManagementTabProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="space-y-4">
           <CardTitle className="flex items-center">
             <Briefcase className="h-5 w-5 mr-2" />
             Job Management
           </CardTitle>
-          <div className="flex items-center space-x-2">
+          
+          {/* Mobile-responsive search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search jobs..."
               value={jobSearchTerm}
               onChange={(e) => setJobSearchTerm(e.target.value)}
-              className="w-64"
+              className="pl-10"
             />
-            <Search className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {paginatedJobs.map((job) => (
-            <div key={job.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold">{job.title}</h4>
-                  <Badge variant="secondary">{formatJobType(job.type)}</Badge>
-                  {job.transportation && (
-                    <Badge variant="outline" className="text-xs">
-                      <Car className="h-3 w-3 mr-1" />
-                      {formatTransportation(job.transportation, job.transportation_amount)}
+            <div key={job.id} className="border rounded-lg p-4">
+              {/* Mobile-friendly layout */}
+              <div className="space-y-3">
+                {/* Job title and badges */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-base leading-tight">{job.title}</h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">{formatJobType(job.type)}</Badge>
+                    {job.transportation && (
+                      <Badge variant="outline" className="text-xs flex items-center gap-1">
+                        <Car className="h-3 w-3" />
+                        {formatTransportation(job.transportation, job.transportation_amount)}
+                      </Badge>
+                    )}
+                    <Badge variant={job.isActive ? "default" : "secondary"} className="text-xs">
+                      {job.isActive ? "Active" : "Inactive"}
                     </Badge>
-                  )}
+                    {job.isFeatured && (
+                      <Badge variant="outline" className="text-xs">Featured</Badge>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-1">{job.company}</p>
-                <p className="text-sm text-muted-foreground">{job.city?.name || 'Remote'}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant={job.isActive ? "default" : "secondary"}>
-                    {job.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                  {job.isFeatured && (
-                    <Badge variant="outline">Featured</Badge>
-                  )}
+                
+                {/* Company and location */}
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">{job.company}</p>
+                  <p className="text-sm text-muted-foreground">{job.city?.name || 'Remote'}</p>
                 </div>
-                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                
+                {/* Meta info */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-muted-foreground">
                   <span>Posted {formatDate(job.createdAt)}</span>
                   {job.postedBy && (
-                    <span> • by {job.postedBy.name}</span>
+                    <span className="sm:before:content-['•'] sm:before:mx-2">by {job.postedBy.name}</span>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={job.isActive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleToggleJobStatus(job.id, !job.isActive)}
-                >
-                  {job.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </Button>
-                <Button
-                  variant={job.isFeatured ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleToggleJobFeatured(job.id, !job.isFeatured)}
-                >
-                  <Star className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteJob(job.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                
+                {/* Action buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
+                  <Button
+                    variant={job.isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleJobStatus(job.id, !job.isActive)}
+                    className="flex items-center gap-2"
+                  >
+                    {job.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    <span className="hidden sm:inline">
+                      {job.isActive ? "Hide" : "Show"}
+                    </span>
+                  </Button>
+                  <Button
+                    variant={job.isFeatured ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleJobFeatured(job.id, !job.isFeatured)}
+                    className="flex items-center gap-2"
+                  >
+                    <Star className="h-4 w-4" />
+                    <span className="hidden sm:inline">
+                      {job.isFeatured ? "Unfeature" : "Feature"}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteJob(job.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

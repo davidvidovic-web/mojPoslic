@@ -193,7 +193,7 @@ export default function SignIn() {
 
             <Button 
               type="submit" 
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white" 
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200" 
               disabled={loading}
             >
               <Mail className="mr-2 h-4 w-4" />

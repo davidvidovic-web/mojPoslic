@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { emailService } from '@/lib/email'
+import { generateUniqueUsernameFromEmail } from '@/lib/username-validation'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
@@ -31,6 +32,9 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
+    // Generate unique username from email
+    const username = await generateUniqueUsernameFromEmail(email)
+
     // Generate 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
     const verificationExpires = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes (shorter for codes)
@@ -39,6 +43,7 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         name: email, // Use email as temporary name until verified
+        username,
         email,
         password: hashedPassword,
         role: 'client',
@@ -47,6 +52,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         email: true,
+        username: true,
         role: true,
       }
     })
@@ -68,13 +74,27 @@ export async function POST(request: NextRequest) {
       // Don't fail registration if email fails, but log it
     }
 
+    // For localhost development, log the verification code
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+      console.log('\n=================================')
+      console.log('📧 VERIFICATION CODE FOR DEVELOPMENT')
+      console.log('=================================')
+      console.log(`Email: ${email}`)
+      console.log(`Verification Code: ${verificationCode}`)
+      console.log('=================================\n')
+    }
+
     return NextResponse.json({
-      message: 'Account created successfully. Please check your email for your verification code.',
+      message: process.env.NODE_ENV === 'development' 
+        ? `Account created successfully. Your verification code is: ${verificationCode}` 
+        : 'Account created successfully. Please check your email for your verification code.',
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         role: user.role,
       },
+      ...(process.env.NODE_ENV === 'development' && { verificationCode }),
       redirectTo: `/auth/verify-email?email=${encodeURIComponent(email)}`
     })
 

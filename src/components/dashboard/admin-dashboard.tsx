@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/hooks/useAuth'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Shield } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,6 +10,7 @@ import { UserManagementTab } from './admin/user-management-tab'
 import { JobManagementTab } from './admin/job-management-tab'
 import { SystemManagementTab } from './admin/system-management-tab'
 import { BillingManagementTab } from './admin/billing-management-tab'
+import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
 
 interface AdminUser {
   id: string
@@ -212,29 +213,55 @@ export function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center">
-            <Shield className="h-8 w-8 mr-3" />
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3" />
             Admin Dashboard
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Welcome back, {user?.name}! Manage users and jobs across the platform.
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+            {getTimeBasedGreeting()}, <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>!
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <AdminStatsCards stats={stats} />
-
         {/* Management Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="jobs">Job Management</TabsTrigger>
-            <TabsTrigger value="system">System Management</TabsTrigger>
-            <TabsTrigger value="billing">Billing Management</TabsTrigger>
-          </TabsList>
+          {/* Mobile: Dropdown-style tabs */}
+          <div className="block sm:hidden">
+            <TabsList className="w-full grid grid-cols-1 h-auto p-1 bg-muted">
+              <div className="grid grid-cols-2 gap-1">
+                <TabsTrigger value="users" className="text-xs px-2 py-2">
+                  Users
+                </TabsTrigger>
+                <TabsTrigger value="jobs" className="text-xs px-2 py-2">
+                  Jobs
+                </TabsTrigger>
+              </div>
+              <div className="grid grid-cols-3 gap-1 mt-1">
+                <TabsTrigger value="system" className="text-xs px-2 py-2">
+                  System
+                </TabsTrigger>
+                <TabsTrigger value="billing" className="text-xs px-2 py-2">
+                  Billing
+                </TabsTrigger>
+                <TabsTrigger value="statistics" className="text-xs px-2 py-2">
+                  Statistics
+                </TabsTrigger>
+              </div>
+            </TabsList>
+          </div>
+          
+          {/* Desktop: Horizontal tabs */}
+          <div className="hidden sm:block">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="users">User Management</TabsTrigger>
+              <TabsTrigger value="jobs">Job Management</TabsTrigger>
+              <TabsTrigger value="system">System Management</TabsTrigger>
+              <TabsTrigger value="billing">Billing Management</TabsTrigger>
+              <TabsTrigger value="statistics">Statistics</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="users">
             <UserManagementTab 
@@ -260,6 +287,10 @@ export function AdminDashboard() {
 
           <TabsContent value="billing">
             <BillingManagementTab />
+          </TabsContent>
+
+          <TabsContent value="statistics">
+            <AdminStatsCards stats={stats} />
           </TabsContent>
         </Tabs>
       </div>

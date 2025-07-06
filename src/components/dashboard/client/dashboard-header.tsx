@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { MultiStepJobForm } from '@/components/job-post-form/multi-step-job-form'
+import { MultiStepJobForm } from '@/components/jobs/job-post-form/multi-step-job-form'
 import { Plus } from 'lucide-react'
+import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
 
 interface DashboardHeaderProps {
   userName?: string
@@ -17,16 +18,16 @@ export function DashboardHeader({ userName, isDialogOpen, setIsDialogOpen, onJob
     <div className="mb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Client Dashboard
           </h1>
           <p className="text-muted-foreground mt-2">
-            Welcome back, {userName}! Manage your job postings here.
+            {getTimeBasedGreeting()}, <span className="font-bold">{formatDisplayName(userName)}</span>!
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Button className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200">
               <Plus className="h-4 w-4 mr-2" />
               Post New Job
             </Button>

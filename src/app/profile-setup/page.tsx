@@ -21,8 +21,10 @@ const jobTypes = [
 export default function ProfileSetupPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    name: '',
+  
+  // Initialize form data - will be updated when user is available
+  const [formData, setFormData] = useState(() => ({
+    name: user?.name || '',
     username: '',
     bio: '',
     skills: '',
@@ -33,7 +35,7 @@ export default function ProfileSetupPage() {
     location: '',
     companyName: '',
     position: '',
-  })
+  }))
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -47,14 +49,11 @@ export default function ProfileSetupPage() {
       return
     }
 
-    // Pre-fill form with existing user data
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.name || '',
-      }))
+    // Update name field if user name is available and form name is empty
+    if (user?.name && !formData.name) {
+      setFormData(prev => ({ ...prev, name: user.name || '' }))
     }
-  }, [user, loading, router])
+  }, [user, loading, router, formData.name])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,17 +107,19 @@ export default function ProfileSetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
       <div className="container mx-auto px-4 max-w-2xl">
         <Card>
-          <CardHeader>
-            <CardTitle>Complete Your Profile</CardTitle>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
             <CardDescription>
-              Help us personalize your experience by completing your profile information.
+              {user.role === 'tasker' && 'Build your professional profile to attract clients'}
+              {user.role === 'client' && 'Set up your profile to start posting jobs and hiring'}
+              {user.role === 'company' && 'Create your company profile to find talent'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Basic Information</h3>
@@ -128,6 +129,7 @@ export default function ProfileSetupPage() {
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
+                      type="text"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="Your full name"
@@ -158,71 +160,129 @@ export default function ProfileSetupPage() {
                 </div>
               </div>
 
-              {/* Professional Information */}
+              {/* Professional Information - Role-specific fields */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Professional Information</h3>
+                <h3 className="text-lg font-semibold">
+                  {user.role === 'tasker' && 'Professional Skills'}
+                  {user.role === 'client' && 'Job Posting Preferences'}
+                  {user.role === 'company' && 'Company Information'}
+                </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="position">Current Position</Label>
-                    <Input
-                      id="position"
-                      value={formData.position}
-                      onChange={(e) => handleInputChange('position', e.target.value)}
-                      placeholder="Your current job title"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Company</Label>
-                    <Input
-                      id="companyName"
-                      value={formData.companyName}
-                      onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      placeholder="Your current company"
-                    />
-                  </div>
-                </div>
+                {user.role === 'tasker' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="skills">Skills</Label>
+                      <Textarea
+                        id="skills"
+                        value={formData.skills}
+                        onChange={(e) => handleInputChange('skills', e.target.value)}
+                        placeholder="List your skills (e.g., Web Development, Graphic Design, Writing...)"
+                        rows={3}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="experience">Experience</Label>
+                      <Textarea
+                        id="experience"
+                        value={formData.experience}
+                        onChange={(e) => handleInputChange('experience', e.target.value)}
+                        placeholder="Describe your work experience..."
+                        rows={3}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="skills">Skills</Label>
-                  <Input
-                    id="skills"
-                    value={formData.skills}
-                    onChange={(e) => handleInputChange('skills', e.target.value)}
-                    placeholder="e.g., JavaScript, React, Node.js (comma separated)"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="preferredJobTypes">Preferred Job Types</Label>
+                      <Select
+                        value={formData.preferredJobTypes}
+                        onValueChange={(value) => handleInputChange('preferredJobTypes', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select preferred job types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {jobTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Experience</Label>
-                  <Textarea
-                    id="experience"
-                    value={formData.experience}
-                    onChange={(e) => handleInputChange('experience', e.target.value)}
-                    placeholder="Describe your work experience..."
-                    rows={3}
-                  />
-                </div>
+                {user.role === 'client' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="preferredJobTypes">Typical Budget Range for Jobs</Label>
+                      <Select
+                        value={formData.preferredJobTypes}
+                        onValueChange={(value) => handleInputChange('preferredJobTypes', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your typical budget range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="small">Small jobs (under 100 BAM)</SelectItem>
+                          <SelectItem value="medium">Medium jobs (100-500 BAM)</SelectItem>
+                          <SelectItem value="large">Large jobs (500-1000 BAM)</SelectItem>
+                          <SelectItem value="premium">Premium jobs (1000+ BAM)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="experience">Preferred Job Categories (Optional)</Label>
+                      <Textarea
+                        id="experience"
+                        value={formData.experience}
+                        onChange={(e) => handleInputChange('experience', e.target.value)}
+                        placeholder="What types of jobs do you typically post? (e.g., cleaning, delivery, handyman, tutoring, design...)"
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="preferredJobTypes">Preferred Job Types</Label>
-                  <Select
-                    value={formData.preferredJobTypes}
-                    onValueChange={(value) => handleInputChange('preferredJobTypes', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select preferred job types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {user.role === 'company' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="companyName">Company Name</Label>
+                        <Input
+                          id="companyName"
+                          value={formData.companyName}
+                          onChange={(e) => handleInputChange('companyName', e.target.value)}
+                          placeholder="Your company name"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="position">Your Position</Label>
+                        <Input
+                          id="position"
+                          value={formData.position}
+                          onChange={(e) => handleInputChange('position', e.target.value)}
+                          placeholder="Your job title (e.g., HR Manager, CEO)"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="experience">Company Description</Label>
+                      <Textarea
+                        id="experience"
+                        value={formData.experience}
+                        onChange={(e) => handleInputChange('experience', e.target.value)}
+                        placeholder="Describe your company, industry, and typical hiring needs..."
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Contact Information */}
@@ -241,7 +301,7 @@ export default function ProfileSetupPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="website">Website</Label>
+                    <Label htmlFor="website">Website/Portfolio</Label>
                     <Input
                       id="website"
                       value={formData.website}

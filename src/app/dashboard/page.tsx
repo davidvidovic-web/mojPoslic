@@ -1,10 +1,9 @@
 'use client'
 
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/hooks/useAuth'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
 import { ClientDashboard } from '@/components/dashboard/client-dashboard'
 import { CompanyDashboard } from '@/components/dashboard/company-dashboard'
-import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LogIn, Shield } from 'lucide-react'
@@ -34,12 +33,24 @@ function DashboardContent() {
     }
   }, [searchParams, router])
 
-  // Redirect to profile setup if not completed
+  // Redirect to role selection if no role, or profile setup if role but profile incomplete
   useEffect(() => {
-    if (user && !user.profileSetupCompleted) {
-      router.push('/profile-setup')
+    if (user) {
+      if (!user.role) {
+        router.push('/role-selection')
+      } else if (!user.profileSetupCompleted) {
+        router.push('/profile-setup')
+      }
     }
   }, [user, router])
+
+  // Redirect taskers to overview page
+  useEffect(() => {
+    if (user && user.role === 'tasker' && !loading) {
+      router.push('/dashboard/overview')
+      return
+    }
+  }, [user, loading, router])
 
   if (loading) {
     return (
@@ -99,7 +110,9 @@ function DashboardContent() {
       case 'company':
         return <CompanyDashboard />
       case 'tasker':
-        return <TaskerDashboard />
+        // Redirect admin viewing tasker to overview
+        router.push('/dashboard/overview')
+        return null
       case 'admin':
       default:
         return <AdminDashboard />
@@ -113,7 +126,8 @@ function DashboardContent() {
     case 'company':
       return <CompanyDashboard />
     case 'tasker':
-      return <TaskerDashboard />
+      // This will be handled by useEffect above
+      return null
     default:
       return (
         <div className="min-h-screen flex items-center justify-center p-4">

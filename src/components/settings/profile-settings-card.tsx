@@ -28,7 +28,7 @@ interface UserProfile {
 }
 
 export function ProfileSettingsCard() {
-  const { user: authProfile, loading: authLoading } = useAuth()
+  const { user: authProfile, loading: authLoading, refreshUser } = useAuth()
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
@@ -86,26 +86,37 @@ export function ProfileSettingsCard() {
     setIsLoading(true)
 
     try {
+      // Base profile data that all roles can update
+      const baseProfileData = {
+        name: profile.name,
+        phone: profile.phone,
+        location: profile.location,
+        website: profile.website,
+      }
+
+      // Only include professional fields for non-client roles
+      const profileData = profile.role === 'client' 
+        ? baseProfileData 
+        : {
+            ...baseProfileData,
+            bio: profile.bio,
+            skills: skillsArrayToString(profile.skills || []),
+            experience: profile.experience,
+            preferredJobTypes: profile.preferredJobTypes,
+          }
+
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: profile.name,
-          username: profile.username,
-          bio: profile.bio,
-          phone: profile.phone,
-          location: profile.location,
-          website: profile.website,
-          skills: skillsArrayToString(profile.skills || []),
-          experience: profile.experience,
-          preferredJobTypes: profile.preferredJobTypes,
-        }),
+        body: JSON.stringify(profileData),
       })
 
       if (response.ok) {
         toast.success('Profile updated successfully!')
+        // Refresh the auth context to get updated user data
+        await refreshUser()
       } else {
         const errorData = await response.json()
         toast.error(errorData.message || 'Failed to update profile')
@@ -145,28 +156,6 @@ export function ProfileSettingsCard() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profile.email}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Email cannot be changed here. Contact support if needed.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={profile.username || ''}
-                  onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                  placeholder="Choose a unique username"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
@@ -196,50 +185,52 @@ export function ProfileSettingsCard() {
             </div>
           </div>
 
-          {/* Professional Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Professional Information</h3>
+          {/* Professional Information - Only show for taskers and companies */}
+          {profile.role !== 'client' && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <SimpleRichTextEditor
-                  value={profile.bio || ''}
-                  onChange={(content) => setProfile({ ...profile, bio: content })}
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="skills">Skills</Label>
-                <SkillsBubbleInput
-                  value={profile.skills || []}
-                  onChange={(skills) => setProfile({ ...profile, skills })}
-                  placeholder="Add your skills (e.g., React, Node.js, Design)"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Add skills that showcase your expertise
-                </p>
-              </div>
+              <h3 className="text-lg font-medium">Professional Information</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <SimpleRichTextEditor
+                    value={profile.bio || ''}
+                    onChange={(content) => setProfile({ ...profile, bio: content })}
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="skills">Skills</Label>
+                  <SkillsBubbleInput
+                    value={profile.skills || []}
+                    onChange={(skills) => setProfile({ ...profile, skills })}
+                    placeholder="Add your skills (e.g., React, Node.js, Design)"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Add skills that showcase your expertise
+                  </p>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="experience">Experience Level</Label>
-                <Select
-                  value={profile.experience || ''}
-                  onValueChange={(value) => setProfile({ ...profile, experience: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your experience level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entry">Entry Level (0-2 years)</SelectItem>
-                    <SelectItem value="mid">Mid Level (3-5 years)</SelectItem>
-                    <SelectItem value="senior">Senior Level (6-10 years)</SelectItem>
-                    <SelectItem value="expert">Expert Level (10+ years)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Experience Level</Label>
+                  <Select
+                    value={profile.experience || ''}
+                    onValueChange={(value) => setProfile({ ...profile, experience: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your experience level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entry">Entry Level (0-2 years)</SelectItem>
+                      <SelectItem value="mid">Mid Level (3-5 years)</SelectItem>
+                      <SelectItem value="senior">Senior Level (6-10 years)</SelectItem>
+                      <SelectItem value="expert">Expert Level (10+ years)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
             {isLoading ? 'Updating...' : 'Update Profile'}

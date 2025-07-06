@@ -149,36 +149,63 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
         </CardHeader>
         <CardContent>
           <Tabs value={systemActiveTab} onValueChange={setSystemActiveTab} className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="cities">Cities</TabsTrigger>
-              <TabsTrigger value="connections">Connections</TabsTrigger>
-              <TabsTrigger value="history">Connection History</TabsTrigger>
-            </TabsList>
+            {/* Mobile-responsive tabs */}
+            <div className="block sm:hidden">
+              <TabsList className="w-full grid grid-cols-2 h-auto p-1 bg-muted">
+                <div className="grid grid-cols-2 gap-1">
+                  <TabsTrigger value="categories" className="text-xs px-2 py-2">
+                    Categories
+                  </TabsTrigger>
+                  <TabsTrigger value="cities" className="text-xs px-2 py-2">
+                    Cities
+                  </TabsTrigger>
+                </div>
+                <div className="grid grid-cols-2 gap-1 mt-1">
+                  <TabsTrigger value="connections" className="text-xs px-2 py-2">
+                    Connections
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="text-xs px-2 py-2">
+                    History
+                  </TabsTrigger>
+                </div>
+              </TabsList>
+            </div>
+            
+            {/* Desktop tabs */}
+            <div className="hidden sm:block">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="categories">Categories</TabsTrigger>
+                <TabsTrigger value="cities">Cities</TabsTrigger>
+                <TabsTrigger value="connections">Connections</TabsTrigger>
+                <TabsTrigger value="history">Connection History</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="categories">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h3 className="text-lg font-semibold">Category Management</h3>
-                  <Button onClick={() => {/* TODO: Add create category modal */}}>
+                  <Button onClick={() => {/* TODO: Add create category modal */}} className="w-full sm:w-auto">
                     Add Category
                   </Button>
                 </div>
                 <div className="space-y-2">
                   {paginatedCategories.map((category) => (
-                    <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{category.nameEN}</h4>
-                          <span className="text-sm text-muted-foreground">({category.nameBS})</span>
-                          {category.isPopular && <Badge variant="default" className="text-xs">Popular</Badge>}
-                          {!category.isActive && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
+                    <div key={category.id} className="border rounded-lg p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <h4 className="font-medium truncate">{category.nameEN}</h4>
+                            <span className="text-sm text-muted-foreground">({category.nameBS})</span>
+                            {category.isPopular && <Badge variant="default" className="text-xs">Popular</Badge>}
+                            {!category.isActive && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
+                          </div>
+                          <p className="text-sm text-muted-foreground">Key: {category.key}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">Key: {category.key}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
-                        <Button variant="outline" size="sm" className="text-destructive">Delete</Button>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Edit</Button>
+                          <Button variant="outline" size="sm" className="text-destructive flex-1 sm:flex-none">Delete</Button>
+                        </div>
                       </div>
                     </div>
                   ))}

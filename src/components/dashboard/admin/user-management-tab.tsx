@@ -155,17 +155,28 @@ export function UserManagementTab({ users, setUsers, currentUserId }: UserManage
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="space-y-4">
           <CardTitle className="flex items-center">
             <Users className="h-5 w-5 mr-2" />
             User Management
           </CardTitle>
-          <div className="flex items-center space-x-2">
+          
+          {/* Mobile-responsive filters */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             <Select
               value={userRoleFilter}
               onValueChange={setUserRoleFilter}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
@@ -176,62 +187,65 @@ export function UserManagementTab({ users, setUsers, currentUserId }: UserManage
                 <SelectItem value="company">Companies</SelectItem>
               </SelectContent>
             </Select>
-            <Input
-              placeholder="Search users..."
-              value={userSearchTerm}
-              onChange={(e) => setUserSearchTerm(e.target.value)}
-              className="w-64"
-            />
-            <Search className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {paginatedUsers.map((user) => (
-            <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 rounded-full bg-muted border flex items-center justify-center font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
+            <div key={user.id} className="border rounded-lg p-4">
+              {/* Mobile-friendly layout */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                {/* User info */}
+                <div className="flex items-center space-x-4 flex-1 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-muted border flex items-center justify-center font-semibold flex-shrink-0">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold truncate">{user.name}</h4>
+                    <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Joined {formatDate(user.createdAt)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold">{user.name}</h4>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Joined {formatDate(user.createdAt)}
-                  </p>
+                
+                {/* Actions - stacked on mobile, inline on desktop */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
+                  <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center w-fit">
+                    {getRoleIcon(user.role)}
+                    <span className="ml-1">{getRoleDisplayName(user.role as 'admin' | 'client' | 'tasker' | 'company')}</span>
+                  </Badge>
+                  
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Select
+                      value={user.role}
+                      onValueChange={(value) => {
+                        console.log('Select onValueChange triggered with value:', value)
+                        handleUpdateUserRole(user.id, value)
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="tasker">Tasker</SelectItem>
+                        <SelectItem value="company">Company</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={user.id === currentUserId} // Can't delete own account
+                      className="flex-shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center">
-                  {getRoleIcon(user.role)}
-                  <span className="ml-1">{getRoleDisplayName(user.role as 'admin' | 'client' | 'tasker' | 'company')}</span>
-                </Badge>
-                <Select
-                  value={user.role}
-                  onValueChange={(value) => {
-                    console.log('Select onValueChange triggered with value:', value)
-                    handleUpdateUserRole(user.id, value)
-                  }}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="tasker">Tasker</SelectItem>
-                    <SelectItem value="company">Company</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteUser(user.id)}
-                  disabled={user.id === currentUserId} // Can't delete own account
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
               </div>
             </div>
           ))}

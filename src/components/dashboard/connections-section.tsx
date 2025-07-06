@@ -32,6 +32,11 @@ export function ConnectionsSection() {
   const [history, setHistory] = useState<ConnectionHistoryEntry[]>([])
 
   const fetchConnections = useCallback(async () => {
+    if (!user?.email) {
+      setLoading(false)
+      return
+    }
+
     try {
       console.log('Fetching connections for user:', user?.email)
       const response = await fetch('/api/user/connections', {
@@ -52,15 +57,23 @@ export function ConnectionsSection() {
       } else {
         const errorData = await response.json()
         console.error('Error response:', errorData)
+        // Set default values on error
+        setConnections(0)
+        setLastRefresh(null)
       }
     } catch (error) {
       console.error('Error fetching connections:', error)
+      // Set default values on error
+      setConnections(0)
+      setLastRefresh(null)
     } finally {
       setLoading(false)
     }
   }, [user?.email])
 
   const fetchHistory = useCallback(async () => {
+    if (!user?.email) return
+
     try {
       console.log('Fetching connection history for user:', user?.email)
       const response = await fetch('/api/user/connections/history', {
@@ -80,18 +93,52 @@ export function ConnectionsSection() {
       } else {
         const errorData = await response.json()
         console.error('Error response:', errorData)
+        setHistory([])
       }
     } catch (error) {
       console.error('Error fetching connection history:', error)
+      setHistory([])
     }
   }, [user?.email])
 
   useEffect(() => {
-    if (user?.email && !authLoading) {
-      fetchConnections()
-      fetchHistory()
+    if (!authLoading) {
+      if (user?.email) {
+        fetchConnections()
+        fetchHistory()
+      } else {
+        // If no user, stop loading
+        setLoading(false)
+      }
     }
-  }, [user?.email, authLoading, fetchConnections, fetchHistory])
+
+    // Add a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log('Connections loading timeout - stopping loading state')
+        setLoading(false)
+      }
+    }, 10000) // 10 seconds timeout
+
+    return () => clearTimeout(timeout)
+  }, [user?.email, authLoading, fetchConnections, fetchHistory, loading])
+
+  // Listen for refresh events
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('Received refresh-connections event')
+      if (user?.email) {
+        fetchConnections()
+        fetchHistory()
+      }
+    }
+
+    window.addEventListener('refresh-connections', handleRefresh)
+    
+    return () => {
+      window.removeEventListener('refresh-connections', handleRefresh)
+    }
+  }, [user?.email, fetchConnections, fetchHistory])
 
   if (loading) {
     return (
@@ -126,7 +173,7 @@ export function ConnectionsSection() {
         
         <Separator />
         
-        <ConnectionCosts />
+        <ConnectionCosts userRole={user?.role} />
         
         <Separator />
         
@@ -136,11 +183,11 @@ export function ConnectionsSection() {
         
         <ConnectionActivity history={history} />
         
-        <LowConnectionsWarning connections={connections} />
+        <LowConnectionsWarning connections={connections} userRole={user?.role} />
         
         <Separator />
         
-        <PurchaseConnectionsSection />
+        <PurchaseConnectionsSection userRole={user?.role} />
       </CardContent>
     </Card>
   )

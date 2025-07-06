@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-// Create a simple Prisma client for this endpoint
-const simplePrisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const cities = await simplePrisma.city.findMany({
+    if (!prisma) {
+      throw new Error('Database connection not available')
+    }
+
+    const cities = await prisma.city.findMany({
       where: {
         isActive: true,
       },
@@ -16,7 +17,21 @@ export async function GET() {
       ],
     })
 
-    return NextResponse.json({ cities })
+    // Transform the data to match the expected format
+    const formattedCities = cities.map((city) => ({
+      id: city.id,
+      key: city.key,
+      name_bs: city.nameBS,
+      name_en: city.nameEN,
+      name: city.nameEN, // Default to English name
+      country: 'Bosnia and Herzegovina', // Default country
+      state: '', // Not used in current schema
+      is_special: city.isSpecial,
+      sort_order: city.sortOrder,
+      is_active: city.isActive
+    }))
+
+    return NextResponse.json({ cities: formattedCities })
   } catch (error) {
     console.error('Error fetching cities:', error)
     return NextResponse.json(

@@ -1,10 +1,12 @@
 "use client";
 
-import { JobList } from "@/components/job-list";
-import SiteStats from "@/components/site-stats";
+import { JobList } from "@/components/jobs/job-list";
+import SiteStats from "@/components/common/site-stats";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Briefcase, Zap, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   // Use an interval to refresh jobs periodically (alternative to direct callback)
@@ -14,7 +16,7 @@ export default function Home() {
     <>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="container mx-auto px-4 py-16 text-center">
+        <div className="container mx-auto px-4 py-8 text-center">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-4">
               <Badge
@@ -27,7 +29,7 @@ export default function Home() {
 
               <h2 className="text-5xl md:text-6xl font-bold leading-tight">
                 Post & Find
-                <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
+                <span className="block bg-gradient-brand bg-clip-text text-transparent">
                   Quick Jobs
                 </span>
               </h2>
@@ -36,27 +38,36 @@ export default function Home() {
                 The fastest way to post quick jobs and find reliable workers in
                 Bosnia. Simple, free, and trusted by thousands.
               </p>
+
+              {/* Call to Action Button */}
+              <div className="flex justify-center items-center mt-8">
+                <Link href="/auth/register">
+                  <Button
+                    size="lg"
+                    className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 px-8 py-3 text-lg transition-all duration-200"
+                  >
+                    <UserPlus className="h-5 w-5 mr-2" />
+                    Register for free
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <Separator className="container mx-auto" />
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
-        <div className="space-y-8">
-          <div className="text-center space-y-4">
-            <h3 className="text-3xl font-bold">Latest Opportunities</h3>
+      {/* Browse Jobs Section */}
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-4 mb-12">
+            <h3 className="text-3xl font-bold">Browse Available Jobs</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Browse through our curated list of job openings and find the
-              perfect match for your skills and experience.
+              Discover opportunities that match your skills and preferences
             </p>
           </div>
-
           <JobList />
         </div>
-      </main>
+      </section>
 
       {/* Site Stats Section */}
       <section className="bg-muted/30 py-16">
@@ -65,7 +76,8 @@ export default function Home() {
             <div className="space-y-4">
               <h3 className="text-3xl font-bold">Site Statistics</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                See how mojPoslić is connecting workers and clients across Bosnia and Herzegovina
+                See how mojPoslić is connecting workers and clients across
+                Bosnia and Herzegovina
               </p>
             </div>
             <SiteStats />

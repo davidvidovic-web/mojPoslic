@@ -48,21 +48,50 @@ export async function POST(request: NextRequest) {
 
     const currentConnections = connectionResult[0].connections || 0
 
-    // Calculate connection cost based on user role
-    let connectionCost = 3 // Default for clients
-    if (user.role === 'company') {
-      connectionCost = 4
-    } else if (user.role === 'client') {
-      connectionCost = 3
-    }
+    // Get today's date range (start and end of day in UTC to avoid timezone issues)
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfDay = new Date(today.getTime())
+    const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000) // Add 24 hours
 
-    // Check if user has enough connections
-    if (currentConnections < connectionCost) {
-      return NextResponse.json({ 
-        error: `Insufficient connections. You need ${connectionCost} connections to post a job as ${user.role}, but you only have ${currentConnections}.`,
-        requiredConnections: connectionCost,
-        currentConnections
-      }, { status: 400 })
+    // Count jobs posted today by this user
+    const todayJobCount = await simplePrisma.jobListing.count({
+      where: {
+        postedById: userId,
+        createdAt: {
+          gte: startOfDay,
+          lt: endOfDay
+        }
+      }
+    })
+
+    console.log('=== Today Job Count Check ===')
+    console.log('Today start:', startOfDay.toISOString())
+    console.log('Today end:', endOfDay.toISOString())
+    console.log('Current todayJobCount:', todayJobCount)
+    console.log('needsConnections will be:', todayJobCount >= 1)
+
+    // Determine if connections are needed (first job today is free, subsequent cost connections)
+    const needsConnections = todayJobCount >= 1
+    let connectionCost = 0
+
+    if (needsConnections) {
+      // Calculate connection cost based on user role
+      if (user.role === 'company') {
+        connectionCost = 4
+      } else if (user.role === 'client') {
+        connectionCost = 3
+      }
+
+      // Check if user has enough connections
+      if (currentConnections < connectionCost) {
+        return NextResponse.json({ 
+          error: `Insufficient connections. You need ${connectionCost} connections to post additional jobs today (you've already posted ${todayJobCount} job${todayJobCount > 1 ? 's' : ''} today), but you only have ${currentConnections}.`,
+          requiredConnections: connectionCost,
+          currentConnections,
+          todayJobCount
+        }, { status: 400 })
+      }
     }
 
     // Format client name as "FirstName L."
@@ -231,29 +260,40 @@ export async function POST(request: NextRequest) {
         data: jobData
       })
 
-      // Spend connections using raw SQL
-      await tx.$executeRaw`
-        UPDATE users 
-        SET connections = connections - ${connectionCost}
-        WHERE id = ${userId}
-      `
+      // Only spend connections if needed (not first job today)
+      if (needsConnections && connectionCost > 0) {
+        // Spend connections using raw SQL
+        await tx.$executeRaw`
+          UPDATE users 
+          SET connections = connections - ${connectionCost}
+          WHERE id = ${userId}
+        `
 
-      // Log connection usage using raw SQL
-      const actionType = user.role === 'company' ? 'JOB_POST_COMPANY' : 'JOB_POST_CLIENT'
-      await tx.$executeRaw`
-        INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
-        VALUES (gen_random_uuid()::text, ${userId}, ${actionType}::"ConnectionAction", ${-connectionCost}, ${'Posted job as ' + user.role}, ${createdJob.id}, NOW())
-      `
+        // Log connection usage using raw SQL
+        const actionType = user.role === 'company' ? 'JOB_POST_COMPANY' : 'JOB_POST_CLIENT'
+        await tx.$executeRaw`
+          INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
+          VALUES (gen_random_uuid()::text, ${userId}, ${actionType}::"ConnectionAction", ${-connectionCost}, ${'Posted additional job today as ' + user.role}, ${createdJob.id}, NOW())
+        `
+      } else {
+        // Log free job posting
+        await tx.$executeRaw`
+          INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
+          VALUES (gen_random_uuid()::text, ${userId}, ${'JOB_POST_FREE'}::"ConnectionAction", ${0}, ${'First job posted today (free)'}, ${createdJob.id}, NOW())
+        `
+      }
 
       return createdJob
     })
 
-    console.log('Job created successfully with connections spent:', job.id)
+    console.log('Job created successfully:', job.id, needsConnections ? `(${connectionCost} connections spent)` : '(free - first job today)')
 
     return NextResponse.json({
       success: true,
       connectionsSpent: connectionCost,
       remainingConnections: currentConnections - connectionCost,
+      wasFree: !needsConnections,
+      todayJobCount: todayJobCount + 1, // Include the just posted job
       job: {
         ...job,
         posted_at: job.createdAt.toISOString(),

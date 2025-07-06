@@ -1,63 +1,66 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Clock, Heart } from 'lucide-react'
+import { CheckCircle, DollarSign, Briefcase } from 'lucide-react'
 
 interface JobApplication {
   id: string
   job_id: string
   applied_at: string
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected'
+  status: 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'completed'
+  job?: {
+    title: string
+    salaryMin?: number
+    salaryMax?: number
+    salary?: string
+  }
 }
 
 interface TaskerStatsCardsProps {
   applications: JobApplication[]
-  savedJobsCount: number
+  completedJobs?: number
+  totalEarnings?: number
 }
 
-export function TaskerStatsCards({ applications, savedJobsCount }: TaskerStatsCardsProps) {
+export function TaskerStatsCards({ 
+  applications, 
+  completedJobs = 0, 
+  totalEarnings = 0 
+}: TaskerStatsCardsProps) {
+  const activeJobs = applications.filter(app => app.status === 'accepted').length
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <Card>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Applications</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{applications.length}</div>
-          <p className="text-xs text-muted-foreground">Total sent</p>
+          <div className="text-2xl font-bold">{activeJobs}</div>
+          <p className="text-xs text-muted-foreground">Jobs you&apos;re working on</p>
         </CardContent>
       </Card>
-      <Card>
+
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Completed Jobs</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {applications.filter(app => app.status === 'pending').length}
-          </div>
-          <p className="text-xs text-muted-foreground">Awaiting response</p>
+          <div className="text-2xl font-bold">{completedJobs}</div>
+          <p className="text-xs text-muted-foreground">Successfully finished</p>
         </CardContent>
       </Card>
-      <Card>
+
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Saved Jobs</CardTitle>
-          <Heart className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{savedJobsCount}</div>
-          <p className="text-xs text-muted-foreground">Bookmarked</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">24</div>
-          <p className="text-xs text-muted-foreground">This month</p>
+          <div className="text-2xl font-bold">{totalEarnings.toLocaleString()} BAM</div>
+          <p className="text-xs text-muted-foreground">From completed work</p>
         </CardContent>
       </Card>
     </div>

@@ -11,6 +11,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { code } = verifyEmailSchema.parse(body)
 
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Database connection unavailable' },
+        { status: 500 }
+      )
+    }
+
     // Find the verification token
     const verificationToken = await prisma.verificationToken.findUnique({
       where: { token: code }
@@ -48,22 +55,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update user as verified and delete the token
-    await prisma.$transaction([
-      prisma.user.update({
+    // Update user as verified (but don't mark profile as completed yet)
+    // Profile will be completed after role selection
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
         where: { id: user.id },
         data: { 
           emailVerified: true,
-          profileSetupCompleted: true 
+          // Don't set profileSetupCompleted here - will be set after role selection
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          emailVerified: true,
+          profileSetupCompleted: true
         }
-      }),
-      prisma.verificationToken.delete({
+      })
+      
+      await tx.verificationToken.delete({
         where: { token: code }
       })
-    ])
+      
+      return updated
+    })
 
     return NextResponse.json({
-      message: 'Email verified successfully!'
+      message: 'Email verified successfully!',
+      user: updatedUser,
+      shouldRedirectToRoleSelection: !updatedUser.role || !updatedUser.profileSetupCompleted
     })
 
   } catch (error) {

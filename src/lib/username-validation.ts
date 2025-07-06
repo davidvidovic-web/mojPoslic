@@ -115,3 +115,88 @@ export async function checkUsernameAvailability(username: string): Promise<boole
     return false
   }
 }
+
+/**
+ * Generates a unique username from an email address
+ * Uses common techniques to ensure uniqueness
+ */
+export async function generateUniqueUsernameFromEmail(email: string): Promise<string> {
+  // Extract base username from email
+  const emailPart = email.split('@')[0]
+  let baseUsername = emailPart.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+  
+  // Ensure minimum length
+  if (baseUsername.length < 3) {
+    baseUsername = `user${baseUsername}`
+  }
+  
+  // Ensure maximum length
+  if (baseUsername.length > 20) {
+    baseUsername = baseUsername.substring(0, 20)
+  }
+  
+  // Check if base username is valid and available
+  const formatValidation = validateUsernameFormat(baseUsername)
+  if (formatValidation.isValid) {
+    const isAvailable = await checkUsernameAvailability(baseUsername)
+    if (isAvailable) {
+      return baseUsername
+    }
+  }
+  
+  // If not available, try common techniques to make it unique
+  const strategies = [
+    // Add random numbers
+    () => `${baseUsername}${Math.floor(Math.random() * 1000)}`,
+    () => `${baseUsername}${Math.floor(Math.random() * 10000)}`,
+    
+    // Add current year
+    () => `${baseUsername}${new Date().getFullYear()}`,
+    
+    // Add month and year
+    () => `${baseUsername}${String(new Date().getMonth() + 1).padStart(2, '0')}${new Date().getFullYear()}`,
+    
+    // Add underscore with numbers
+    () => `${baseUsername}_${Math.floor(Math.random() * 100)}`,
+    () => `${baseUsername}_${Math.floor(Math.random() * 1000)}`,
+    
+    // Add hyphen with numbers
+    () => `${baseUsername}-${Math.floor(Math.random() * 100)}`,
+    () => `${baseUsername}-${Math.floor(Math.random() * 1000)}`,
+    
+    // Truncate and add numbers if too long
+    () => `${baseUsername.substring(0, 15)}${Math.floor(Math.random() * 10000)}`,
+    
+    // Add 'user' prefix with numbers
+    () => `user${baseUsername.substring(0, 10)}${Math.floor(Math.random() * 100)}`,
+  ]
+  
+  // Try each strategy until we find an available username
+  for (const strategy of strategies) {
+    const candidate = strategy()
+    const formatValidation = validateUsernameFormat(candidate)
+    
+    if (formatValidation.isValid) {
+      const isAvailable = await checkUsernameAvailability(candidate)
+      if (isAvailable) {
+        return candidate
+      }
+    }
+  }
+  
+  // Fallback: generate completely random username
+  const randomId = Math.random().toString(36).substring(2, 15)
+  const fallbackUsername = `user${randomId}`
+  
+  // This should always be unique, but check just in case
+  const fallbackValidation = validateUsernameFormat(fallbackUsername)
+  if (fallbackValidation.isValid) {
+    const isAvailable = await checkUsernameAvailability(fallbackUsername)
+    if (isAvailable) {
+      return fallbackUsername
+    }
+  }
+  
+  // Final fallback with timestamp
+  return `user${Date.now().toString(36)}`
+}

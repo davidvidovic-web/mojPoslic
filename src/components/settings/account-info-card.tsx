@@ -10,13 +10,26 @@ export function AccountInfoCard() {
   const { user: profile, loading } = useAuth()
 
   const formatMemberSince = (date?: string | Date) => {
-    if (!date) return 'Unknown'
+    if (!date) {
+      // If no creation date is available, check if we have session data
+      return 'Recent Member'
+    }
     
-    const dateObj = typeof date === 'string' ? new Date(date) : date
-    return dateObj.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long'
-    })
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date
+      
+      // Check if date is valid
+      if (isNaN(dateObj.getTime())) {
+        return 'Recent Member'
+      }
+      
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long'
+      })
+    } catch {
+      return 'Recent Member'
+    }
   }
 
   const getRoleDisplayName = (role: string) => {

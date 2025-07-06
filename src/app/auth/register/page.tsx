@@ -66,7 +66,14 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Registration failed')
       }
 
-      showToast.success("Account created! Please check your email for your verification code.")
+      // Show success message with verification code in development
+      if (process.env.NODE_ENV === 'development' && data.verificationCode) {
+        showToast.success(`Account created! Your verification code is: ${data.verificationCode}`)
+        // Also show an alert for easier copying
+        alert(`Your verification code is: ${data.verificationCode}`)
+      } else {
+        showToast.success("Account created! Please check your email for your verification code.")
+      }
       
       // Redirect to verification page
       if (data.redirectTo) {

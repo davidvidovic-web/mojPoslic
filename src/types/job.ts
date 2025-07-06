@@ -19,9 +19,12 @@ export interface Category {
   name_bs: string
   name_en: string
   name: string // For convenience, will map to name_en
+  parent_id?: string // For hierarchy support
+  parentId?: string // Alternative naming
   is_popular?: boolean
   sort_order?: number
   is_active?: boolean
+  children?: Category[] // For nested categories
 }
 
 // Job interface matching job_listings table structure

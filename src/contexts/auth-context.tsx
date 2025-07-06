@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut as nextAuthSignOut } from 'next-auth/react'
 
 type UserRole = 'admin' | 'client' | 'tasker' | 'company'
 
@@ -15,6 +15,12 @@ interface AuthUser {
   role: UserRole
   profileSetupCompleted?: boolean
   createdAt?: Date
+  phone?: string | null
+  location?: string | null
+  website?: string | null
+  skills?: string | null
+  experience?: string | null
+  preferredJobTypes?: string[] | null
 }
 
 interface AuthContextType {
@@ -26,6 +32,7 @@ interface AuthContextType {
   isTasker: boolean
   isCompany: boolean
   refreshUser: () => Promise<void>
+  signOut: () => Promise<void>
 }
 
 // Auth.js-powered auth context
@@ -38,6 +45,7 @@ const AuthContext = createContext<AuthContextType>({
   isTasker: false,
   isCompany: false,
   refreshUser: async () => {},
+  signOut: async () => {},
 })
 
 export const useAuth = () => {
@@ -57,16 +65,30 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   const fetchUserData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/user/me`)
+      const response = await fetch(`/api/user/profile`)
+      
       if (response.ok) {
-        const userData = await response.json()
+        const { user: userData } = await response.json()
         setDbUser({
           profileSetupCompleted: userData.profileSetupCompleted,
-          role: userData.role, // In case role was updated
+          role: userData.role,
+          name: userData.name,
+          bio: userData.bio,
+          username: userData.username,
+          phone: userData.phone,
+          location: userData.location,
+          website: userData.website,
+          skills: userData.skills,
+          experience: userData.experience,
+          preferredJobTypes: userData.preferredJobTypes,
         })
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+      // If there's a JWT error, clear local state
+      if (error instanceof Error && error.message.includes('JWT')) {
+        setDbUser(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -87,13 +109,35 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
       await fetchUserData()
     }
   }
+
+  // Custom sign out function that clears local state
+  const signOut = async () => {
+    // Clear local state immediately
+    setDbUser(null)
+    
+    // Sign out with NextAuth and force redirect
+    await nextAuthSignOut({ 
+      callbackUrl: "/", 
+      redirect: true 
+    })
+    
+    // Force page reload to clear any cached state
+    window.location.href = "/"
+  }
   
   // Convert Auth.js session to our app's user format, with database fallback
   const user: AuthUser | null = session?.user ? {
     id: session.user.id,
-    name: session.user.name,
+    name: dbUser?.name || session.user.name,
     email: session.user.email,
-    username: null,
+    username: dbUser?.username || null,
+    bio: dbUser?.bio || null,
+    phone: dbUser?.phone || null,
+    location: dbUser?.location || null,
+    website: dbUser?.website || null,
+    skills: dbUser?.skills || null,
+    experience: dbUser?.experience || null,
+    preferredJobTypes: dbUser?.preferredJobTypes || null,
     role: (dbUser?.role as UserRole) || (session.user.role as UserRole) || 'client',
     profileSetupCompleted: dbUser?.profileSetupCompleted ?? session.user.profileSetupCompleted ?? false,
   } : null
@@ -117,6 +161,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     isTasker,
     isCompany,
     refreshUser,
+    signOut,
   }
 
   return (

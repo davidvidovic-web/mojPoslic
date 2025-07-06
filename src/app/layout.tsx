@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import React from "react";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
-import { Providers } from "@/components/providers";
-import { Header } from "@/components/header";
+import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/contexts/auth-context";
+import { DataProvider } from "@/contexts/data-context";
+import { Header } from "@/components/core/header";
 import { Toaster } from "sonner";
 import Script from "next/script";
 import "./globals.css";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
 });
 
 export const metadata: Metadata = {
@@ -40,13 +42,20 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${manrope.variable} font-sans antialiased`}>
         <SessionProvider>
-          <Providers>
-            <div className="min-h-screen bg-background">
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AuthProvider>
+              <DataProvider>
+                <div className="min-h-screen bg-background">
             <Toaster 
               position="top-right" 
-              richColors
+              richColors={false}
               closeButton
               duration={4000}
               theme="system"
@@ -62,7 +71,9 @@ export default function RootLayout({
             <Header />
             {children}
           </div>
-        </Providers>
+              </DataProvider>
+            </AuthProvider>
+        </ThemeProvider>
       </SessionProvider>
     </body>
   </html>

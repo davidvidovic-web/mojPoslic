@@ -30,12 +30,29 @@ model User {
   connectionsLastRefresh DateTime?           @map("connections_last_refresh")
   createdAt              DateTime            @default(now()) @map("created_at")
   updatedAt              DateTime            @updatedAt @map("updated_at")
+  
+  // Relations
   accounts               Account[]
   applications           Application[]
   connectionHistory      ConnectionHistory[]
   postedJobs             JobListing[]        @relation("JobPoster")
   sessions               Session[]
   stripeTransactions     StripeTransaction[]
+  
+  // Reviews
+  reviewsGiven           Review[]            @relation("ReviewsGiven")
+  reviewsReceived        Review[]            @relation("ReviewsReceived")
+  
+  // Messaging
+  conversationsAsParticipant1 Conversation[] @relation("ConversationsAsParticipant1")
+  conversationsAsParticipant2 Conversation[] @relation("ConversationsAsParticipant2")
+  messagesSent           Message[]           @relation("MessagesSent")
+  
+  // Notifications
+  notifications          Notification[]
+  
+  // Saved Jobs
+  savedJobs              SavedJob[]
 
   @@map("users")
 }
@@ -129,7 +146,12 @@ model JobListing {
   postedById           String        @map("posted_by_id")
   createdAt            DateTime      @default(now()) @map("created_at")
   updatedAt            DateTime      @updatedAt @map("updated_at")
+  
+  // Relations
   applications         Application[]
+  reviews              Review[]
+  conversations        Conversation[]
+  savedBy              SavedJob[]
   category             Category?     @relation(fields: [categoryId], references: [id])
   city                 City          @relation(fields: [cityId], references: [id])
   postedBy             User          @relation("JobPoster", fields: [postedById], references: [id])
@@ -151,6 +173,18 @@ model Application {
 
   @@unique([jobId, userId])
   @@map("applications")
+}
+
+model SavedJob {
+  id        String     @id @default(cuid())
+  jobId     String     @map("job_id")
+  userId    String     @map("user_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  job       JobListing @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@map("saved_jobs")
 }
 
 model Category {
@@ -238,6 +272,91 @@ enum ConnectionAction {
   JOB_APPLICATION
   JOB_POST_CLIENT
   JOB_POST_COMPANY
+  JOB_POST_FREE
   ADMIN_ADJUSTMENT
   PURCHASE
+}
+
+// User Reviews System
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5 star rating
+  comment     String?  // Optional review comment
+  reviewerId  String   @map("reviewer_id")
+  revieweeId  String   @map("reviewee_id")
+  jobId       String?  @map("job_id") // Optional: link to specific job
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  reviewer User       @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee User       @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  job      JobListing? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  // Constraints
+  @@unique([reviewerId, revieweeId, jobId]) // Prevent duplicate reviews for same job
+  @@map("reviews")
+}
+
+// Chat/Messaging System
+model Conversation {
+  id           String   @id @default(cuid())
+  participant1 String   @map("participant1_id")
+  participant2 String   @map("participant2_id")
+  jobId        String?  @map("job_id") // Optional: conversation about specific job
+  lastMessageAt DateTime? @map("last_message_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user1    User        @relation("ConversationsAsParticipant1", fields: [participant1], references: [id], onDelete: Cascade)
+  user2    User        @relation("ConversationsAsParticipant2", fields: [participant2], references: [id], onDelete: Cascade)
+  job      JobListing? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  // Constraints
+  @@unique([participant1, participant2, jobId]) // Prevent duplicate conversations
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  senderId       String   @map("sender_id")
+  content        String
+  isRead         Boolean  @default(false) @map("is_read")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// Notification System (for reviews, messages, job updates, etc.)
+model Notification {
+  id        String            @id @default(cuid())
+  userId    String            @map("user_id")
+  type      NotificationType
+  title     String
+  content   String
+  isRead    Boolean           @default(false) @map("is_read")
+  data      Json?             // Additional data (job_id, review_id, etc.)
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  NEW_REVIEW
+  JOB_APPLICATION
+  JOB_UPDATE
+  SYSTEM
 }

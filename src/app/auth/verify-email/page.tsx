@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,11 +40,32 @@ function VerifyEmailForm() {
 
       if (response.ok) {
         setStatus('success')
-        setMessage('Email verified successfully!')
-        // Redirect to sign in after a delay
-        setTimeout(() => {
-          router.push('/auth/signin?message=Email verified. You can now sign in.')
-        }, 2000)
+        setMessage('Email verified successfully! Logging you in...')
+        
+        // Create a session by signing in the user automatically
+        const signInResult = await signIn('credentials', {
+          email: data.user.email,
+          password: '__VERIFIED_AUTO_LOGIN__', // Special flag for auto-login
+          redirect: false
+        })
+
+        if (signInResult?.ok) {
+          // Redirect based on whether user needs role selection
+          if (data.shouldRedirectToRoleSelection) {
+            setTimeout(() => {
+              router.push('/role-selection')
+            }, 1500)
+          } else {
+            setTimeout(() => {
+              router.push('/dashboard')
+            }, 1500)
+          }
+        } else {
+          // Fallback: redirect to signin if auto-login fails
+          setTimeout(() => {
+            router.push('/auth/signin?message=Email verified. Please sign in to continue.')
+          }, 2000)
+        }
       } else {
         setStatus('error')
         setMessage(data.error || 'Invalid or expired verification code')
@@ -81,7 +103,14 @@ function VerifyEmailForm() {
       
       if (response.ok) {
         setStatus('idle')
-        setMessage('A new verification code has been sent to your email.')
+        // Show verification code in development
+        if (process.env.NODE_ENV === 'development' && data.verificationCode) {
+          setMessage(`A new verification code has been sent: ${data.verificationCode}`)
+          // Also show an alert for easier copying
+          alert(`Your new verification code is: ${data.verificationCode}`)
+        } else {
+          setMessage('A new verification code has been sent to your email.')
+        }
       } else {
         setStatus('error')
         setMessage(data.error || 'Failed to resend verification code')

@@ -3,10 +3,26 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { PurchaseConnections } from '@/components/purchase-connections'
+import { PurchaseConnections } from '@/components/common/purchase-connections'
 
-export function PurchaseConnectionsSection() {
+interface PurchaseConnectionsSectionProps {
+  userRole?: string
+}
+
+export function PurchaseConnectionsSection({ userRole = 'tasker' }: PurchaseConnectionsSectionProps) {
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false)
+
+  const getDescription = () => {
+    switch (userRole) {
+      case 'client':
+        return 'Need more connections? Purchase additional connects to post multiple jobs daily.'
+      case 'company':
+        return 'Need more connections? Purchase additional connects to continue posting jobs.'
+      case 'tasker':
+      default:
+        return 'Need more connections? Purchase additional connects to continue applying for professional jobs.'
+    }
+  }
 
   return (
     <div className="text-center">
@@ -27,7 +43,7 @@ export function PurchaseConnectionsSection() {
         </DialogContent>
       </Dialog>
       <p className="text-xs text-muted-foreground mt-2">
-        Need more connections? Purchase additional connects to continue applying and posting.
+        {getDescription()}
       </p>
     </div>
   )

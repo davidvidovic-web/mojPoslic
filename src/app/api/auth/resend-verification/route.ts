@@ -60,8 +60,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // For localhost development, log the verification code
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
+      console.log('\n=================================')
+      console.log('📧 RESENT VERIFICATION CODE FOR DEVELOPMENT')
+      console.log('=================================')
+      console.log(`Email: ${email}`)
+      console.log(`Verification Code: ${verificationCode}`)
+      console.log('=================================\n')
+    }
+
     return NextResponse.json({
-      message: 'A new verification code has been sent to your email.'
+      message: process.env.NODE_ENV === 'development' 
+        ? `A new verification code has been sent: ${verificationCode}` 
+        : 'A new verification code has been sent to your email.',
+      ...(process.env.NODE_ENV === 'development' && { verificationCode })
     })
 
   } catch (error) {

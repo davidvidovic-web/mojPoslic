@@ -2,6 +2,8 @@
  * Utility functions for formatting job-related data
  */
 
+import { formatDisplayName } from './utils'
+
 /**
  * Formats job type strings to human-readable format
  * @param type - The job type string (e.g., 'full_time', 'part-time', 'quick_job')
@@ -43,7 +45,7 @@ export function getJobTypeBadgeVariant(type: string): "default" | "secondary" | 
       return 'default'
     case 'quick-job':
     case 'quick_job':
-      return 'destructive'
+      return 'default' // Changed from 'destructive' to 'default' (blue instead of red)
     default:
       return 'outline'
   }
@@ -204,16 +206,64 @@ export function formatClientName(fullName?: string): string {
     return 'Anonymous Client'
   }
   
-  const nameParts = fullName.trim().split(' ')
+  const formatted = formatDisplayName(fullName)
+  return formatted || 'Anonymous Client'
+}
+
+/**
+ * Formats time ago to human-readable format (e.g., "5m ago", "2h ago", "1d ago", "3mo ago")
+ * @param dateString - The date string to calculate time ago
+ * @returns Human-readable time ago
+ */
+export const formatTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInMs = now.getTime() - date.getTime()
   
-  if (nameParts.length === 1) {
-    // If only one name part, return it as is
-    return nameParts[0]
+  // Convert to different time units
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+  const diffInMonths = Math.floor(diffInDays / 30)
+  
+  // Format based on time elapsed
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`
+  } else if (diffInDays < 30) {
+    return `${diffInDays}d ago`
+  } else {
+    return `${diffInMonths}mo ago`
+  }
+}
+
+/**
+ * Formats duration strings to human-readable format (e.g., "1 hour", "2 days", "3 months")
+ * @param duration - The duration string (e.g., '1_hour', '2_days', '3_months')
+ * @returns Human-readable duration or original string if unrecognized
+ */
+export const formatDuration = (duration?: string): string => {
+  if (!duration) return ''
+  
+  const durationMap: Record<string, string> = {
+    '1_hour': '1 hour',
+    '2_hours': '2 hours',
+    '3_hours': '3 hours',
+    '4_hours': '4 hours',
+    '6_hours': '6 hours',
+    '8_hours': '8 hours',
+    '1_day': '1 day',
+    '2_days': '2 days',
+    '3_days': '3 days',
+    '1_week': '1 week',
+    '2_weeks': '2 weeks',
+    '1_month': '1 month',
+    '2_months': '2 months',
+    '3_months': '3 months',
+    '6_months': '6 months',
+    '1_year': '1 year'
   }
   
-  // Get first name and first letter of last name
-  const firstName = nameParts[0]
-  const lastNameInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase()
-  
-  return `${firstName} ${lastNameInitial}.`
+  return durationMap[duration] || duration.replace('_', ' ')
 }

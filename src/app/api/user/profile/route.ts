@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 
 import { PrismaClient } from '@prisma/client'
-import { validateUsernameFormat } from '@/lib/username-validation'
 
 const prisma = new PrismaClient()
 
@@ -16,7 +15,6 @@ export async function PUT(request: Request) {
 
     const { 
       name, 
-      username,
       bio, 
       phone, 
       location, 
@@ -26,40 +24,40 @@ export async function PUT(request: Request) {
       preferredJobTypes 
     } = await request.json()
 
-    // Validate username if provided
-    if (username) {
-      const formatValidation = validateUsernameFormat(username)
-      if (!formatValidation.isValid) {
-        return NextResponse.json({ 
-          error: formatValidation.error 
-        }, { status: 400 })
-      }
+    // Get current user to check role
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { role: true }
+    })
 
-      // Check if username is already taken
-      const existingUser = await prisma.user.findUnique({
-        where: { username }
-      })
-
-      if (existingUser && existingUser.email !== session.user.email) {
-        return NextResponse.json({ 
-          error: 'Username is already taken' 
-        }, { status: 400 })
-      }
+    if (!currentUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
+
+    // Base update data that all roles can modify
+    const baseUpdateData = {
+      name,
+      phone,
+      location,
+      website,
+    }
+
+    // Only include professional fields for non-client roles
+    const updateData = currentUser.role === 'client' 
+      ? baseUpdateData 
+      : {
+          ...baseUpdateData,
+          bio,
+          skills,
+          experience,
+          preferredJobTypes: Array.isArray(preferredJobTypes) 
+            ? preferredJobTypes.join(', ') 
+            : preferredJobTypes || '',
+        }
 
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
-      data: {
-        name,
-        username,
-        bio,
-        phone,
-        location,
-        website,
-        skills,
-        experience,
-        preferredJobTypes,
-      },
+      data: updateData,
     })
 
     return NextResponse.json({ 
@@ -75,7 +73,7 @@ export async function PUT(request: Request) {
         website: updatedUser.website,
         skills: updatedUser.skills,
         experience: updatedUser.experience,
-        preferredJobTypes: updatedUser.preferredJobTypes,
+        preferredJobTypes: updatedUser.preferredJobTypes ? updatedUser.preferredJobTypes.split(', ') : [],
         role: updatedUser.role,
       }
     })
@@ -116,7 +114,13 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ user })
+    // Convert preferredJobTypes string back to array for frontend consumption
+    const userWithArrayJobTypes = {
+      ...user,
+      preferredJobTypes: user.preferredJobTypes ? user.preferredJobTypes.split(', ') : []
+    }
+
+    return NextResponse.json({ user: userWithArrayJobTypes })
   } catch (error) {
     console.error('Profile fetch error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

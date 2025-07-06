@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    if (!prisma) {
+      throw new Error('Database connection not available')
+    }
+
     // Fetch all categories with their children
     const categories = await prisma.category.findMany({
       where: {
@@ -22,17 +26,22 @@ export async function GET() {
     const formattedCategories = categories.map((category: Record<string, unknown>) => ({
       id: category.id,
       key: category.key,
-      nameBS: category.nameBS,
-      nameEN: category.nameEN,
-      isPopular: category.isPopular,
-      sortOrder: category.sortOrder,
+      name_bs: category.nameBS,
+      name_en: category.nameEN,
+      name: category.nameEN, // Default to English name
+      is_popular: category.isPopular,
+      sort_order: category.sortOrder,
+      is_active: true,
       children: Array.isArray(category.children) ? category.children.map((child: Record<string, unknown>) => ({
         id: child.id,
         key: child.key,
-        nameBS: child.nameBS,
-        nameEN: child.nameEN,
-        isPopular: child.isPopular,
-        sortOrder: child.sortOrder
+        name_bs: child.nameBS,
+        name_en: child.nameEN,
+        name: child.nameEN, // Default to English name
+        parent_id: category.id,
+        is_popular: child.isPopular,
+        sort_order: child.sortOrder,
+        is_active: true
       })) : []
     }))
 
