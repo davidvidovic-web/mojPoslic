@@ -69,7 +69,6 @@ next-env.d.ts
 *-draft.*
 *refactor*
 scripts/
-docs/
 database/
 *.sql
 *.log
