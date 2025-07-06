@@ -44,7 +44,7 @@ export default function Home() {
                 <Link href="/auth/register">
                   <Button
                     size="lg"
-                    className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 px-8 py-3 text-lg transition-all duration-200"
+                    className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 px-8 py-3 text-lg transition-all duration-200"
                   >
                     <UserPlus className="h-5 w-5 mr-2" />
                     Register for free
@@ -56,10 +56,15 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Light Separator */}
+      <div className="flex justify-center py-8">
+        <div className="w-1/2 h-px bg-border"></div>
+      </div>
+
       {/* Browse Jobs Section */}
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-4 mb-12">
+          <div className="text-center space-y-2 mb-12">
             <h3 className="text-3xl font-bold">Browse Available Jobs</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Discover opportunities that match your skills and preferences

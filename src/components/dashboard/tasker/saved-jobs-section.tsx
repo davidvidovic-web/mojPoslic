@@ -1,17 +1,16 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Bookmark } from 'lucide-react'
 import { Job } from '@/types/job'
-import { formatJobType, formatClientName } from '@/lib/job-utils'
+import { JobCard } from '@/components/jobs/job-card'
 
 interface SavedJobsSectionProps {
   savedJobs: Job[]
+  onSaveToggle?: (jobId: string, isSaved: boolean) => void
 }
 
-export function SavedJobsSection({ savedJobs }: SavedJobsSectionProps) {
+export function SavedJobsSection({ savedJobs, onSaveToggle }: SavedJobsSectionProps) {
   return (
     <Card>
       <CardHeader>
@@ -30,16 +29,14 @@ export function SavedJobsSection({ savedJobs }: SavedJobsSectionProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {savedJobs.map((job) => (
-              <div key={job.id} className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-1">{job.title}</h4>
-                <p className="text-sm text-muted-foreground mb-2">{formatClientName(job.company)}</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary">{formatJobType(job.type)}</Badge>
-                  <Button size="sm">Apply Now</Button>
-                </div>
-              </div>
+              <JobCard 
+                key={job.id} 
+                job={job} 
+                isSaved={true}
+                onSaveToggle={onSaveToggle}
+              />
             ))}
           </div>
         )}

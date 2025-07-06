@@ -12,80 +12,109 @@ interface JobCardProps {
   applicationCount: number
   onEdit: (job: Job) => void
   onDelete: (jobId: string) => void
+  onFeature?: (jobId: string, isFeatured: boolean) => void
 }
 
-export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProps) {
+export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: JobCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
   }
 
+  const handleFeatureToggle = () => {
+    onFeature?.(job.id, !job.is_featured)
+  }
+
   return (
-    <Card className="border-l-4 border-l-blue-500">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-semibold">{job.title}</h3>
-              <Badge variant="secondary">{formatJobType(job.type)}</Badge>
-              {job.transportation && (
+    <Card className={`border-l-4 ${job.is_featured ? 'border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20' : 'border-l-blue-500'}`}>
+      <CardContent className="p-4 sm:p-6">
+        <div className="space-y-4">
+          {/* Header with title and actions in top right */}
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">{job.title}</h3>
+                  {job.is_featured && (
+                    <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs">
+                      Featured
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary">{formatJobType(job.type)}</Badge>
+                  {typeof applicationCount === 'number' && (
+                    <Badge 
+                      variant={applicationCount > 0 ? "default" : "outline"}
+                      className="text-xs"
+                    >
+                      {applicationCount} application{applicationCount !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div 
+                className="text-sm text-muted-foreground mb-3 line-clamp-2 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: job.description }}
+              />
+            </div>
+            
+            {/* Actions moved to top right corner */}
+            <div className="flex-shrink-0">
+              <JobCardActions 
+                applicationCount={applicationCount}
+                onEdit={() => onEdit(job)}
+                onDelete={() => onDelete(job.id)}
+                onFeature={onFeature ? handleFeatureToggle : undefined}
+                isFeatured={job.is_featured}
+              />
+            </div>
+          </div>
+          
+          {/* Transportation and tags row */}
+          <div className="space-y-2">
+            {job.transportation && (
+              <div className="flex items-center">
                 <Badge variant="outline" className="text-xs">
                   <Car className="h-3 w-3 mr-1" />
                   {formatTransportation(job.transportation, job.transportation_amount)}
                 </Badge>
-              )}
-              {typeof applicationCount === 'number' && (
-                <Badge 
-                  variant={applicationCount > 0 ? "default" : "outline"}
-                  className="text-xs"
-                >
-                  {applicationCount} application{applicationCount !== 1 ? 's' : ''}
-                </Badge>
-              )}
-            </div>
-            
-            <div 
-              className="text-sm text-muted-foreground mb-3 line-clamp-2 prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: job.description }}
-            />
-            
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-1" />
-                {job.city?.name || 'Remote'}
               </div>
-              {job.salary && (
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  {job.salary}
-                </div>
-              )}
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                Posted {formatDate(job.created_at)}
-              </div>
-            </div>
+            )}
             
             {job.tags && job.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-3">
-                {job.tags.slice(0, 3).map((tag, index) => (
+              <div className="flex flex-wrap gap-1">
+                {job.tags.slice(0, 4).map((tag, index) => (
                   <Badge key={index} variant="outline" className="text-xs">
                     {tag}
                   </Badge>
                 ))}
-                {job.tags.length > 3 && (
+                {job.tags.length > 4 && (
                   <Badge variant="outline" className="text-xs">
-                    +{job.tags.length - 3} more
+                    +{job.tags.length - 4} more
                   </Badge>
                 )}
               </div>
             )}
           </div>
           
-          <JobCardActions 
-            applicationCount={applicationCount}
-            onEdit={() => onEdit(job)}
-            onDelete={() => onDelete(job.id)}
-          />
+          {/* Footer info */}
+          <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-muted-foreground pt-2 border-t border-border/50">
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+              <span className="truncate">{job.city?.name || 'Remote'}</span>
+            </div>
+            {job.salary && (
+              <div className="flex items-center">
+                <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
+                <span className="truncate">{job.salary}</span>
+              </div>
+            )}
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+              <span>Posted {formatDate(job.created_at)}</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

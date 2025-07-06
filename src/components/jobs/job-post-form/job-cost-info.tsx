@@ -41,7 +41,6 @@ export function JobCostInfo({ className = '' }: JobCostInfoProps) {
   // Listen for refresh events to update cost info after job posting
   useEffect(() => {
     const handleRefresh = () => {
-      console.log('Received refresh-job-cost event')
       if (user) {
         const fetchCostInfo = async () => {
           try {

@@ -124,8 +124,8 @@ const SiteStats = () => {
       </div>
 
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
-        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-green-100 dark:bg-green-900">
-          <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-blue-100 dark:bg-blue-900">
+          <CheckCircle className="h-7 w-7 text-blue-600 dark:text-blue-400" />
         </div>
         <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.finishedJobs} suffix="" />

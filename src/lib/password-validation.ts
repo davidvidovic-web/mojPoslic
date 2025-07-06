@@ -204,7 +204,7 @@ export function getPasswordStrengthColor(level: PasswordStrength['level']): stri
     case 'weak': return 'text-orange-500'
     case 'fair': return 'text-yellow-500'
     case 'good': return 'text-blue-500'
-    case 'strong': return 'text-green-500'
+    case 'strong': return 'text-blue-500'
     default: return 'text-gray-500'
   }
 }
@@ -215,7 +215,7 @@ export function getPasswordStrengthBgColor(level: PasswordStrength['level']): st
     case 'weak': return 'bg-orange-500'
     case 'fair': return 'bg-yellow-500'
     case 'good': return 'bg-blue-500'
-    case 'strong': return 'bg-green-500'
+    case 'strong': return 'bg-blue-500'
     default: return 'bg-gray-500'
   }
 }
@@ -228,5 +228,41 @@ export function getPasswordStrengthText(level: PasswordStrength['level']): strin
     case 'good': return 'Good'
     case 'strong': return 'Strong'
     default: return 'Unknown'
+  }
+}
+
+// Simple validation for registration form
+export function validatePasswordSimple(password: string, email?: string): {
+  isValid: boolean
+  errors: string[]
+} {
+  const errors: string[] = []
+  
+  // Must have at least one capital letter
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one capital letter')
+  }
+  
+  // Must have at least one number
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number')
+  }
+  
+  // Must be at least 8 characters
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long')
+  }
+  
+  // Should not contain email address part
+  if (email) {
+    const emailUsername = email.split('@')[0].toLowerCase()
+    if (emailUsername.length > 2 && password.toLowerCase().includes(emailUsername)) {
+      errors.push('Password should not contain your email address')
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
   }
 }

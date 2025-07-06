@@ -50,13 +50,22 @@ export interface Job {
   start_date?: string // When the job/work should start
   start_time?: string // What time the job should start (e.g., "09:00", "14:30")
   duration?: string // How long the job will take (e.g., "1_day", "3_days", "1_week", "1_month")
-  transportation?: 'provided' | 'not_provided' | 'tasker_responsible' | 'compensated' // Transportation arrangement
+  transportation?: 'provided' | 'not_provided' | 'compensated' // Transportation arrangement
   transportation_amount?: number // Amount if client compensates for transportation
+  has_parking?: boolean // Whether parking is available
+  public_transport_info?: string // Public transport accessibility information
   expires_at?: string // When the job posting expires
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
   job_longitude?: number // Longitude coordinate
   posted_by?: string // Foreign key to auth.users
+  // Job poster information
+  postedBy?: {
+    id: string
+    name: string | null
+    email: string | null
+    role: string
+  }
   created_at: string
   updated_at?: string
   posted_at: string // Alias for created_at for compatibility
@@ -87,8 +96,10 @@ export interface CreateJobData {
   start_date?: string // When the job/work should start
   start_time?: string // What time the job should start (e.g., "09:00", "14:30")
   duration?: string // How long the job will take (e.g., "1_day", "3_days", "1_week", "1_month")
-  transportation?: 'provided' | 'not_provided' | 'tasker_responsible' | 'compensated' // Transportation arrangement
+  transportation?: 'provided' | 'not_provided' | 'compensated' // Transportation arrangement
   transportation_amount?: number // Amount if client compensates for transportation
+  has_parking?: boolean // Whether parking is available
+  public_transport_info?: string // Public transport accessibility information
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
   job_longitude?: number // Longitude coordinate

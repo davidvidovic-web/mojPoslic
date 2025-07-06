@@ -46,7 +46,8 @@ export async function getUserBasicInfo(userId: string) {
     select: {
       id: true,
       name: true,
-      email: true
+      email: true,
+      role: true
     }
   })
 }

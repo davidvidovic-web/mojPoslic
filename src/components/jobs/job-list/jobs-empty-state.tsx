@@ -26,7 +26,7 @@ export function JobsEmptyState({ hasActiveFilters, onClearFilters }: JobsEmptySt
         <div className="flex justify-center">
           {hasActiveFilters ? (
             <Button 
-              className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200"
+              className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200"
               onClick={onClearFilters}
             >
               Clear all filters
@@ -34,7 +34,7 @@ export function JobsEmptyState({ hasActiveFilters, onClearFilters }: JobsEmptySt
           ) : (
             <Link href="/auth/register">
               <Button 
-                className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200"
+                className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Be the first

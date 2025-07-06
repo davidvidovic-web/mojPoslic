@@ -8,15 +8,34 @@ import { MultiStepJobForm } from '@/components/jobs/job-post-form/multi-step-job
 import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { JobsListSection } from './client/jobs-list-section'
 import { ClientMessagesSection } from './client/messages-section'
-import { DashboardStatsCards } from './client/dashboard-stats-cards'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { formatDisplayName, getTimeBasedGreetingWithIcon } from '@/lib/utils'
+import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+// Helper function to get full name display
+const getFullNameDisplay = (name?: string | null): string => {
+  if (!name || typeof name !== 'string') {
+    return ''
+  }
+  return name.trim()
+}
 import { DashboardFooter } from '@/components/core/dashboard-footer'
-import { Sunrise, Sun, Moon } from 'lucide-react'
+import { 
+  Sunrise, 
+  Sun, 
+  Moon, 
+  LayoutDashboard,
+  Briefcase,
+  MessageSquare,
+  Zap,
+  DollarSign,
+  BarChart3,
+  Puzzle,
+  Lock
+} from 'lucide-react'
 
 export function ClientDashboard() {
   const { user } = useAuth()
@@ -26,6 +45,7 @@ export function ClientDashboard() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [jobApplicationCounts, setJobApplicationCounts] = useState<Record<string, number>>({})
+  const [activeTab, setActiveTab] = useState('overview')
   
   // Get time-based greeting with icon
   const { greeting, iconName } = getTimeBasedGreetingWithIcon()
@@ -172,6 +192,34 @@ export function ClientDashboard() {
     }
   }
 
+  const handleFeatureJob = async (jobId: string, isFeatured: boolean) => {
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/feature`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_featured: isFeatured }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // Update the job in the local state
+      setJobs(jobs.map(job => 
+        job.id === jobId 
+          ? { ...job, is_featured: isFeatured }
+          : job
+      ))
+      
+      toast.success(isFeatured ? 'Job featured successfully' : 'Job removed from featured')
+    } catch (error) {
+      console.error('Error featuring job:', error)
+      toast.error('Failed to update job feature status')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -193,28 +241,33 @@ export function ClientDashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg p-6 border border-blue-100 dark:border-blue-900/30">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
               <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800">
                 <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-                  Client Dashboard
-                </h1>
-                <p className="text-blue-600 dark:text-blue-300 mt-1 flex items-center gap-2">
-                  <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>
-                  {renderTimeIcon()}
-                  <span>{greeting}! Ready to find the perfect talent?</span>
-                </p>
+              <div className="flex-1">
+                <div className="space-y-2">
+                  {/* Greeting message */}
+                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300">
+                    {renderTimeIcon()}
+                    <span className="text-lg font-medium">{greeting}</span>
+                  </div>
+                  
+                  {/* Full name - bold and prominent */}
+                  <h1 className="text-xl sm:text-2xl font-bold text-blue-900 dark:text-blue-100">
+                    {getFullNameDisplay(user?.name)}
+                  </h1>
+                  
+                  {/* Role-appropriate tagline */}
+                  <p className="text-sm text-blue-600 dark:text-blue-300">
+                    Ready to find the perfect talent for your projects?
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-sm text-blue-600 dark:text-blue-300">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>Hiring Mode Active</span>
-              </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-blue-600 dark:text-blue-300">
               <div className="flex items-center gap-2">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -225,92 +278,167 @@ export function ClientDashboard() {
           </div>
         </div>
 
-        {/* Main Content with Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="messages" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Messages</TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Analytics</TabsTrigger>
-            <TabsTrigger value="finances" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white disabled:opacity-50" disabled>
-              <div className="flex items-center gap-1">
-                Finances
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="statistics" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white disabled:opacity-50" disabled>
-              <div className="flex items-center gap-1">
-                Statistics
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="integrations" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white disabled:opacity-50" disabled>
-              <div className="flex items-center gap-1">
-                Integrations
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content with Dropdown Navigation */}
+        <div className="space-y-6">
+          {/* Section Selector */}
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center gap-4">
+              <label htmlFor="section-select" className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                View Section:
+              </label>
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-[200px]" id="section-select">
+                  <SelectValue placeholder="Select a section" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="overview">
+                    <div className="flex items-center gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Overview
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="jobs">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Jobs
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="messages">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Messages
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="connections">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4" />
+                      Connections
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="finances" disabled>
+                    <div className="flex items-center gap-2 opacity-50">
+                      <DollarSign className="h-4 w-4" />
+                      Finances
+                      <Lock className="h-3 w-3 ml-1" />
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="analytics" disabled>
+                    <div className="flex items-center gap-2 opacity-50">
+                      <BarChart3 className="h-4 w-4" />
+                      Analytics
+                      <Lock className="h-3 w-3 ml-1" />
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="integrations" disabled>
+                    <div className="flex items-center gap-2 opacity-50">
+                      <Puzzle className="h-4 w-4" />
+                      Integrations
+                      <Lock className="h-3 w-3 ml-1" />
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-          <TabsContent value="overview">
-            {/* Quick Stats */}
-            <ClientQuickStats 
-              jobs={jobs}
-              applicationCounts={jobApplicationCounts}
-            />
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Mobile: Jobs first, then Quick Actions */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Jobs List - prioritized for mobile */}
-                <JobsListSection 
+          {/* Content based on selected section */}
+          {activeTab === 'overview' && (
+            <div>
+              {/* Quick Stats - collapsed on mobile */}
+              <div className="hidden md:block">
+                <ClientQuickStats 
                   jobs={jobs}
                   applicationCounts={jobApplicationCounts}
-                  onEdit={handleEditJob}
-                  onDelete={handleDeleteJob}
-                  onPostNewJob={() => setIsDialogOpen(true)}
                 />
               </div>
 
-              {/* Right Column - Quick Actions & Connections */}
-              <div className="space-y-8">
-                {/* Quick Actions - mobile shows after jobs */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Mobile: Quick Actions first, then Jobs */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* Quick Actions - prioritized for mobile */}
+                  <div className="block lg:hidden">
+                    <ClientQuickActions 
+                      onPostNewJob={() => setIsDialogOpen(true)}
+                    />
+                  </div>
+                  
+                  {/* Jobs List - second on mobile */}
+                  <JobsListSection 
+                    jobs={jobs}
+                    applicationCounts={jobApplicationCounts}
+                    onEdit={handleEditJob}
+                    onDelete={handleDeleteJob}
+                    onPostNewJob={() => setIsDialogOpen(true)}
+                    onFeature={handleFeatureJob}
+                  />
+                </div>
+
+                {/* Right Column - Quick Actions & Connections for desktop */}
+                <div className="hidden lg:block space-y-8">
+                  <ClientQuickActions 
+                    onPostNewJob={() => setIsDialogOpen(true)}
+                  />
+                  
+                  {/* Connections */}
+                  <ConnectionsSection />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'jobs' && (
+            <div className="space-y-6">
+              {/* Quick Actions - first on mobile */}
+              <div className="block lg:hidden">
                 <ClientQuickActions 
                   onPostNewJob={() => setIsDialogOpen(true)}
                 />
-                
-                {/* Connections */}
-                <ConnectionsSection />
               </div>
+              
+              {/* Jobs List - second on mobile */}
+              <JobsListSection 
+                jobs={jobs}
+                applicationCounts={jobApplicationCounts}
+                onEdit={handleEditJob}
+                onDelete={handleDeleteJob}
+                onPostNewJob={() => setIsDialogOpen(true)}
+                onFeature={handleFeatureJob}
+              />
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="messages">
+          {activeTab === 'messages' && (
             <ClientMessagesSection />
-          </TabsContent>
+          )}
 
-          <TabsContent value="analytics">
+          {activeTab === 'connections' && (
             <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Analytics & Insights</h2>
-                <DashboardStatsCards jobs={jobs} />
-              </div>
+              <ConnectionsSection />
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="finances">
+          {activeTab === 'analytics' && (
             <div className="space-y-6">
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                    <BarChart3 className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Analytics Coming Soon</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Advanced analytics, performance insights, and detailed reporting will be available in a future update.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'finances' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
+                    <DollarSign className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-muted-foreground mb-2">Finances Coming Soon</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -319,34 +447,14 @@ export function ClientDashboard() {
                 </div>
               </div>
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="statistics">
+          {activeTab === 'integrations' && (
             <div className="space-y-6">
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Advanced Statistics Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Detailed hiring analytics, performance metrics, and advanced reporting features will be available in a future update.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="integrations">
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 011 1v1a2 2 0 104 0V4z" />
-                    </svg>
+                    <Puzzle className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-muted-foreground mb-2">Integrations Coming Soon</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -355,8 +463,8 @@ export function ClientDashboard() {
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
 
         {/* Post New Job Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

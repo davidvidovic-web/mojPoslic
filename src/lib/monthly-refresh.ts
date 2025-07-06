@@ -20,7 +20,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
   let refreshedUsers = 0
 
   try {
-    console.log('Starting automatic monthly connections refresh...')
 
     // Get all users who need a monthly refresh using raw SQL for compatibility
     const users = await prisma.$queryRaw`
@@ -34,7 +33,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
       connections: number
     }>
 
-    console.log(`Found ${users.length} users to check for refresh eligibility`)
 
     // Process users in batches to avoid overwhelming the database
     const batchSize = 50
@@ -67,7 +65,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
             })
 
             refreshedUsers++
-            console.log(`Refreshed connections for user ${user.id} (${user.email})`)
           } catch (error) {
             const errorMsg = `Failed to refresh user ${user.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
             errors.push(errorMsg)
@@ -77,7 +74,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
       )
     }
 
-    console.log(`Monthly refresh completed. Refreshed ${refreshedUsers} users.`)
     
     if (errors.length > 0) {
       console.error(`Encountered ${errors.length} errors during refresh:`, errors)
@@ -114,11 +110,9 @@ export function shouldRunMonthlyRefresh(): boolean {
 
 // If this script is run directly (not imported)
 if (require.main === module) {
-  console.log('Running manual monthly connections refresh...')
   
   performAutomaticMonthlyRefresh()
     .then((result) => {
-      console.log('Refresh completed:', result)
       process.exit(result.success ? 0 : 1)
     })
     .catch((error) => {

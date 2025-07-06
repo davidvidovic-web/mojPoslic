@@ -72,7 +72,7 @@
 @layer components {
   /* Light mode toast styles */
   :root [data-sonner-toast] {
-    background: transparent !important;
+    background: hsl(var(--background)) !important;
     border: 1px solid hsl(var(--border)) !important;
     color: hsl(var(--foreground)) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;

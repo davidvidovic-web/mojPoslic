@@ -38,7 +38,6 @@ export function ConnectionsSection() {
     }
 
     try {
-      console.log('Fetching connections for user:', user?.email)
       const response = await fetch('/api/user/connections', {
         method: 'GET',
         credentials: 'include',
@@ -47,11 +46,9 @@ export function ConnectionsSection() {
         },
       })
       
-      console.log('Connections response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Connections data:', data)
         setConnections(data.connections || 0)
         setLastRefresh(data.lastRefresh ? new Date(data.lastRefresh) : null)
       } else {
@@ -75,7 +72,6 @@ export function ConnectionsSection() {
     if (!user?.email) return
 
     try {
-      console.log('Fetching connection history for user:', user?.email)
       const response = await fetch('/api/user/connections/history', {
         method: 'GET',
         credentials: 'include',
@@ -84,11 +80,9 @@ export function ConnectionsSection() {
         },
       })
       
-      console.log('History response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('History data:', data)
         setHistory(data.history || [])
       } else {
         const errorData = await response.json()
@@ -115,7 +109,6 @@ export function ConnectionsSection() {
     // Add a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (loading) {
-        console.log('Connections loading timeout - stopping loading state')
         setLoading(false)
       }
     }, 10000) // 10 seconds timeout
@@ -126,7 +119,6 @@ export function ConnectionsSection() {
   // Listen for refresh events
   useEffect(() => {
     const handleRefresh = () => {
-      console.log('Received refresh-connections event')
       if (user?.email) {
         fetchConnections()
         fetchHistory()

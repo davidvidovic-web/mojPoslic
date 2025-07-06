@@ -14,7 +14,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('Fetching connections for user:', session.user.email)
 
     // Use raw SQL query to avoid TypeScript issues
     const result = await prisma.$queryRaw`
@@ -23,15 +22,12 @@ export async function GET() {
       WHERE email = ${session.user.email}
     ` as Array<{ connections: number; connections_last_refresh: Date | null }>
 
-    console.log('Database query result:', result)
 
     if (!result || result.length === 0) {
-      console.log('No user found with email:', session.user.email)
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     const user = result[0]
-    console.log('User data:', user)
     
     return NextResponse.json({ 
       connections: user.connections || 0,

@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Search } from "lucide-react"
+import { MapPin, Search, Navigation } from "lucide-react"
+import { useGeolocation } from "@/hooks/use-geolocation"
+import { GeolocationService } from "@/lib/geolocation"
 
 // Import leaflet types
 import type { LatLngExpression } from "leaflet"
@@ -33,6 +35,7 @@ interface LocationPickerProps {
   placeholder?: string
   className?: string
   selectedCityCoordinates?: { lat: number; lng: number; name: string } | null
+  autoDetectLocation?: boolean
 }
 
 export function LocationPicker({
@@ -40,10 +43,12 @@ export function LocationPicker({
   onChange,
   placeholder = "Enter job location address",
   className = "",
-  selectedCityCoordinates
+  selectedCityCoordinates,
+  autoDetectLocation = false
 }: LocationPickerProps) {
   const [searchQuery, setSearchQuery] = useState(value?.address || "")
   const [isSearching, setIsSearching] = useState(false)
+  const { position, error, loading, getCurrentLocation, clearError } = useGeolocation()
   const [mapCenter, setMapCenter] = useState<LatLngExpression>(() => {
     // Set initial map center based on selected city or default to Sarajevo
     if (selectedCityCoordinates) {
@@ -66,6 +71,45 @@ export function LocationPicker({
     }
   }, [selectedCityCoordinates, value])
 
+  // Handle geolocation position updates
+  useEffect(() => {
+    if (position) {
+      const handleGeolocationSuccess = async () => {
+        const { latitude, longitude } = position.coords
+        setMapCenter([latitude, longitude])
+        setMarkerPosition([latitude, longitude])
+        
+        // Get address from coordinates
+        try {
+          const address = await GeolocationService.reverseGeocode(latitude, longitude)
+          setSearchQuery(address)
+          onChange?.({
+            address,
+            latitude,
+            longitude
+          })
+        } catch (error) {
+          console.error('Failed to get address from coordinates:', error)
+          // Still set the coordinates even if we can't get the address
+          onChange?.({
+            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            latitude,
+            longitude
+          })
+        }
+      }
+      
+      handleGeolocationSuccess()
+    }
+  }, [position, onChange])
+
+  // Auto-detect location on mount if enabled
+  useEffect(() => {
+    if (autoDetectLocation && !value && GeolocationService.isSupported()) {
+      getCurrentLocation()
+    }
+  }, [autoDetectLocation, value, getCurrentLocation])
+
   // Geocoding function using Nominatim (OpenStreetMap)
   const searchLocation = async (query: string) => {
     if (!query.trim()) return
@@ -73,8 +117,21 @@ export function LocationPicker({
     setIsSearching(true)
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ba&addressdetails=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ba&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'mojPoslic/1.0'
+          }
+        }
       )
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.warn('Geocoding rate limited')
+        }
+        throw new Error(`HTTP ${response.status}`)
+      }
+      
       const data = await response.json()
       
       if (data && data.length > 0) {
@@ -94,6 +151,7 @@ export function LocationPicker({
       }
     } catch (error) {
       console.error('Geocoding error:', error)
+      // For network/CORS errors, we still allow manual map clicking
     } finally {
       setIsSearching(false)
     }
@@ -103,8 +161,21 @@ export function LocationPicker({
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'mojPoslic/1.0'
+          }
+        }
       )
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          console.warn('Reverse geocoding rate limited')
+        }
+        throw new Error(`HTTP ${response.status}`)
+      }
+      
       const data = await response.json()
       
       if (data) {
@@ -121,6 +192,14 @@ export function LocationPicker({
       }
     } catch (error) {
       console.error('Reverse geocoding error:', error)
+      // Fallback to coordinates when reverse geocoding fails
+      const fallbackLocation: LocationData = {
+        address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        latitude: lat,
+        longitude: lng
+      }
+      setSearchQuery(fallbackLocation.address)
+      onChange?.(fallbackLocation)
     }
   }
 
@@ -165,9 +244,33 @@ export function LocationPicker({
               <Search className="h-4 w-4" />
             )}
           </Button>
+          {GeolocationService.isSupported() && (
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => {
+                clearError()
+                getCurrentLocation()
+              }}
+              disabled={loading}
+              className="px-3"
+              title="Use my current location"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+              ) : (
+                <Navigation className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
+        {error && (
+          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+            {error.message}
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">
-          Search for a specific address or click on the map to select a precise location within the selected city
+          Search for a specific address, use your current location, or click on the map to select a precise location within the selected city
         </p>
       </div>
 

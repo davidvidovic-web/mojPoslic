@@ -7,17 +7,21 @@ interface TimePickerProps {
   onChange?: (time: string) => void
   placeholder?: string
   className?: string
+  startHour?: number
+  endHour?: number
 }
 
 export function TimePicker({
   value,
   onChange,
   placeholder = "Select time",
-  className
+  className,
+  startHour = 0,
+  endHour = 23
 }: TimePickerProps) {
-  // Generate time options in 30-minute intervals
+  // Generate time options in 30-minute intervals with hour restrictions
   const timeOptions = []
-  for (let hour = 0; hour < 24; hour++) {
+  for (let hour = startHour; hour <= endHour; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
       const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
       const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {

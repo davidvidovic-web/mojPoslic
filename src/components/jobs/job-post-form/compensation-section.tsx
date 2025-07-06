@@ -143,14 +143,14 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
 
       <div className="space-y-2">
         <Label htmlFor="legacy-salary">
-          Additional Salary Notes <span className="text-muted-foreground">(Optional)</span>
+          Compensation Notes <span className="text-muted-foreground">(Optional)</span>
         </Label>
         <Textarea
           id="legacy-salary"
           placeholder="e.g. Negotiable based on experience, Performance bonuses available..."
           value={formData.salary || ''}
           onChange={(e) => onChange({ salary: e.target.value })}
-          className="min-h-[60px] resize-none"
+          className="min-h-[60px] resize-none text-xs"
         />
         <p className="text-xs text-muted-foreground">
           Add any additional context about compensation, benefits, or negotiability.

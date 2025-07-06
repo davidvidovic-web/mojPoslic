@@ -51,12 +51,12 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
-const CACHE_DURATION = 30 * 60 * 1000 // 30 minutes
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours - rely on server-side daily updates
 const STORAGE_KEYS = {
-  cities: 'app_cache_cities',
-  categories: 'app_cache_categories',
-  citiesTimestamp: 'app_cache_cities_timestamp',
-  categoriesTimestamp: 'app_cache_categories_timestamp'
+  cities: 'app_cache_cities_v2',
+  categories: 'app_cache_categories_v2', // Updated version to force refresh
+  citiesTimestamp: 'app_cache_cities_timestamp_v2',
+  categoriesTimestamp: 'app_cache_categories_timestamp_v2'
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
@@ -70,6 +70,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     cities: null as string | null,
     categories: null as string | null
   })
+
+  // Add global function to clear cache (for debugging)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as unknown as { clearMojPoslicCache: () => void }).clearMojPoslicCache = () => {
+        localStorage.removeItem(STORAGE_KEYS.cities)
+        localStorage.removeItem(STORAGE_KEYS.categories)
+        localStorage.removeItem(STORAGE_KEYS.citiesTimestamp)
+        localStorage.removeItem(STORAGE_KEYS.categoriesTimestamp)
+        // Cache cleared! Refresh the page to reload data.
+      }
+    }
+  }, [])
 
   // Check if cached data is still valid
   const isCacheValid = (key: string): boolean => {
@@ -139,6 +152,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!force && isCacheValid(STORAGE_KEYS.citiesTimestamp)) {
       const cached = loadCitiesFromCache()
       if (cached && cached.length > 0) {
+        // Make sure to set loading to false when returning cached data
+        setLoading(prev => ({ ...prev, cities: false }))
         return cached
       }
     }
@@ -179,6 +194,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!force && isCacheValid(STORAGE_KEYS.categoriesTimestamp)) {
       const cached = loadCategoriesFromCache()
       if (cached && cached.length > 0) {
+        // Make sure to set loading to false when returning cached data
+        setLoading(prev => ({ ...prev, categories: false }))
         return cached
       }
     }
@@ -188,11 +205,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const response = await fetch('/api/categories')
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
       const data = await response.json()
+      
       // Handle API response format { categories: [...] }
       const categoriesArray = data.categories || data || []
       
@@ -203,7 +222,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch categories'
       setError(prev => ({ ...prev, categories: errorMessage }))
-      console.error('Error fetching categories:', err)
       
       // Try to return cached data even if expired
       const cached = loadCategoriesFromCache()
@@ -253,7 +271,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [cities])
 
   const getCategoriesByParent = useCallback((parentId?: string) => {
-    return Array.isArray(categories) ? categories.filter(category => category.parent_id === parentId) : []
+    return Array.isArray(categories) ? categories.filter(category => {
+      // Handle both null and undefined for main categories
+      if (parentId === undefined) {
+        return category.parent_id === null || category.parent_id === undefined
+      }
+      return category.parent_id === parentId
+    }) : []
   }, [categories])
 
   const value: DataContextType = {

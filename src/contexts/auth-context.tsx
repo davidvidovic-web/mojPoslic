@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
+import React, { createContext, useContext, ReactNode, useEffect, useState, useRef, useMemo } from 'react'
 import { useSession, signOut as nextAuthSignOut } from 'next-auth/react'
 
 type UserRole = 'admin' | 'client' | 'tasker' | 'company'
@@ -60,8 +60,10 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession()
   const [dbUser, setDbUser] = useState<Partial<AuthUser> | null>(null)
   const [loading, setLoading] = useState(false)
+  const [dataFetched, setDataFetched] = useState(false)
+  const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   
-  // Fetch fresh user data from database
+  // Fetch fresh user data from database with debouncing
   const fetchUserData = async () => {
     try {
       setLoading(true)
@@ -81,7 +83,9 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
           skills: userData.skills,
           experience: userData.experience,
           preferredJobTypes: userData.preferredJobTypes,
+          createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
         })
+        setDataFetched(true)
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -94,18 +98,37 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Fetch user data when session changes
+  // Fetch user data when session changes with debouncing
   useEffect(() => {
     if (session?.user?.id) {
-      fetchUserData()
+      // Clear any existing timeout
+      if (fetchTimeout.current) {
+        clearTimeout(fetchTimeout.current)
+      }
+      
+      // Reset data fetched flag when session changes
+      setDataFetched(false)
+      
+      // Debounce the fetch to prevent rapid calls
+      fetchTimeout.current = setTimeout(() => {
+        fetchUserData()
+      }, 200)
     } else {
       setDbUser(null)
+      setDataFetched(false)
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (fetchTimeout.current) {
+        clearTimeout(fetchTimeout.current)
+      }
     }
   }, [session?.user?.id])
 
   // Refresh user data manually
   const refreshUser = async () => {
-    if (session?.user?.id) {
+    if (session?.user?.id && !loading) {
       await fetchUserData()
     }
   }
@@ -126,21 +149,64 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   }
   
   // Convert Auth.js session to our app's user format, with database fallback
-  const user: AuthUser | null = session?.user ? {
-    id: session.user.id,
-    name: dbUser?.name || session.user.name,
-    email: session.user.email,
-    username: dbUser?.username || null,
-    bio: dbUser?.bio || null,
-    phone: dbUser?.phone || null,
-    location: dbUser?.location || null,
-    website: dbUser?.website || null,
-    skills: dbUser?.skills || null,
-    experience: dbUser?.experience || null,
-    preferredJobTypes: dbUser?.preferredJobTypes || null,
-    role: (dbUser?.role as UserRole) || (session.user.role as UserRole) || 'client',
-    profileSetupCompleted: dbUser?.profileSetupCompleted ?? session.user.profileSetupCompleted ?? false,
-  } : null
+  const user: AuthUser | null = useMemo(() => {
+    if (!session?.user) return null
+    
+    // If we haven't fetched database data yet, but we have a session, return minimal user until DB data loads
+    if (!dataFetched) {
+      return {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        username: null,
+        bio: null,
+        phone: null,
+        location: null,
+        website: null,
+        skills: null,
+        experience: null,
+        preferredJobTypes: null,
+        role: (session.user.role as UserRole) || 'client',
+        profileSetupCompleted: session.user.profileSetupCompleted ?? false,
+      }
+    }
+    
+    // Return complete user object with database data
+    return {
+      id: session.user.id,
+      name: dbUser?.name || session.user.name,
+      email: session.user.email,
+      username: dbUser?.username || null,
+      bio: dbUser?.bio || null,
+      phone: dbUser?.phone || null,
+      location: dbUser?.location || null,
+      website: dbUser?.website || null,
+      skills: dbUser?.skills || null,
+      experience: dbUser?.experience || null,
+      preferredJobTypes: dbUser?.preferredJobTypes || null,
+      role: (dbUser?.role as UserRole) || (session.user.role as UserRole) || 'client',
+      createdAt: dbUser?.createdAt || undefined,
+      // Always prefer database data for profileSetupCompleted if available
+      profileSetupCompleted: dbUser?.profileSetupCompleted !== undefined 
+        ? dbUser.profileSetupCompleted 
+        : (session.user.profileSetupCompleted ?? false),
+    }
+  }, [
+    session?.user,
+    dataFetched,
+    dbUser?.name,
+    dbUser?.username,
+    dbUser?.bio,
+    dbUser?.phone,
+    dbUser?.location,
+    dbUser?.website,
+    dbUser?.skills,
+    dbUser?.experience,
+    dbUser?.preferredJobTypes,
+    dbUser?.role,
+    dbUser?.profileSetupCompleted,
+    dbUser?.createdAt
+  ])
 
   const hasRole = (role: UserRole): boolean => {
     if (!user) return false
@@ -154,7 +220,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
 
   const contextValue: AuthContextType = {
     user,
-    loading: status === 'loading' || loading,
+    loading: status === 'loading' || (!!session?.user && !dataFetched),
     hasRole,
     isAdmin,
     isClient,

@@ -24,23 +24,28 @@ export async function PUT(request: Request) {
       preferredJobTypes 
     } = await request.json()
 
-    // Get current user to check role
+    // Get current user to check role and profile setup status
     const currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { role: true }
+      select: { role: true, profileSetupCompleted: true }
     })
 
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Base update data that all roles can modify
-    const baseUpdateData = {
-      name,
-      phone,
-      location,
-      website,
+    // Base update data - only allow changes to basic fields if profile setup is not completed
+    const baseUpdateData: Record<string, string | undefined> = {}
+    
+    // If profile setup is not completed, allow basic field updates
+    if (!currentUser.profileSetupCompleted) {
+      if (name !== undefined) baseUpdateData.name = name
+      if (phone !== undefined) baseUpdateData.phone = phone
+      if (location !== undefined) baseUpdateData.location = location
     }
+    
+    // Website is always updatable
+    if (website !== undefined) baseUpdateData.website = website
 
     // Only include professional fields for non-client roles
     const updateData = currentUser.role === 'client' 
@@ -75,6 +80,7 @@ export async function PUT(request: Request) {
         experience: updatedUser.experience,
         preferredJobTypes: updatedUser.preferredJobTypes ? updatedUser.preferredJobTypes.split(', ') : [],
         role: updatedUser.role,
+        profileSetupCompleted: updatedUser.profileSetupCompleted,
       }
     })
   } catch (error) {
@@ -106,6 +112,7 @@ export async function GET() {
         experience: true,
         preferredJobTypes: true,
         role: true,
+        profileSetupCompleted: true,
         createdAt: true,
       },
     })

@@ -1,40 +1,22 @@
 'use client'
 
-import { signIn, getProviders } from "next-auth/react"
-import { useEffect, useState } from "react"
+import { signIn } from "next-auth/react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Chrome, Facebook, Apple as AppleIcon, Mail, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { showToast } from "@/lib/toast"
 
-interface Provider {
-  id: string
-  name: string
-  type: string
-  signinUrl: string
-  callbackUrl: string
-}
-
-export default function SignIn() {
-  const [providers, setProviders] = useState<Record<string, Provider> | null>(null)
+export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   })
-
-  useEffect(() => {
-    const setUpProviders = async () => {
-      const providers = await getProviders()
-      setProviders(providers)
-    }
-    setUpProviders()
-  }, [])
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +26,7 @@ export default function SignIn() {
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false
+        redirect: false,
       })
 
       if (result?.error) {
@@ -67,85 +49,16 @@ export default function SignIn() {
     })
   }
 
-  const getProviderIcon = (providerId: string) => {
-    switch (providerId) {
-      case 'google':
-        return <Chrome className="mr-2 h-4 w-4" />
-      case 'facebook':
-        return <Facebook className="mr-2 h-4 w-4" />
-      case 'apple':
-        return <AppleIcon className="mr-2 h-4 w-4" />
-      default:
-        return null
-    }
-  }
-
-  const getProviderDisplayName = (provider: Provider) => {
-    switch (provider.id) {
-      case 'google':
-        return 'Google'
-      case 'facebook':
-        return 'Facebook'
-      case 'apple':
-        return 'Apple'
-      default:
-        return provider.name
-    }
-  }
-
-  if (!providers) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    )
-  }
-
-  const oauthProviders = Object.values(providers).filter(
-    provider => provider.type === 'oauth' && ['google', 'facebook', 'apple'].includes(provider.id)
-  )
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Sign in to mojPoslić</CardTitle>
           <CardDescription className="text-center">
-            Choose your preferred authentication method
+            Enter your email and password to sign in
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* OAuth Providers */}
-          {oauthProviders.length > 0 && (
-            <div className="space-y-2">
-              {oauthProviders.map((provider) => (
-                <Button
-                  key={provider.name}
-                  onClick={() => signIn(provider.id, { callbackUrl: "/" })}
-                  variant="outline"
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {getProviderIcon(provider.id)}
-                  Sign in with {getProviderDisplayName(provider)}
-                </Button>
-              ))}
-            </div>
-          )}
-
-          {/* Separator */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with email
-              </span>
-            </div>
-          </div>
-
-          {/* Email Sign In Form */}
           <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -160,7 +73,6 @@ export default function SignIn() {
                 disabled={loading}
               />
             </div>
-            
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -173,6 +85,7 @@ export default function SignIn() {
                   onChange={handleInputChange}
                   required
                   disabled={loading}
+                  className="pr-10"
                 />
                 <Button
                   type="button"
@@ -183,9 +96,9 @@ export default function SignIn() {
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
               </div>
@@ -193,15 +106,13 @@ export default function SignIn() {
 
             <Button 
               type="submit" 
-              className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200" 
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200" 
               disabled={loading}
             >
-              <Mail className="mr-2 h-4 w-4" />
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
-          {/* Register Link */}
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Don&apos;t have an account? </span>
             <Link

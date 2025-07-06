@@ -15,9 +15,10 @@ interface JobApplicationSidebarProps {
   user: { name?: string | null; email?: string | null } | null
   applying: boolean
   handleApply: () => void
+  showAboutSection?: boolean // New prop to control About section visibility
 }
 
-export function JobApplicationSidebar({ job, user, applying, handleApply }: JobApplicationSidebarProps) {
+export function JobApplicationSidebar({ job, user, applying, handleApply, showAboutSection = true }: JobApplicationSidebarProps) {
   return (
     <div className="space-y-6">
       {/* Apply Card */}
@@ -46,72 +47,74 @@ export function JobApplicationSidebar({ job, user, applying, handleApply }: JobA
       </Card>
 
       {/* Company Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            About {job.company}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span>{job.city?.name || 'Remote'}</span>
-          </div>
-          
-          {job.email && (
+      {showAboutSection && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              About {job.company}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <a 
-                href={`mailto:${job.email}`}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                {job.email}
-              </a>
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{job.city?.name || 'Remote'}</span>
             </div>
-          )}
-          
-          {job.contact_email && job.contact_email !== job.email && (
-            <div className="flex items-center gap-2 text-sm">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <a 
-                href={`mailto:${job.contact_email}`}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                {job.contact_email}
-              </a>
-            </div>
-          )}
-          
-          {job.website && (
-            <div className="flex items-center gap-2 text-sm">
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              <a 
-                href={job.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Company Website
-              </a>
-            </div>
-          )}
-          
-          {job.application_url && job.application_url !== job.website && (
-            <div className="flex items-center gap-2 text-sm">
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              <a 
-                href={job.application_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Application Portal
-              </a>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            
+            {job.email && (
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href={`mailto:${job.email}`}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {job.email}
+                </a>
+              </div>
+            )}
+            
+            {job.contact_email && job.contact_email !== job.email && (
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href={`mailto:${job.contact_email}`}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {job.contact_email}
+                </a>
+              </div>
+            )}
+            
+            {job.website && (
+              <div className="flex items-center gap-2 text-sm">
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href={job.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Company Website
+                </a>
+              </div>
+            )}
+            
+            {job.application_url && job.application_url !== job.website && (
+              <div className="flex items-center gap-2 text-sm">
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href={job.application_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Application Portal
+                </a>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

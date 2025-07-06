@@ -8,8 +8,6 @@ const simplePrisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== Job Creation API Called ===')
-    
     const session = await auth()
     
     if (!session?.user?.id) {
@@ -65,12 +63,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('=== Today Job Count Check ===')
-    console.log('Today start:', startOfDay.toISOString())
-    console.log('Today end:', endOfDay.toISOString())
-    console.log('Current todayJobCount:', todayJobCount)
-    console.log('needsConnections will be:', todayJobCount >= 1)
-
     // Determine if connections are needed (first job today is free, subsequent cost connections)
     const needsConnections = todayJobCount >= 1
     let connectionCost = 0
@@ -98,7 +90,6 @@ export async function POST(request: NextRequest) {
     const formattedClientName = formatClientName(user.name)
 
     const body = await request.json()
-    console.log('Request body:', JSON.stringify(body, null, 2))
     const {
       title,
       description,
@@ -127,20 +118,17 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields (company is no longer required as we generate it)
     if (!title || !description || !city_id || !email) {
-      console.log('Missing required fields:', { title: !!title, description: !!description, city_id: !!city_id, email: !!email })
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    console.log('=== Resolving City ===')
     // Resolve city key to city ID
     const city = await simplePrisma.city.findUnique({
       where: { key: city_id },
       select: { id: true, key: true }
     })
-    console.log('City lookup result:', city)
 
     if (!city) {
       return NextResponse.json(
@@ -149,26 +137,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('=== Resolving Category ===')
     // Resolve category key/ID to category ID if provided
     let resolvedCategoryId = null
     if (category_id) {
-      console.log('Looking up category:', category_id)
       // Try to find by ID first (for new format), then by key (for backward compatibility)
       let category = await simplePrisma.category.findUnique({
         where: { id: category_id },
         select: { id: true, key: true }
       })
-      console.log('Category lookup by ID result:', category)
 
       // If not found by ID, try to find by key
       if (!category) {
-        console.log('Not found by ID, trying by key...')
         category = await simplePrisma.category.findUnique({
           where: { key: category_id },
           select: { id: true, key: true }
         })
-        console.log('Category lookup by key result:', category)
       }
 
       if (!category) {
@@ -179,7 +162,6 @@ export async function POST(request: NextRequest) {
       }
       resolvedCategoryId = category.id
     }
-    console.log('Resolved category ID:', resolvedCategoryId)
 
     // Validate start date is not in the past
     if (start_date) {
@@ -222,7 +204,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('=== Creating Job ===')
     const jobData = {
       title,
       company: formattedClientName, // Use formatted client name instead of company field
@@ -251,7 +232,6 @@ export async function POST(request: NextRequest) {
       postedById: userId,
       isActive: true
     }
-    console.log('Job data to create:', JSON.stringify(jobData, null, 2))
 
     // Create job and spend connections in a transaction
     const job = await simplePrisma.$transaction(async (tx) => {
@@ -286,7 +266,6 @@ export async function POST(request: NextRequest) {
       return createdJob
     })
 
-    console.log('Job created successfully:', job.id, needsConnections ? `(${connectionCost} connections spent)` : '(free - first job today)')
 
     return NextResponse.json({
       success: true,

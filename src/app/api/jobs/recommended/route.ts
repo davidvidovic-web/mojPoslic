@@ -64,8 +64,17 @@ export async function GET() {
       })
     }
 
-    // Fetch recent jobs that the user hasn't applied to
-    // This is a simplified recommendation system - in a real app you'd use more sophisticated logic
+    // Get user profile information for better recommendations
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        location: true,
+        skills: true,
+        preferredJobTypes: true
+      }
+    })
+
+    // Fetch jobs that the user hasn't applied to
     const userApplications = await prisma.application.findMany({
       where: {
         userId: session.user.id
@@ -77,49 +86,125 @@ export async function GET() {
 
     const appliedJobIds = userApplications.map(app => app.jobId)
 
-    const recommendedJobs = await prisma.jobListing.findMany({
-      where: {
-        AND: [
-          {
-            id: {
-              notIn: appliedJobIds
-            }
-          },
-          {
-            status: 'active'
-          },
-          {
-            postedById: {
-              not: session.user.id // Don't recommend user's own jobs
-            }
-          }
-        ]
-      },
-      include: {
-        city: true,
-        category: true,
-        postedBy: {
-          select: {
-            id: true,
-            name: true,
-            companyName: true,
-            avatarUrl: true
+    // Extract user's preferred location and skills
+    const userLocation = user?.location?.toLowerCase()
+    const userSkills = user?.skills?.toLowerCase().split(',').map(s => s.trim()) || []
+    
+    // Build recommendation query with location and skill preferences
+    const whereConditions = {
+      AND: [
+        {
+          id: {
+            notIn: appliedJobIds
           }
         },
-        _count: {
-          select: {
-            applications: true
+        {
+          status: 'active' as const
+        },
+        {
+          postedById: {
+            not: session.user.id // Don't recommend user's own jobs
           }
         }
-      },
+      ]
+    }
+
+    const recommendedJobs = await prisma.jobListing.findMany({
+      where: whereConditions,
       orderBy: {
         createdAt: 'desc'
       },
-      take: 5 // Limit to 5 recommendations
+      take: 20 // Get more initially to filter and rank
     })
 
+    // Get cities and categories separately
+    const cities = await prisma.city.findMany({
+      where: { isActive: true }
+    })
+
+    const categories = await prisma.category.findMany({
+      where: { isActive: true }
+    })
+
+    const postedByUsers = await prisma.user.findMany({
+      where: {
+        id: { in: recommendedJobs.map(job => job.postedById) }
+      },
+      select: {
+        id: true,
+        name: true,
+        companyName: true,
+        avatarUrl: true
+      }
+    })
+
+    // Transform jobs with manual joins and score them
+    const scoredJobs = recommendedJobs.map(job => {
+      const city = cities.find(c => c.id === job.cityId)
+      const category = categories.find(c => c.id === job.categoryId)
+      const postedBy = postedByUsers.find(u => u.id === job.postedById)
+      
+      const transformedJob = {
+        ...job,
+        city: city ? {
+          ...city,
+          name: city.nameEN || city.nameBS // Add name property for compatibility
+        } : null,
+        category: category ? {
+          ...category,
+          name: category.nameEN || category.nameBS // Add name property for compatibility
+        } : null,
+        postedBy,
+        _count: { applications: 0 } // We'll calculate this separately if needed
+      }
+      
+      let score = 0
+      
+      // Location matching (highest priority)
+      if (userLocation && city) {
+        const jobLocation = (city.nameEN || city.nameBS).toLowerCase()
+        if (jobLocation.includes(userLocation) || userLocation.includes(jobLocation)) {
+          score += 100 // High bonus for location match
+        }
+      }
+      
+      // Skills matching (check job title, description, and requirements)
+      if (userSkills.length > 0) {
+        const jobText = `${job.title} ${job.description} ${job.requirements || ''}`.toLowerCase()
+        userSkills.forEach(skill => {
+          if (skill && jobText.includes(skill)) {
+            score += 50 // Bonus for each skill match
+          }
+        })
+      }
+      
+      // Category preference (if we can infer from skills)
+      if (category && userSkills.length > 0) {
+        const categoryName = (category.nameEN || category.nameBS).toLowerCase()
+        userSkills.forEach(skill => {
+          if (skill && categoryName.includes(skill)) {
+            score += 30 // Bonus for category match
+          }
+        })
+      }
+      
+      // Recency bonus (newer jobs get slight preference)
+      const daysSincePosted = Math.floor((Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+      if (daysSincePosted <= 7) {
+        score += Math.max(0, 10 - daysSincePosted) // Up to 10 points for recent jobs
+      }
+      
+      return { job: transformedJob, score }
+    })
+
+    // Sort by score (highest first) and take top 3
+    const topRecommendations = scoredJobs
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(item => item.job)
+
     return NextResponse.json({
-      jobs: recommendedJobs
+      jobs: topRecommendations
     })
   } catch (error) {
     console.error('Error fetching recommended jobs:', error)

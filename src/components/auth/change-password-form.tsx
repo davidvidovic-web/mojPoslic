@@ -199,10 +199,10 @@ export function ChangePasswordForm() {
               <div className="flex items-center gap-2 text-sm">
                 {passwordsMatch ? (
                   <>
-                    <div className="h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
+                    <div className="h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center">
                       <div className="h-2 w-2 bg-white rounded-full" />
                     </div>
-                    <span className="text-green-600">Passwords match</span>
+                    <span className="text-blue-600">Passwords match</span>
                   </>
                 ) : (
                   <>

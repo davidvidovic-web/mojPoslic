@@ -39,6 +39,18 @@ export default function JobDetailPage() {
 
         const job = await response.json()
         setJob(job)
+
+        // Track job view after successfully loading the job
+        try {
+          await fetch(`/api/jobs/${jobId}/view`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+        } catch {
+          // Silently fail view tracking - it's not critical
+        }
       } catch (error) {
         console.error('Error fetching job:', error)
         toast.error('Failed to load job details')
@@ -181,8 +193,8 @@ ${user.name || user.email}`
             {/* Job Content */}
             <JobContent job={job} />
 
-            {/* Job Location */}
-            <JobLocation job={job} />
+            {/* Job Location - hide full location for now */}
+            <JobLocation job={job} showFullLocation={false} />
 
             {/* Job Timeline */}
             <JobTimeline job={job} formatDate={formatDate} />
@@ -194,12 +206,14 @@ ${user.name || user.email}`
               job={job} 
               user={user} 
               applying={applying} 
-              handleApply={handleApply} 
+              handleApply={handleApply}
+              showAboutSection={job.postedBy?.role === 'company'}
             />
             <JobDetailsSidebar 
               job={job} 
               formatDate={formatDate} 
               formatSalary={formatSalary} 
+              showAddress={false}
             />
           </div>
         </div>

@@ -25,7 +25,9 @@ export async function middleware(request: NextRequest) {
       '/api/categories', 
       '/api/cities',
       '/api/stats',
-      '/api/user/me'
+      '/api/user/me',
+      '/api/debug',
+      '/api/cache'
     ]
     
     // Check if current path is public
@@ -61,7 +63,7 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     // Handle JWT decryption errors by clearing the session cookie and redirecting
     if (error instanceof Error && error.message.includes('no matching decryption secret')) {
-      console.log('JWT decryption error detected, clearing session cookies')
+
       
       const response = NextResponse.redirect(new URL('/auth/signin', request.url))
       

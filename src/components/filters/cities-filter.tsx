@@ -15,9 +15,6 @@ interface CitiesFilterProps {
 export function CitiesFilter({ value, onChange, placeholder = "All locations", className, includeAllOption = true }: CitiesFilterProps) {
   const { cities, loading } = useCities()
 
-  // Debug logging
-  console.log('CitiesFilter - cities:', cities, 'type:', typeof cities, 'isArray:', Array.isArray(cities), 'loading:', loading)
-
   // Ensure cities is always an array and handle loading state
   const citiesArray = Array.isArray(cities) ? cities : []
 

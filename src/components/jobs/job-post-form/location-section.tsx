@@ -7,7 +7,9 @@ import { LocationPicker } from '@/components/ui/location-picker'
 import { CitiesFilter } from '@/components/filters/cities-filter'
 import { CreateJobData } from '@/types/job'
 import { validateLocationInCity, cleanMapAddress } from '@/lib/location-utils'
+import { CITY_COORDINATES } from '@/lib/city-coordinates'
 import { MapPin as MapPinIcon } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
 
 interface LocationSectionProps {
   formData: CreateJobData
@@ -16,12 +18,21 @@ interface LocationSectionProps {
 }
 
 export function LocationSection({ formData, onChange, onLocationValidationChange }: LocationSectionProps) {
+  const { user } = useAuth()
   const [hasSpecificLocation, setHasSpecificLocation] = useState(!!formData.job_address)
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
   
   // City coordinates for map centering
   const [selectedCityCoordinates, setSelectedCityCoordinates] = useState<{ lat: number; lng: number; name: string } | null>(null)
   const [selectedCityName, setSelectedCityName] = useState<string>('')
+
+  // Auto-load user's city if not already set (based on location if available)
+  useEffect(() => {
+    if (!formData.city_id && user?.location) {
+      // We could try to match user's location to a city in the future
+      // For now, we'll skip auto-loading since the user location is a free text field
+    }
+  }, [user?.location, formData.city_id, onChange])
 
   // Fetch city name and coordinates when city_id changes
   useEffect(() => {
@@ -139,6 +150,16 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
                   job_latitude: undefined,
                   job_longitude: undefined
                 })
+              } else {
+                // Reset map to center of Banja Luka when enabling specific location
+                const banjaLukaCoords = CITY_COORDINATES['banja-luka']
+                if (banjaLukaCoords) {
+                  setSelectedCityCoordinates({
+                    lat: banjaLukaCoords.lat,
+                    lng: banjaLukaCoords.lng,
+                    name: banjaLukaCoords.name
+                  })
+                }
               }
             }}
           />
@@ -168,6 +189,7 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
               }}
               placeholder="Enter the specific job address"
               selectedCityCoordinates={selectedCityCoordinates}
+              autoDetectLocation={true}
             />
             {locationValidationError && (
               <div className={`text-sm p-4 rounded-lg border ${

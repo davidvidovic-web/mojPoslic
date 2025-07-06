@@ -21,8 +21,8 @@ export interface ConnectionCost {
 export const INITIAL_CONNECTIONS = 20
 export const MONTHLY_CONNECTIONS = 15
 
-// Job application costs (always 2 connections)
-export const JOB_APPLICATION_COST = 2
+// Job application costs (always 3 connections for professional jobs)
+export const JOB_APPLICATION_COST = 3
 
 // Job posting costs based on job type
 export const JOB_POSTING_COSTS: Record<string, number> = {
@@ -40,7 +40,7 @@ export const CONNECTION_COSTS: Record<string, ConnectionCost> = {
   JOB_APPLICATION: {
     action: 'JOB_APPLICATION',
     cost: JOB_APPLICATION_COST,
-    description: 'Apply for a job'
+    description: 'Apply for a professional job'
   },
   JOB_POST_CLIENT: {
     action: 'JOB_POST_CLIENT',

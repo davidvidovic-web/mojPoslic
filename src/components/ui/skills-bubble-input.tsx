@@ -12,16 +12,10 @@ import { cn } from '@/lib/utils'
 interface Category {
   id: string
   key: string
-  nameBS: string
-  nameEN: string
-  isPopular: boolean
-  children: {
-    id: string
-    key: string
-    nameBS: string
-    nameEN: string
-    isPopular: boolean
-  }[]
+  name_bs: string
+  name_en: string
+  is_popular: boolean
+  parent_id?: string
 }
 
 interface SkillsBubbleInputProps {
@@ -63,77 +57,122 @@ export function SkillsBubbleInput({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Filter suggestions based on input
+  // Filter suggestions based on input and selected skills
   useEffect(() => {
-    if (!inputValue.trim()) {
-      setFilteredSuggestions([])
-      return
+    // Get related categories based on selected skills
+    const getRelatedCategories = () => {
+      if (!categories || categories.length === 0 || value.length === 0) {
+        return []
+      }
+
+      const relatedSuggestions: string[] = []
+      const selectedCategoryIds = new Set<string>()
+
+      // Find parent categories of selected skills
+      value.forEach(skill => {
+        const category = categories.find(cat => cat.name_en === skill)
+        if (category) {
+          if (category.parent_id) {
+            selectedCategoryIds.add(category.parent_id)
+          } else {
+            selectedCategoryIds.add(category.id)
+          }
+        }
+      })
+
+      // Find subcategories of selected parent categories
+      selectedCategoryIds.forEach(parentId => {
+        const subcategories = categories.filter(cat => 
+          cat.parent_id === parentId && 
+          cat.name_en && 
+          !value.includes(cat.name_en)
+        )
+        subcategories.forEach(sub => {
+          if (sub.name_en && !relatedSuggestions.includes(sub.name_en)) {
+            relatedSuggestions.push(sub.name_en)
+          }
+        })
+      })
+
+      // If no related subcategories found, suggest popular categories
+      if (relatedSuggestions.length === 0) {
+        const popularUnselected = categories
+          .filter(cat => cat.is_popular && cat.name_en && !value.includes(cat.name_en))
+          .map(cat => cat.name_en!)
+          .slice(0, 6)
+        relatedSuggestions.push(...popularUnselected)
+      }
+
+      return relatedSuggestions
     }
 
     const searchTerm = inputValue.toLowerCase()
     const newSuggestions: string[] = []
 
-    // Add category suggestions
-    if (categories && Array.isArray(categories)) {
-      categories.forEach((category: Category) => {
-        // Add parent category
-        if (category.nameEN.toLowerCase().includes(searchTerm) && 
-            !value.includes(category.nameEN)) {
-          newSuggestions.push(category.nameEN)
-        }
-        
-        // Add child categories
-        if (category.children && Array.isArray(category.children)) {
-          category.children.forEach((child) => {
-            if (child.nameEN.toLowerCase().includes(searchTerm) && 
-                !value.includes(child.nameEN)) {
-              newSuggestions.push(child.nameEN)
-            }
-          })
-        }
-      })
+    // If there's no input, show related categories based on selected skills
+    if (!inputValue.trim() && value.length > 0) {
+      const relatedSuggestions = getRelatedCategories()
+      setFilteredSuggestions(relatedSuggestions.slice(0, 8))
+      return
     }
 
-    // Add common tech skills that might not be in categories
-    const commonSkills = [
-      // Programming Languages
-      'JavaScript', 'TypeScript', 'Python', 'Java', 'PHP', 'C++', 'C#', 'Swift', 'Kotlin', 'Go',
-      
-      // Frontend Technologies  
-      'React', 'Vue.js', 'Angular', 'Next.js', 'HTML', 'CSS', 'Sass', 'Tailwind CSS', 'Bootstrap',
-      
-      // Backend Technologies
-      'Node.js', 'Express.js', 'Django', 'Spring', 'Laravel', 'Ruby on Rails', '.NET', 'FastAPI',
-      
-      // Databases
-      'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Oracle', 'Firebase',
-      
-      // Cloud & DevOps
-      'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes', 'Git', 'GitHub', 'GitLab', 'CI/CD',
-      
-      // Design & UI/UX
-      'Photoshop', 'Figma', 'Adobe Illustrator', 'UI/UX Design', 'Sketch', 'Adobe XD', 'Canva',
-      
-      // Marketing & Business
-      'Digital Marketing', 'SEO', 'Content Writing', 'Social Media', 'Google Analytics', 'Project Management',
-      
-      // Soft Skills
-      'Team Leadership', 'Communication', 'Problem Solving', 'Agile', 'Scrum', 'Time Management',
-      
-      // Handyman Skills (from categories)
-      'Plumbing', 'Electrical Work', 'Carpentry', 'Painting', 'Home Repairs', 'Furniture Assembly',
-      'Appliance Repair', 'HVAC', 'Tiling', 'Drywall', 'Flooring', 'Roofing'
-    ]
-
-    commonSkills.forEach(skill => {
-      if (skill.toLowerCase().includes(searchTerm) && 
-          !value.includes(skill) && 
-          !newSuggestions.includes(skill)) {
-        newSuggestions.push(skill)
+    // If there's input, filter normally
+    if (inputValue.trim()) {
+      // Add category suggestions
+      if (categories && Array.isArray(categories)) {
+        categories.forEach((category: Category) => {
+          // Add category name if it matches search and isn't already selected
+          if (category.name_en && 
+              category.name_en.toLowerCase().includes(searchTerm) && 
+              !value.includes(category.name_en)) {
+            newSuggestions.push(category.name_en)
+          }
+        })
       }
-    })
 
-    setFilteredSuggestions(newSuggestions.slice(0, 10))
+      // Add common tech skills that might not be in categories
+      const commonSkills = [
+        // Programming Languages
+        'JavaScript', 'TypeScript', 'Python', 'Java', 'PHP', 'C++', 'C#', 'Swift', 'Kotlin', 'Go',
+        
+        // Frontend Technologies  
+        'React', 'Vue.js', 'Angular', 'Next.js', 'HTML', 'CSS', 'Sass', 'Tailwind CSS', 'Bootstrap',
+        
+        // Backend Technologies
+        'Node.js', 'Express.js', 'Django', 'Spring', 'Laravel', 'Ruby on Rails', '.NET', 'FastAPI',
+        
+        // Databases
+        'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Oracle', 'Firebase',
+        
+        // Cloud & DevOps
+        'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes', 'Git', 'GitHub', 'GitLab', 'CI/CD',
+        
+        // Design & UI/UX
+        'Photoshop', 'Figma', 'Adobe Illustrator', 'UI/UX Design', 'Sketch', 'Adobe XD', 'Canva',
+        
+        // Marketing & Business
+        'Digital Marketing', 'SEO', 'Content Writing', 'Social Media', 'Google Analytics', 'Project Management',
+        
+        // Soft Skills
+        'Team Leadership', 'Communication', 'Problem Solving', 'Agile', 'Scrum', 'Time Management',
+        
+        // Handyman Skills (from categories)
+        'Plumbing', 'Electrical Work', 'Carpentry', 'Painting', 'Home Repairs', 'Furniture Assembly',
+        'Appliance Repair', 'HVAC', 'Tiling', 'Drywall', 'Flooring', 'Roofing'
+      ]
+
+      commonSkills.forEach(skill => {
+        if (skill.toLowerCase().includes(searchTerm) && 
+            !value.includes(skill) && 
+            !newSuggestions.includes(skill)) {
+          newSuggestions.push(skill)
+        }
+      })
+
+      setFilteredSuggestions(newSuggestions.slice(0, 10))
+    } else {
+      setFilteredSuggestions([])
+    }
   }, [inputValue, categories, value])
 
   const fetchCategories = async () => {
@@ -153,7 +192,12 @@ export function SkillsBubbleInput({
     if (trimmedSkill && !value.includes(trimmedSkill) && value.length < maxSkills) {
       onChange([...value, trimmedSkill])
       setInputValue('')
-      setShowSuggestions(false)
+      // Keep suggestions open to show related categories
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus()
+        }
+      }, 100)
     }
   }
 
@@ -180,12 +224,13 @@ export function SkillsBubbleInput({
 
   // Popular categories for quick selection
   const popularCategories = (categories || [])
-    .filter(cat => cat.isPopular)
-    .flatMap(cat => [cat.nameEN, ...cat.children.map(child => child.nameEN)])
+    .filter(cat => cat.is_popular)
+    .map(cat => cat.name_en)
+    .filter(name => name) // Filter out undefined names
     .slice(0, 8)
 
   return (
-    <div className={cn("space-y-3", className)} ref={containerRef}>
+    <div className={cn("space-y-3 relative", className)} ref={containerRef}>
       <Label>Skills & Expertise</Label>
       
       {/* Selected Skills Display */}
@@ -211,7 +256,7 @@ export function SkillsBubbleInput({
           ))}
           
           {/* Input for adding new skills */}
-          <div className="relative flex-1 min-w-[150px]">
+          <div className="flex-1 min-w-[150px]">
             <Input
               ref={inputRef}
               value={inputValue}
@@ -222,42 +267,51 @@ export function SkillsBubbleInput({
               className="border-0 shadow-none p-0 h-6 text-sm focus-visible:ring-0"
               disabled={value.length >= maxSkills}
             />
-            
-            {/* Suggestions Dropdown */}
-            {showSuggestions && (filteredSuggestions.length > 0 || inputValue.trim()) && (
-              <Card className="absolute top-full left-0 right-0 z-50 mt-1 shadow-lg">
-                <CardContent className="p-2">
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredSuggestions.map((suggestion, index) => (
-                      <Button
-                        key={index}
-                        variant="ghost"
-                        className="w-full justify-start h-8 px-2 text-sm"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        <Plus className="h-3 w-3 mr-2" />
-                        {suggestion}
-                      </Button>
-                    ))}
-                    
-                    {/* Add custom skill option */}
-                    {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start h-8 px-2 text-sm font-medium"
-                        onClick={() => addSkill(inputValue)}
-                      >
-                        <Plus className="h-3 w-3 mr-2" />
-                        Add &quot;{inputValue.trim()}&quot;
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>
+
+      {/* Suggestions Dropdown - positioned relative to main container */}
+      {showSuggestions && (filteredSuggestions.length > 0 || inputValue.trim()) && (
+        <Card className="absolute top-full left-0 right-0 z-50 mt-1 shadow-lg">
+          <CardContent className="p-2">
+            <div className="max-h-48 overflow-y-auto">
+              {/* Show header for related suggestions when no input */}
+              {!inputValue.trim() && filteredSuggestions.length > 0 && value.length > 0 && (
+                <div className="px-2 py-1 text-xs text-muted-foreground border-b mb-1">
+                  Related skills:
+                </div>
+              )}
+              
+              {filteredSuggestions.map((suggestion, index) => (
+                <Button
+                  key={index}
+                  type="button"
+                  variant="ghost"
+                  className="w-full justify-start h-8 px-2 text-sm"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  {suggestion}
+                </Button>
+              ))}
+              
+              {/* Add custom skill option */}
+              {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full justify-start h-8 px-2 text-sm font-medium"
+                  onClick={() => addSkill(inputValue)}
+                >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Add &quot;{inputValue.trim()}&quot;
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Popular Skills Quick Add */}
       {popularCategories.length > 0 && value.length === 0 && (

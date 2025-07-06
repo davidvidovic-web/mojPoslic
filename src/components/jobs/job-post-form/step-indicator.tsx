@@ -64,7 +64,7 @@ export function StepIndicator({ currentStep, completedSteps, stepValidations = {
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2",
                 isCurrent ? "bg-primary text-primary-foreground border-primary" :
-                isCompleted ? "bg-green-500 text-white border-green-500" :
+                isCompleted ? "bg-blue-500 text-white border-blue-500" :
                 hasValidationIssue ? "bg-destructive/10 border-destructive text-destructive" :
                 "bg-background border-border"
               )}>

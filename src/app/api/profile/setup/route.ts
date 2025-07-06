@@ -14,15 +14,11 @@ export async function POST(request: NextRequest) {
     const {
       name,
       username,
-      bio,
-      skills,
-      experience,
-      preferredJobTypes,
       phone,
-      website,
       location,
-      companyName,
-      position,
+      skills,
+      skillExperiences,
+      website,
     } = body
 
     // Update user profile
@@ -31,15 +27,11 @@ export async function POST(request: NextRequest) {
       data: {
         name: name || undefined,
         username: username || undefined,
-        bio: bio || undefined,
-        skills: skills || undefined,
-        experience: experience || undefined,
-        preferredJobTypes: preferredJobTypes || '',
+        skills: skills && Array.isArray(skills) ? skills.join(', ') : (skills || undefined),
+        experience: skillExperiences && Array.isArray(skillExperiences) ? JSON.stringify(skillExperiences) : undefined,
         phone: phone || undefined,
         website: website || undefined,
         location: location || undefined,
-        companyName: companyName || undefined,
-        position: position || undefined,
         profileSetupCompleted: true,
       },
     })
@@ -50,7 +42,17 @@ export async function POST(request: NextRequest) {
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
+        username: updatedUser.username,
+        bio: updatedUser.bio,
+        phone: updatedUser.phone,
+        location: updatedUser.location,
+        website: updatedUser.website,
+        skills: updatedUser.skills,
+        experience: updatedUser.experience,
+        preferredJobTypes: updatedUser.preferredJobTypes ? updatedUser.preferredJobTypes.split(', ') : [],
+        role: updatedUser.role,
         profileSetupCompleted: updatedUser.profileSetupCompleted,
+        createdAt: updatedUser.createdAt,
       }
     })
   } catch (error) {

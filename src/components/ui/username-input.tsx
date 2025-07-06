@@ -111,7 +111,7 @@ export function UsernameInput({
             className={cn(
               'pl-10 pr-10',
               error && 'border-destructive focus-visible:ring-destructive',
-              isAvailable === true && 'border-green-500 focus-visible:ring-green-500'
+              isAvailable === true && 'border-blue-500 focus-visible:ring-blue-500'
             )}
             required={required}
           />
@@ -121,7 +121,7 @@ export function UsernameInput({
             {isChecking ? (
               <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : isAvailable === true ? (
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-blue-500" />
             ) : isAvailable === false ? (
               <X className="h-4 w-4 text-destructive" />
             ) : null}
@@ -135,7 +135,7 @@ export function UsernameInput({
 
         {/* Success message */}
         {isAvailable === true && (
-          <p className="text-sm text-green-600 mt-1">Username is available!</p>
+          <p className="text-sm text-blue-600 mt-1">Username is available!</p>
         )}
       </div>
 

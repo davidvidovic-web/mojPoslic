@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/auth-context'
-import { MessagesSection } from '@/components/dashboard/tasker/messages-section'
+import { ClientMessagesSection } from '@/components/dashboard/client/messages-section'
 import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
 
 export default function MessagesPage() {
@@ -22,7 +22,7 @@ export default function MessagesPage() {
 
         {/* Messages Content */}
         <div className="max-w-6xl">
-          <MessagesSection />
+          <ClientMessagesSection />
         </div>
       </div>
     </div>

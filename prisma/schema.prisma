@@ -53,6 +53,9 @@ model User {
   
   // Saved Jobs
   savedJobs              SavedJob[]
+  
+  // Job Views
+  jobViews               JobView[]
 
   @@map("users")
 }
@@ -152,6 +155,7 @@ model JobListing {
   reviews              Review[]
   conversations        Conversation[]
   savedBy              SavedJob[]
+  views                JobView[]
   category             Category?     @relation(fields: [categoryId], references: [id])
   city                 City          @relation(fields: [cityId], references: [id])
   postedBy             User          @relation("JobPoster", fields: [postedById], references: [id])
@@ -359,4 +363,23 @@ enum NotificationType {
   JOB_APPLICATION
   JOB_UPDATE
   SYSTEM
+}
+
+model JobView {
+  id        String   @id @default(cuid())
+  jobId     String   @map("job_id")
+  userId    String?  @map("user_id") // nullable for anonymous views
+  ipAddress String?  @map("ip_address") // for anonymous tracking
+  userAgent String?  @map("user_agent") // for bot detection
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  job  JobListing @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ensure one view per user per job (if user is logged in)
+  @@unique([jobId, userId])
+  // For anonymous users, track by IP and job to prevent spam
+  @@unique([jobId, ipAddress])
+  @@map("job_views")
 }

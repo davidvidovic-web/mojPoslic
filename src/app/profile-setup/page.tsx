@@ -1,79 +1,116 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
+import { CitiesFilter } from '@/components/filters/cities-filter'
+import { Badge } from '@/components/ui/badge'
+import { X, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
 
-const jobTypes = [
-  { value: 'quick_job', label: 'Quick Job' },
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'remote', label: 'Remote' },
-]
+interface SkillExperience {
+  skill: string
+  experienceLevel: 'not-specified' | 'beginner' | '1-2-years' | '3-5-years' | '5plus-years'
+  experienceYears?: string
+}
 
 export default function ProfileSetupPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
   const router = useRouter()
   
-  // Initialize form data - will be updated when user is available
   const [formData, setFormData] = useState(() => ({
-    name: user?.name || '',
+    name: '',
     username: '',
-    bio: '',
-    skills: '',
-    experience: '',
-    preferredJobTypes: '',
     phone: '',
-    website: '',
     location: '',
-    companyName: '',
-    position: '',
+    skills: [] as string[],
+    skillExperiences: [] as SkillExperience[],
+    website: '',
   }))
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const redirectAttempted = useRef(false)
+
+  // Check if we've recently redirected (within last 5 seconds)
+  const checkRecentRedirect = () => {
+    const lastRedirect = localStorage.getItem('lastRedirectTime')
+    if (lastRedirect) {
+      const timeDiff = Date.now() - parseInt(lastRedirect)
+      return timeDiff < 5000 // 5 seconds
+    }
+    return false
+  }
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/signin')
+    // Prevent multiple redirect attempts, during loading, or if recently redirected
+    if (redirectAttempted.current || isRedirecting || loading || checkRecentRedirect()) return 
+    
+    if (!user) {
+      redirectAttempted.current = true
+      setIsRedirecting(true)
+      localStorage.setItem('lastRedirectTime', Date.now().toString())
+      router.replace('/auth/signin')
       return
     }
 
-    if (user && user.profileSetupCompleted) {
-      router.push('/dashboard')
+    if (user && user.profileSetupCompleted === true) {
+      redirectAttempted.current = true
+      setIsRedirecting(true)
+      localStorage.setItem('lastRedirectTime', Date.now().toString())
+      router.replace('/dashboard')
       return
     }
 
-    // Update name field if user name is available and form name is empty
-    if (user?.name && !formData.name) {
-      setFormData(prev => ({ ...prev, name: user.name || '' }))
-    }
-  }, [user, loading, router, formData.name])
+    // Don't auto-populate name from user data - let tasker enter their own name
+  }, [user, loading, router, isRedirecting])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
 
+    // Auto-generate username if not provided
+    const finalUsername = formData.username || generateUsernameFromName(formData.name)
+
     setIsSubmitting(true)
 
     try {
+      // Check if username already exists (only if user provided a custom username)
+      if (formData.username) {
+        const usernameCheckResponse = await fetch(`/api/user/check-username?username=${encodeURIComponent(formData.username)}`)
+        if (usernameCheckResponse.ok) {
+          const { exists } = await usernameCheckResponse.json()
+          if (exists) {
+            toast.error('Username already exists. Please choose a different one.')
+            setIsSubmitting(false)
+            return
+          }
+        }
+      }
+
       const response = await fetch('/api/profile/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          username: finalUsername,
+        }),
       })
 
       if (!response.ok) {
         throw new Error('Failed to update profile')
       }
 
+      // Refresh user context to get updated profileSetupCompleted status
+      await refreshUser()
+      
       toast.success('Profile setup completed!')
       router.push('/dashboard')
     } catch (error) {
@@ -84,10 +121,51 @@ export default function ProfileSetupPage() {
     }
   }
 
+  const generateUsernameFromName = (name: string): string => {
+    return name.toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 15) + Math.floor(Math.random() * 1000)
+  }
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }))
+  }
+
+  const handleSkillsChange = (newSkills: string[]) => {
+    setFormData(prev => {
+      // Update skill experiences when skills change
+      const currentSkillExperiences = prev.skillExperiences
+      const newSkillExperiences = newSkills.map(skill => {
+        const existing = currentSkillExperiences.find((exp: SkillExperience) => exp.skill === skill)
+        return existing || { skill, experienceLevel: 'not-specified' as const }
+      })
+      
+      return {
+        ...prev,
+        skills: newSkills,
+        skillExperiences: newSkillExperiences
+      }
+    })
+  }
+
+  const updateSkillExperience = (skillIndex: number, field: keyof SkillExperience, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      skillExperiences: prev.skillExperiences.map((exp, index) =>
+        index === skillIndex ? { ...exp, [field]: value } : exp
+      )
+    }))
+  }
+
+  const removeSkillExperience = (skillIndex: number) => {
+    const skillToRemove = formData.skillExperiences[skillIndex].skill
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove),
+      skillExperiences: prev.skillExperiences.filter((_, index) => index !== skillIndex)
     }))
   }
 
@@ -106,226 +184,218 @@ export default function ProfileSetupPage() {
     return null
   }
 
+  // Get role-specific content
+  const getRoleContent = () => {
+    switch (user.role) {
+      case 'client':
+        return {
+          title: 'Complete Your Client Profile',
+          description: 'Set up your profile to easily post jobs and connect with taskers'
+        }
+      case 'company':
+        return {
+          title: 'Complete Your Company Profile',
+          description: 'Build your company profile to attract top talent and manage projects'
+        }
+      case 'tasker':
+        return {
+          title: 'Complete Your Tasker Profile',
+          description: 'Build your professional profile to attract clients and showcase your skills'
+        }
+      case 'admin':
+        return {
+          title: 'Complete Your Admin Profile',
+          description: 'Set up your administrator profile'
+        }
+      default:
+        return {
+          title: 'Complete Your Profile',
+          description: 'Set up your profile to get started'
+        }
+    }
+  }
+
+  const roleContent = getRoleContent()
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
-      <div className="container mx-auto px-4 max-w-2xl">
+    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+      <div className="w-full max-w-2xl">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
+            <CardTitle className="text-2xl font-bold">{roleContent.title}</CardTitle>
             <CardDescription>
-              {user.role === 'tasker' && 'Build your professional profile to attract clients'}
-              {user.role === 'client' && 'Set up your profile to start posting jobs and hiring'}
-              {user.role === 'company' && 'Create your company profile to find talent'}
+              {roleContent.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Basic Information */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information - Show for all roles */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Basic Information</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Your full name"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      value={formData.username}
-                      onChange={(e) => handleInputChange('username', e.target.value)}
-                      placeholder="Choose a username"
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    placeholder="Tell us about yourself..."
-                    rows={3}
+                  <Label htmlFor="name">
+                    {user.role === 'company' ? 'Company Name' : 'Full Name'} *
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder={user.role === 'company' ? 'Your company name' : 'Your full name'}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username (optional)</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
+                    placeholder="Choose a username (we'll create one if left empty)"
+                  />
+                  {!formData.username && (
+                    <p className="text-sm text-muted-foreground">
+                      We&apos;ll automatically create: {generateUsernameFromName(formData.name || 'user')}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="Your phone number"
+                    required
                   />
                 </div>
               </div>
 
-              {/* Professional Information - Role-specific fields */}
+              {/* Location - Show for all roles */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">
-                  {user.role === 'tasker' && 'Professional Skills'}
-                  {user.role === 'client' && 'Job Posting Preferences'}
-                  {user.role === 'company' && 'Company Information'}
-                </h3>
-                
-                {user.role === 'tasker' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="skills">Skills</Label>
-                      <Textarea
-                        id="skills"
-                        value={formData.skills}
-                        onChange={(e) => handleInputChange('skills', e.target.value)}
-                        placeholder="List your skills (e.g., Web Development, Graphic Design, Writing...)"
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="experience">Experience</Label>
-                      <Textarea
-                        id="experience"
-                        value={formData.experience}
-                        onChange={(e) => handleInputChange('experience', e.target.value)}
-                        placeholder="Describe your work experience..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="preferredJobTypes">Preferred Job Types</Label>
-                      <Select
-                        value={formData.preferredJobTypes}
-                        onValueChange={(value) => handleInputChange('preferredJobTypes', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select preferred job types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {jobTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-
-                {user.role === 'client' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="preferredJobTypes">Typical Budget Range for Jobs</Label>
-                      <Select
-                        value={formData.preferredJobTypes}
-                        onValueChange={(value) => handleInputChange('preferredJobTypes', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your typical budget range" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="small">Small jobs (under 100 BAM)</SelectItem>
-                          <SelectItem value="medium">Medium jobs (100-500 BAM)</SelectItem>
-                          <SelectItem value="large">Large jobs (500-1000 BAM)</SelectItem>
-                          <SelectItem value="premium">Premium jobs (1000+ BAM)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="experience">Preferred Job Categories (Optional)</Label>
-                      <Textarea
-                        id="experience"
-                        value={formData.experience}
-                        onChange={(e) => handleInputChange('experience', e.target.value)}
-                        placeholder="What types of jobs do you typically post? (e.g., cleaning, delivery, handyman, tutoring, design...)"
-                        rows={3}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {user.role === 'company' && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="companyName">Company Name</Label>
-                        <Input
-                          id="companyName"
-                          value={formData.companyName}
-                          onChange={(e) => handleInputChange('companyName', e.target.value)}
-                          placeholder="Your company name"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="position">Your Position</Label>
-                        <Input
-                          id="position"
-                          value={formData.position}
-                          onChange={(e) => handleInputChange('position', e.target.value)}
-                          placeholder="Your job title (e.g., HR Manager, CEO)"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="experience">Company Description</Label>
-                      <Textarea
-                        id="experience"
-                        value={formData.experience}
-                        onChange={(e) => handleInputChange('experience', e.target.value)}
-                        placeholder="Describe your company, industry, and typical hiring needs..."
-                        rows={3}
-                      />
-                    </div>
-                  </>
-                )}
+                <h3 className="text-lg font-semibold">Location</h3>
+                <div className="space-y-2">
+                  <Label>Your City *</Label>
+                  <CitiesFilter
+                    value={formData.location}
+                    onChange={(value) => handleInputChange('location', value)}
+                    placeholder="Select your city"
+                    className="w-full"
+                    includeAllOption={false}
+                  />
+                </div>
               </div>
 
-              {/* Contact Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Contact Information</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="Your phone number"
-                    />
+              {/* Professional Skills - Only show for taskers */}
+              {user.role === 'tasker' && (
+                <>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold">Professional Skills</h3>
+                      <div className="flex items-start gap-2 text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                        <span>You can add this later in settings, but we highly recommend completing it now for a better success rate</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Your Skills</Label>
+                      <SkillsBubbleInput
+                        value={formData.skills}
+                        onChange={handleSkillsChange}
+                        placeholder="Add your skills (e.g., Plumbing, Web Design, Tutoring...)"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Choose from existing categories or add your own custom skills
+                      </p>
+                    </div>
                   </div>
-                  
+
+                  {/* Experience Levels - Only show for taskers */}
+                  {formData.skillExperiences.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Experience Levels</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Set your experience level for each skill to help clients understand your expertise
+                      </p>
+                      
+                      <div className="space-y-3">
+                        {formData.skillExperiences.map((skillExp, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <Badge variant="secondary" className="shrink-0">
+                              {skillExp.skill}
+                            </Badge>
+                            
+                            <Select
+                              value={skillExp.experienceLevel}
+                              onValueChange={(value) => updateSkillExperience(index, 'experienceLevel', value)}
+                            >
+                              <SelectTrigger className="flex-1 truncate">
+                                <SelectValue className="truncate" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="not-specified">Not Specified</SelectItem>
+                                <SelectItem value="beginner">Beginner (&lt; 1 year)</SelectItem>
+                                <SelectItem value="1-2-years">1-2 Years</SelectItem>
+                                <SelectItem value="3-5-years">3-5 Years</SelectItem>
+                                <SelectItem value="5plus-years">5+ Years</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeSkillExperience(index)}
+                              className="shrink-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Website/Portfolio - Show for taskers and companies */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Portfolio</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="website">Website or Portfolio URL</Label>
+                      <Input
+                        id="website"
+                        value={formData.website}
+                        onChange={(e) => handleInputChange('website', e.target.value)}
+                        placeholder="https://yourwebsite.com or https://yourportfolio.com"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Website/Company URL - Show for companies only */}
+              {user.role === 'company' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Company Information</h3>
                   <div className="space-y-2">
-                    <Label htmlFor="website">Website/Portfolio</Label>
+                    <Label htmlFor="website">Company Website</Label>
                     <Input
                       id="website"
                       value={formData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder="Your website or portfolio"
+                      placeholder="https://yourcompany.com"
                     />
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="Your location (city, country)"
-                  />
-                </div>
-              </div>
+              )}
 
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !formData.name || !formData.phone || formData.location === 'all'}
               >
                 {isSubmitting ? 'Saving...' : 'Complete Setup'}
               </Button>

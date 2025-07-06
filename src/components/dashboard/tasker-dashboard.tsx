@@ -3,17 +3,38 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { Job } from '@/types/job'
-import { ConnectionsSection } from '@/components/dashboard/connections-section'
-import { TaskerStatsCards } from './tasker/tasker-stats-cards'
 import { ApplicationsSection } from './tasker/applications-section'
+import { TaskerQuickStats } from './tasker/tasker-quick-stats'
+import { TaskerQuickActions } from './tasker/tasker-quick-actions'
 import { SavedJobsSection } from './tasker/saved-jobs-section'
 import { RecommendedJobsSection } from './tasker/recommended-jobs-section'
-import { FinancesSection } from './tasker/finances-section'
-import { MessagesSection } from './tasker/messages-section'
-import { formatDisplayName, getTimeBasedGreetingWithIcon } from '@/lib/utils'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TaskerMessagesSection } from './tasker/messages-section'
+import { ConnectionsSection } from './connections-section'
+import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DashboardFooter } from '@/components/core/dashboard-footer'
-import { Sunrise, Sun, Moon } from 'lucide-react'
+import { 
+  Sunrise, 
+  Sun, 
+  Moon,
+  LayoutDashboard,
+  Briefcase,
+  MessageSquare,
+  Zap,
+  DollarSign,
+  BarChart3,
+  Puzzle,
+  Lock
+} from 'lucide-react'
+import { toast } from 'sonner'
+
+// Helper function to get full name display
+const getFullNameDisplay = (name?: string | null): string => {
+  if (!name || typeof name !== 'string') {
+    return ''
+  }
+  return name.trim()
+}
 
 interface JobApplication {
   id: string
@@ -35,6 +56,9 @@ interface ApplicationStats {
 export function TaskerDashboard() {
   const { user } = useAuth()
   const [applications, setApplications] = useState<JobApplication[]>([])
+  const [savedJobs, setSavedJobs] = useState<Job[]>([])
+  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
   const [stats, setStats] = useState<ApplicationStats>({
     total: 0,
     pending: 0,
@@ -43,10 +67,9 @@ export function TaskerDashboard() {
     rejected: 0,
     totalEarnings: 0
   })
-  const [savedJobs, setSavedJobs] = useState<Job[]>([])
-  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-
+  const [activeTab, setActiveTab] = useState('overview')
+  
   // Get time-based greeting with icon
   const { greeting, iconName } = getTimeBasedGreetingWithIcon()
   
@@ -64,92 +87,91 @@ export function TaskerDashboard() {
         return <Sun {...iconProps} />
     }
   }
-
+  
   useEffect(() => {
-    const fetchApplications = async () => {
+    const fetchTaskerData = async () => {
       if (!user) return
-
+      
       try {
-        // Fetch job applications and stats from Prisma API
-        const response = await fetch(`/api/user/applications?userId=${user.id}`)
-        if (response.ok) {
-          const data = await response.json()
-          setApplications(data.applications || [])
-          setStats(data.stats || {
-            total: 0,
-            pending: 0,
-            accepted: 0,
-            completed: 0,
-            rejected: 0,
-            totalEarnings: 0
-          })
-        } else {
-          console.error('Error fetching applications:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching applications:', error)
-      }
-    }
-
-    const fetchSavedJobs = async () => {
-      try {
-        // Fetch saved jobs from Prisma API
-        const response = await fetch(`/api/user/saved-jobs?userId=${user?.id}`)
-        if (response.ok) {
-          const data = await response.json()
-          setSavedJobs(data.savedJobs || [])
-        } else {
-          console.error('Error fetching saved jobs:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching saved jobs:', error)
-      }
-    }
-
-    const fetchRecommendedJobs = async () => {
-      try {
-        // Fetch recommended jobs from Prisma API
-        const response = await fetch('/api/jobs/recommended')
-        if (response.ok) {
-          const data = await response.json()
-          setRecommendedJobs(data.jobs || [])
-        } else {
-          console.error('Error fetching recommended jobs:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching recommended jobs:', error)
-      }
-    }
-
-    const loadData = async () => {
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      try {
-        // Set a timeout to prevent infinite loading
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 10000)
-        )
-
-        await Promise.race([
-          Promise.allSettled([
-            fetchApplications(),
-            fetchSavedJobs(),
-            fetchRecommendedJobs()
-          ]),
-          timeoutPromise
+        // Fetch all data in parallel
+        const [applicationsResponse, savedResponse, recommendedResponse] = await Promise.all([
+          fetch('/api/tasker/applications', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          }),
+          fetch(`/api/user/saved-jobs?userId=${user.id}`),
+          fetch('/api/jobs/recommended')
         ])
+        
+        // Handle applications data
+        if (applicationsResponse.ok) {
+          const applicationsData = await applicationsResponse.json()
+          setApplications(applicationsData || [])
+          
+          // Calculate stats from applications
+          const apps = applicationsData || []
+          const newStats: ApplicationStats = {
+            total: apps.length,
+            pending: apps.filter((app: JobApplication) => app.status === 'pending').length,
+            accepted: apps.filter((app: JobApplication) => app.status === 'accepted').length,
+            completed: apps.filter((app: JobApplication) => app.status === 'completed').length,
+            rejected: apps.filter((app: JobApplication) => app.status === 'rejected').length,
+            totalEarnings: 0 // TODO: Calculate from completed jobs
+          }
+          setStats(newStats)
+        }
+
+        // Handle saved jobs data
+        if (savedResponse.ok) {
+          const savedData = await savedResponse.json()
+          const jobs = savedData.savedJobs || []
+          setSavedJobs(jobs)
+          // Create a set of saved job IDs for quick lookup
+          setSavedJobIds(new Set(jobs.map((job: Job) => job.id)))
+        }
+
+        // Handle recommended jobs data
+        if (recommendedResponse.ok) {
+          const recommendedData = await recommendedResponse.json()
+          setRecommendedJobs(recommendedData.jobs || [])
+        }
+
       } catch (error) {
-        console.error('Error loading dashboard data:', error)
+        console.error('Error fetching tasker data:', error)
+        toast.error('Failed to load your dashboard data')
       } finally {
         setLoading(false)
       }
     }
     
-    loadData()
+    fetchTaskerData()
   }, [user])
+
+  // Handle job save/unsave
+  const handleJobSaveToggle = async (jobId: string, isSaved: boolean) => {
+    if (isSaved) {
+      // Add to saved jobs
+      setSavedJobIds(prev => new Set([...prev, jobId]))
+      // Optionally refresh saved jobs list to get full job data
+      try {
+        const response = await fetch(`/api/user/saved-jobs?userId=${user?.id}`)
+        if (response.ok) {
+          const savedData = await response.json()
+          setSavedJobs(savedData.savedJobs || [])
+        }
+      } catch (error) {
+        console.error('Error refreshing saved jobs:', error)
+      }
+    } else {
+      // Remove from saved jobs
+      setSavedJobIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(jobId)
+        return newSet
+      })
+      setSavedJobs(prev => prev.filter(job => job.id !== jobId))
+    }
+  }
 
   if (loading) {
     return (
@@ -172,144 +194,243 @@ export function TaskerDashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 rounded-lg p-6 border border-emerald-100 dark:border-emerald-900/30">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800">
-                <svg className="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">
-                  Tasker Dashboard
-                </h1>
-                <p className="text-emerald-600 dark:text-emerald-300 mt-1 flex items-center gap-2">
-                  <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>
-                  {renderTimeIcon()}
-                  <span>{greeting}! Ready to find your next opportunity?</span>
-                </p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
+              <div className="flex-1">
+                <div className="space-y-2">
+                  {/* Greeting message */}
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-300">
+                    {renderTimeIcon()}
+                    <span className="text-lg font-medium">{greeting}</span>
+                  </div>
+                  
+                  {/* Full name - bold and prominent */}
+                  <h1 className="text-xl sm:text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                    {getFullNameDisplay(user?.name)}
+                  </h1>
+                  
+                  {/* Role-appropriate tagline */}
+                  <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                    Ready to find your next opportunity and grow your skills
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-sm text-emerald-600 dark:text-emerald-300">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-emerald-600 dark:text-emerald-300">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>Available for Work</span>
+                <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                <span>Job Seeking Active</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>Profile Complete</span>
+                <span>Quick Apply & Track</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content with Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="messages" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Messages</TabsTrigger>
-            <TabsTrigger value="statistics" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Statistics</TabsTrigger>
-            <TabsTrigger value="finances" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white disabled:opacity-50" disabled>
-              <div className="flex items-center gap-1">
-                Finances
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="advanced-stats" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white disabled:opacity-50" disabled>
-              <div className="flex items-center gap-1">
-                Analytics
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="integrations" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white disabled:opacity-50" disabled>
-              <div className="flex items-center gap-1">
-                Integrations
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content with Dropdown Navigation */}
+        <div className="space-y-6">
+          {/* Section Selector */}
+          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+            <div className="flex items-center gap-4">
+              <label htmlFor="section-select" className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+                View Section:
+              </label>
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-[200px]" id="section-select">
+                  <SelectValue placeholder="Select a section" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="overview">
+                    <div className="flex items-center gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Overview
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="jobs">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Jobs
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="messages">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Messages
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="connections">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4" />
+                      Connections
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="finances" disabled>
+                    <div className="flex items-center gap-2 opacity-50">
+                      <DollarSign className="h-4 w-4" />
+                      Finances
+                      <Lock className="h-3 w-3 ml-1" />
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="analytics" disabled>
+                    <div className="flex items-center gap-2 opacity-50">
+                      <BarChart3 className="h-4 w-4" />
+                      Analytics
+                      <Lock className="h-3 w-3 ml-1" />
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="integrations" disabled>
+                    <div className="flex items-center gap-2 opacity-50">
+                      <Puzzle className="h-4 w-4" />
+                      Integrations
+                      <Lock className="h-3 w-3 ml-1" />
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-          <TabsContent value="overview">
+          {/* Content based on selected section */}
+          {activeTab === 'overview' && (
+            <div>
+              {/* Quick Stats - collapsed on mobile */}
+              <div className="hidden md:block">
+                <TaskerQuickStats stats={stats} />
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Mobile: Quick Actions first, then content */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* Quick Actions - prioritized for mobile */}
+                  <div className="block lg:hidden">
+                    <TaskerQuickActions />
+                  </div>
+                  
+                  {/* Applications - second on mobile */}
+                  <ApplicationsSection applications={applications.slice(0, 5)} />
+                  
+                  {/* Recommended Jobs - third on mobile */}
+                  <RecommendedJobsSection 
+                    recommendedJobs={recommendedJobs.slice(0, 3)} 
+                    savedJobIds={savedJobIds}
+                    onSaveToggle={handleJobSaveToggle}
+                  />
+                  
+                  {/* Saved Jobs - fourth on mobile */}
+                  <SavedJobsSection 
+                    savedJobs={savedJobs.slice(0, 3)} 
+                    onSaveToggle={handleJobSaveToggle}
+                  />
+                </div>
+                
+                {/* Right Column - Quick Actions & Connections for desktop */}
+                <div className="hidden lg:block space-y-8">
+                  <TaskerQuickActions />
+                  
+                  {/* Connections */}
+                  <ConnectionsSection />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'jobs' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Applications and Jobs */}
+              {/* Mobile: Quick Actions first, then Jobs */}
               <div className="lg:col-span-2 space-y-8">
-                {/* Applications Section */}
+                {/* Quick Actions - prioritized for mobile */}
+                <div className="block lg:hidden">
+                  <TaskerQuickActions />
+                </div>
+                
+                {/* Applications - second on mobile */}
                 <ApplicationsSection applications={applications} />
                 
-                {/* Saved Jobs Section */}
-                <SavedJobsSection savedJobs={savedJobs} />
+                {/* Recommended Jobs - third on mobile */}
+                <RecommendedJobsSection 
+                  recommendedJobs={recommendedJobs} 
+                  savedJobIds={savedJobIds}
+                  onSaveToggle={handleJobSaveToggle}
+                />
                 
-                {/* Recommended Jobs */}
-                <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+                {/* Saved Jobs - fourth on mobile */}
+                <SavedJobsSection 
+                  savedJobs={savedJobs} 
+                  onSaveToggle={handleJobSaveToggle}
+                />
               </div>
 
-              {/* Right Column - Connections */}
-              <div className="space-y-8">
-                {/* Connections Section */}
+              {/* Right Column - Quick Actions & Connections for desktop */}
+              <div className="hidden lg:block space-y-8">
+                <TaskerQuickActions />
+                
+                {/* Connections */}
                 <ConnectionsSection />
               </div>
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="finances">
-            <FinancesSection />
-          </TabsContent>
+          {activeTab === 'messages' && (
+            <TaskerMessagesSection />
+          )}
 
-          <TabsContent value="messages">
-            <MessagesSection />
-          </TabsContent>
+          {activeTab === 'connections' && (
+            <div className="space-y-6">
+              <ConnectionsSection />
+            </div>
+          )}
 
-          <TabsContent value="statistics">
-            <TaskerStatsCards 
-              applications={applications} 
-              completedJobs={stats.completed}
-              totalEarnings={stats.totalEarnings}
-            />
-          </TabsContent>
-
-          <TabsContent value="advanced-stats">
+          {activeTab === 'finances' && (
             <div className="space-y-6">
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
+                    <DollarSign className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Advanced Analytics Coming Soon</h3>
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Finances Coming Soon</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Detailed performance metrics, earnings analytics, and career insights will be available in a future update.
+                    Earnings tracking, payment history, and tax documents will be available in a future update.
                   </p>
                 </div>
               </div>
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="integrations">
+          {activeTab === 'analytics' && (
             <div className="space-y-6">
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 011 1v1a2 2 0 104 0V4z" />
-                    </svg>
+                    <BarChart3 className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Analytics Coming Soon</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Performance insights, application success rates, and detailed reporting will be available in a future update.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'integrations' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
+                    <Puzzle className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-muted-foreground mb-2">Integrations Coming Soon</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Connect with tools like Google Calendar, LinkedIn, portfolio platforms, and time tracking apps to enhance your workflow.
+                    Connect with calendar apps, portfolio platforms, and productivity tools to streamline your workflow.
                   </p>
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </div>
 
       {/* Footer */}

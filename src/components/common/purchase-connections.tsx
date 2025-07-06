@@ -138,11 +138,11 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
 
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Check className="h-4 w-4 text-green-500" />
+          <Check className="h-4 w-4 text-blue-500" />
           <span>Secure payment powered by Stripe</span>
         </div>
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Check className="h-4 w-4 text-green-500" />
+          <Check className="h-4 w-4 text-blue-500" />
           <span>Connections are added instantly after payment</span>
         </div>
       </div>

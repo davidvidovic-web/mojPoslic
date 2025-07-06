@@ -10,6 +10,7 @@ import { ReviewStep } from './review-step'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
 
 interface JobFormBaseProps {
   initialData?: Partial<CreateJobData>
@@ -30,6 +31,7 @@ export function JobFormBase({
   submittingText = 'Submitting...',
   showCard = true
 }: JobFormBaseProps) {
+  const { user } = useAuth()
   const {
     currentStep,
     setCurrentStep,
@@ -63,6 +65,43 @@ export function JobFormBase({
 
   const handleFormSubmit = async () => {
     if (!isCurrentStepValid && currentStep !== 'review') return
+    
+    // Validate required fields before submitting
+    const missingFields: string[] = []
+    
+    if (!formData.title?.trim()) {
+      missingFields.push('Job Title')
+    }
+    if (!formData.description?.trim()) {
+      missingFields.push('Job Description')
+    }
+    if (!formData.category_id) {
+      missingFields.push('Job Category')
+    }
+    if (!formData.type) {
+      missingFields.push('Job Type')
+    }
+    if (!formData.city_id) {
+      missingFields.push('City')
+    }
+    
+    // For companies, email is required
+    const isCompany = user?.role === 'company'
+    if (isCompany && !formData.email?.trim()) {
+      missingFields.push('Contact Email')
+    }
+    
+    if (missingFields.length > 0) {
+      const fieldsList = missingFields.join(', ')
+      const errorMessage = missingFields.length === 1 
+        ? `Please fill in the required field: ${fieldsList}`
+        : `Please fill in the following required fields: ${fieldsList}`
+      
+      // You'll need to import toast from sonner
+      const { toast } = await import('sonner')
+      toast.error(errorMessage)
+      return
+    }
     
     setIsSubmitting(true)
     try {

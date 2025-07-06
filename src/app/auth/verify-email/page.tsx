@@ -5,9 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react'
+import { CodeInput } from '@/components/ui/code-input'
+import { CheckCircle, XCircle, Mail } from 'lucide-react'
 import Link from 'next/link'
 
 function VerifyEmailForm() {
@@ -40,32 +39,41 @@ function VerifyEmailForm() {
 
       if (response.ok) {
         setStatus('success')
-        setMessage('Email verified successfully! Logging you in...')
+        setMessage('Email verified successfully!')
+        
+        // Update message after a short delay
+        setTimeout(() => {
+          setMessage('Logging you in...')
+        }, 1000)
         
         // Create a session by signing in the user automatically
-        const signInResult = await signIn('credentials', {
-          email: data.user.email,
-          password: '__VERIFIED_AUTO_LOGIN__', // Special flag for auto-login
-          redirect: false
-        })
+        setTimeout(async () => {
+          const signInResult = await signIn('credentials', {
+            email: data.user.email,
+            password: '__VERIFIED_AUTO_LOGIN__', // Special flag for auto-login
+            redirect: false
+          })
 
-        if (signInResult?.ok) {
-          // Redirect based on whether user needs role selection
-          if (data.shouldRedirectToRoleSelection) {
-            setTimeout(() => {
-              router.push('/role-selection')
-            }, 1500)
+          if (signInResult?.ok) {
+            setMessage('Redirecting to dashboard...')
+            // Redirect based on whether user needs role selection
+            if (data.shouldRedirectToRoleSelection) {
+              setTimeout(() => {
+                router.push('/role-selection')
+              }, 800)
+            } else {
+              setTimeout(() => {
+                router.push('/dashboard')
+              }, 800)
+            }
           } else {
+            // Fallback: redirect to signin if auto-login fails
+            setMessage('Redirecting to sign in...')
             setTimeout(() => {
-              router.push('/dashboard')
-            }, 1500)
+              router.push('/auth/signin?message=Email verified. Please sign in to continue.')
+            }, 1000)
           }
-        } else {
-          // Fallback: redirect to signin if auto-login fails
-          setTimeout(() => {
-            router.push('/auth/signin?message=Email verified. Please sign in to continue.')
-          }, 2000)
-        }
+        }, 1500)
       } else {
         setStatus('error')
         setMessage(data.error || 'Invalid or expired verification code')
@@ -76,12 +84,22 @@ function VerifyEmailForm() {
     }
   }
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+  const handleCodeChange = (value: string) => {
     setCode(value)
     if (status === 'error') {
       setStatus('idle')
       setMessage('')
+    }
+  }
+
+  const handleCodeComplete = (value: string) => {
+    setCode(value)
+    // Auto-submit when all 6 digits are entered
+    if (value.length === 6) {
+      setTimeout(() => {
+        const form = document.querySelector('form') as HTMLFormElement
+        form?.requestSubmit()
+      }, 100)
     }
   }
 
@@ -145,33 +163,27 @@ function VerifyEmailForm() {
               <p className="text-sm text-gray-600">
                 {message}
               </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Redirecting to sign in...
-              </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="code">Verification Code</Label>
-                <Input
-                  id="code"
-                  type="text"
+                <p className="text-sm font-medium text-center mb-4">Enter verification code</p>
+                <CodeInput
+                  length={6}
                   value={code}
                   onChange={handleCodeChange}
-                  placeholder="Enter 6-digit code"
-                  className="text-center text-lg font-mono tracking-widest"
-                  maxLength={6}
-                  autoComplete="one-time-code"
+                  onComplete={handleCodeComplete}
                   disabled={status === 'loading'}
+                  className="mb-4"
                 />
                 {status === 'error' && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                  <div className="mt-2 flex items-center justify-center gap-2 text-sm text-red-600">
                     <XCircle className="h-4 w-4" />
                     {message}
                   </div>
                 )}
                 {status === 'idle' && message && (
-                  <div className="mt-2 text-sm text-green-600">
+                  <div className="mt-2 text-sm text-center text-green-600">
                     {message}
                   </div>
                 )}
@@ -182,14 +194,7 @@ function VerifyEmailForm() {
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white" 
                 disabled={status === 'loading' || code.length !== 6}
               >
-                {status === 'loading' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  'Verify Email'
-                )}
+                {status === 'loading' ? 'Verifying...' : 'Verify Email'}
               </Button>
 
               <div className="text-center">

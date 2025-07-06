@@ -4,18 +4,30 @@ import { useAuth } from '@/hooks/useAuth'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
 import { ClientDashboard } from '@/components/dashboard/client-dashboard'
 import { CompanyDashboard } from '@/components/dashboard/company-dashboard'
+import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LogIn, Shield } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { UserRole } from '@prisma/client'
-import { useEffect, Suspense } from 'react'
+import { useEffect, Suspense, useRef } from 'react'
 import { toast } from 'sonner'
 
 function DashboardContent() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const redirectAttempted = useRef(false)
+
+  // Check if we've recently redirected (within last 5 seconds)
+  const checkRecentRedirect = () => {
+    const lastRedirect = localStorage.getItem('lastRedirectTime')
+    if (lastRedirect) {
+      const timeDiff = Date.now() - parseInt(lastRedirect)
+      return timeDiff < 5000 // 5 seconds
+    }
+    return false
+  }
 
   // Handle payment success/cancellation
   useEffect(() => {
@@ -35,20 +47,20 @@ function DashboardContent() {
 
   // Redirect to role selection if no role, or profile setup if role but profile incomplete
   useEffect(() => {
+    // Prevent multiple redirect attempts, during loading, or if recently redirected
+    if (redirectAttempted.current || loading || checkRecentRedirect()) return
+    
+    // Only redirect if we have a user object and it's stable
     if (user) {
       if (!user.role) {
-        router.push('/role-selection')
-      } else if (!user.profileSetupCompleted) {
-        router.push('/profile-setup')
+        redirectAttempted.current = true
+        localStorage.setItem('lastRedirectTime', Date.now().toString())
+        router.replace('/role-selection')
+      } else if (user.profileSetupCompleted === false) {
+        redirectAttempted.current = true
+        localStorage.setItem('lastRedirectTime', Date.now().toString())
+        router.replace('/profile-setup')
       }
-    }
-  }, [user, router])
-
-  // Redirect taskers to overview page
-  useEffect(() => {
-    if (user && user.role === 'tasker' && !loading) {
-      router.push('/dashboard/overview')
-      return
     }
   }, [user, loading, router])
 
@@ -87,18 +99,6 @@ function DashboardContent() {
     )
   }
 
-  // Show loading while redirecting to profile setup if not completed
-  if (user && !user.profileSetupCompleted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Setting up your profile...</p>
-        </div>
-      </div>
-    )
-  }
-
   // Render role-specific dashboard with admin override
   const dashboardView = searchParams.get('view') || 'default'
   
@@ -110,9 +110,7 @@ function DashboardContent() {
       case 'company':
         return <CompanyDashboard />
       case 'tasker':
-        // Redirect admin viewing tasker to overview
-        router.push('/dashboard/overview')
-        return null
+        return <TaskerDashboard />
       case 'admin':
       default:
         return <AdminDashboard />
@@ -126,8 +124,7 @@ function DashboardContent() {
     case 'company':
       return <CompanyDashboard />
     case 'tasker':
-      // This will be handled by useEffect above
-      return null
+      return <TaskerDashboard />
     default:
       return (
         <div className="min-h-screen flex items-center justify-center p-4">

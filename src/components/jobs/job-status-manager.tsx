@@ -34,7 +34,7 @@ interface JobStatusManagerProps {
 const statusConfig = {
   active: {
     label: 'Active',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
     icon: Play,
     description: 'Job is currently accepting applications'
   },

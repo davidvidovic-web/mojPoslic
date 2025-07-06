@@ -45,7 +45,6 @@ export function UserManagementTab({ users, setUsers, currentUserId }: UserManage
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
     try {
-      console.log('Updating user role on client side:', { userId, newRole })
       
       // First validate that the role is one of the valid options
       const validRoles = ['admin', 'client', 'tasker', 'company']
@@ -63,17 +62,14 @@ export function UserManagementTab({ users, setUsers, currentUserId }: UserManage
         body: JSON.stringify({ userId, role: newRole }),
       })
       
-      console.log('Update role response status:', response.status)
       
       const responseData = await response.json()
-      console.log('Response data:', responseData)
       
       if (!response.ok) {
         console.error('Error response data:', responseData)
         throw new Error(responseData.error || responseData.details || 'Failed to update user role')
       }
       
-      console.log('Updated user data from server:', responseData)
 
       // Update the UI with the new role
       setUsers(prevUsers => 
@@ -221,7 +217,6 @@ export function UserManagementTab({ users, setUsers, currentUserId }: UserManage
                     <Select
                       value={user.role}
                       onValueChange={(value) => {
-                        console.log('Select onValueChange triggered with value:', value)
                         handleUpdateUserRole(user.id, value)
                       }}
                     >

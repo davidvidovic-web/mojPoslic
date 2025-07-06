@@ -6,7 +6,6 @@ import {
   MapPin, 
   Calendar, 
   DollarSign, 
-  User,
   Tag,
   Car
 } from "lucide-react"
@@ -65,12 +64,6 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
                 <div className="flex items-center gap-1">
                   <Car className="h-4 w-4" />
                   {formatTransportation(job.transportation, job.transportation_amount)}
-                </div>
-              )}
-              {job.posted_by && (
-                <div className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  Posted by client
                 </div>
               )}
             </div>

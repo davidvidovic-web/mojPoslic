@@ -164,17 +164,18 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           >
             <SelectTrigger>
               <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select a category"} />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.nameEN}
-                  {category.nameBS !== category.nameEN && (
-                    <span className="text-muted-foreground ml-2">({category.nameBS})</span>
-                  )}
-                </SelectItem>
-              ))}
-            </SelectContent>
+            </SelectTrigger>              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    <span className="block truncate">
+                      {category.nameEN}
+                      {category.nameBS !== category.nameEN && (
+                        <span className="text-muted-foreground text-xs ml-1">({category.nameBS})</span>
+                      )}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
           </Select>
         </div>
 
@@ -234,7 +235,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
             className="min-h-[150px]"
           />
           <p className="text-xs text-muted-foreground">
-            Be specific about what you need done, timeline, and any special requirements.
+            Be specific about what you need done. Timeline, compensation, and location will be added in the next step.
           </p>
         </div>
 

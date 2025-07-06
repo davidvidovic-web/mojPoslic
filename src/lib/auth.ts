@@ -5,7 +5,6 @@ import Apple from "next-auth/providers/apple"
 import Credentials from "next-auth/providers/credentials"
 import type { NextAuthConfig } from "next-auth"
 import { authorizeCredentials } from "./auth-credentials"
-import { getAuthAdapter } from "./auth-adapter"
 
 declare module "next-auth" {
   interface Session {
@@ -33,72 +32,66 @@ declare module "@auth/core/jwt" {
   }
 }
 
-// Optimized configuration for Vercel serverless functions
-const createConfig = async (): Promise<NextAuthConfig> => {
-  // Only use adapter if not in edge runtime
-  const adapter = process.env.NEXT_RUNTIME === 'edge' ? undefined : await getAuthAdapter()
-  
-  return {
-    secret: process.env.NEXTAUTH_SECRET,
-    adapter,
-    debug: process.env.NODE_ENV === "development",
-    providers: [
-      Google({
-        clientId: process.env.AUTH_GOOGLE_ID,
-        clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      }),
-      Facebook({
-        clientId: process.env.AUTH_FACEBOOK_ID,
-        clientSecret: process.env.AUTH_FACEBOOK_SECRET,
-      }),
-      Apple({
-        clientId: process.env.AUTH_APPLE_ID,
-        clientSecret: process.env.AUTH_APPLE_SECRET,
-      }),
-      Credentials({
-        id: "credentials",
-        name: "Email and Password",
-        credentials: {
-          email: { label: "Email", type: "email" },
-          password: { label: "Password", type: "password" }
-        },
-        async authorize(credentials) {
-          if (!credentials?.email || !credentials?.password) {
-            return null
-          }
+// Configuration for NextAuth.js v5
+const config: NextAuthConfig = {
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
+  providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    }),
+    Facebook({
+      clientId: process.env.AUTH_FACEBOOK_ID,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET,
+    }),
+    Apple({
+      clientId: process.env.AUTH_APPLE_ID,
+      clientSecret: process.env.AUTH_APPLE_SECRET,
+    }),
+    Credentials({
+      id: "credentials",
+      name: "Email and Password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
 
-          return await authorizeCredentials(
-            credentials.email as string,
-            credentials.password as string
-          )
-        }
-      }),
-    ],
-    pages: {
-      signIn: "/auth/signin",
+        return await authorizeCredentials(
+          credentials.email as string,
+          credentials.password as string
+        )
+      }
+    }),
+  ],
+  pages: {
+    signIn: "/auth/signin",
+  },
+  session: {
+    strategy: "jwt" as const,
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+        token.id = user.id!
+        token.profileSetupCompleted = user.profileSetupCompleted
+      }
+      return token
     },
-    session: {
-      strategy: "jwt" as const,
+    async session({ session, token }) {
+      if (session.user && token) {
+        session.user.id = token.id as string
+        session.user.role = token.role as string
+        session.user.profileSetupCompleted = token.profileSetupCompleted as boolean
+      }
+      return session
     },
-    callbacks: {
-      async jwt({ token, user }) {
-        if (user) {
-          token.role = user.role
-          token.id = user.id!
-          token.profileSetupCompleted = user.profileSetupCompleted
-        }
-        return token
-      },
-      async session({ session, token }) {
-        if (session.user && token) {
-          session.user.id = token.id as string
-          session.user.role = token.role as string
-          session.user.profileSetupCompleted = token.profileSetupCompleted as boolean
-        }
-        return session
-      },
-    },
-  }
+  },
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(createConfig)
+export const { handlers, auth, signIn, signOut } = NextAuth(config)

@@ -27,7 +27,7 @@ export function DashboardFooter() {
             <h4 className="font-medium">Quick Links</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/jobs" className="hover:text-foreground transition-colors">
+                <Link href="/" className="hover:text-foreground transition-colors">
                   Browse Jobs
                 </Link>
               </li>

@@ -7,6 +7,7 @@ import { TransportationSection } from './transportation-section'
 import { ScheduleSection } from './schedule-section'
 import { CompensationSection } from './compensation-section'
 import { ContactInformationSection } from './contact-information-section'
+import { useAuth } from '@/contexts/auth-context'
 
 
 
@@ -17,16 +18,28 @@ interface LocationTransportationCompensationStepProps {
 }
 
 export function LocationTransportationCompensationStep({ formData, onChange, onValidation }: LocationTransportationCompensationStepProps) {
+  const { user } = useAuth()
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
 
-  // Validation - email is required, only block on high-confidence location errors
+  const isCompany = user?.role === 'company'
+
+  // Validation - email is required for companies, only block on high-confidence location errors
   useEffect(() => {
     const hasBlockingLocationError = locationValidationError && 
       locationValidationError.includes('Location Mismatch:')
     
-    const isValid = !!(formData.email?.trim()) && !hasBlockingLocationError
+    // For companies, email is required; for clients, auto-set email
+    let emailValid = true
+    if (isCompany) {
+      emailValid = !!(formData.email?.trim())
+    } else if (!formData.email && user?.email) {
+      // Auto-set email for non-company users
+      onChange({ email: user.email })
+    }
+    
+    const isValid = emailValid && !hasBlockingLocationError
     onValidation(isValid)
-  }, [formData.email, locationValidationError, onValidation])
+  }, [formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange])
 
   const handleLocationValidationChange = (error: string | null) => {
     setLocationValidationError(error)
@@ -55,10 +68,12 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
         onChange={onChange} 
       />
       
-      <ContactInformationSection 
-        formData={formData} 
-        onChange={onChange} 
-      />
+      {isCompany && (
+        <ContactInformationSection 
+          formData={formData} 
+          onChange={onChange} 
+        />
+      )}
     </div>
   )
 }

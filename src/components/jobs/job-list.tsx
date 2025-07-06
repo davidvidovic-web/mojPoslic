@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UnifiedJobCard } from "./unified-job-card";
+import { JobCard } from "./job-card";
 import { JobCardSkeleton } from "./job-card-skeleton";
 import { Job } from "@/types/job";
 import { JobFilters } from "./job-list/job-filters";
 import { JobsViewControls } from "./job-list/jobs-view-controls";
 import { JobsEmptyState } from "./job-list/jobs-empty-state";
 import { JobsPagination } from "./job-list/jobs-pagination";
+import { useAuth } from "@/contexts/auth-context";
+import { toast } from "sonner";
 
 interface JobListProps {
   refreshTrigger?: number;
@@ -16,6 +18,7 @@ interface JobListProps {
 const JOBS_PER_PAGE = 20;
 
 export function JobList({ refreshTrigger }: JobListProps) {
+  const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,10 +27,54 @@ export function JobList({ refreshTrigger }: JobListProps) {
   const [subcategoryFilter, setSubcategoryFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchJobs();
   }, [refreshTrigger]);
+
+  // Fetch saved jobs when user changes
+  useEffect(() => {
+    const fetchSavedJobs = async () => {
+      if (!user) {
+        setSavedJobIds(new Set());
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/user/saved-jobs?userId=${user.id}`);
+        if (response.ok) {
+          const savedData = await response.json();
+          const jobs = savedData.savedJobs || [];
+          setSavedJobIds(new Set(jobs.map((job: Job) => job.id)));
+        }
+      } catch (error) {
+        console.error('Error fetching saved jobs:', error);
+      }
+    };
+
+    fetchSavedJobs();
+  }, [user]);
+
+  // Handle job save/unsave
+  const handleJobSaveToggle = async (jobId: string, isSaved: boolean) => {
+    if (!user) {
+      toast.error('Please sign in to save jobs');
+      return;
+    }
+
+    if (isSaved) {
+      // Add to saved jobs
+      setSavedJobIds(prev => new Set([...prev, jobId]));
+    } else {
+      // Remove from saved jobs
+      setSavedJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -181,7 +228,13 @@ export function JobList({ refreshTrigger }: JobListProps) {
         <>
           <div className="grid grid-cols-1 gap-4">
             {paginatedJobs.map((job) => (
-              <UnifiedJobCard key={job.id} job={job} onJobUpdated={fetchJobs} />
+              <JobCard 
+                key={job.id} 
+                job={job} 
+                onJobUpdated={fetchJobs}
+                isSaved={savedJobIds.has(job.id)}
+                onSaveToggle={handleJobSaveToggle}
+              />
             ))}
           </div>
 

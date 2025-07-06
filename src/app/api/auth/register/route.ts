@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Create user with email verification
     const user = await prisma.user.create({
       data: {
-        name: email, // Use email as temporary name until verified
+        name: '', // Let user enter their own name during profile setup
         username,
         email,
         password: hashedPassword,
@@ -76,12 +76,7 @@ export async function POST(request: NextRequest) {
 
     // For localhost development, log the verification code
     if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
-      console.log('\n=================================')
-      console.log('📧 VERIFICATION CODE FOR DEVELOPMENT')
-      console.log('=================================')
-      console.log(`Email: ${email}`)
-      console.log(`Verification Code: ${verificationCode}`)
-      console.log('=================================\n')
+      // Verification code available in development via response message
     }
 
     return NextResponse.json({

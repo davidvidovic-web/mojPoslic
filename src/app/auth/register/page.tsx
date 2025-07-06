@@ -1,28 +1,18 @@
 'use client'
 
 import { useState } from "react"
-import { signIn, getProviders } from "next-auth/react"
-import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Chrome, Facebook, Apple as AppleIcon, Mail, Eye, EyeOff } from "lucide-react"
+import { PasswordRequirements } from "@/components/ui/password-requirements"
+import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { showToast } from "@/lib/toast"
-
-interface Provider {
-  id: string
-  name: string
-  type: string
-  signinUrl: string
-  callbackUrl: string
-}
+import { validatePasswordSimple } from "@/lib/password-validation"
 
 export default function RegisterPage() {
-  const [providers, setProviders] = useState<Record<string, Provider> | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -31,22 +21,16 @@ export default function RegisterPage() {
   })
   const router = useRouter()
 
-  useEffect(() => {
-    const setUpProviders = async () => {
-      const providers = await getProviders()
-      setProviders(providers)
-    }
-    setUpProviders()
-  }, [])
-
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (formData.password.length < 8) {
-      showToast.error("Password must be at least 8 characters")
+    // Validate password
+    const validation = validatePasswordSimple(formData.password, formData.email)
+    if (!validation.isValid) {
+      showToast.error(validation.errors[0]) // Show first error in toast
       return
     }
-
+    
     setLoading(true)
 
     try {
@@ -102,86 +86,16 @@ export default function RegisterPage() {
     })
   }
 
-  const getProviderIcon = (providerId: string) => {
-    switch (providerId) {
-      case 'google':
-        return <Chrome className="mr-2 h-4 w-4" />
-      case 'facebook':
-        return <Facebook className="mr-2 h-4 w-4" />
-      case 'apple':
-        return <AppleIcon className="mr-2 h-4 w-4" />
-      default:
-        return null
-    }
-  }
-
-  const getProviderDisplayName = (provider: Provider) => {
-    switch (provider.id) {
-      case 'google':
-        return 'Google'
-      case 'facebook':
-        return 'Facebook'
-      case 'apple':
-        return 'Apple'
-      default:
-        return provider.name
-    }
-  }
-
-  if (!providers) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    )
-  }
-
-  const oauthProviders = Object.values(providers).filter(
-    provider => provider.type === 'oauth' && ['google', 'facebook', 'apple'].includes(provider.id)
-  )
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Create an account</CardTitle>
           <CardDescription className="text-center">
-            Choose your preferred registration method
+            Enter your email and password to create your account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* OAuth Providers */}
-          {oauthProviders.length > 0 && (
-            <div className="space-y-2">
-              {oauthProviders.map((provider) => (
-                <Button
-                  key={provider.name}
-                  onClick={() => signIn(provider.id, { callbackUrl: "/account-type" })}
-                  variant="outline"
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {getProviderIcon(provider.id)}
-                  Continue with {getProviderDisplayName(provider)}
-                </Button>
-              ))}
-            </div>
-          )}
-
-          {/* Separator */}
-          {oauthProviders.length > 0 && (
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with email
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Email Registration Form */}
           <form onSubmit={handleEmailRegister} className="space-y-4">
             <div className="space-y-2">
@@ -227,6 +141,13 @@ export default function RegisterPage() {
                   )}
                 </Button>
               </div>
+              {formData.password && (
+                <PasswordRequirements 
+                  password={formData.password} 
+                  email={formData.email}
+                  className="mt-3"
+                />
+              )}
             </div>
 
             <Button 
@@ -234,7 +155,6 @@ export default function RegisterPage() {
               className="w-full bg-gray-900 hover:bg-gray-800 text-white" 
               disabled={loading}
             >
-              <Mail className="mr-2 h-4 w-4" />
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>

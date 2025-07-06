@@ -31,10 +31,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Delete any existing verification tokens for this email
-    await prisma.verificationToken.deleteMany({
-      where: { identifier: email }
-    })
+    // Try to delete any existing verification tokens for this email (ignore errors if table has constraints)
+    try {
+      await prisma.verificationToken.deleteMany({
+        where: { identifier: email }
+      })
+    } catch {
+      // Could not delete existing verification tokens (this is OK)
+      // Continue - new token will still be created
+    }
 
     // Generate new 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
@@ -60,14 +65,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // For localhost development, log the verification code
+    // For localhost development, include code in response
     if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
-      console.log('\n=================================')
-      console.log('📧 RESENT VERIFICATION CODE FOR DEVELOPMENT')
-      console.log('=================================')
-      console.log(`Email: ${email}`)
-      console.log(`Verification Code: ${verificationCode}`)
-      console.log('=================================\n')
+      // Verification code available in development via response message
     }
 
     return NextResponse.json({

@@ -72,14 +72,12 @@ export function getCityCoordinates(cityId: string, cities: City[]): CityCoordina
   // First check if we have predefined coordinates
   const predefinedCoords = CITY_COORDINATES[cityId]
   if (predefinedCoords) {
-    console.log(`Found coordinates for ${cityId}:`, predefinedCoords)
     return predefinedCoords
   }
   
   // If not found in predefined coordinates, try to find from loaded cities
   const selectedCity = cities.find(city => city.key === cityId)
   if (selectedCity) {
-    console.log(`City ${cityId} not in coordinates mapping, using fallback for:`, selectedCity.nameEN)
     // For cities not in our static mapping, provide approximate coordinates
     return {
       lat: 43.8563, // Default to Sarajevo area
@@ -88,6 +86,5 @@ export function getCityCoordinates(cityId: string, cities: City[]): CityCoordina
     }
   }
   
-  console.log(`No coordinates found for city key: ${cityId}`)
   return null
 }

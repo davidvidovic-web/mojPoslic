@@ -29,10 +29,6 @@ export async function GET() {
     const startOfDay = new Date(today.getTime())
     const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000) // Add 24 hours
 
-    console.log('=== Today Count API Debug ===')
-    console.log('Start of day:', startOfDay.toISOString())
-    console.log('End of day:', endOfDay.toISOString())
-    console.log('User ID:', user.id)
 
     // Count jobs posted today by this user
     const todayJobCount = await prisma.jobListing.count({
@@ -45,8 +41,6 @@ export async function GET() {
       }
     })
 
-    console.log('Today job count found:', todayJobCount)
-    console.log('Will cost connections:', todayJobCount >= 1)
 
     return NextResponse.json({ 
       count: todayJobCount,

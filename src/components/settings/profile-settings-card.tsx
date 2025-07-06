@@ -11,6 +11,8 @@ import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 import { User } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
+import { parseSkillsArray, parseExperienceLevels, formatExperienceLevel } from '@/lib/profile-format'
+import { formatLocation } from '@/lib/location-format'
 
 interface UserProfile {
   name: string
@@ -23,6 +25,7 @@ interface UserProfile {
   website?: string
   skills?: string[]
   experience?: string
+  experienceLevels?: { [skill: string]: string }
   preferredJobTypes?: string[]
   createdAt?: string
 }
@@ -39,18 +42,25 @@ export function ProfileSettingsCard() {
   // Update local profile state when auth profile changes
   useEffect(() => {
     if (authProfile) {
+      // Parse skills properly using utility function
+      const parsedSkills = parseSkillsArray(authProfile.skills)
+
+      // Parse experience levels using utility function
+      const parsedExperienceLevels = parseExperienceLevels(authProfile.experience)
+
       setProfile({
         name: authProfile.name || '',
         email: authProfile.email || '',
         username: authProfile.username || '',
         bio: authProfile.bio || '',
         role: authProfile.role || 'tasker',
-        phone: authProfile.position || '', // Map position to phone for now
-        location: '',
-        website: '',
-        skills: [],
-        experience: '',
-        preferredJobTypes: [],
+        phone: authProfile.phone || '',
+        location: authProfile.location || '',
+        website: authProfile.website || '',
+        skills: parsedSkills,
+        experience: authProfile.experience || '',
+        experienceLevels: parsedExperienceLevels,
+        preferredJobTypes: authProfile.preferredJobTypes || [],
         createdAt: authProfile.createdAt?.toISOString()
       })
     }
@@ -91,17 +101,25 @@ export function ProfileSettingsCard() {
         name: profile.name,
         phone: profile.phone,
         location: profile.location,
-        website: profile.website,
       }
+
+      // Convert skills and experience levels back to the format expected by the API
+      const skillExperiences = (profile.skills || []).map(skill => ({
+        skill,
+        experienceLevel: profile.experienceLevels?.[skill] || 'not-specified'
+      }))
 
       // Only include professional fields for non-client roles
       const profileData = profile.role === 'client' 
-        ? baseProfileData 
+        ? { 
+            ...baseProfileData,
+            website: profile.website, // Website is available for all roles but moved to bio section for taskers/companies
+          }
         : {
             ...baseProfileData,
             bio: profile.bio,
             skills: skillsArrayToString(profile.skills || []),
-            experience: profile.experience,
+            experience: JSON.stringify(skillExperiences),
             preferredJobTypes: profile.preferredJobTypes,
           }
 
@@ -129,6 +147,9 @@ export function ProfileSettingsCard() {
     }
   }
 
+  // Check if profile setup is completed to determine if basic fields should be locked
+  const isProfileSetupCompleted = authProfile?.profileSetupCompleted ?? false
+
   return (
     <Card>
       <CardHeader>
@@ -138,6 +159,11 @@ export function ProfileSettingsCard() {
         </CardTitle>
         <CardDescription>
           Update your personal information and profile details
+          {isProfileSetupCompleted && (
+            <span className="block text-xs text-muted-foreground mt-1">
+              Basic information is locked after profile setup. Contact support to modify.
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -153,7 +179,14 @@ export function ProfileSettingsCard() {
                   value={profile.name}
                   onChange={(e) => setProfile({ ...profile, name: e.target.value })}
                   placeholder="Your display name"
+                  disabled={isProfileSetupCompleted}
+                  className={isProfileSetupCompleted ? "bg-muted" : ""}
                 />
+                {isProfileSetupCompleted && (
+                  <p className="text-xs text-muted-foreground">
+                    This field is locked. Contact support to change.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -162,26 +195,43 @@ export function ProfileSettingsCard() {
                   value={profile.phone || ''}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                   placeholder="Your phone number"
+                  disabled={isProfileSetupCompleted}
+                  className={isProfileSetupCompleted ? "bg-muted" : ""}
                 />
+                {isProfileSetupCompleted && (
+                  <p className="text-xs text-muted-foreground">
+                    This field is locked. Contact support to change.
+                  </p>
+                )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="location">Location</Label>
                 <Input
                   id="location"
-                  value={profile.location || ''}
+                  value={profile.location ? formatLocation(profile.location) : ''}
                   onChange={(e) => setProfile({ ...profile, location: e.target.value })}
                   placeholder="City, Country"
+                  disabled={isProfileSetupCompleted}
+                  className={isProfileSetupCompleted ? "bg-muted" : ""}
                 />
+                {isProfileSetupCompleted && (
+                  <p className="text-xs text-muted-foreground">
+                    This field is locked. Contact support to change.
+                  </p>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <Input
-                  id="website"
-                  value={profile.website || ''}
-                  onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                  placeholder="https://yourwebsite.com"
-                />
-              </div>
+              {/* Website field for clients only in basic info */}
+              {profile.role === 'client' && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    value={profile.website || ''}
+                    onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                    placeholder="https://yourwebsite.com"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -198,6 +248,16 @@ export function ProfileSettingsCard() {
                     placeholder="Tell us about yourself..."
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    value={profile.website || ''}
+                    onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                    placeholder="https://yourwebsite.com"
+                  />
+                </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="skills">Skills</Label>
@@ -211,23 +271,56 @@ export function ProfileSettingsCard() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Experience Level</Label>
-                  <Select
-                    value={profile.experience || ''}
-                    onValueChange={(value) => setProfile({ ...profile, experience: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="entry">Entry Level (0-2 years)</SelectItem>
-                      <SelectItem value="mid">Mid Level (3-5 years)</SelectItem>
-                      <SelectItem value="senior">Senior Level (6-10 years)</SelectItem>
-                      <SelectItem value="expert">Expert Level (10+ years)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Experience levels for each skill */}
+                {profile.skills && profile.skills.length > 0 && (
+                  <div className="space-y-3">
+                    <Label>Experience Levels</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Set your experience level for each skill
+                    </p>
+                    <div className="space-y-2">
+                      {profile.skills.map((skill) => {
+                        const currentLevel = profile.experienceLevels?.[skill] || 'not-specified'
+                        
+                        return (
+                          <div key={skill} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <span className="text-sm font-medium flex-1">{skill}</span>
+                            <div className="flex flex-col items-end gap-1">
+                              <Select
+                                value={currentLevel}
+                                onValueChange={(value) => 
+                                  setProfile(prev => ({
+                                    ...prev,
+                                    experienceLevels: {
+                                      ...prev.experienceLevels,
+                                      [skill]: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="w-48">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="not-specified">Not Specified</SelectItem>
+                                  <SelectItem value="beginner">Beginner (&lt; 1 year)</SelectItem>
+                                  <SelectItem value="1-2-years">1-2 Years</SelectItem>
+                                  <SelectItem value="3-5-years">3-5 Years</SelectItem>
+                                  <SelectItem value="5plus-years">5+ Years</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {currentLevel !== 'not-specified' && (
+                                <span className="text-xs text-muted-foreground">
+                                  Current: {formatExperienceLevel(currentLevel)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

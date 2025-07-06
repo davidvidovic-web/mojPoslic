@@ -10,9 +10,10 @@ interface JobDetailsSidebarProps {
   job: Job
   formatDate: (dateString: string) => string
   formatSalary: (job: Job) => string | null
+  showAddress?: boolean // New prop to control address visibility
 }
 
-export function JobDetailsSidebar({ job, formatDate, formatSalary }: JobDetailsSidebarProps) {
+export function JobDetailsSidebar({ job, formatDate, formatSalary, showAddress = false }: JobDetailsSidebarProps) {
   const getTypeVariant = getJobTypeBadgeVariant
 
   return (
@@ -83,7 +84,7 @@ export function JobDetailsSidebar({ job, formatDate, formatSalary }: JobDetailsS
           </>
         )}
 
-        {job.job_address && (
+        {job.job_address && showAddress && (
           <>
             <Separator />
             <div className="flex justify-between items-start">

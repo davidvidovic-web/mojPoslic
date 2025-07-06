@@ -116,14 +116,12 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     const cityKey = formData.city_id
     const predefinedCoords = getCityCoordinates(cityKey, cities)
     if (predefinedCoords) {
-      console.log(`Found coordinates for ${cityKey}:`, predefinedCoords)
       return predefinedCoords
     }
     
     // If not found in predefined coordinates, try to find from loaded cities
     const selectedCity = cities.find(city => city.key === cityKey)
     if (selectedCity) {
-      console.log(`City ${cityKey} not in coordinates mapping, using fallback for:`, selectedCity.nameEN)
       // For cities not in our static mapping, provide approximate coordinates
       return {
         lat: 43.8563, // Default to Sarajevo area
@@ -132,7 +130,6 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       }
     }
     
-    console.log(`No coordinates found for city key: ${cityKey}`)
     return null
   }
 

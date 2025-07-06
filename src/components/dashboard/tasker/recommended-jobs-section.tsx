@@ -7,9 +7,11 @@ import { Job } from '@/types/job'
 
 interface RecommendedJobsSectionProps {
   recommendedJobs: Job[]
+  savedJobIds?: Set<string>
+  onSaveToggle?: (jobId: string, isSaved: boolean) => void
 }
 
-export function RecommendedJobsSection({ recommendedJobs }: RecommendedJobsSectionProps) {
+export function RecommendedJobsSection({ recommendedJobs, savedJobIds, onSaveToggle }: RecommendedJobsSectionProps) {
   return (
     <Card>
       <CardHeader>
@@ -23,11 +25,19 @@ export function RecommendedJobsSection({ recommendedJobs }: RecommendedJobsSecti
           <div className="text-center py-8">
             <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold">No recommendations yet</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Complete your profile with location and skills to get personalized job recommendations.
+            </p>
           </div>
         ) : (
           <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {recommendedJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+              <JobCard 
+                key={job.id} 
+                job={job} 
+                isSaved={savedJobIds?.has(job.id) || false}
+                onSaveToggle={onSaveToggle}
+              />
             ))}
           </div>
         )}

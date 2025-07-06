@@ -53,29 +53,31 @@ export default function RootLayout({
             <AuthProvider>
               <DataProvider>
                 <div className="min-h-screen bg-background">
-            <Toaster 
-              position="top-right" 
-              richColors={false}
-              closeButton
-              duration={4000}
-              theme="system"
-              toastOptions={{
-                style: {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                },
-                className: 'toast-custom',
-              }}
-            />
-            <Header />
-            {children}
-          </div>
+                  <Toaster 
+                    position="top-right" 
+                    richColors={false}
+                    closeButton
+                    duration={4000}
+                    theme="system"
+                    toastOptions={{
+                      style: {
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                      },
+                      className: 'toast-custom',
+                    }}
+                  />
+                  <Header />
+                  <main className="pt-20">
+                    {children}
+                  </main>
+                </div>
               </DataProvider>
             </AuthProvider>
-        </ThemeProvider>
-      </SessionProvider>
-    </body>
-  </html>
+          </ThemeProvider>
+        </SessionProvider>
+      </body>
+    </html>
   );
 }

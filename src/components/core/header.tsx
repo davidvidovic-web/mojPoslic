@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { useAuth } from "@/contexts/auth-context";
 import { ThemeToggleButton } from "@/components/core/theme-toggle-button";
@@ -32,6 +31,7 @@ import {
   BarChart3,
   CreditCard,
   Lock,
+  UserPlus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -63,7 +63,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm border-b border-border/40">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link
@@ -81,6 +81,7 @@ export function Header() {
             {loading ? (
               <div className="flex items-center space-x-2">
                 <div className="h-9 w-20 bg-muted animate-pulse rounded-md" />
+                <div className="h-9 w-9 bg-muted animate-pulse rounded-full" />
               </div>
             ) : (
               <div className="flex items-center space-x-2">
@@ -92,7 +93,7 @@ export function Header() {
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                       <DialogTrigger asChild>
                         <Button
-                          className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200"
+                          className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200"
                           onClick={handlePostJobClick}
                         >
                           <Plus className="h-4 w-4 mr-2" />
@@ -113,13 +114,25 @@ export function Header() {
 
                 {/* Auth.js Authentication Components */}
                 {!user ? (
-                  <Button
-                    className="bg-brand-green hover:bg-brand-green/90 text-white font-bold border-0 transition-all duration-200"
-                    onClick={() => signIn()}
-                  >
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Sign In
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Link href="/auth/signin">
+                      <Button
+                        variant="outline"
+                        className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-bold transition-all duration-200"
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth/register">
+                      <Button
+                        className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Register
+                      </Button>
+                    </Link>
+                  </div>
                 ) : (
                   <>
                     {/* Notifications Bell */}
@@ -152,7 +165,7 @@ export function Header() {
                         >
                           <DropdownMenuItem asChild>
                             <Link
-                              href="/dashboard/overview"
+                              href="/dashboard"
                               className="cursor-pointer"
                             >
                               <LayoutDashboard className="mr-2 h-6 w-6" />
@@ -248,7 +261,7 @@ export function Header() {
                       <div className="fixed inset-0 z-[60] bg-background md:hidden">
                         <div className="flex h-full flex-col bg-background">
                           {/* Header */}
-                          <div className="flex items-center justify-between p-6 border-b">
+                          <div className="flex items-center justify-between p-4 border-b">
                             <h2 className="text-lg font-semibold">Menu</h2>
                             <Button
                               variant="ghost"
@@ -264,7 +277,7 @@ export function Header() {
                           <div className="flex-1 px-6 py-8 bg-background">
                             <nav className="space-y-6">
                               <Link
-                                href="/dashboard/overview"
+                                href="/dashboard"
                                 className="flex items-center py-4 text-lg font-medium hover:text-primary transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >

@@ -24,6 +24,8 @@ import {
   Car,
   Star,
   Users,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import { Job } from "@/types/job";
 import {
@@ -40,17 +42,78 @@ import { toast } from "sonner";
 interface JobCardProps {
   job: Job;
   onJobUpdated?: () => void;
+  isSaved?: boolean;
+  onSaveToggle?: (jobId: string, isSaved: boolean) => void;
 }
 
-export function JobCard({ job, onJobUpdated }: JobCardProps) {
+export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: JobCardProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isJobSaved, setIsJobSaved] = useState(isSaved);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Check if the current user owns this job
   const isOwner = user && job.posted_by === user.id;
+
+  // Update saved state when prop changes
+  useEffect(() => {
+    setIsJobSaved(isSaved);
+  }, [isSaved]);
+
+  // Handle save/unsave job
+  const handleSaveToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    if (!user) {
+      toast.error('Please sign in to save jobs');
+      return;
+    }
+
+    if (isSaving) return;
+
+    setIsSaving(true);
+    try {
+      if (isJobSaved) {
+        // Unsave the job
+        const response = await fetch(`/api/user/saved-jobs?jobId=${job.id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setIsJobSaved(false);
+          onSaveToggle?.(job.id, false);
+          toast.success('Job removed from saved jobs');
+        } else {
+          throw new Error('Failed to unsave job');
+        }
+      } else {
+        // Save the job
+        const response = await fetch('/api/user/saved-jobs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ jobId: job.id }),
+        });
+
+        if (response.ok) {
+          setIsJobSaved(true);
+          onSaveToggle?.(job.id, true);
+          toast.success('Job saved successfully');
+        } else {
+          throw new Error('Failed to save job');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling job save:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Mock data for reviews (in real app, this would come from API)
   const mockUserData = {
@@ -169,18 +232,36 @@ export function JobCard({ job, onJobUpdated }: JobCardProps) {
       onClick={handleViewDetails}
     >
       <CardHeader className="p-4 pb-3">
-        {/* 1. Posted time - small font */}
+        {/* 1. Posted time and save button */}
         <div className="flex justify-between items-start mb-3">
           <span className="text-xs text-muted-foreground">
             {formatTimeAgo(job.posted_at)}
           </span>
-          {/* 7. Amount of people applied - top right for owners */}
-          {isOwner && applicationCount !== null && (
-            <Badge variant="secondary" className="text-xs">
-              <Users className="h-3 w-3 mr-1" />
-              {applicationCount} applied
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Save button for non-owners and taskers only */}
+            {!isOwner && user && user.role === 'tasker' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSaveToggle}
+                disabled={isSaving}
+                className="h-8 w-8 p-0 hover:bg-emerald-100 dark:hover:bg-emerald-900/20"
+              >
+                {isJobSaved ? (
+                  <BookmarkCheck className="h-4 w-4 text-emerald-600" />
+                ) : (
+                  <Bookmark className="h-4 w-4 text-muted-foreground hover:text-emerald-600" />
+                )}
+              </Button>
+            )}
+            {/* Application count for owners */}
+            {isOwner && applicationCount !== null && (
+              <Badge variant="secondary" className="text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                {applicationCount} applied
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* 2. Title of the post - big font */}

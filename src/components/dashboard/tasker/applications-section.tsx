@@ -1,10 +1,12 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, Clock, CheckCircle, Briefcase, XCircle } from 'lucide-react'
+import { TrendingUp, Clock, CheckCircle, Briefcase, XCircle, Search } from 'lucide-react'
 import { Job } from '@/types/job'
 import { formatClientName } from '@/lib/job-utils'
+import Link from 'next/link'
 
 interface JobApplication {
   id: string
@@ -44,21 +46,26 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
     }
   }
 
-  // Group applications by status in the order: Active, Pending, Completed
-  const activeJobs = applications.filter(app => app.status === 'accepted')
-  const pendingJobs = applications.filter(app => app.status === 'pending')
-  const completedJobs = applications.filter(app => app.status === 'completed')
-  
-  // Combine in the desired order
-  const orderedApplications = [...activeJobs, ...pendingJobs, ...completedJobs]
+  // Filter to only show active applications (pending, reviewed, accepted)
+  const activeApplications = applications.filter(app => 
+    app.status === 'pending' || app.status === 'reviewed' || app.status === 'accepted'
+  )
 
   const renderApplicationList = (apps: JobApplication[]) => {
     if (apps.length === 0) {
       return (
         <div className="text-center py-8">
           <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">No applications yet</h3>
-          <p className="text-sm text-muted-foreground mt-1">Start applying to jobs to track your progress here.</p>
+          <h3 className="text-lg font-semibold">No active applications</h3>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Start applying to jobs to track your progress here.
+          </p>
+          <Link href="/">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Search className="h-4 w-4 mr-2" />
+              Find Jobs
+            </Button>
+          </Link>
         </div>
       )
     }
@@ -84,9 +91,8 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
               </div>
               <Badge className={getStatusColor(application.status)}>
                 {application.status === 'pending' ? 'Pending Review' : 
+                 application.status === 'reviewed' ? 'Under Review' :
                  application.status === 'accepted' ? 'Active' :
-                 application.status === 'completed' ? 'Completed' :
-                 application.status === 'rejected' ? 'Rejected' :
                  application.status}
               </Badge>
             </div>
@@ -112,11 +118,11 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
       <CardHeader>
         <CardTitle className="flex items-center">
           <TrendingUp className="h-5 w-5 mr-2" />
-          Job Applications
+          Active Applications
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {renderApplicationList(orderedApplications)}
+        {renderApplicationList(activeApplications)}
       </CardContent>
     </Card>
   )
