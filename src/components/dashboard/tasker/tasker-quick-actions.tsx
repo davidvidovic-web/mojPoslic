@@ -8,11 +8,11 @@ import Link from "next/link"
 
 export function TaskerQuickActions() {
   return (
-    <Card className="border-emerald-200 dark:border-emerald-800">
+    <Card>
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-            <BarChart className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40">
+            <BarChart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           Quick Actions
         </CardTitle>
@@ -22,14 +22,14 @@ export function TaskerQuickActions() {
         <Link href="/" className="block">
           <Button 
             variant="outline" 
-            className="w-full justify-start gap-3 h-12 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
+            className="w-full justify-start gap-3 h-12 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-foreground dark:hover:text-foreground"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-              <Search className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40">
+              <Search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-left">
-              <div className="font-medium text-emerald-900 dark:text-emerald-100">Find Jobs</div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400">Browse available opportunities</div>
+              <div className="font-medium">Find Jobs</div>
+              <div className="text-xs text-muted-foreground">Browse available opportunities</div>
             </div>
           </Button>
         </Link>
@@ -38,14 +38,14 @@ export function TaskerQuickActions() {
         <Link href="/settings" className="block">
           <Button 
             variant="outline" 
-            className="w-full justify-start gap-3 h-12 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
+            className="w-full justify-start gap-3 h-12 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-foreground dark:hover:text-foreground"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-              <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40">
+              <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-left">
-              <div className="font-medium text-emerald-900 dark:text-emerald-100">Update Profile</div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400">Enhance your visibility</div>
+              <div className="font-medium">Update Profile</div>
+              <div className="text-xs text-muted-foreground">Enhance your visibility</div>
             </div>
           </Button>
         </Link>
@@ -53,15 +53,15 @@ export function TaskerQuickActions() {
         {/* View Skills */}
         <Button 
           variant="outline" 
-          className="w-full justify-start gap-3 h-12 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
+          className="w-full justify-start gap-3 h-12 hover:bg-yellow-50 dark:hover:bg-yellow-950/50 hover:text-foreground dark:hover:text-foreground"
           disabled
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-            <Star className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/40">
+            <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-emerald-900 dark:text-emerald-100">Manage Skills</div>
-            <div className="text-xs text-emerald-600 dark:text-emerald-400">Add certifications</div>
+            <div className="font-medium">Manage Skills</div>
+            <div className="text-xs text-muted-foreground">Add certifications</div>
           </div>
           <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
         </Button>
@@ -69,20 +69,20 @@ export function TaskerQuickActions() {
         {/* Learning Center */}
         <Button 
           variant="outline" 
-          className="w-full justify-start gap-3 h-12 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
+          className="w-full justify-start gap-3 h-12 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-foreground dark:hover:text-foreground"
           disabled
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-            <BookOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40">
+            <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-emerald-900 dark:text-emerald-100">Learning Center</div>
-            <div className="text-xs text-emerald-600 dark:text-emerald-400">Skill development</div>
+            <div className="font-medium">Learning Center</div>
+            <div className="text-xs text-muted-foreground">Skill development</div>
           </div>
           <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
         </Button>
 
-        {/* Tips Section */}
+        {/* Tips Section - Restored to green theme */}
         <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800">
           <h4 className="font-medium text-emerald-900 dark:text-emerald-100 mb-2 flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>

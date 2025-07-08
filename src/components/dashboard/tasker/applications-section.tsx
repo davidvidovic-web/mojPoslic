@@ -57,11 +57,11 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
         <div className="text-center py-8">
           <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold">No active applications</h3>
-          <p className="text-sm text-muted-foreground mt-1 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Start applying to jobs to track your progress here.
           </p>
           <Link href="/">
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button>
               <Search className="h-4 w-4 mr-2" />
               Find Jobs
             </Button>
@@ -121,7 +121,7 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
           Active Applications
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {renderApplicationList(activeApplications)}
       </CardContent>
     </Card>

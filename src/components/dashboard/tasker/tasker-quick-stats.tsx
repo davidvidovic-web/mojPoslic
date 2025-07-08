@@ -31,72 +31,72 @@ export function TaskerQuickStats({ stats }: Omit<TaskerQuickStatsProps, 'applica
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {/* Total Applications */}
-      <Card className="border-emerald-200 dark:border-emerald-800">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Total Applications
           </CardTitle>
-          <Briefcase className="h-4 w-4 text-emerald-600" />
+          <Briefcase className="h-4 w-4 text-blue-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+          <div className="text-2xl font-bold">
             {stats.total}
           </div>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs text-muted-foreground">
             {stats.pending} pending review
           </p>
         </CardContent>
       </Card>
 
       {/* Active Applications */}
-      <Card className="border-emerald-200 dark:border-emerald-800">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Active Applications
           </CardTitle>
-          <Clock className="h-4 w-4 text-emerald-600" />
+          <Clock className="h-4 w-4 text-orange-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+          <div className="text-2xl font-bold">
             {stats.pending + stats.accepted}
           </div>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs text-muted-foreground">
             {stats.accepted} accepted
           </p>
         </CardContent>
       </Card>
 
       {/* Completed Jobs */}
-      <Card className="border-emerald-200 dark:border-emerald-800">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Completed Jobs
           </CardTitle>
-          <CheckCircle className="h-4 w-4 text-emerald-600" />
+          <CheckCircle className="h-4 w-4 text-green-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+          <div className="text-2xl font-bold">
             {stats.completed}
           </div>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs text-muted-foreground">
             This month
           </p>
         </CardContent>
       </Card>
 
       {/* Total Earnings */}
-      <Card className="border-emerald-200 dark:border-emerald-800">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Total Earnings
           </CardTitle>
           <DollarSign className="h-4 w-4 text-emerald-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+          <div className="text-2xl font-bold">
             {stats.totalEarnings.toLocaleString()} BAM
           </div>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs text-muted-foreground">
             All time
           </p>
         </CardContent>

@@ -1,0 +1,161 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+})
+
+// Type definitions for our database
+export type Database = {
+  public: {
+    Tables: {
+      conversations: {
+        Row: {
+          id: string
+          type: 'direct' | 'group' | 'job_related'
+          title: string | null
+          job_id: string | null
+          created_at: string
+          updated_at: string
+          last_message_at: string | null
+          archived: boolean
+        }
+        Insert: {
+          id?: string
+          type: 'direct' | 'group' | 'job_related'
+          title?: string | null
+          job_id?: string | null
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string | null
+          archived?: boolean
+        }
+        Update: {
+          id?: string
+          type?: 'direct' | 'group' | 'job_related'
+          title?: string | null
+          job_id?: string | null
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string | null
+          archived?: boolean
+        }
+      }
+      conversation_participants: {
+        Row: {
+          id: string
+          conversation_id: string
+          user_id: string
+          joined_at: string
+          left_at: string | null
+          role: 'admin' | 'member'
+          last_read_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          user_id: string
+          joined_at?: string
+          left_at?: string | null
+          role?: 'admin' | 'member'
+          last_read_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          user_id?: string
+          joined_at?: string
+          left_at?: string | null
+          role?: 'admin' | 'member'
+          last_read_at?: string
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          sender_id: string
+          content: string | null
+          message_type: 'text' | 'image' | 'file' | 'system'
+          attachment_url: string | null
+          attachment_filename: string | null
+          attachment_size: number | null
+          reply_to_message_id: string | null
+          edited_at: string | null
+          deleted_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          sender_id: string
+          content?: string | null
+          message_type?: 'text' | 'image' | 'file' | 'system'
+          attachment_url?: string | null
+          attachment_filename?: string | null
+          attachment_size?: number | null
+          reply_to_message_id?: string | null
+          edited_at?: string | null
+          deleted_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          sender_id?: string
+          content?: string | null
+          message_type?: 'text' | 'image' | 'file' | 'system'
+          attachment_url?: string | null
+          attachment_filename?: string | null
+          attachment_size?: number | null
+          reply_to_message_id?: string | null
+          edited_at?: string | null
+          deleted_at?: string | null
+          created_at?: string
+        }
+      }
+      message_status: {
+        Row: {
+          id: string
+          message_id: string
+          user_id: string
+          status: 'sent' | 'delivered' | 'read'
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          user_id: string
+          status: 'sent' | 'delivered' | 'read'
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          user_id?: string
+          status?: 'sent' | 'delivered' | 'read'
+          timestamp?: string
+        }
+      }
+    }
+  }
+}
+
+export type ConversationRow = Database['public']['Tables']['conversations']['Row']
+export type MessageRow = Database['public']['Tables']['messages']['Row']
+export type ParticipantRow = Database['public']['Tables']['conversation_participants']['Row']
+export type MessageStatusRow = Database['public']['Tables']['message_status']['Row']

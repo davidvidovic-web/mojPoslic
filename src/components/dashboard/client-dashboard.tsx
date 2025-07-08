@@ -1,19 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
+import { useUserJobs, useDeleteJob } from '@/hooks/use-jobs'
+import { useDialogStore } from '@/stores/dialog-store'
+import { useRouter } from 'next/navigation'
 import { Job } from '@/types/job'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { MultiStepJobForm } from '@/components/jobs/job-post-form/multi-step-job-form'
 import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { JobsListSection } from './client/jobs-list-section'
-import { ClientMessagesSection } from './client/messages-section'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // Helper function to get full name display
 const getFullNameDisplay = (name?: string | null): string => {
@@ -22,7 +24,6 @@ const getFullNameDisplay = (name?: string | null): string => {
   }
   return name.trim()
 }
-import { DashboardFooter } from '@/components/core/dashboard-footer'
 import { 
   Sunrise, 
   Sun, 
@@ -39,13 +40,67 @@ import {
 
 export function ClientDashboard() {
   const { user } = useAuth()
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingJob, setEditingJob] = useState<Job | null>(null)
-  const [jobApplicationCounts, setJobApplicationCounts] = useState<Record<string, number>>({})
-  const [activeTab, setActiveTab] = useState('overview')
+  const router = useRouter()
+  
+  // TanStack Query hooks for job data
+  const { data: jobs = [], isLoading, refetch: refreshJobs } = useUserJobs(user?.id || '')
+  const deleteJobMutation = useDeleteJob()
+  
+  // Zustand stores for UI state
+  const { 
+    isJobPostDialogOpen, 
+    openJobPostDialog, 
+    closeJobPostDialog,
+    isEditJobDialogOpen,
+    openEditJobDialog,
+    closeEditJobDialog,
+    editingJob
+  } = useDialogStore()
+  
+  // We'll handle navigation locally for now since the tabs are URL-based
+  // const { currentDashboardTab, setDashboardTab } = useNavigationStore()
+  
+  // Get active section from URL
+  const getActiveSection = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tab = urlParams.get('tab')
+    return tab === 'jobs' ? 'jobs' : 'overview'
+  }
+
+  const activeTab = getActiveSection()
+
+  // Navigate to section
+  const navigateToSection = (section: string) => {
+    if (section === 'overview' || section === 'jobs') {
+      // These stay within the dashboard
+      if (section === 'jobs') {
+        router.push('/dashboard?tab=jobs')
+      } else {
+        router.push('/dashboard')
+      }
+    } else {
+      // These navigate to dedicated pages
+      switch (section) {
+        case 'messages':
+          router.push('/messages')
+          break
+        case 'connections':
+          router.push('/connections')
+          break
+        case 'finances':
+          toast.info('Finances feature coming soon!')
+          break
+        case 'analytics':
+          toast.info('Analytics feature coming soon!')
+          break
+        case 'integrations':
+          toast.info('Integrations feature coming soon!')
+          break
+        default:
+          router.push('/dashboard')
+      }
+    }
+  }
   
   // Get time-based greeting with icon
   const { greeting, iconName } = getTimeBasedGreetingWithIcon()
@@ -65,126 +120,32 @@ export function ClientDashboard() {
     }
   }
 
-  useEffect(() => {
-    const fetchMyJobs = async () => {
-      if (!user) return
-
-      try {
-        const response = await fetch('/api/jobs/my-jobs', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const data = await response.json()
-        setJobs(data || [])
-        
-        // Fetch application counts for each job
-        if (data && Array.isArray(data)) {
-          const counts: Record<string, number> = {}
-          await Promise.all(
-            data.map(async (job: Job) => {
-              try {
-                const appResponse = await fetch(`/api/jobs/${job.id}/applications`)
-                if (appResponse.ok) {
-                  const appData = await appResponse.json()
-                  counts[job.id] = appData.applicationCount || 0
-                }
-              } catch (error) {
-                console.error(`Error fetching applications for job ${job.id}:`, error)
-                counts[job.id] = 0
-              }
-            })
-          )
-          setJobApplicationCounts(counts)
-        }
-      } catch (error) {
-        console.error('Error fetching jobs:', {
-          error,
-          message: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined
-        })
-        toast.error('Failed to load your jobs')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMyJobs()
-  }, [user])
+  // Application counts are now handled by TanStack Query in useUserJobs hook
+  const applicationCounts = jobs.reduce((acc, job) => {
+    // Mock application counts for now - this should be part of the job data from the API
+    acc[job.id] = 0 // This will be replaced when the API includes application counts
+    return acc
+  }, {} as Record<string, number>)
 
   const handleJobPosted = () => {
-    setIsDialogOpen(false)
-    // Re-fetch jobs when a new job is posted
-    const refetchJobs = async () => {
-      if (!user) return
-      try {
-        const response = await fetch('/api/jobs/my-jobs')
-        if (response.ok) {
-          const data = await response.json()
-          setJobs(data || [])
-        }
-      } catch (error) {
-        console.error('Error refetching jobs after posting:', error)
-      }
-    }
-    refetchJobs()
-    
-    // Force refresh of connections section to show updated count
-    // Add a small delay to ensure backend transaction is complete
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('refresh-connections'))
-      window.dispatchEvent(new CustomEvent('refresh-job-cost'))
-    }, 500)
-    
-    // Note: Success toast is handled in the form component now
+    closeJobPostDialog()
+    // TanStack Query will automatically invalidate and refetch user jobs
   }
 
   const handleEditJob = (job: Job) => {
-    setEditingJob(job)
-    setIsEditDialogOpen(true)
+    openEditJobDialog(job)
   }
 
   const handleEditComplete = () => {
-    setIsEditDialogOpen(false)
-    setEditingJob(null)
-    // Refresh jobs list
-    const fetchJobs = async () => {
-      if (!user) return
-      try {
-        const response = await fetch('/api/jobs/my-jobs')
-        if (response.ok) {
-          const data = await response.json()
-          setJobs(data || [])
-        }
-      } catch (error) {
-        console.error('Error refreshing jobs:', error)
-      }
-    }
-    fetchJobs()
+    closeEditJobDialog()
+    // TanStack Query will automatically invalidate and refetch user jobs
   }
 
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm('Are you sure you want to delete this job posting?')) return
 
     try {
-      const response = await fetch(`/api/jobs/${jobId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      setJobs(jobs.filter(job => job.id !== jobId))
+      await deleteJobMutation.mutateAsync(jobId)
       toast.success('Job deleted successfully')
     } catch (error) {
       console.error('Error deleting job:', error)
@@ -206,13 +167,8 @@ export function ClientDashboard() {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      // Update the job in the local state
-      setJobs(jobs.map(job => 
-        job.id === jobId 
-          ? { ...job, is_featured: isFeatured }
-          : job
-      ))
-      
+      // TanStack Query will automatically invalidate and refetch
+      refreshJobs()
       toast.success(isFeatured ? 'Job featured successfully' : 'Job removed from featured')
     } catch (error) {
       console.error('Error featuring job:', error)
@@ -220,16 +176,12 @@ export function ClientDashboard() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading your jobs...</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your jobs...</p>
         </div>
       </div>
     )
@@ -278,67 +230,114 @@ export function ClientDashboard() {
           </div>
         </div>
 
-        {/* Main Content with Dropdown Navigation */}
+        {/* Main Content with Responsive Navigation */}
         <div className="space-y-6">
-          {/* Section Selector */}
-          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <div className="flex items-center gap-4">
-              <label htmlFor="section-select" className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                View Section:
-              </label>
-              <Select value={activeTab} onValueChange={setActiveTab}>
-                <SelectTrigger className="w-[200px]" id="section-select">
-                  <SelectValue placeholder="Select a section" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="overview">
-                    <div className="flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Overview
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="jobs">
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4" />
-                      Jobs
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="messages">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Messages
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="connections">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4" />
-                      Connections
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="finances" disabled>
-                    <div className="flex items-center gap-2 opacity-50">
-                      <DollarSign className="h-4 w-4" />
-                      Finances
-                      <Lock className="h-3 w-3 ml-1" />
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="analytics" disabled>
-                    <div className="flex items-center gap-2 opacity-50">
-                      <BarChart3 className="h-4 w-4" />
-                      Analytics
-                      <Lock className="h-3 w-3 ml-1" />
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="integrations" disabled>
-                    <div className="flex items-center gap-2 opacity-50">
-                      <Puzzle className="h-4 w-4" />
-                      Integrations
-                      <Lock className="h-3 w-3 ml-1" />
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Section Selector - Dropdown on mobile, Tabs on tablet+ */}
+          <div className="block md:hidden">
+            <div className="bg-card border rounded-lg p-4">
+              <div className="flex items-center gap-4">
+                <label htmlFor="section-select" className="text-sm font-medium text-foreground whitespace-nowrap">
+                  View Section:
+                </label>
+                <Select value={activeTab} onValueChange={navigateToSection}>
+                  <SelectTrigger className="flex-1" id="section-select">
+                    <SelectValue placeholder="Select a section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="overview">
+                      <div className="flex items-center gap-2">
+                        <LayoutDashboard className="h-4 w-4 text-blue-600" />
+                        Overview
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="jobs">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-green-600" />
+                        Jobs
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="messages">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-purple-600" />
+                        Messages
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="connections">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-600" />
+                        Connections
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="finances" disabled>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                        Finances
+                        <Lock className="h-3 w-3 ml-1" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="analytics" disabled>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <BarChart3 className="h-4 w-4 text-indigo-600" />
+                        Analytics
+                        <Lock className="h-3 w-3 ml-1" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="integrations" disabled>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <Puzzle className="h-4 w-4 text-orange-600" />
+                        Integrations
+                        <Lock className="h-3 w-3 ml-1" />
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </div>
+
+          {/* Tabs for tablet and desktop */}
+          <div className="hidden md:block">
+            <Tabs value={activeTab} onValueChange={navigateToSection} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4 text-blue-600" />
+                  <span className="hidden lg:inline">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="jobs" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-green-600" />
+                  <span className="hidden lg:inline">Jobs</span>
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-purple-600" />
+                  <span className="hidden lg:inline">Messages</span>
+                </TabsTrigger>
+                <TabsTrigger value="connections" className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-yellow-600" />
+                  <span className="hidden lg:inline">Connections</span>
+                </TabsTrigger>
+                <TabsTrigger value="finances" disabled className="opacity-50">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-emerald-600" />
+                    <span className="hidden lg:inline">Finances</span>
+                    <Lock className="h-3 w-3" />
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" disabled className="opacity-50">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-indigo-600" />
+                    <span className="hidden lg:inline">Analytics</span>
+                    <Lock className="h-3 w-3" />
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="integrations" disabled className="opacity-50">
+                  <div className="flex items-center gap-2">
+                    <Puzzle className="h-4 w-4 text-orange-600" />
+                    <span className="hidden lg:inline">Integrations</span>
+                    <Lock className="h-3 w-3" />
+                  </div>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Content based on selected section */}
@@ -348,39 +347,45 @@ export function ClientDashboard() {
               <div className="hidden md:block">
                 <ClientQuickStats 
                   jobs={jobs}
-                  applicationCounts={jobApplicationCounts}
+                  applicationCounts={applicationCounts}
                 />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Mobile: Quick Actions first, then Jobs */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="lg:col-span-2">
                   {/* Quick Actions - prioritized for mobile */}
-                  <div className="block lg:hidden">
+                  <div className="block lg:hidden mb-8">
                     <ClientQuickActions 
-                      onPostNewJob={() => setIsDialogOpen(true)}
+                      onPostNewJob={() => openJobPostDialog()}
                     />
                   </div>
                   
                   {/* Jobs List - second on mobile */}
-                  <JobsListSection 
-                    jobs={jobs}
-                    applicationCounts={jobApplicationCounts}
-                    onEdit={handleEditJob}
-                    onDelete={handleDeleteJob}
-                    onPostNewJob={() => setIsDialogOpen(true)}
-                    onFeature={handleFeatureJob}
-                  />
+                  <div className="mb-8">
+                    <JobsListSection 
+                      jobs={jobs}
+                      applicationCounts={applicationCounts}
+                      onEdit={handleEditJob}
+                      onDelete={handleDeleteJob}
+                      onPostNewJob={() => openJobPostDialog()}
+                      onFeature={handleFeatureJob}
+                    />
+                  </div>
                 </div>
 
                 {/* Right Column - Quick Actions & Connections for desktop */}
-                <div className="hidden lg:block space-y-8">
-                  <ClientQuickActions 
-                    onPostNewJob={() => setIsDialogOpen(true)}
-                  />
+                <div className="hidden lg:block">
+                  <div className="mb-8">
+                    <ClientQuickActions 
+                      onPostNewJob={() => openJobPostDialog()}
+                    />
+                  </div>
                   
                   {/* Connections */}
-                  <ConnectionsSection />
+                  <div>
+                    <ConnectionsSection />
+                  </div>
                 </div>
               </div>
             </div>
@@ -391,98 +396,43 @@ export function ClientDashboard() {
               {/* Quick Actions - first on mobile */}
               <div className="block lg:hidden">
                 <ClientQuickActions 
-                  onPostNewJob={() => setIsDialogOpen(true)}
+                  onPostNewJob={() => openJobPostDialog()}
                 />
               </div>
               
               {/* Jobs List - second on mobile */}
               <JobsListSection 
                 jobs={jobs}
-                applicationCounts={jobApplicationCounts}
+                applicationCounts={applicationCounts}
                 onEdit={handleEditJob}
                 onDelete={handleDeleteJob}
-                onPostNewJob={() => setIsDialogOpen(true)}
+                onPostNewJob={() => openJobPostDialog()}
                 onFeature={handleFeatureJob}
               />
-            </div>
-          )}
-
-          {activeTab === 'messages' && (
-            <ClientMessagesSection />
-          )}
-
-          {activeTab === 'connections' && (
-            <div className="space-y-6">
-              <ConnectionsSection />
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <BarChart3 className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Analytics Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Advanced analytics, performance insights, and detailed reporting will be available in a future update.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'finances' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <DollarSign className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Finances Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Payment processing, invoicing, and financial analytics will be available in a future update.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'integrations' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <Puzzle className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Integrations Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Connect with popular tools like Slack, Calendar apps, CRM systems, and more to streamline your hiring workflow.
-                  </p>
-                </div>
-              </div>
             </div>
           )}
         </div>
 
         {/* Post New Job Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isJobPostDialogOpen} onOpenChange={(open) => open ? openJobPostDialog() : closeJobPostDialog()}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="hidden">
               Post Job
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
             <DialogHeader>
-              <DialogTitle>Post a New Job</DialogTitle>
+              <DialogTitle>Post a Job - Free & Easy</DialogTitle>
             </DialogHeader>
-            <MultiStepJobForm onJobPosted={handleJobPosted} />
+            <MultiStepJobForm
+              onJobPosted={handleJobPosted}
+              showCard={false}
+            />
           </DialogContent>
         </Dialog>
 
         {/* Edit Job Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditJobDialogOpen} onOpenChange={(open) => open ? openEditJobDialog(editingJob!) : closeEditJobDialog()}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="hidden">
               Edit Job
@@ -526,9 +476,6 @@ export function ClientDashboard() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Footer */}
-      <DashboardFooter />
     </div>
   )
 }

@@ -145,9 +145,11 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading connection history...</p>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading connection history...</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -234,7 +236,7 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
                 </div>
                 <div className="text-right">
                   <div className={`text-lg font-semibold ${
-                    entry.amount > 0 ? 'text-green-600' : 'text-red-600'
+                    entry.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                     {formatAmount(entry.amount)}
                   </div>
@@ -263,3 +265,6 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
     </Card>
   )
 }
+
+// Add default export
+export default ConnectionGrantHistory

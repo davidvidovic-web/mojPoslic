@@ -34,25 +34,25 @@ interface JobStatusManagerProps {
 const statusConfig = {
   active: {
     label: 'Active',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
     icon: Play,
     description: 'Job is currently accepting applications'
   },
   inactive: {
     label: 'Inactive',
-    color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
+    color: 'bg-muted text-muted-foreground',
     icon: Pause,
     description: 'Job is paused and not accepting applications'
   },
   completed: {
     label: 'Completed',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
     icon: CheckCircle,
     description: 'Position has been filled successfully'
   },
   expired: {
     label: 'Expired',
-    color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
+    color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300',
     icon: Clock,
     description: 'Job posting has expired'
   }

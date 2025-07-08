@@ -183,9 +183,11 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading billing data...</p>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading billing data...</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -268,10 +270,10 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Successful</CardTitle>
-                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-green-600">{stats.successfulTransactions}</div>
+                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.successfulTransactions}</div>
                       <p className="text-xs text-muted-foreground">
                         {((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1)}% success rate
                       </p>
@@ -281,10 +283,10 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Failed</CardTitle>
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-red-600">{stats.failedTransactions}</div>
+                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.failedTransactions}</div>
                       <p className="text-xs text-muted-foreground">
                         {((stats.failedTransactions / stats.totalTransactions) * 100).toFixed(1)}% failure rate
                       </p>
@@ -411,3 +413,6 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
     </Card>
   )
 }
+
+// Add default export
+export default BillingManagementTab

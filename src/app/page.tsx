@@ -1,6 +1,6 @@
 "use client";
 
-import { JobList } from "@/components/jobs/job-list";
+import { JobList } from "@/components/job-list";
 import SiteStats from "@/components/common/site-stats";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,6 @@ import { Briefcase, Zap, UserPlus } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
-  // Use an interval to refresh jobs periodically (alternative to direct callback)
-  // This ensures new jobs posted from the header will appear
-
   return (
     <>
       {/* Hero Section */}
@@ -24,7 +21,7 @@ export default function Home() {
                 className="text-sm font-medium px-3 py-1 flex items-center gap-1 w-fit mx-auto"
               >
                 <Zap className="h-4 w-4" />
-                Quick • Simple • Free
+                Quick • Simple • Safe
               </Badge>
 
               <h2 className="text-5xl md:text-6xl font-bold leading-tight">
@@ -44,7 +41,7 @@ export default function Home() {
                 <Link href="/auth/register">
                   <Button
                     size="lg"
-                    className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 px-8 py-3 text-lg transition-all duration-200"
+                    className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <UserPlus className="h-5 w-5 mr-2" />
                     Register for free

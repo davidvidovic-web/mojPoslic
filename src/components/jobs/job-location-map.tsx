@@ -49,8 +49,8 @@ export function JobLocationMap({
     const popupContent = `
       <div class="text-center">
         <h3 class="font-semibold text-sm">${jobTitle}</h3>
-        <p class="text-xs text-gray-600">${company}</p>
-        ${address ? `<p class="text-xs text-gray-500 mt-1">${address}</p>` : ''}
+        <p class="text-xs text-foreground/80">${company}</p>
+        ${address ? `<p class="text-xs text-muted-foreground mt-1">${address}</p>` : ''}
       </div>
     `
     marker.bindPopup(popupContent).openPopup()

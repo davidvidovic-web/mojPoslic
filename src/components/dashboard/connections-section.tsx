@@ -85,8 +85,12 @@ export function ConnectionsSection() {
         const data = await response.json()
         setHistory(data.history || [])
       } else {
-        const errorData = await response.json()
-        console.error('Error response:', errorData)
+        try {
+          const errorData = await response.json()
+          console.error('Error response:', errorData)
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError, 'Status:', response.status, response.statusText)
+        }
         setHistory([])
       }
     } catch (error) {

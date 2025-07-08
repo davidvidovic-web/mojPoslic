@@ -194,8 +194,8 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
             {locationValidationError && (
               <div className={`text-sm p-4 rounded-lg border ${
                 locationValidationError.includes('Location Mismatch:') 
-                  ? 'text-red-600 bg-red-50 border-red-200' 
-                  : 'text-amber-600 bg-amber-50 border-amber-200'
+                  ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800' 
+                  : 'text-amber-600 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800'
               }`}>
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0">
@@ -213,7 +213,7 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
                     </h4>
                     <div className={`space-y-2 ${locationValidationError.includes('Location Mismatch:') ? 'text-red-700' : 'text-amber-700'}`}>
                       {locationValidationError.split('\n').map((line, index) => (
-                        <p key={index} className={line.startsWith('📍') ? 'text-xs font-mono bg-white/60 p-2 rounded border' : ''}>
+                        <p key={index} className={line.startsWith('📍') ? 'text-xs font-mono bg-card/60 p-2 rounded border' : ''}>
                           {line}
                         </p>
                       ))}

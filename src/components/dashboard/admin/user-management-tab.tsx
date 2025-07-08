@@ -16,98 +16,38 @@ import {
   User,
   Crown
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { getRoleDisplayName } from '@/lib/role-utils'
-
-interface AdminUser {
-  id: string
-  email: string
-  name: string
-  role: 'admin' | 'client' | 'tasker' | 'company'
-  companyName?: string
-  createdAt: string
-  _count: {
-    postedJobs: number
-  }
-}
+import { useUpdateUserRole, useDeleteUser, type AdminUser } from '@/hooks/use-admin'
 
 interface UserManagementTabProps {
   users: AdminUser[]
-  setUsers: React.Dispatch<React.SetStateAction<AdminUser[]>>
   currentUserId?: string
 }
 
-export function UserManagementTab({ users, setUsers, currentUserId }: UserManagementTabProps) {
+export function UserManagementTab({ users, currentUserId }: UserManagementTabProps) {
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all')
   const [userPage, setUserPage] = useState(1)
   const itemsPerPage = 10
 
-  const handleUpdateUserRole = async (userId: string, newRole: string) => {
-    try {
-      
-      // First validate that the role is one of the valid options
-      const validRoles = ['admin', 'client', 'tasker', 'company']
-      if (!validRoles.includes(newRole)) {
-        console.error('Invalid role selected:', newRole)
-        toast.error(`Invalid role: ${newRole}`)
-        return
-      }
-      
-      const response = await fetch('/api/admin/users', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, role: newRole }),
-      })
-      
-      
-      const responseData = await response.json()
-      
-      if (!response.ok) {
-        console.error('Error response data:', responseData)
-        throw new Error(responseData.error || responseData.details || 'Failed to update user role')
-      }
-      
+  // TanStack Query mutations
+  const updateUserRoleMutation = useUpdateUserRole()
+  const deleteUserMutation = useDeleteUser()
 
-      // Update the UI with the new role
-      setUsers(prevUsers => 
-        prevUsers.map(u => u.id === userId 
-          ? { ...u, role: newRole as 'admin' | 'client' | 'tasker' | 'company' } 
-          : u
-        )
-      )
-      
-      toast.success('User role updated successfully')
-    } catch (error) {
-      console.error('Error updating user role:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update user role')
+  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    // First validate that the role is one of the valid options
+    const validRoles = ['admin', 'client', 'tasker', 'company']
+    if (!validRoles.includes(newRole)) {
+      console.error('Invalid role selected:', newRole)
+      return
     }
+    
+    updateUserRoleMutation.mutate({ userId, role: newRole })
   }
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return
-
-    try {
-      const response = await fetch('/api/admin/users', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete user')
-      }
-
-      setUsers(users.filter(u => u.id !== userId))
-      toast.success('User deleted successfully')
-    } catch (error) {
-      console.error('Error deleting user:', error)
-      toast.error('Failed to delete user')
-    }
+    deleteUserMutation.mutate(userId)
   }
 
   const getRoleIcon = (role: string) => {
@@ -256,3 +196,6 @@ export function UserManagementTab({ users, setUsers, currentUserId }: UserManage
     </Card>
   )
 }
+
+// Add default export
+export default UserManagementTab

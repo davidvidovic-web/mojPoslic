@@ -50,7 +50,7 @@ export function PasswordStrengthIndicator({
       case 'warning':
         return <AlertCircle className="h-4 w-4 text-yellow-500" />
       default:
-        return <Info className="h-4 w-4 text-gray-400" />
+        return <Info className="h-4 w-4 text-muted-foreground" />
     }
   }
 
@@ -65,7 +65,7 @@ export function PasswordStrengthIndicator({
       case 'warning':
         return 'text-yellow-600 dark:text-yellow-400'
       default:
-        return 'text-gray-600 dark:text-gray-400'
+        return 'text-muted-foreground'
     }
   }
 
@@ -81,7 +81,7 @@ export function PasswordStrengthIndicator({
             </span>
           </div>
           
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-secondary rounded-full h-2">
             <div
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
@@ -102,7 +102,7 @@ export function PasswordStrengthIndicator({
       {/* Requirements List */}
       {showRequirements && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <h4 className="text-sm font-medium text-foreground">
             Password Requirements:
           </h4>
           
@@ -113,7 +113,7 @@ export function PasswordStrengthIndicator({
                 <span className={getRequirementTextColor(requirement)}>
                   {requirement.label}
                   {requirement.severity === 'warning' && (
-                    <span className="ml-1 text-xs text-gray-500">(optional)</span>
+                    <span className="ml-1 text-xs text-muted-foreground">(optional)</span>
                   )}
                 </span>
               </div>

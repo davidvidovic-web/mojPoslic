@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import React from "react";
 import { Manrope } from "next/font/google";
-import { SessionProvider } from "next-auth/react";
-import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/auth-context";
-import { DataProvider } from "@/contexts/data-context";
+import { Providers } from "@/components/providers";
 import { Header } from "@/components/core/header";
-import { Toaster } from "sonner";
 import Script from "next/script";
 import "./globals.css";
 
@@ -43,40 +39,12 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${manrope.variable} font-sans antialiased`}>
-        <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AuthProvider>
-              <DataProvider>
-                <div className="min-h-screen bg-background">
-                  <Toaster 
-                    position="top-right" 
-                    richColors={false}
-                    closeButton
-                    duration={4000}
-                    theme="system"
-                    toastOptions={{
-                      style: {
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                      },
-                      className: 'toast-custom',
-                    }}
-                  />
-                  <Header />
-                  <main className="pt-20">
-                    {children}
-                  </main>
-                </div>
-              </DataProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </SessionProvider>
+        <Providers>
+          <Header />
+          <main className="pt-20">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );

@@ -70,7 +70,7 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-medium ${
-                    entry.isPositive ? 'text-green-600' : 'text-red-600'
+                    entry.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                     {entry.isPositive ? '+' : '-'}{entry.amount}
                   </p>

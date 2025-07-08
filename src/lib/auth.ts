@@ -36,6 +36,7 @@ declare module "@auth/core/jwt" {
 const config: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
+  trustHost: true, // Add this to fix UntrustedHost errors in development
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,

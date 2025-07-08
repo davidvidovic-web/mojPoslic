@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 
 interface City {
   id: string
@@ -244,7 +244,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
 
     initData()
-  }, [fetchCities, fetchCategories])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Intentionally empty - we only want to initialize data once on mount
 
   // Refresh functions
   const refreshCities = useCallback(async () => {
@@ -280,7 +281,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }) : []
   }, [categories])
 
-  const value: DataContextType = {
+  const value: DataContextType = useMemo(() => ({
     cities,
     categories,
     loading,
@@ -291,7 +292,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getCategoryById,
     getCitiesByCountry,
     getCategoriesByParent
-  }
+  }), [
+    cities,
+    categories,
+    loading,
+    error,
+    refreshCities,
+    refreshCategories,
+    getCityById,
+    getCategoryById,
+    getCitiesByCountry,
+    getCategoriesByParent
+  ])
 
   return (
     <DataContext.Provider value={value}>

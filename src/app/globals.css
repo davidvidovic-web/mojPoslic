@@ -32,25 +32,25 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 0 0% 100%;
-    --accent-foreground: 0 0% 0%;
+    --background: 215 28% 7%;
+    --foreground: 213 31% 91%;
+    --card: 216 34% 12%;
+    --card-foreground: 213 31% 91%;
+    --popover: 216 34% 12%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 215 28% 7%;
+    --secondary: 216 28% 16%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 216 28% 16%;
+    --muted-foreground: 213 13% 65%;
+    --accent: 216 34% 12%;
+    --accent-foreground: 213 31% 91%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --border: 216 28% 18%;
+    --input: 216 28% 18%;
+    --ring: 213 94% 68%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -68,50 +68,106 @@
   }
 }
 
-/* Custom Toast Styling - Light mode border-only design */
+/* Custom Toast Styling - Consistent theme-aware design */
 @layer components {
-  /* Light mode toast styles */
-  :root [data-sonner-toast] {
-    background: hsl(var(--background)) !important;
-    border: 1px solid hsl(var(--border)) !important;
-    color: hsl(var(--foreground)) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  /* Success toasts - green border */
-  :root [data-sonner-toast][data-type="success"] {
-    border-color: #10b981 !important;
-    color: #065f46 !important;
-  }
-
-  /* Error toasts - red border */
-  :root [data-sonner-toast][data-type="error"] {
-    border-color: #ef4444 !important;
-    color: #991b1b !important;
-  }
-
-  /* Warning toasts - yellow border */
-  :root [data-sonner-toast][data-type="warning"] {
-    border-color: #f59e0b !important;
-    color: #92400e !important;
-  }
-
-  /* Info toasts - blue border */
-  :root [data-sonner-toast][data-type="info"] {
-    border-color: #3b82f6 !important;
-    color: #1e40af !important;
-  }
-
-  /* Dark mode - keep original styling */
-  .dark [data-sonner-toast] {
+  /* Base toast styles for both light and dark mode */
+  [data-sonner-toast] {
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     color: hsl(var(--card-foreground)) !important;
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* Dark mode shadow enhancement */
+  .dark [data-sonner-toast] {
+    box-shadow: 
+      0 10px 15px -3px rgba(0, 0, 0, 0.3),
+      0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Success toasts - green accent */
+  [data-sonner-toast][data-type="success"] {
+    border-left: 4px solid #10b981 !important;
+    background: hsl(var(--card)) !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="success"] {
+    border-left: 4px solid #34d399 !important;
+  }
+
+  /* Error toasts - red accent */
+  [data-sonner-toast][data-type="error"] {
+    border-left: 4px solid #ef4444 !important;
+    background: hsl(var(--card)) !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="error"] {
+    border-left: 4px solid #f87171 !important;
+  }
+
+  /* Warning toasts - amber accent */
+  [data-sonner-toast][data-type="warning"] {
+    border-left: 4px solid #f59e0b !important;
+    background: hsl(var(--card)) !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="warning"] {
+    border-left: 4px solid #fbbf24 !important;
+  }
+
+  /* Info toasts - blue accent */
+  [data-sonner-toast][data-type="info"] {
+    border-left: 4px solid #3b82f6 !important;
+    background: hsl(var(--card)) !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="info"] {
+    border-left: 4px solid #60a5fa !important;
+  }
+
+  /* Default toasts */
+  [data-sonner-toast][data-type="default"] {
+    border-left: 4px solid hsl(var(--primary)) !important;
   }
 
   /* Toast icons styling */
   [data-sonner-toast] [data-icon] {
-    opacity: 0.8;
+    opacity: 0.9 !important;
+    margin-right: 8px !important;
+  }
+
+  /* Success icon color */
+  [data-sonner-toast][data-type="success"] [data-icon] {
+    color: #10b981 !important;
+  }
+  .dark [data-sonner-toast][data-type="success"] [data-icon] {
+    color: #34d399 !important;
+  }
+
+  /* Error icon color */
+  [data-sonner-toast][data-type="error"] [data-icon] {
+    color: #ef4444 !important;
+  }
+  .dark [data-sonner-toast][data-type="error"] [data-icon] {
+    color: #f87171 !important;
+  }
+
+  /* Warning icon color */
+  [data-sonner-toast][data-type="warning"] [data-icon] {
+    color: #f59e0b !important;
+  }
+  .dark [data-sonner-toast][data-type="warning"] [data-icon] {
+    color: #fbbf24 !important;
+  }
+
+  /* Info icon color */
+  [data-sonner-toast][data-type="info"] [data-icon] {
+    color: #3b82f6 !important;
+  }
+  .dark [data-sonner-toast][data-type="info"] [data-icon] {
+    color: #60a5fa !important;
   }
 
   /* Close button styling */
@@ -119,9 +175,27 @@
     color: hsl(var(--muted-foreground)) !important;
     border: 1px solid hsl(var(--border)) !important;
     background: transparent !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
   }
 
   [data-sonner-toast] [data-close-button]:hover {
     background: hsl(var(--secondary)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Toast content styling */
+  [data-sonner-toast] [data-title] {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 600 !important;
+  }
+
+  [data-sonner-toast] [data-description] {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  /* Toast container */
+  [data-sonner-toaster] {
+    font-family: inherit !important;
   }
 }

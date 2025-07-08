@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
 import { Job } from '@/types/job'
 import { ApplicationsSection } from './tasker/applications-section'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { TaskerQuickActions } from './tasker/tasker-quick-actions'
 import { SavedJobsSection } from './tasker/saved-jobs-section'
 import { RecommendedJobsSection } from './tasker/recommended-jobs-section'
-import { TaskerMessagesSection } from './tasker/messages-section'
 import { ConnectionsSection } from './connections-section'
 import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DashboardFooter } from '@/components/core/dashboard-footer'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Sunrise, 
   Sun, 
@@ -55,6 +55,8 @@ interface ApplicationStats {
 
 export function TaskerDashboard() {
   const { user } = useAuth()
+  const router = useRouter()
+  
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
@@ -68,7 +70,42 @@ export function TaskerDashboard() {
     totalEarnings: 0
   })
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
+
+  // Determine active section from URL
+  const getActiveSection = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tab = urlParams.get('tab')
+    return tab === 'jobs' ? 'jobs' : 'overview'
+  }
+
+  const activeTab = getActiveSection()
+
+  // Navigate to section
+  const navigateToSection = (section: string) => {
+    switch (section) {
+      case 'overview':
+        router.push('/dashboard')
+        break
+      case 'jobs':
+        router.push('/jobs')
+        break
+      case 'messages':
+        router.push('/messages')
+        break
+      case 'connections':
+        router.push('/connections')
+        break
+      case 'finances':
+        // TODO: Implement finances page
+        break
+      case 'analytics':
+        // TODO: Implement analytics page
+        break
+      case 'integrations':
+        // TODO: Implement integrations page
+        break
+    }
+  }
   
   // Get time-based greeting with icon
   const { greeting, iconName } = getTimeBasedGreetingWithIcon()
@@ -175,14 +212,10 @@ export function TaskerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading your dashboard...</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     )
@@ -230,67 +263,114 @@ export function TaskerDashboard() {
           </div>
         </div>
 
-        {/* Main Content with Dropdown Navigation */}
+        {/* Main Content with Responsive Navigation */}
         <div className="space-y-6">
-          {/* Section Selector */}
-          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
-            <div className="flex items-center gap-4">
-              <label htmlFor="section-select" className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
-                View Section:
-              </label>
-              <Select value={activeTab} onValueChange={setActiveTab}>
-                <SelectTrigger className="w-[200px]" id="section-select">
-                  <SelectValue placeholder="Select a section" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="overview">
-                    <div className="flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Overview
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="jobs">
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4" />
-                      Jobs
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="messages">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Messages
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="connections">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4" />
-                      Connections
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="finances" disabled>
-                    <div className="flex items-center gap-2 opacity-50">
-                      <DollarSign className="h-4 w-4" />
-                      Finances
-                      <Lock className="h-3 w-3 ml-1" />
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="analytics" disabled>
-                    <div className="flex items-center gap-2 opacity-50">
-                      <BarChart3 className="h-4 w-4" />
-                      Analytics
-                      <Lock className="h-3 w-3 ml-1" />
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="integrations" disabled>
-                    <div className="flex items-center gap-2 opacity-50">
-                      <Puzzle className="h-4 w-4" />
-                      Integrations
-                      <Lock className="h-3 w-3 ml-1" />
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Section Selector - Dropdown on mobile, Tabs on tablet+ */}
+          <div className="block md:hidden">
+            <div className="bg-card border rounded-lg p-4">
+              <div className="flex items-center gap-4">
+                <label htmlFor="section-select" className="text-sm font-medium text-foreground whitespace-nowrap">
+                  View Section:
+                </label>
+                <Select value={activeTab} onValueChange={navigateToSection}>
+                  <SelectTrigger className="flex-1" id="section-select">
+                    <SelectValue placeholder="Select a section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="overview">
+                      <div className="flex items-center gap-2">
+                        <LayoutDashboard className="h-4 w-4 text-blue-600" />
+                        Overview
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="jobs">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-green-600" />
+                        Jobs
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="messages">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-purple-600" />
+                        Messages
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="connections">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-600" />
+                        Connections
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="finances" disabled>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                        Finances
+                        <Lock className="h-3 w-3 ml-1" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="analytics" disabled>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <BarChart3 className="h-4 w-4 text-indigo-600" />
+                        Analytics
+                        <Lock className="h-3 w-3 ml-1" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="integrations" disabled>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <Puzzle className="h-4 w-4 text-orange-600" />
+                        Integrations
+                        <Lock className="h-3 w-3 ml-1" />
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </div>
+
+          {/* Tabs for tablet and desktop */}
+          <div className="hidden md:block">
+            <Tabs value={activeTab} onValueChange={navigateToSection} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4 text-blue-600" />
+                  <span className="hidden lg:inline">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="jobs" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-green-600" />
+                  <span className="hidden lg:inline">Jobs</span>
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-purple-600" />
+                  <span className="hidden lg:inline">Messages</span>
+                </TabsTrigger>
+                <TabsTrigger value="connections" className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-yellow-600" />
+                  <span className="hidden lg:inline">Connections</span>
+                </TabsTrigger>
+                <TabsTrigger value="finances" disabled className="opacity-50">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-emerald-600" />
+                    <span className="hidden lg:inline">Finances</span>
+                    <Lock className="h-3 w-3" />
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" disabled className="opacity-50">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-indigo-600" />
+                    <span className="hidden lg:inline">Analytics</span>
+                    <Lock className="h-3 w-3" />
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="integrations" disabled className="opacity-50">
+                  <div className="flex items-center gap-2">
+                    <Puzzle className="h-4 w-4 text-orange-600" />
+                    <span className="hidden lg:inline">Integrations</span>
+                    <Lock className="h-3 w-3" />
+                  </div>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Content based on selected section */}
@@ -303,27 +383,33 @@ export function TaskerDashboard() {
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Mobile: Quick Actions first, then content */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="lg:col-span-2">
                   {/* Quick Actions - prioritized for mobile */}
-                  <div className="block lg:hidden">
+                  <div className="block lg:hidden mb-8">
                     <TaskerQuickActions />
                   </div>
                   
-                  {/* Applications - second on mobile */}
-                  <ApplicationsSection applications={applications.slice(0, 5)} />
+                  {/* Applications - first/second on mobile */}
+                  <div className="mb-8">
+                    <ApplicationsSection applications={applications.slice(0, 5)} />
+                  </div>
                   
                   {/* Recommended Jobs - third on mobile */}
-                  <RecommendedJobsSection 
-                    recommendedJobs={recommendedJobs.slice(0, 3)} 
-                    savedJobIds={savedJobIds}
-                    onSaveToggle={handleJobSaveToggle}
-                  />
+                  <div className="mb-8">
+                    <RecommendedJobsSection 
+                      recommendedJobs={recommendedJobs.slice(0, 3)} 
+                      savedJobIds={savedJobIds}
+                      onSaveToggle={handleJobSaveToggle}
+                    />
+                  </div>
                   
                   {/* Saved Jobs - fourth on mobile */}
-                  <SavedJobsSection 
-                    savedJobs={savedJobs.slice(0, 3)} 
-                    onSaveToggle={handleJobSaveToggle}
-                  />
+                  <div>
+                    <SavedJobsSection 
+                      savedJobs={savedJobs.slice(0, 3)} 
+                      onSaveToggle={handleJobSaveToggle}
+                    />
+                  </div>
                 </div>
                 
                 {/* Right Column - Quick Actions & Connections for desktop */}
@@ -340,27 +426,33 @@ export function TaskerDashboard() {
           {activeTab === 'jobs' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Mobile: Quick Actions first, then Jobs */}
-              <div className="lg:col-span-2 space-y-8">
+              <div className="lg:col-span-2">
                 {/* Quick Actions - prioritized for mobile */}
-                <div className="block lg:hidden">
+                <div className="block lg:hidden mb-8">
                   <TaskerQuickActions />
                 </div>
                 
                 {/* Applications - second on mobile */}
-                <ApplicationsSection applications={applications} />
+                <div className="mb-8">
+                  <ApplicationsSection applications={applications} />
+                </div>
                 
                 {/* Recommended Jobs - third on mobile */}
-                <RecommendedJobsSection 
-                  recommendedJobs={recommendedJobs} 
-                  savedJobIds={savedJobIds}
-                  onSaveToggle={handleJobSaveToggle}
-                />
+                <div className="mb-8">
+                  <RecommendedJobsSection 
+                    recommendedJobs={recommendedJobs} 
+                    savedJobIds={savedJobIds}
+                    onSaveToggle={handleJobSaveToggle}
+                  />
+                </div>
                 
                 {/* Saved Jobs - fourth on mobile */}
-                <SavedJobsSection 
-                  savedJobs={savedJobs} 
-                  onSaveToggle={handleJobSaveToggle}
-                />
+                <div>
+                  <SavedJobsSection 
+                    savedJobs={savedJobs} 
+                    onSaveToggle={handleJobSaveToggle}
+                  />
+                </div>
               </div>
 
               {/* Right Column - Quick Actions & Connections for desktop */}
@@ -372,69 +464,8 @@ export function TaskerDashboard() {
               </div>
             </div>
           )}
-
-          {activeTab === 'messages' && (
-            <TaskerMessagesSection />
-          )}
-
-          {activeTab === 'connections' && (
-            <div className="space-y-6">
-              <ConnectionsSection />
-            </div>
-          )}
-
-          {activeTab === 'finances' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <DollarSign className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Finances Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Earnings tracking, payment history, and tax documents will be available in a future update.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <BarChart3 className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Analytics Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Performance insights, application success rates, and detailed reporting will be available in a future update.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'integrations' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4">
-                    <Puzzle className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">Integrations Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Connect with calendar apps, portfolio platforms, and productivity tools to streamline your workflow.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-
-      {/* Footer */}
-      <DashboardFooter />
     </div>
   )
 }

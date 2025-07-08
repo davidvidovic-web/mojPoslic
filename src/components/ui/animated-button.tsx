@@ -20,7 +20,7 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
     ...props 
   }, ref) => {
     const brandClass = variant === "gradient" 
-      ? "bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200" 
+      ? "bg-foreground hover:bg-foreground/90 text-background font-bold border-0 transition-all duration-200" 
       : ""
 
     return (

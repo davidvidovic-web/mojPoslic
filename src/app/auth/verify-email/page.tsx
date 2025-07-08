@@ -140,14 +140,14 @@ function VerifyEmailForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-            <Mail className="h-6 w-6 text-blue-600" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Mail className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-2xl">Verify Your Email</CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             We&apos;ve sent a 6-digit verification code to{' '}
             {email && <span className="font-medium">{email}</span>}
             {!email && 'your email address'}
@@ -157,10 +157,10 @@ function VerifyEmailForm() {
           {status === 'success' ? (
             <div className="text-center">
               <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-500" />
-              <h3 className="mb-2 text-lg font-semibold text-green-700">
+              <h3 className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">
                 Email Verified!
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {message}
               </p>
             </div>
@@ -191,19 +191,19 @@ function VerifyEmailForm() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white" 
+                className="w-full bg-foreground hover:bg-foreground/80 text-background" 
                 disabled={status === 'loading' || code.length !== 6}
               >
                 {status === 'loading' ? 'Verifying...' : 'Verify Email'}
               </Button>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Didn&apos;t receive the code?{' '}
                   <button
                     type="button"
                     onClick={handleResendCode}
-                    className="text-blue-600 hover:text-blue-500 hover:underline"
+                    className="text-primary hover:text-primary/80 hover:underline"
                     disabled={status === 'loading'}
                   >
                     Resend code
@@ -214,7 +214,7 @@ function VerifyEmailForm() {
               <div className="text-center">
                 <Link
                   href="/auth/signin"
-                  className="text-sm text-gray-600 hover:text-gray-500 hover:underline"
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Back to sign in
                 </Link>

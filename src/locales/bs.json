@@ -1,0 +1,63 @@
+{
+  "messaging": {
+    "title": "Poruke",
+    "newMessage": "Nova poruka",
+    "send": "Pošalji",
+    "search": "Pretraži",
+    "edit": "Uredi",
+    "delete": "Obriši",
+    "reply": "Odgovori",
+    "typing": "Kuca...",
+    "placeholder": "Kucaj poruku...",
+    "file": "Datoteka",
+    "image": "Slika",
+    "upload": "Učitaj",
+    "download": "Preuzmi",
+    "clear": "Očisti",
+    "cancel": "Otkaži",
+    "confirm": "Potvrdi",
+    "loading": "Učitavanje...",
+    "noMessages": "Nema poruka",
+    "startConversation": "Započni razgovor",
+    "status": {
+      "sent": "Poslano",
+      "delivered": "Dostavljeno",
+      "read": "Pročitano",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "conversation": {
+      "archive": "Arhiviraj",
+      "block": "Blokiraj",
+      "report": "Prijavi",
+      "jobApplication": "Prijava za posao",
+      "participants": "Učesnici",
+      "addParticipant": "Dodaj učesnika",
+      "removeParticipant": "Ukloni učesnika",
+      "leaveConversation": "Napusti razgovor"
+    },
+    "time": {
+      "justNow": "upravo sada",
+      "minuteAgo": "prije {count} minut",
+      "minutesAgo": "prije {count} minuta",
+      "hourAgo": "prije {count} sat",
+      "hoursAgo": "prije {count} sati",
+      "dayAgo": "juče",
+      "daysAgo": "prije {count} dana",
+      "weekAgo": "prošle sedmice",
+      "weeksAgo": "prije {count} sedmica",
+      "monthAgo": "prošlog mjeseca",
+      "monthsAgo": "prije {count} mjeseci",
+      "yearAgo": "prošle godine",
+      "yearsAgo": "prije {count} godina"
+    },
+    "errors": {
+      "uploadFailed": "Učitavanje datoteke neuspješno",
+      "connectionLost": "Veza izgubljena",
+      "messageNotSent": "Poruka nije poslana",
+      "fileTooLarge": "Datoteka je prevelika",
+      "invalidFileType": "Neispravna vrsta datoteke",
+      "networkError": "Greška mreže"
+    }
+  }
+}

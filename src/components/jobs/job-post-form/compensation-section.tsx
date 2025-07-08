@@ -44,7 +44,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
         
         {/* Smart payment calculator hint */}
         {formData.duration && (
-          <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-start gap-2">
               <Lightbulb className="h-4 w-4 mt-0.5 text-blue-600" />
               <div>
@@ -116,13 +116,13 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
 
       {/* Payment calculation display */}
       {formData.salaryType && formData.salaryMin && formData.duration && (
-        <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg">
+        <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
           <h4 className="text-sm font-medium text-green-800 mb-3 flex items-center gap-1">
             <DollarSign className="h-5 w-5" />
             Smart Payment Calculation
           </h4>
           <div className="space-y-2">
-            <div className="text-sm text-green-700 whitespace-pre-line font-mono bg-white/60 p-3 rounded border">
+            <div className="text-sm text-green-700 whitespace-pre-line font-mono bg-card/60 p-3 rounded border">
               {calculateTotalPayment(formData.salaryType, formData.salaryMin, formData.salaryMax, formData.duration)}
             </div>
             {formData.salaryType !== 'fixed' && (

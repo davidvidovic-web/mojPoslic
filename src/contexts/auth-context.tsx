@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, ReactNode, useEffect, useState, useRef, useMemo } from 'react'
+import React, { createContext, useContext, ReactNode, useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useSession, signOut as nextAuthSignOut } from 'next-auth/react'
 
 type UserRole = 'admin' | 'client' | 'tasker' | 'company'
@@ -64,7 +64,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   
   // Fetch fresh user data from database with debouncing
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/user/profile`)
@@ -96,7 +96,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // Fetch user data when session changes with debouncing
   useEffect(() => {
@@ -124,17 +124,17 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
         clearTimeout(fetchTimeout.current)
       }
     }
-  }, [session?.user?.id])
+  }, [session?.user?.id, fetchUserData])
 
   // Refresh user data manually
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     if (session?.user?.id && !loading) {
       await fetchUserData()
     }
-  }
+  }, [session?.user?.id, loading, fetchUserData])
 
   // Custom sign out function that clears local state
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     // Clear local state immediately
     setDbUser(null)
     
@@ -146,7 +146,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     
     // Force page reload to clear any cached state
     window.location.href = "/"
-  }
+  }, [])
   
   // Convert Auth.js session to our app's user format, with database fallback
   const user: AuthUser | null = useMemo(() => {
@@ -208,17 +208,17 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     dbUser?.createdAt
   ])
 
-  const hasRole = (role: UserRole): boolean => {
+  const hasRole = useCallback((role: UserRole): boolean => {
     if (!user) return false
     return user.role === role
-  }
+  }, [user])
 
   const isAdmin = user?.role === 'admin'
   const isClient = user?.role === 'client' || user?.role === 'company'
   const isTasker = user?.role === 'tasker'
   const isCompany = user?.role === 'company'
 
-  const contextValue: AuthContextType = {
+  const contextValue: AuthContextType = useMemo(() => ({
     user,
     loading: status === 'loading' || (!!session?.user && !dataFetched),
     hasRole,
@@ -228,7 +228,19 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     isCompany,
     refreshUser,
     signOut,
-  }
+  }), [
+    user,
+    status,
+    session?.user,
+    dataFetched,
+    hasRole,
+    isAdmin,
+    isClient,
+    isTasker,
+    isCompany,
+    refreshUser,
+    signOut
+  ])
 
   return (
     <AuthContext.Provider value={contextValue}>

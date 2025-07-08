@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/ui/pagination'
 import { Shield, Users } from 'lucide-react'
 import { toast } from 'sonner'
-import { ConnectionGrantHistory } from './connection-grant-history'
+import ConnectionGrantHistory from './connection-grant-history'
 
 interface AdminCategory {
   id: string
@@ -387,3 +387,6 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
     </div>
   )
 }
+
+// Add default export
+export default SystemManagementTab

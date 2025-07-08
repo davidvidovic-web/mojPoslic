@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Search, Users, MessageSquare, BarChart3, Settings } from 'lucide-react'
+import { Plus, Search, Users, MessageSquare, BarChart3, Settings, Lock } from 'lucide-react'
+import Link from 'next/link'
 
 interface ClientQuickActionsProps {
   onPostNewJob: () => void
@@ -33,21 +34,26 @@ export function ClientQuickActions({ onPostNewJob }: ClientQuickActionsProps) {
           Manage Applications
         </Button>
         
-        <Button variant="outline" className="w-full justify-start" size="lg">
-          <MessageSquare className="h-4 w-4 mr-2" />
-          Message Center
-        </Button>
+        <Link href="/dashboard/messages">
+          <Button variant="outline" className="w-full justify-start" size="lg">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Message Center
+          </Button>
+        </Link>
         
         <div className="pt-3 border-t">
-          <Button variant="ghost" className="w-full justify-start" size="sm">
+          <Button variant="ghost" className="w-full justify-start opacity-50 cursor-not-allowed" size="sm" disabled>
             <BarChart3 className="h-4 w-4 mr-2" />
             View Analytics
+            <Lock className="h-4 w-4 ml-auto" />
           </Button>
           
-          <Button variant="ghost" className="w-full justify-start" size="sm">
-            <Settings className="h-4 w-4 mr-2" />
-            Account Settings
-          </Button>
+          <Link href="/settings">
+            <Button variant="ghost" className="w-full justify-start" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Account Settings
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

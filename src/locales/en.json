@@ -1,0 +1,63 @@
+{
+  "messaging": {
+    "title": "Messages",
+    "newMessage": "New Message",
+    "send": "Send",
+    "search": "Search",
+    "edit": "Edit",
+    "delete": "Delete",
+    "reply": "Reply",
+    "typing": "Typing...",
+    "placeholder": "Type a message...",
+    "file": "File",
+    "image": "Image",
+    "upload": "Upload",
+    "download": "Download",
+    "clear": "Clear",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "noMessages": "No messages",
+    "startConversation": "Start conversation",
+    "status": {
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "conversation": {
+      "archive": "Archive",
+      "block": "Block",
+      "report": "Report",
+      "jobApplication": "Job Application",
+      "participants": "Participants",
+      "addParticipant": "Add participant",
+      "removeParticipant": "Remove participant",
+      "leaveConversation": "Leave conversation"
+    },
+    "time": {
+      "justNow": "just now",
+      "minuteAgo": "{count} minute ago",
+      "minutesAgo": "{count} minutes ago",
+      "hourAgo": "{count} hour ago",
+      "hoursAgo": "{count} hours ago",
+      "dayAgo": "yesterday",
+      "daysAgo": "{count} days ago",
+      "weekAgo": "last week",
+      "weeksAgo": "{count} weeks ago",
+      "monthAgo": "last month",
+      "monthsAgo": "{count} months ago",
+      "yearAgo": "last year",
+      "yearsAgo": "{count} years ago"
+    },
+    "errors": {
+      "uploadFailed": "File upload failed",
+      "connectionLost": "Connection lost",
+      "messageNotSent": "Message not sent",
+      "fileTooLarge": "File too large",
+      "invalidFileType": "Invalid file type",
+      "networkError": "Network error"
+    }
+  }
+}

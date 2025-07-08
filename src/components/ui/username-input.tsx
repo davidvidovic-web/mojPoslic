@@ -121,7 +121,7 @@ export function UsernameInput({
             {isChecking ? (
               <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : isAvailable === true ? (
-              <Check className="h-4 w-4 text-blue-500" />
+              <Check className="h-4 w-4 text-green-600" />
             ) : isAvailable === false ? (
               <X className="h-4 w-4 text-destructive" />
             ) : null}
@@ -135,7 +135,7 @@ export function UsernameInput({
 
         {/* Success message */}
         {isAvailable === true && (
-          <p className="text-sm text-blue-600 mt-1">Username is available!</p>
+          <p className="text-sm text-green-600 mt-1">Username is available!</p>
         )}
       </div>
 

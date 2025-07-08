@@ -15,120 +15,39 @@ import {
   Star,
   Car
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
-
-interface AdminJob {
-  id: string
-  title: string
-  company: string
-  description: string
-  type: string
-  salary?: string
-  transportation?: string
-  transportation_amount?: number
-  email: string
-  website?: string
-  isActive: boolean
-  isFeatured: boolean
-  createdAt: string
-  updatedAt: string
-  city?: {
-    id: string
-    name: string
-    name_en: string
-    name_bs: string
-  }
-  category?: {
-    id: string
-    name: string
-    name_en: string
-    name_bs: string
-  }
-  postedBy: {
-    id: string
-    name: string
-    email: string
-    companyName?: string
-  }
-}
+import { 
+  useDeleteAdminJob, 
+  useUpdateJobStatus, 
+  useUpdateJobFeatured,
+  type AdminJob 
+} from '@/hooks/use-admin'
 
 interface JobManagementTabProps {
   jobs: AdminJob[]
-  setJobs: React.Dispatch<React.SetStateAction<AdminJob[]>>
 }
 
-export function JobManagementTab({ jobs, setJobs }: JobManagementTabProps) {
+export function JobManagementTab({ jobs }: JobManagementTabProps) {
   const [jobSearchTerm, setJobSearchTerm] = useState('')
   const [jobPage, setJobPage] = useState(1)
   const itemsPerPage = 10
 
+  // TanStack Query mutations
+  const deleteJobMutation = useDeleteAdminJob()
+  const updateStatusMutation = useUpdateJobStatus()
+  const updateFeaturedMutation = useUpdateJobFeatured()
+
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return
-
-    try {
-      const response = await fetch('/api/admin/jobs', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ jobId }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete job')
-      }
-
-      setJobs(jobs.filter(job => job.id !== jobId))
-      toast.success('Job deleted successfully')
-    } catch (error) {
-      console.error('Error deleting job:', error)
-      toast.error('Failed to delete job')
-    }
+    deleteJobMutation.mutate(jobId)
   }
 
   const handleToggleJobStatus = async (jobId: string, isActive: boolean) => {
-    try {
-      const response = await fetch('/api/admin/jobs', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ jobId, isActive }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update job status')
-      }
-
-      setJobs(jobs.map(job => job.id === jobId ? { ...job, isActive } : job))
-      toast.success(`Job ${isActive ? 'activated' : 'deactivated'} successfully`)
-    } catch (error) {
-      console.error('Error updating job status:', error)
-      toast.error('Failed to update job status')
-    }
+    updateStatusMutation.mutate({ jobId, isActive })
   }
 
-  const handleToggleJobFeatured = async (jobId: string, isFeatured: boolean) => {
-    try {
-      const response = await fetch('/api/admin/jobs', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ jobId, isFeatured }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update featured status')
-      }
-
-      setJobs(jobs.map(job => job.id === jobId ? { ...job, isFeatured } : job))
-      toast.success(`Job ${isFeatured ? 'featured' : 'unfeatured'} successfully`)
-    } catch (error) {
-      console.error('Error updating featured status:', error)
-      toast.error('Failed to update featured status')
-    }
+  const handleToggleFeatured = async (jobId: string, isFeatured: boolean) => {
+    updateFeaturedMutation.mutate({ jobId, isFeatured })
   }
 
   const filteredJobs = jobs.filter(job =>
@@ -148,7 +67,7 @@ export function JobManagementTab({ jobs, setJobs }: JobManagementTabProps) {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-none">
       <CardHeader>
         <div className="space-y-4">
           <CardTitle className="flex items-center">
@@ -182,78 +101,111 @@ export function JobManagementTab({ jobs, setJobs }: JobManagementTabProps) {
                     {job.transportation && (
                       <Badge variant="outline" className="text-xs flex items-center gap-1">
                         <Car className="h-3 w-3" />
-                        {formatTransportation(job.transportation, job.transportation_amount)}
+                        {formatTransportation(job.transportation)}
                       </Badge>
                     )}
-                    <Badge variant={job.isActive ? "default" : "secondary"} className="text-xs">
-                      {job.isActive ? "Active" : "Inactive"}
+                    <Badge variant={job.isActive ? 'default' : 'secondary'} className="text-xs">
+                      {job.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                     {job.isFeatured && (
-                      <Badge variant="outline" className="text-xs">Featured</Badge>
+                      <Badge variant="destructive" className="text-xs flex items-center gap-1">
+                        <Star className="h-3 w-3" />
+                        Featured
+                      </Badge>
                     )}
                   </div>
                 </div>
-                
+
                 {/* Company and location */}
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">{job.company}</p>
-                  <p className="text-sm text-muted-foreground">{job.city?.name || 'Remote'}</p>
-                </div>
-                
-                {/* Meta info */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-muted-foreground">
-                  <span>Posted {formatDate(job.createdAt)}</span>
-                  {job.postedBy && (
-                    <span className="sm:before:content-['•'] sm:before:mx-2">by {job.postedBy.name}</span>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p><span className="font-medium">Company:</span> {job.company}</p>
+                  {job.city && (
+                    <p><span className="font-medium">Location:</span> {job.city.name}</p>
+                  )}
+                  {job.category && (
+                    <p><span className="font-medium">Category:</span> {job.category.name}</p>
+                  )}
+                  {job.salary && (
+                    <p><span className="font-medium">Salary:</span> {job.salary}</p>
                   )}
                 </div>
-                
+
+                {/* Posted by info */}
+                <div className="text-sm text-muted-foreground">
+                  <p><span className="font-medium">Posted by:</span> {job.postedBy.name} ({job.postedBy.email})</p>
+                  <p><span className="font-medium">Created:</span> {formatDate(job.createdAt)}</p>
+                </div>
+
                 {/* Action buttons */}
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
+                <div className="flex flex-wrap gap-2 pt-2 border-t">
                   <Button
-                    variant={job.isActive ? "default" : "outline"}
+                    variant={job.isActive ? 'outline' : 'default'}
                     size="sm"
                     onClick={() => handleToggleJobStatus(job.id, !job.isActive)}
-                    className="flex items-center gap-2"
+                    disabled={updateStatusMutation.isPending}
+                    className="text-xs"
                   >
-                    {job.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    <span className="hidden sm:inline">
-                      {job.isActive ? "Hide" : "Show"}
-                    </span>
+                    {job.isActive ? (
+                      <>
+                        <EyeOff className="h-3 w-3 mr-1" />
+                        Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-3 w-3 mr-1" />
+                        Activate
+                      </>
+                    )}
                   </Button>
+                  
                   <Button
-                    variant={job.isFeatured ? "default" : "outline"}
+                    variant={job.isFeatured ? 'outline' : 'default'}
                     size="sm"
-                    onClick={() => handleToggleJobFeatured(job.id, !job.isFeatured)}
-                    className="flex items-center gap-2"
+                    onClick={() => handleToggleFeatured(job.id, !job.isFeatured)}
+                    disabled={updateFeaturedMutation.isPending}
+                    className="text-xs"
                   >
-                    <Star className="h-4 w-4" />
-                    <span className="hidden sm:inline">
-                      {job.isFeatured ? "Unfeature" : "Feature"}
-                    </span>
+                    <Star className="h-3 w-3 mr-1" />
+                    {job.isFeatured ? 'Unfeature' : 'Feature'}
                   </Button>
+                  
                   <Button
-                    variant="outline"
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteJob(job.id)}
-                    className="flex items-center gap-2"
+                    disabled={deleteJobMutation.isPending}
+                    className="text-xs"
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="hidden sm:inline">Delete</span>
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
                   </Button>
                 </div>
               </div>
             </div>
           ))}
+
+          {filteredJobs.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No jobs found matching your search.</p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalJobPages > 1 && (
+            <div className="flex justify-center pt-4">
+              <Pagination
+                currentPage={jobPage}
+                totalPages={totalJobPages}
+                onPageChange={setJobPage}
+              />
+            </div>
+          )}
         </div>
-        
-        <Pagination
-          currentPage={jobPage}
-          totalPages={totalJobPages}
-          onPageChange={setJobPage}
-          className="mt-6"
-        />
       </CardContent>
     </Card>
   )
 }
+
+// Adding a default export that re-exports the named export
+export default JobManagementTab

@@ -2,17 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Users, MessageSquare, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
+import { Users, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { Job } from '@/types/job'
+import { MessageUserButton } from '@/components/messaging/examples'
 
 interface JobApplication {
   id: string
   applicant_name: string
   applicant_email: string
+  applicant_id?: string // Add user ID for messaging
   applied_at: string
   status: 'pending' | 'reviewed' | 'accepted' | 'rejected'
   message?: string
@@ -70,15 +71,15 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
       case 'reviewed':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
       case 'accepted':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
       case 'rejected':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-muted-foreground'
     }
   }
 
@@ -92,8 +93,11 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading applications...</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -151,10 +155,12 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                         {getStatusIcon(application.status)}
                         <span className="ml-1 capitalize">{application.status}</span>
                       </Badge>
-                      <Button size="sm" variant="outline">
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        Message
-                      </Button>
+                      <MessageUserButton 
+                        userId={application.applicant_id || application.applicant_email} 
+                        userName={application.applicant_name}
+                        size="sm"
+                        variant="outline"
+                      />
                     </div>
                   </div>
                 ))}
@@ -193,10 +199,12 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                         {getStatusIcon(application.status)}
                         <span className="ml-1 capitalize">{application.status}</span>
                       </Badge>
-                      <Button size="sm" variant="outline">
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        Message
-                      </Button>
+                      <MessageUserButton 
+                        userId={application.applicant_id || application.applicant_email} 
+                        userName={application.applicant_name}
+                        size="sm"
+                        variant="outline"
+                      />
                     </div>
                   </div>
                 ))}

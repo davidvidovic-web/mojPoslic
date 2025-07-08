@@ -11,7 +11,8 @@ import {
   Briefcase, 
   ArrowRight, 
   CheckCircle,
-  Target
+  Target,
+  Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
@@ -76,6 +77,10 @@ export default function RoleSelectionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleRoleSelect = (roleId: 'tasker' | 'client' | 'company') => {
+    // Disable company role selection for now
+    if (roleId === 'company') {
+      return
+    }
     setSelectedRole(roleId)
   }
 
@@ -119,7 +124,7 @@ export default function RoleSelectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -128,7 +133,7 @@ export default function RoleSelectionPage() {
               <Target className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Choose Your Role
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -138,57 +143,74 @@ export default function RoleSelectionPage() {
 
         {/* Role Selection Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {roleOptions.map((role) => (
-            <Card
-              key={role.id}
-              className={`relative cursor-pointer transition-all duration-200 hover:scale-105 ${
-                selectedRole === role.id
-                  ? 'ring-2 ring-primary shadow-lg bg-primary/5'
-                  : 'hover:shadow-md'
-              }`}
-              onClick={() => handleRoleSelect(role.id)}
-            >
-              {role.badge && (
-                <Badge 
-                  className="absolute -top-2 left-4 bg-primary text-primary-foreground"
-                  variant="default"
-                >
-                  {role.badge}
-                </Badge>
-              )}
-              
-              {selectedRole === role.id && (
-                <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
-                  <CheckCircle className="h-4 w-4 text-primary-foreground" />
-                </div>
-              )}
-
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-3">
-                  <div className={`p-3 rounded-full ${
-                    selectedRole === role.id ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                  }`}>
-                    {role.icon}
+          {roleOptions.map((role) => {
+            const isCompanyDisabled = role.id === 'company'
+            return (
+              <Card
+                key={role.id}
+                className={`relative transition-all duration-200 border ${
+                  isCompanyDisabled
+                    ? 'opacity-60 cursor-not-allowed border-border'
+                    : selectedRole === role.id
+                    ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer hover:scale-105'
+                    : 'hover:shadow-md border-border cursor-pointer hover:scale-105'
+                }`}
+                onClick={() => handleRoleSelect(role.id)}
+              >
+                {/* Lock Overlay for Company */}
+                {isCompanyDisabled && (
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+                    <div className="text-center">
+                      <Lock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm font-medium text-muted-foreground">Coming Soon</p>
+                    </div>
                   </div>
-                </div>
-                <CardTitle className="text-xl">{role.title}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {role.description}
-                </p>
-              </CardHeader>
+                )}
 
-              <CardContent>
-                <ul className="space-y-2">
-                  {role.features.map((feature, index) => (
-                    <li key={index} className="flex items-center text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
+                {role.badge && !isCompanyDisabled && (
+                  <Badge 
+                    className="absolute -top-2 left-4 bg-primary text-primary-foreground"
+                    variant="default"
+                  >
+                    {role.badge}
+                  </Badge>
+                )}
+                
+                {selectedRole === role.id && !isCompanyDisabled && (
+                  <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
+                    <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+
+                <CardHeader className="text-center pb-4">
+                  <div className="flex justify-center mb-3">
+                    <div className={`p-3 rounded-full transition-colors ${
+                      selectedRole === role.id && !isCompanyDisabled 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {role.icon}
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl">{role.title}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {role.description}
+                  </p>
+                </CardHeader>
+
+                <CardContent>
+                  <ul className="space-y-2">
+                    {role.features.map((feature, index) => (
+                      <li key={index} className="flex items-center text-sm text-foreground">
+                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
 
         {/* Continue Button */}
@@ -197,11 +219,11 @@ export default function RoleSelectionPage() {
             onClick={handleContinue}
             disabled={!selectedRole || isSubmitting}
             size="lg"
-            className="px-8 py-3 text-lg font-medium"
+            className="px-8 py-3 text-lg font-medium bg-foreground hover:bg-foreground/90 text-background"
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background mr-2"></div>
                 Setting up your account...
               </>
             ) : (

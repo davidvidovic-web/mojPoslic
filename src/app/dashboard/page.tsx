@@ -89,7 +89,7 @@ function DashboardContent() {
             <p className="text-muted-foreground">
               You need to be signed in to access the dashboard.
             </p>
-            <Button onClick={() => router.push('/login')} className="w-full">
+            <Button onClick={() => router.push('/auth/signin')} className="w-full">
               <LogIn className="h-4 w-4 mr-2" />
               Sign In
             </Button>

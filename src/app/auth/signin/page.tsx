@@ -106,7 +106,7 @@ export default function SignInPage() {
 
             <Button 
               type="submit" 
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200" 
+              className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold border-0 transition-all duration-200" 
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign In"}

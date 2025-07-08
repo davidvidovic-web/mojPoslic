@@ -107,3 +107,16 @@ export interface CreateJobData {
   application_url?: string
   tags?: string[] // Keep for backward compatibility but deprecated
 }
+
+// Job filtering interface for TanStack Query
+export interface JobFilters {
+  search?: string
+  city?: string
+  category?: string
+  subcategory?: string
+  type?: 'quick_job' | 'full_time' | 'part_time' | 'remote' | 'all'
+  salaryMin?: number
+  salaryMax?: number
+  isActive?: boolean
+  isFeatured?: boolean
+}

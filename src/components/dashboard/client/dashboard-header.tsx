@@ -27,7 +27,7 @@ export function DashboardHeader({ userName, isDialogOpen, setIsDialogOpen, onJob
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200">
+            <Button className="bg-foreground hover:bg-foreground/90 text-background font-bold border-0 transition-all duration-200">
               <Plus className="h-4 w-4 mr-2" />
               Post New Job
             </Button>

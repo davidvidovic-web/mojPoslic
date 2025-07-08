@@ -200,14 +200,14 @@ export function ChangePasswordForm() {
                 {passwordsMatch ? (
                   <>
                     <div className="h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center">
-                      <div className="h-2 w-2 bg-white rounded-full" />
+                      <div className="h-2 w-2 bg-background rounded-full" />
                     </div>
                     <span className="text-blue-600">Passwords match</span>
                   </>
                 ) : (
                   <>
                     <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center">
-                      <div className="h-1 w-2 bg-white rounded-full" />
+                      <div className="h-1 w-2 bg-background rounded-full" />
                     </div>
                     <span className="text-red-600">Passwords do not match</span>
                   </>

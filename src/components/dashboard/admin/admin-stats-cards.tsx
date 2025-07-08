@@ -9,38 +9,53 @@ import {
   Building2,
   User
 } from 'lucide-react'
-
-interface AdminStats {
-  users: {
-    total: number
-    admin: number
-    client: number
-    tasker: number
-    company: number
-  }
-  jobs: {
-    total: number
-    active: number
-    featured: number
-  }
-  growth: {
-    percentage: number
-    recentUsers: number
-    previousUsers: number
-  }
-}
+import { type AdminStats } from '@/hooks/use-admin'
 
 interface AdminStatsCardsProps {
   stats: AdminStats | null
+  isLoading?: boolean
 }
 
-export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
+export function AdminStatsCards({ stats, isLoading = false }: AdminStatsCardsProps) {
+  // Handle loading state or missing data
+  if (isLoading || !stats) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 mb-8 opacity-60">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium bg-muted h-4 w-24 rounded"></CardTitle>
+              <div className="h-8 w-8 rounded-full bg-muted"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold bg-muted h-8 w-16 rounded mb-1"></div>
+              <p className="text-xs text-muted-foreground bg-muted h-3 w-20 rounded"></p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  // Map the stats from the API format to the display format
   const userStats = {
-    total: stats?.users.total || 0,
-    admins: stats?.users.admin || 0,
-    clients: stats?.users.client || 0,
-    taskers: stats?.users.tasker || 0,
-    companies: stats?.users.company || 0,
+    total: stats.totalUsers || 0,
+    admins: 0, // These detailed stats aren't in our current API
+    clients: 0,
+    taskers: 0,
+    companies: 0,
+  }
+  
+  const jobStats = {
+    total: stats.totalJobs || 0,
+    active: stats.totalActiveJobs || 0,
+    featured: stats.totalFeaturedJobs || 0,
+  }
+  
+  const growthStats = {
+    percentage: 0, // Calculate this if needed
+    recentUsers: stats.monthlySignups || 0,
+    previousUsers: 0,
   }
 
   return (
@@ -95,7 +110,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats?.jobs.total || 0}</div>
+          <div className="text-2xl font-bold">{jobStats.total}</div>
           <p className="text-xs text-muted-foreground">Job postings</p>
         </CardContent>
       </Card>
@@ -107,8 +122,8 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {stats?.growth.percentage !== undefined 
-              ? `${stats.growth.percentage > 0 ? '+' : ''}${stats.growth.percentage}%` 
+            {growthStats.percentage !== undefined 
+              ? `${growthStats.percentage > 0 ? '+' : ''}${growthStats.percentage}%` 
               : '0%'}
           </div>
           <p className="text-xs text-muted-foreground">This month</p>
@@ -117,3 +132,6 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
     </div>
   )
 }
+
+// Add default export
+export default AdminStatsCards

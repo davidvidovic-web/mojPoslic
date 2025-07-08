@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { useCallback } from 'react'
 
 interface JobFormBaseProps {
   initialData?: Partial<CreateJobData>
@@ -113,11 +114,11 @@ export function JobFormBase({
     }
   }
 
-  const handleFormDataUpdate = (updates: Partial<CreateJobData>) => {
+  const handleFormDataUpdate = useCallback((updates: Partial<CreateJobData>) => {
     Object.entries(updates).forEach(([key, value]) => {
       updateFormData(key as keyof CreateJobData, value)
     })
-  }
+  }, [updateFormData])
 
   const renderCurrentStep = () => {
     switch (currentStep) {

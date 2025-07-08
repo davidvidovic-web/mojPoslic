@@ -3,6 +3,23 @@
  */
 export function formatConnectionAction(action: string): string {
   switch (action) {
+    case 'MONTHLY_REFRESH':
+      return 'Monthly Refresh'
+    case 'INITIAL_SIGNUP':
+      return 'Initial Signup'
+    case 'JOB_APPLICATION':
+      return 'Job Application'
+    case 'JOB_POST_CLIENT':
+      return 'Job Post (Client)'
+    case 'JOB_POST_COMPANY':
+      return 'Job Post (Company)'
+    case 'JOB_POST_FREE':
+      return 'Job Post (Free)'
+    case 'ADMIN_ADJUSTMENT':
+      return 'Admin Adjustment'
+    case 'PURCHASE':
+      return 'Purchased'
+    // Legacy values for backwards compatibility
     case 'purchase':
       return 'Purchased'
     case 'used':
@@ -14,7 +31,7 @@ export function formatConnectionAction(action: string): string {
     case 'monthly_refresh':
       return 'Monthly Refresh'
     default:
-      return action
+      return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
   }
 }
 

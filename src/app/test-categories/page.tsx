@@ -97,7 +97,7 @@ export default function TestCategoriesPage() {
           </div>
         )}
 
-        <div className="mt-6 p-4 bg-gray-100 rounded">
+        <div className="mt-6 p-4 bg-muted rounded">
           <h3 className="font-medium mb-2">Debug Info:</h3>
           <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
           <p>Categories count: {categories.length}</p>

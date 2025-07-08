@@ -205,7 +205,7 @@ export function getPasswordStrengthColor(level: PasswordStrength['level']): stri
     case 'fair': return 'text-yellow-500'
     case 'good': return 'text-blue-500'
     case 'strong': return 'text-blue-500'
-    default: return 'text-gray-500'
+    default: return 'text-muted-foreground'
   }
 }
 
@@ -216,7 +216,7 @@ export function getPasswordStrengthBgColor(level: PasswordStrength['level']): st
     case 'fair': return 'bg-yellow-500'
     case 'good': return 'bg-blue-500'
     case 'strong': return 'bg-blue-500'
-    default: return 'bg-gray-500'
+    default: return 'bg-muted'
   }
 }
 

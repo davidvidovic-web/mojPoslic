@@ -55,7 +55,8 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
         onChange(updates)
       }
     }
-  }, [canPostAllJobTypes, formData.requirements, formData.benefits, formData.type, onChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canPostAllJobTypes, formData.requirements, formData.benefits, formData.type])
 
   // Load categories
   useEffect(() => {

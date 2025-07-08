@@ -12,7 +12,7 @@ export async function GET() {
     const session = await auth()
     
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized', details: 'No session or email found' }, { status: 401 })
     }
 
     // Get user ID
@@ -22,7 +22,7 @@ export async function GET() {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: 'User not found', email: session.user.email }, { status: 404 })
     }
 
     // Get connection history using raw SQL to avoid TypeScript issues
@@ -65,7 +65,20 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching connection history:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+    // Provide more specific error information
+    if (error instanceof Error) {
+      return NextResponse.json({ 
+        error: 'Internal server error', 
+        details: error.message,
+        type: error.constructor.name
+      }, { status: 500 })
+    }
+    
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: 'Unknown error occurred' 
+    }, { status: 500 })
   } finally {
     await prisma.$disconnect()
   }

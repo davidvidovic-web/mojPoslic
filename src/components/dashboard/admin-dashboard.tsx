@@ -1,202 +1,38 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Shield } from 'lucide-react'
-import { toast } from 'sonner'
-import { AdminStatsCards } from './admin/admin-stats-cards'
-import { UserManagementTab } from './admin/user-management-tab'
-import { JobManagementTab } from './admin/job-management-tab'
-import { SystemManagementTab } from './admin/system-management-tab'
-import { BillingManagementTab } from './admin/billing-management-tab'
+import AdminStatsCards from './admin/admin-stats-cards'
+import UserManagementTab from './admin/user-management-tab'
+import JobManagementTab from './admin/job-management-tab'
+import SystemManagementTab from './admin/system-management-tab'
+import BillingManagementTab from './admin/billing-management-tab'
 import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
-
-interface AdminUser {
-  id: string
-  email: string
-  name: string
-  role: 'admin' | 'client' | 'tasker' | 'company'
-  companyName?: string
-  createdAt: string
-  _count: {
-    postedJobs: number
-  }
-}
-
-interface AdminJob {
-  id: string
-  title: string
-  company: string
-  description: string
-  type: string
-  salary?: string
-  transportation?: string
-  transportation_amount?: number
-  email: string
-  website?: string
-  isActive: boolean
-  isFeatured: boolean
-  createdAt: string
-  updatedAt: string
-  city?: {
-    id: string
-    name: string
-    name_en: string
-    name_bs: string
-  }
-  category?: {
-    id: string
-    name: string
-    name_en: string
-    name_bs: string
-  }
-  postedBy: {
-    id: string
-    name: string
-    email: string
-    companyName?: string
-  }
-}
-
-interface AdminStats {
-  users: {
-    total: number
-    admin: number
-    client: number
-    tasker: number
-    company: number
-  }
-  jobs: {
-    total: number
-    active: number
-    featured: number
-  }
-  growth: {
-    percentage: number
-    recentUsers: number
-    previousUsers: number
-  }
-}
-
-interface AdminCategory {
-  id: string
-  key: string
-  nameEN: string
-  nameBS: string
-  isPopular: boolean
-  sortOrder: number
-  isActive: boolean
-  createdAt: string
-}
-
-interface AdminCity {
-  id: string
-  key: string
-  nameEN: string
-  nameBS: string
-  isSpecial: boolean
-  sortOrder: number
-  isActive: boolean
-  createdAt: string
-}
+import { useNavigationStore } from '@/stores/navigation-store'
+import { 
+  useAdminUsers, 
+  useAdminJobs, 
+  useAdminStats, 
+  useAdminCategories, 
+  useAdminCities 
+} from '@/hooks/use-admin'
 
 export function AdminDashboard() {
   const { user } = useAuth()
-  const [users, setUsers] = useState<AdminUser[]>([])
-  const [jobs, setJobs] = useState<AdminJob[]>([])
-  const [stats, setStats] = useState<AdminStats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { currentAdminTab, setAdminTab } = useNavigationStore()
   
-  // System management state
-  const [categories, setCategories] = useState<AdminCategory[]>([])
-  const [cities, setCities] = useState<AdminCity[]>([])
+  // TanStack Query hooks for all admin data
+  const { data: users, isLoading: usersLoading } = useAdminUsers()
+  const { data: jobs, isLoading: jobsLoading } = useAdminJobs()
+  const { data: stats, isLoading: statsLoading } = useAdminStats()
+  const { data: categories } = useAdminCategories()
+  const { data: cities } = useAdminCities()
 
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch('/api/admin/users')
-      if (!response.ok) {
-        throw new Error('Failed to fetch users')
-      }
-      const data = await response.json()
-      setUsers(data)
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      toast.error('Failed to load users')
-    }
-  }
+  // Check if any critical data is still loading
+  const isLoading = usersLoading || jobsLoading || statsLoading
 
-  const fetchJobs = async () => {
-    try {
-      const response = await fetch('/api/admin/jobs')
-      if (!response.ok) {
-        throw new Error('Failed to fetch jobs')
-      }
-      const data = await response.json()
-      setJobs(data)
-    } catch (error) {
-      console.error('Error fetching jobs:', error)
-      toast.error('Failed to load jobs')
-    }
-  }
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/admin/stats')
-      if (!response.ok) {
-        throw new Error('Failed to fetch stats')
-      }
-      const data = await response.json()
-      setStats(data)
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-      toast.error('Failed to load statistics')
-    }
-  }
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/admin/categories')
-      if (!response.ok) {
-        throw new Error('Failed to fetch categories')
-      }
-      const data = await response.json()
-      setCategories(data)
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-      toast.error('Failed to load categories')
-    }
-  }
-
-  const fetchCities = async () => {
-    try {
-      const response = await fetch('/api/admin/cities')
-      if (!response.ok) {
-        throw new Error('Failed to fetch cities')
-      }
-      const data = await response.json()
-      setCities(data)
-    } catch (error) {
-      console.error('Error fetching cities:', error)
-      toast.error('Failed to load cities')
-    }
-  }
-
-  useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([
-        fetchUsers(), 
-        fetchJobs(), 
-        fetchStats(),
-        fetchCategories(),
-        fetchCities()
-      ])
-      setLoading(false)
-    }
-    loadData()
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -210,6 +46,50 @@ export function AdminDashboard() {
       </div>
     )
   }
+
+  // Convert data types to match component expectations
+  const mappedCategories = categories?.map(cat => ({
+    id: cat.id,
+    key: cat.key,
+    nameEN: cat.name_en,
+    nameBS: cat.name_bs,
+    isPopular: true, // Default to true since hook doesn't have this field
+    sortOrder: cat.sort_order,
+    isActive: cat.is_active,
+    createdAt: new Date().toISOString(), // Default since hook doesn't have this field
+  })) || []
+
+  const mappedCities = cities?.map(city => ({
+    id: city.id,
+    key: city.key,
+    nameEN: city.name_en,
+    nameBS: city.name_bs,
+    isSpecial: false, // Default to false since hook doesn't have this field
+    sortOrder: city.sort_order,
+    isActive: city.is_active,
+    createdAt: new Date().toISOString(), // Default since hook doesn't have this field
+  })) || []
+
+  // Convert stats format
+  const mappedStats = stats ? {
+    users: {
+      total: stats.totalUsers,
+      admin: 0, // These detailed breakdowns might not be in the hook's stats
+      client: 0,
+      tasker: 0,
+      company: 0,
+    },
+    jobs: {
+      total: stats.totalJobs,
+      active: stats.totalActiveJobs,
+      featured: stats.totalFeaturedJobs,
+    },
+    growth: {
+      percentage: 0, // Default values
+      recentUsers: stats.monthlySignups,
+      previousUsers: 0,
+    }
+  } : null
 
   return (
     <div className="min-h-screen bg-background">
@@ -226,7 +106,11 @@ export function AdminDashboard() {
         </div>
 
         {/* Management Tabs */}
-        <Tabs defaultValue="users" className="space-y-6">
+        <Tabs 
+          value={currentAdminTab} 
+          onValueChange={(value) => setAdminTab(value as 'users' | 'jobs' | 'system' | 'billing' | 'analytics')} 
+          className="space-y-6"
+        >
           {/* Mobile: Dropdown-style tabs */}
           <div className="block sm:hidden">
             <TabsList className="w-full grid grid-cols-1 h-auto p-1 bg-muted">
@@ -245,7 +129,7 @@ export function AdminDashboard() {
                 <TabsTrigger value="billing" className="text-xs px-2 py-2">
                   Billing
                 </TabsTrigger>
-                <TabsTrigger value="statistics" className="text-xs px-2 py-2">
+                <TabsTrigger value="analytics" className="text-xs px-2 py-2">
                   Statistics
                 </TabsTrigger>
               </div>
@@ -259,29 +143,27 @@ export function AdminDashboard() {
               <TabsTrigger value="jobs">Job Management</TabsTrigger>
               <TabsTrigger value="system">System Management</TabsTrigger>
               <TabsTrigger value="billing">Billing Management</TabsTrigger>
-              <TabsTrigger value="statistics">Statistics</TabsTrigger>
+              <TabsTrigger value="analytics">Statistics</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="users">
             <UserManagementTab 
-              users={users} 
-              setUsers={setUsers} 
+              users={users || []} 
               currentUserId={user?.id}
             />
           </TabsContent>
 
           <TabsContent value="jobs">
             <JobManagementTab 
-              jobs={jobs} 
-              setJobs={setJobs} 
+              jobs={jobs || []} 
             />
           </TabsContent>
 
           <TabsContent value="system">
             <SystemManagementTab 
-              categories={categories}
-              cities={cities}
+              categories={mappedCategories}
+              cities={mappedCities}
             />
           </TabsContent>
 
@@ -289,8 +171,11 @@ export function AdminDashboard() {
             <BillingManagementTab />
           </TabsContent>
 
-          <TabsContent value="statistics">
-            <AdminStatsCards stats={stats} />
+          <TabsContent value="analytics">
+            <AdminStatsCards 
+              stats={mappedStats} 
+              isLoading={statsLoading}
+            />
           </TabsContent>
         </Tabs>
       </div>

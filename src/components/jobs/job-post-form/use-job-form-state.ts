@@ -57,9 +57,9 @@ export function useJobFormState({ initialData, isEditMode: _isEditMode = false }
     tags: initialData?.tags || []
   })
 
-  const updateFormData = (field: keyof CreateJobData, value: unknown) => {
+  const updateFormData = useCallback((field: keyof CreateJobData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-  }
+  }, [])
 
   const handleStepValidation = useCallback((step: JobFormStep, isValid: boolean) => {
     setStepValidations(prev => ({ ...prev, [step]: isValid }))

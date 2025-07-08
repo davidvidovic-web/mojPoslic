@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { useAuth } from "@/contexts/auth-context";
+import { useCreateJob } from "@/hooks/use-jobs";
+import { useDialogStore } from "@/stores/dialog-store";
 import { ThemeToggleButton } from "@/components/core/theme-toggle-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,20 +44,48 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { 
+    isJobPostDialogOpen, 
+    openJobPostDialog, 
+    closeJobPostDialog, 
+    isMobileMenuOpen, 
+    toggleMobileMenu,
+    closeMobileMenu
+  } = useDialogStore();
   const { loading, user, signOut } = useAuth();
-  const router = useRouter();
+  const createJobMutation = useCreateJob();
+  const pathname = usePathname();
+
+  // Helper function to check if a menu item is active
+  const isActiveMenuItem = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    return pathname?.startsWith(href);
+  };
+
+  const getMenuItemClass = (href: string) => {
+    const baseClass = "cursor-pointer";
+    const activeClass = "bg-primary text-primary-foreground";
+    return isActiveMenuItem(href) ? `${baseClass} ${activeClass}` : baseClass;
+  };
+
+  const getMobileMenuItemClass = (href: string) => {
+    const baseClass = "flex items-center py-4 text-lg font-medium transition-colors";
+    const activeClass = "bg-primary text-primary-foreground rounded-lg px-2 -mx-2";
+    const inactiveClass = "hover:text-primary";
+    return isActiveMenuItem(href) ? `${baseClass} ${activeClass}` : `${baseClass} ${inactiveClass}`;
+  };
 
   const handleJobPosted = () => {
-    setIsDialogOpen(false);
-    // Refresh the page to update job listings
-    router.refresh();
+    closeJobPostDialog();
+    // TanStack Query automatically handles cache invalidation after job creation
+    // No manual refresh needed!
   };
 
   const handlePostJobClick = () => {
     // Open the dialog - Auth.js will handle authentication
-    setIsDialogOpen(true);
+    openJobPostDialog();
   };
 
   const handleSignOut = async () => {
@@ -90,10 +120,10 @@ export function Header() {
                   (user.role === "client" ||
                     user.role === "company" ||
                     user.role === "admin") && (
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <Dialog open={isJobPostDialogOpen} onOpenChange={closeJobPostDialog}>
                       <DialogTrigger asChild>
                         <Button
-                          className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200"
+                          className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
                           onClick={handlePostJobClick}
                         >
                           <Plus className="h-4 w-4 mr-2" />
@@ -118,7 +148,7 @@ export function Header() {
                     <Link href="/auth/signin">
                       <Button
                         variant="outline"
-                        className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-bold transition-all duration-200"
+                        className="border-foreground text-foreground hover:bg-foreground hover:text-background font-bold transition-all duration-200"
                       >
                         <LogIn className="h-4 w-4 mr-2" />
                         Sign In
@@ -126,7 +156,7 @@ export function Header() {
                     </Link>
                     <Link href="/auth/register">
                       <Button
-                        className="bg-gray-900 hover:bg-gray-800 text-white font-bold border-0 transition-all duration-200"
+                        className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Register
@@ -166,7 +196,7 @@ export function Header() {
                           <DropdownMenuItem asChild>
                             <Link
                               href="/dashboard"
-                              className="cursor-pointer"
+                              className={getMenuItemClass('/dashboard')}
                             >
                               <LayoutDashboard className="mr-2 h-6 w-6" />
                               Dashboard
@@ -176,7 +206,7 @@ export function Header() {
                           <DropdownMenuItem asChild>
                             <Link
                               href="/dashboard/applications"
-                              className="cursor-pointer"
+                              className={getMenuItemClass('/dashboard/applications')}
                             >
                               <Briefcase className="mr-2 h-6 w-6" />
                               Job Applications
@@ -185,7 +215,7 @@ export function Header() {
                           <DropdownMenuItem asChild>
                             <Link
                               href="/dashboard/messages"
-                              className="cursor-pointer"
+                              className={getMenuItemClass('/dashboard/messages')}
                             >
                               <MessageSquare className="mr-2 h-6 w-6" />
                               Messages
@@ -194,7 +224,7 @@ export function Header() {
                           <DropdownMenuItem asChild>
                             <Link
                               href="/dashboard/connections"
-                              className="cursor-pointer"
+                              className={getMenuItemClass('/dashboard/connections')}
                             >
                               <Zap className="mr-2 h-6 w-6" />
                               Connections
@@ -223,7 +253,7 @@ export function Header() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
-                            <Link href="/settings" className="cursor-pointer">
+                            <Link href="/settings" className={getMenuItemClass('/settings')}>
                               <Settings className="mr-2 h-6 w-6" />
                               Settings
                             </Link>
@@ -249,7 +279,7 @@ export function Header() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setIsMobileMenuOpen(true)}
+                        onClick={() => toggleMobileMenu()}
                         className="relative h-9 w-9 rounded-full"
                       >
                         <Menu className="h-7 w-7" />
@@ -266,7 +296,7 @@ export function Header() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setIsMobileMenuOpen(false)}
+                              onClick={() => closeMobileMenu()}
                               className="h-9 w-9 rounded-full"
                             >
                               <X className="h-7 w-7" />
@@ -278,8 +308,8 @@ export function Header() {
                             <nav className="space-y-6">
                               <Link
                                 href="/dashboard"
-                                className="flex items-center py-4 text-lg font-medium hover:text-primary transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={getMobileMenuItemClass('/dashboard')}
+                                onClick={() => closeMobileMenu()}
                               >
                                 <LayoutDashboard className="mr-4 h-6 w-6" />
                                 Dashboard
@@ -287,8 +317,8 @@ export function Header() {
 
                               <Link
                                 href="/dashboard/applications"
-                                className="flex items-center py-4 text-lg font-medium hover:text-primary transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={getMobileMenuItemClass('/dashboard/applications')}
+                                onClick={() => closeMobileMenu()}
                               >
                                 <Briefcase className="mr-4 h-6 w-6" />
                                 Job Applications
@@ -296,8 +326,8 @@ export function Header() {
 
                               <Link
                                 href="/dashboard/messages"
-                                className="flex items-center py-4 text-lg font-medium hover:text-primary transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={getMobileMenuItemClass('/dashboard/messages')}
+                                onClick={() => closeMobileMenu()}
                               >
                                 <MessageSquare className="mr-4 h-6 w-6" />
                                 Messages
@@ -305,8 +335,8 @@ export function Header() {
 
                               <Link
                                 href="/dashboard/connections"
-                                className="flex items-center py-4 text-lg font-medium hover:text-primary transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={getMobileMenuItemClass('/dashboard/connections')}
+                                onClick={() => closeMobileMenu()}
                               >
                                 <Zap className="mr-4 h-6 w-6" />
                                 Connections
@@ -333,8 +363,8 @@ export function Header() {
                               <div className="border-t pt-6">
                                 <Link
                                   href="/settings"
-                                  className="flex items-center py-4 text-lg font-medium hover:text-primary transition-colors"
-                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className={getMobileMenuItemClass('/settings')}
+                                  onClick={() => closeMobileMenu()}
                                 >
                                   <Settings className="mr-4 h-6 w-6" />
                                   Settings
@@ -350,10 +380,10 @@ export function Header() {
 
                                 <button
                                   onClick={() => {
-                                    setIsMobileMenuOpen(false);
+                                    closeMobileMenu();
                                     handleSignOut();
                                   }}
-                                  className="flex items-center py-4 text-lg font-medium text-red-600 hover:text-red-700 transition-colors w-full text-left"
+                                  className="flex items-center py-4 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors w-full text-left"
                                 >
                                   <LogOut className="mr-4 h-6 w-6" />
                                   Sign Out
