@@ -5,13 +5,22 @@ import { useAuth } from '@/contexts/auth-context'
 import { Job } from '@/types/job'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
-import { DashboardNavigation } from '@/components/dashboard/dashboard-navigation'
-import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
+import { AppliedJobsSection } from '@/components/dashboard/tasker/applied-jobs-section'
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
+
+interface JobApplication {
+  id: string
+  job_id: string
+  applied_at: string
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  job: Job
+}
 
 export default function JobsPage() {
   const { user } = useAuth()
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
+  const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,9 +28,10 @@ export default function JobsPage() {
       if (!user) return
 
       try {
-        const [savedResponse, recommendedResponse] = await Promise.all([
+        const [savedResponse, recommendedResponse, applicationsResponse] = await Promise.all([
           fetch(`/api/user/saved-jobs?userId=${user.id}`),
-          fetch('/api/jobs/recommended')
+          fetch('/api/jobs/recommended'),
+          fetch('/api/tasker/applications')
         ])
 
         if (savedResponse.ok) {
@@ -32,6 +42,11 @@ export default function JobsPage() {
         if (recommendedResponse.ok) {
           const recommendedData = await recommendedResponse.json()
           setRecommendedJobs(recommendedData.jobs || [])
+        }
+
+        if (applicationsResponse.ok) {
+          const applicationsData = await applicationsResponse.json()
+          setApplications(applicationsData || [])
         }
       } catch (error) {
         console.error('Error fetching jobs:', error)
@@ -45,39 +60,29 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading jobs...</p>
-            </div>
+      <DashboardLayout activeTab="jobs" title="Jobs" subtitle="Loading your opportunities...">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading jobs...</p>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardNavigation />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">
-            Jobs
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {getTimeBasedGreeting()}, <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>! Manage your saved and find new opportunities.
-          </p>
-        </div>
-
-        {/* Jobs Content */}
-        <div className="space-y-8 max-w-4xl">
-          <SavedJobsSection savedJobs={savedJobs} />
-          <RecommendedJobsSection recommendedJobs={recommendedJobs} />
-        </div>
+    <DashboardLayout 
+      activeTab="jobs" 
+      title="Jobs" 
+      subtitle="Manage your applications, saved jobs, and find new opportunities"
+      userRole={user?.role}
+    >
+      <div className="space-y-8 max-w-4xl">
+        <AppliedJobsSection applications={applications} />
+        <SavedJobsSection savedJobs={savedJobs} />
+        <RecommendedJobsSection recommendedJobs={recommendedJobs} />
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

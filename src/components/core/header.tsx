@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { useAuth } from "@/contexts/auth-context";
-import { useCreateJob } from "@/hooks/use-jobs";
 import { useDialogStore } from "@/stores/dialog-store";
 import { ThemeToggleButton } from "@/components/core/theme-toggle-button";
 import { Button } from "@/components/ui/button";
@@ -28,11 +27,7 @@ import {
   Zap,
   Menu,
   X,
-  Puzzle,
   Bell,
-  BarChart3,
-  CreditCard,
-  Lock,
   UserPlus,
 } from "lucide-react";
 import {
@@ -53,7 +48,6 @@ export function Header() {
     closeMobileMenu
   } = useDialogStore();
   const { loading, user, signOut } = useAuth();
-  const createJobMutation = useCreateJob();
   const pathname = usePathname();
 
   // Helper function to check if a menu item is active
@@ -120,7 +114,11 @@ export function Header() {
                   (user.role === "client" ||
                     user.role === "company" ||
                     user.role === "admin") && (
-                    <Dialog open={isJobPostDialogOpen} onOpenChange={closeJobPostDialog}>
+                    <Dialog open={isJobPostDialogOpen} onOpenChange={(open) => {
+                      if (!open) {
+                        closeJobPostDialog();
+                      }
+                    }}>
                       <DialogTrigger asChild>
                         <Button
                           className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
@@ -205,11 +203,11 @@ export function Header() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
                             <Link
-                              href="/dashboard/applications"
-                              className={getMenuItemClass('/dashboard/applications')}
+                              href="/dashboard/jobs"
+                              className={getMenuItemClass('/dashboard/jobs')}
                             >
                               <Briefcase className="mr-2 h-6 w-6" />
-                              Job Applications
+                              Jobs
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
@@ -223,33 +221,12 @@ export function Header() {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link
-                              href="/dashboard/connections"
-                              className={getMenuItemClass('/dashboard/connections')}
+                              href="/connections"
+                              className={getMenuItemClass('/connections')}
                             >
                               <Zap className="mr-2 h-6 w-6" />
                               Connections
                             </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled>
-                            <div className="flex items-center cursor-not-allowed opacity-50">
-                              <BarChart3 className="mr-2 h-6 w-6" />
-                              Statistics
-                              <Lock className="ml-auto h-5 w-5" />
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled>
-                            <div className="flex items-center cursor-not-allowed opacity-50">
-                              <CreditCard className="mr-2 h-6 w-6" />
-                              Finances
-                              <Lock className="ml-auto h-5 w-5" />
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled>
-                            <div className="flex items-center cursor-not-allowed opacity-50">
-                              <Puzzle className="mr-2 h-6 w-6" />
-                              Integrations
-                              <Lock className="ml-auto h-5 w-5" />
-                            </div>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
@@ -316,12 +293,12 @@ export function Header() {
                               </Link>
 
                               <Link
-                                href="/dashboard/applications"
-                                className={getMobileMenuItemClass('/dashboard/applications')}
+                                href="/dashboard/jobs"
+                                className={getMobileMenuItemClass('/dashboard/jobs')}
                                 onClick={() => closeMobileMenu()}
                               >
                                 <Briefcase className="mr-4 h-6 w-6" />
-                                Job Applications
+                                Jobs
                               </Link>
 
                               <Link
@@ -334,31 +311,13 @@ export function Header() {
                               </Link>
 
                               <Link
-                                href="/dashboard/connections"
-                                className={getMobileMenuItemClass('/dashboard/connections')}
+                                href="/connections"
+                                className={getMobileMenuItemClass('/connections')}
                                 onClick={() => closeMobileMenu()}
                               >
                                 <Zap className="mr-4 h-6 w-6" />
                                 Connections
                               </Link>
-
-                              <div className="flex items-center py-4 text-lg font-medium opacity-50 cursor-not-allowed">
-                                <BarChart3 className="mr-4 h-6 w-6" />
-                                Statistics
-                                <Lock className="ml-auto h-5 w-5" />
-                              </div>
-
-                              <div className="flex items-center py-4 text-lg font-medium opacity-50 cursor-not-allowed">
-                                <CreditCard className="mr-4 h-6 w-6" />
-                                Finances
-                                <Lock className="ml-auto h-5 w-5" />
-                              </div>
-
-                              <div className="flex items-center py-4 text-lg font-medium opacity-50 cursor-not-allowed">
-                                <Puzzle className="mr-4 h-6 w-6" />
-                                Integrations
-                                <Lock className="ml-auto h-5 w-5" />
-                              </div>
 
                               <div className="border-t pt-6">
                                 <Link

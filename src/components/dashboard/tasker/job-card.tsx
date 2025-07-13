@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Job } from '@/types/job'
-import { MapPin, Calendar, DollarSign, Car } from 'lucide-react'
+import { MapPin, Calendar, DollarSign, Car, Star } from 'lucide-react'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
 
@@ -26,6 +26,12 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold">{job.title}</h3>
+              {job.is_featured && (
+                <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" />
+                  Featured
+                </Badge>
+              )}
               <Badge variant="secondary">{formatJobType(job.type)}</Badge>
               {job.transportation && (
                 <Badge variant="outline" className="text-xs">

@@ -6,8 +6,8 @@ import { MessagingProvider, useMessaging } from '@/contexts/messaging-context';
 import { ConversationView } from '@/components/messaging/conversation-view';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageAttachment, Conversation } from '@/types/messaging';
-import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils';
 import { extractMessagingParams } from '@/lib/messaging/messaging-utils';
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 
 interface DashboardMessagesContentProps {
   locale?: 'bs' | 'en';
@@ -169,27 +169,18 @@ export default function DashboardMessagesPage() {
   const locale = 'bs' as const;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">
-            {locale === 'bs' ? 'Poruke' : 'Messages'}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {getTimeBasedGreeting()}, <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>! 
-            {locale === 'bs' 
-              ? ' Ostanite povezani sa svojim korisnicima.'
-              : ' Stay connected with your clients.'
-            }
-          </p>
-        </div>
-        
-        {/* Messages Content */}
-        <MessagingProvider>
-          <DashboardMessagesContent locale={locale} />
-        </MessagingProvider>
-      </div>
-    </div>
+    <DashboardLayout 
+      activeTab="messages" 
+      title={locale === 'bs' ? 'Poruke' : 'Messages'} 
+      subtitle={locale === 'bs' 
+        ? 'Ostanite povezani sa svojim korisnicima'
+        : 'Stay connected with your clients'
+      }
+      userRole={user?.role}
+    >
+      <MessagingProvider>
+        <DashboardMessagesContent locale={locale} />
+      </MessagingProvider>
+    </DashboardLayout>
   );
 }

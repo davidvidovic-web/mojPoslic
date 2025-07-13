@@ -82,6 +82,12 @@ export function formatSalary(job: string | { salaryMin?: number; salaryMax?: num
                    job.salaryType === 'daily' ? '/day' :
                    job.salaryType === 'weekly' ? '/week' :
                    job.salaryType === 'monthly' ? '/month' : ''
+      
+      // Don't show "From" for fixed prices
+      if (job.salaryType === 'fixed') {
+        return `${min} BAM`
+      }
+      
       return `From ${min} BAM${type}`
     }
     

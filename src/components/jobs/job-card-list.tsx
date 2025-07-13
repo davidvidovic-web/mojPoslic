@@ -70,6 +70,12 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
                    job.salaryType === 'daily' ? '/day' :
                    job.salaryType === 'weekly' ? '/week' :
                    job.salaryType === 'monthly' ? '/month' : ''
+      
+      // Don't show "From" for fixed prices
+      if (job.salaryType === 'fixed') {
+        return `${min} BAM`
+      }
+      
       return `From ${min} BAM${type}`
     }
     

@@ -6,19 +6,21 @@ import {
   Building2,
   ExternalLink, 
   Mail,
-  MapPin
+  MapPin,
+  CheckCircle
 } from "lucide-react"
 import { Job } from "@/types/job"
 
 interface JobApplicationSidebarProps {
   job: Job
-  user: { name?: string | null; email?: string | null } | null
-  applying: boolean
+  user: { name?: string | null; email?: string | null; id?: string } | null
   handleApply: () => void
   showAboutSection?: boolean // New prop to control About section visibility
+  hasApplied?: boolean // New prop to show if user has already applied
+  isOwner?: boolean // New prop to show if user owns this job
 }
 
-export function JobApplicationSidebar({ job, user, applying, handleApply, showAboutSection = true }: JobApplicationSidebarProps) {
+export function JobApplicationSidebar({ job, user, handleApply, showAboutSection = true, hasApplied = false, isOwner = false }: JobApplicationSidebarProps) {
   return (
     <div className="space-y-6">
       {/* Apply Card */}
@@ -27,21 +29,46 @@ export function JobApplicationSidebar({ job, user, applying, handleApply, showAb
           <CardTitle>Apply for this position</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button 
-            onClick={handleApply}
-            className="w-full"
-            disabled={applying || (!job.application_url && !job.contact_email)}
-            size="lg"
-          >
-            {applying ? 'Opening...' : 'Apply Now'}
-            {job.application_url && <ExternalLink className="h-4 w-4 ml-2" />}
-            {!job.application_url && job.contact_email && <Mail className="h-4 w-4 ml-2" />}
-          </Button>
-          
-          {!user && (
-            <p className="text-xs text-muted-foreground text-center">
-              You need to log in to apply for this job
-            </p>
+          {isOwner ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                This is your job posting. You can view applications in your dashboard.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Button 
+                onClick={handleApply}
+                className="w-full"
+                size="lg"
+                variant={hasApplied ? "outline" : "default"}
+                disabled={hasApplied && !job.application_url}
+              >
+                {hasApplied ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {job.application_url ? "View Application Portal" : "Applied"}
+                  </>
+                ) : (
+                  <>
+                    Apply Now
+                    {job.application_url && <ExternalLink className="h-4 w-4 ml-2" />}
+                  </>
+                )}
+              </Button>
+              
+              {!user && (
+                <p className="text-xs text-muted-foreground text-center">
+                  You need to log in to apply for this job
+                </p>
+              )}
+              
+              {hasApplied && !job.application_url && (
+                <p className="text-xs text-muted-foreground text-center">
+                  You have already applied for this job. Check your dashboard for application status.
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

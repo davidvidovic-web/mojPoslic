@@ -2,13 +2,14 @@
 
 import { useAuth } from '@/contexts/auth-context'
 import { useUserJobs, useDeleteJob } from '@/hooks/use-jobs'
+import { useMultipleJobApplicantCounts } from '@/hooks/use-applications'
 import { useDialogStore } from '@/stores/dialog-store'
 import { useRouter } from 'next/navigation'
 import { Job } from '@/types/job'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { MultiStepJobForm } from '@/components/jobs/job-post-form/multi-step-job-form'
 import { ConnectionsSection } from '@/components/dashboard/connections-section'
-import { JobsListSection } from './client/jobs-list-section'
+import { JobsListSection } from './company/jobs-list-section'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
 import { Button } from '@/components/ui/button'
@@ -20,11 +21,7 @@ import {
   LayoutDashboard,
   Briefcase,
   MessageSquare,
-  Zap,
-  DollarSign,
-  BarChart3,
-  Puzzle,
-  Lock
+  Zap
 } from 'lucide-react'
 
 // Helper function to get full name display
@@ -40,8 +37,13 @@ export function CompanyDashboard() {
   const router = useRouter()
   
   // TanStack Query hooks for job data
-  const { data: jobs = [], isLoading } = useUserJobs(user?.id || '')
+  const { data: jobs = [], isLoading } = useUserJobs()
   const deleteJobMutation = useDeleteJob()
+  // const featureJobMutation = useFeatureJob()
+  
+  // Get real applicant counts for user's jobs
+  const jobIds = jobs.map(job => job.id)
+  const { data: applicationCounts = {} } = useMultipleJobApplicantCounts(jobIds)
   
   // Zustand stores for UI state
   const { 
@@ -54,12 +56,12 @@ export function CompanyDashboard() {
     editingJob
   } = useDialogStore()
   
-  // Application counts are now handled by TanStack Query in useUserJobs hook
-  const applicationCounts = jobs.reduce((acc, job) => {
-    // Mock application counts for now - this should be part of the job data from the API
-    acc[job.id] = 0 // This will be replaced when the API includes application counts
-    return acc
-  }, {} as Record<string, number>)
+  // Application counts are now fetched from the API using TanStack Query
+  // const applicationCounts = jobs.reduce((acc, job) => {
+  //   // Mock application counts for now - this should be part of the job data from the API
+  //   acc[job.id] = 0 // This will be replaced when the API includes application counts
+  //   return acc
+  // }, {} as Record<string, number>)
   
   // Get active section from URL
   const getActiveSection = () => {
@@ -72,34 +74,21 @@ export function CompanyDashboard() {
 
   // Navigate to section
   const navigateToSection = (section: string) => {
-    if (section === 'overview' || section === 'jobs') {
-      // These stay within the dashboard
-      if (section === 'jobs') {
-        router.push('/dashboard?tab=jobs')
-      } else {
+    switch (section) {
+      case 'overview':
         router.push('/dashboard')
-      }
-    } else {
-      // These navigate to dedicated pages
-      switch (section) {
-        case 'messages':
-          router.push('/messages')
-          break
-        case 'connections':
-          router.push('/connections')
-          break
-        case 'finances':
-          toast.info('Finances feature coming soon!')
-          break
-        case 'analytics':
-          toast.info('Analytics feature coming soon!')
-          break
-        case 'integrations':
-          toast.info('Integrations feature coming soon!')
-          break
-        default:
-          router.push('/dashboard')
-      }
+        break
+      case 'jobs':
+        router.push('/dashboard/jobs')
+        break
+      case 'messages':
+        router.push('/dashboard/messages')
+        break
+      case 'connections':
+        router.push('/connections')
+        break
+      default:
+        router.push('/dashboard')
     }
   }
   
@@ -131,6 +120,15 @@ export function CompanyDashboard() {
       toast.error('Failed to delete job')
     }
   }
+
+  // const handleFeatureJob = async (jobId: string, isFeatured: boolean) => {
+  //   try {
+  //     await featureJobMutation.mutateAsync({ id: jobId, is_featured: isFeatured })
+  //   } catch (error) {
+  //     console.error('Error updating job featured status:', error)
+  //     toast.error('Failed to update job featured status')
+  //   }
+  // }
 
   if (isLoading) {
     return (
@@ -227,27 +225,6 @@ export function CompanyDashboard() {
                         Connections
                       </div>
                     </SelectItem>
-                    <SelectItem value="finances" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <DollarSign className="h-4 w-4 text-emerald-600" />
-                        Finances
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="analytics" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <BarChart3 className="h-4 w-4 text-indigo-600" />
-                        Analytics
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="integrations" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <Puzzle className="h-4 w-4 text-orange-600" />
-                        Integrations
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -257,43 +234,22 @@ export function CompanyDashboard() {
           {/* Tabs for tablet and desktop */}
           <div className="hidden md:block">
             <Tabs value={activeTab} onValueChange={navigateToSection} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span className="hidden lg:inline">Overview</span>
+                  <span>Overview</span>
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span className="hidden lg:inline">Jobs</span>
+                  <span>Jobs</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span className="hidden lg:inline">Messages</span>
+                  <span>Messages</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
-                  <span className="hidden lg:inline">Connections</span>
-                </TabsTrigger>
-                <TabsTrigger value="finances" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-emerald-600" />
-                    <span className="hidden lg:inline">Finances</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger value="analytics" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-indigo-600" />
-                    <span className="hidden lg:inline">Analytics</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger value="integrations" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <Puzzle className="h-4 w-4 text-orange-600" />
-                    <span className="hidden lg:inline">Integrations</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
+                  <span>Connections</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>

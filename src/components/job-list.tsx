@@ -1,6 +1,8 @@
 'use client'
 
 import { useJobs } from '@/hooks/use-jobs'
+import { useUserAppliedJobs } from '@/hooks/use-applications'
+import { useAuth } from '@/contexts/auth-context'
 import { useFilterStore } from '@/stores/filter-store'
 import { JobCard } from '@/components/job-card'
 import { JobCardSkeleton } from '@/components/job-card-skeleton'
@@ -12,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { JobFilters as JobFiltersType } from '@/types/job'
 
 export function JobList() {
+  const { user } = useAuth()
   const {
     jobSearch,
     jobCityFilter,
@@ -46,6 +49,9 @@ export function JobList() {
 
   // Fetch jobs with TanStack Query
   const { data: jobs, isLoading, isError, error } = useJobs(filters)
+  
+  // Fetch user's applied jobs for display indication (only if user is logged in)
+  const { data: appliedJobIds = new Set() } = useUserAppliedJobs()
 
   return (
     <div className="space-y-6">
@@ -81,13 +87,18 @@ export function JobList() {
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               : "flex flex-col gap-3"
           }>
-            {jobs.map((job) => (
-              <JobCard key={job.id} job={job} viewMode={viewMode} />
-            ))}
+            {jobs?.map((job) => (
+              <JobCard 
+                key={job.id} 
+                job={job} 
+                viewMode={viewMode} 
+                hasApplied={user ? appliedJobIds.has(job.id) : false}
+              />
+            )) || []}
           </div>
           
           {/* Pagination */}
-          <JobsPagination totalItems={jobs.length} />
+          <JobsPagination totalItems={jobs?.length || 0} />
         </>
       )}
     </div>

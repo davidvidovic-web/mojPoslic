@@ -1,89 +1,64 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Users, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
-import { Job } from '@/types/job'
+import { useApplications } from '@/hooks/use-applications'
+import { ApplicationStatus, JobApplication } from '@/types/application'
 import { MessageUserButton } from '@/components/messaging/examples'
 
-interface JobApplication {
-  id: string
-  applicant_name: string
-  applicant_email: string
-  applicant_id?: string // Add user ID for messaging
-  applied_at: string
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected'
-  message?: string
-  job_title: string
-  job_id: string
-}
-
 interface JobApplicationsManagerProps {
-  // Jobs data for future use
-  jobs?: Job[]
-  applicationCounts?: Record<string, number>
+  // For future enhancement - job filtering
+  jobIds?: string[]
 }
 
 export function JobApplicationsManager({}: JobApplicationsManagerProps) {
-  const [applications, setApplications] = useState<JobApplication[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: applications = [], isLoading } = useApplications()
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        // Fetch all applications for client's jobs
-        const response = await fetch('/api/jobs/client-applications')
-        if (response.ok) {
-          const data = await response.json()
-          setApplications(data || [])
-        }
-      } catch (error) {
-        console.error('Error fetching applications:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const pendingApplications = applications.filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
+  const reviewedApplications = applications.filter((app: JobApplication) => 
+    app.status === ApplicationStatus.REVIEWED || 
+    app.status === ApplicationStatus.SHORTLISTED || 
+    app.status === ApplicationStatus.SELECTED
+  )
 
-    fetchApplications()
-  }, [])
-
-  const pendingApplications = applications.filter(app => app.status === 'pending')
-  const reviewedApplications = applications.filter(app => app.status === 'reviewed' || app.status === 'accepted')
-
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: ApplicationStatus) => {
     switch (status) {
-      case 'pending':
+      case ApplicationStatus.PENDING:
         return <Clock className="h-4 w-4" />
-      case 'reviewed':
+      case ApplicationStatus.REVIEWED:
         return <Eye className="h-4 w-4" />
-      case 'accepted':
+      case ApplicationStatus.SHORTLISTED:
+        return <Eye className="h-4 w-4" />
+      case ApplicationStatus.SELECTED:
         return <CheckCircle className="h-4 w-4" />
-      case 'rejected':
+      case ApplicationStatus.REJECTED:
         return <XCircle className="h-4 w-4" />
       default:
         return <Clock className="h-4 w-4" />
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
-      case 'pending':
+      case ApplicationStatus.PENDING:
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
-      case 'reviewed':
+      case ApplicationStatus.REVIEWED:
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
-      case 'accepted':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
-      case 'rejected':
+      case ApplicationStatus.SHORTLISTED:
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300'
+      case ApplicationStatus.SELECTED:
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+      case ApplicationStatus.REJECTED:
         return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
       default:
-        return 'bg-muted text-muted-foreground'
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300'
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -133,31 +108,31 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {pendingApplications.map((application) => (
+                {pendingApplications.map((application: JobApplication) => (
                   <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src="" />
+                        <AvatarImage src={application.user?.avatarUrl} />
                         <AvatarFallback>
-                          {application.applicant_name.charAt(0).toUpperCase()}
+                          {application.user?.name?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium">{application.applicant_name}</h4>
-                        <p className="text-sm text-muted-foreground">{application.job_title}</p>
+                        <h4 className="font-medium">{application.user?.name || 'Unknown User'}</h4>
+                        <p className="text-sm text-muted-foreground">{application.job?.title || 'Job Title'}</p>
                         <p className="text-xs text-muted-foreground">
-                          Applied {new Date(application.applied_at).toLocaleDateString()}
+                          Applied {new Date(application.appliedAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className={getStatusColor(application.status)}>
                         {getStatusIcon(application.status)}
-                        <span className="ml-1 capitalize">{application.status}</span>
+                        <span className="ml-1 capitalize">{application.status.toLowerCase()}</span>
                       </Badge>
                       <MessageUserButton 
-                        userId={application.applicant_id || application.applicant_email} 
-                        userName={application.applicant_name}
+                        userId={application.user?.id || application.user?.email || ''} 
+                        userName={application.user?.name || 'Unknown User'}
                         size="sm"
                         variant="outline"
                       />
@@ -177,31 +152,31 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {reviewedApplications.map((application) => (
+                {reviewedApplications.map((application: JobApplication) => (
                   <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src="" />
+                        <AvatarImage src={application.user?.avatarUrl} />
                         <AvatarFallback>
-                          {application.applicant_name.charAt(0).toUpperCase()}
+                          {application.user?.name?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium">{application.applicant_name}</h4>
-                        <p className="text-sm text-muted-foreground">{application.job_title}</p>
+                        <h4 className="font-medium">{application.user?.name || 'Unknown User'}</h4>
+                        <p className="text-sm text-muted-foreground">{application.job?.title || 'Job Title'}</p>
                         <p className="text-xs text-muted-foreground">
-                          Applied {new Date(application.applied_at).toLocaleDateString()}
+                          Applied {new Date(application.appliedAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className={getStatusColor(application.status)}>
                         {getStatusIcon(application.status)}
-                        <span className="ml-1 capitalize">{application.status}</span>
+                        <span className="ml-1 capitalize">{application.status.toLowerCase()}</span>
                       </Badge>
                       <MessageUserButton 
-                        userId={application.applicant_id || application.applicant_email} 
-                        userName={application.applicant_name}
+                        userId={application.user?.id || application.user?.email || ''} 
+                        userName={application.user?.name || 'Unknown User'}
                         size="sm"
                         variant="outline"
                       />

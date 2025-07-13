@@ -113,7 +113,8 @@ export async function POST(request: NextRequest) {
       requirements,
       benefits,
       contact_email,
-      application_url
+      application_url,
+      is_featured
     } = body
 
     // Validate required fields (company is no longer required as we generate it)
@@ -230,7 +231,8 @@ export async function POST(request: NextRequest) {
       contactEmail: contact_email || null,
       applicationUrl: application_url || null,
       postedById: userId,
-      isActive: true
+      isActive: true,
+      isFeatured: is_featured || false
     }
 
     // Create job and spend connections in a transaction

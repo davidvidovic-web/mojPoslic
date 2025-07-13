@@ -7,13 +7,14 @@ import { ArrowLeft, Briefcase } from "lucide-react"
 import { Job } from "@/types/job"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
-import { formatClientName } from "@/lib/job-utils"
 import { JobHeader } from "@/components/jobs/job/job-header"
 import { JobContent } from "@/components/jobs/job/job-content"
 import { JobLocation } from "@/components/jobs/job/job-location"
 import { JobTimeline } from "@/components/jobs/job/job-timeline"
 import { JobApplicationSidebar } from "@/components/jobs/job/job-application-sidebar"
 import { JobDetailsSidebar } from "@/components/jobs/job/job-details-sidebar"
+import { JobApplicationForm } from "@/components/jobs/job-application-form"
+import { useUserAppliedJobs } from "@/hooks/use-applications"
 
 export default function JobDetailPage() {
   const params = useParams()
@@ -21,7 +22,12 @@ export default function JobDetailPage() {
   const { user } = useAuth()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
-  const [applying, setApplying] = useState(false)
+  const [showApplicationForm, setShowApplicationForm] = useState(false)
+  
+  // Check if user has already applied to this job
+  const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs()
+  const hasApplied = job ? appliedJobIds.has(job.id) : false
+  const isOwner = !!(user && job && job.postedBy?.id === user.id)
 
   useEffect(() => {
     const fetchJob = async (jobId: string) => {
@@ -76,38 +82,39 @@ export default function JobDetailPage() {
 
     if (!job) return
 
-    setApplying(true)
-    
-    try {
-      // If there's an application URL, open it
-      if (job.application_url) {
-        window.open(job.application_url, '_blank')
-        toast.success('Application page opened in new tab')
-      } 
-      // If there's a contact email, open email client
-      else if (job.contact_email) {
-        const subject = `Application for ${job.title} at ${formatClientName(job.company)}`
-        const body = `Dear Hiring Manager,
-
-I am interested in applying for the ${job.title} position at ${formatClientName(job.company)}. 
-
-Please find my resume attached and let me know if you need any additional information.
-
-Best regards,
-${user.name || user.email}`
-        
-        const mailtoLink = `mailto:${job.contact_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-        window.location.href = mailtoLink
-        toast.success('Email client opened')
-      } else {
-        toast.error('No application method available for this job')
-      }
-    } catch (error) {
-      console.error('Error applying to job:', error)
-      toast.error('Failed to apply to job')
-    } finally {
-      setApplying(false)
+    // Check if user is the owner of this job
+    if (isOwner) {
+      toast.error('You cannot apply to your own job posting.')
+      return
     }
+
+    // Check if user has already applied
+    if (hasApplied) {
+      toast.error('You have already applied for this job. You can check your application status in your dashboard.')
+      return
+    }
+
+    // For jobs with external application URLs, open in new tab
+    if (job.application_url) {
+      window.open(job.application_url, '_blank')
+      toast.success('Application page opened in new tab')
+      return
+    } 
+
+    // Use new application system for all other jobs (default behavior)
+    setShowApplicationForm(true)
+  }
+
+  const handleApplicationSuccess = () => {
+    setShowApplicationForm(false)
+    // Refresh the applied jobs data to show the badge immediately
+    refetchAppliedJobs()
+    // Note: Toast notification is already handled by the useApplyToJob hook
+    // to avoid duplicate success messages
+  }
+
+  const handleApplicationCancel = () => {
+    setShowApplicationForm(false)
   }
 
   const formatDate = (dateString: string) => {
@@ -140,6 +147,12 @@ ${user.name || user.email}`
                    job.salaryType === 'daily' ? '/day' :
                    job.salaryType === 'weekly' ? '/week' :
                    job.salaryType === 'monthly' ? '/month' : ''
+      
+      // Don't show "From" for fixed prices
+      if (job.salaryType === 'fixed') {
+        return `${min} BAM`
+      }
+      
       return `From ${min} BAM${type}`
     }
     
@@ -188,7 +201,7 @@ ${user.name || user.email}`
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Job Header */}
-            <JobHeader job={job} formatDate={formatDate} formatSalary={formatSalary} />
+            <JobHeader job={job} formatDate={formatDate} formatSalary={formatSalary} hasApplied={hasApplied} />
 
             {/* Job Content */}
             <JobContent job={job} />
@@ -205,9 +218,10 @@ ${user.name || user.email}`
             <JobApplicationSidebar 
               job={job} 
               user={user} 
-              applying={applying} 
               handleApply={handleApply}
               showAboutSection={job.postedBy?.role === 'company'}
+              hasApplied={hasApplied}
+              isOwner={isOwner}
             />
             <JobDetailsSidebar 
               job={job} 
@@ -217,6 +231,22 @@ ${user.name || user.email}`
             />
           </div>
         </div>
+
+        {/* Application Form Modal/Overlay */}
+        {showApplicationForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+              <div className="p-6">
+                <JobApplicationForm
+                  jobId={job.id}
+                  jobTitle={job.title}
+                  onSuccess={handleApplicationSuccess}
+                  onCancel={handleApplicationCancel}
+                />
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   )
 }

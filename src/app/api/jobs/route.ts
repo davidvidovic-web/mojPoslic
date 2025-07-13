@@ -46,6 +46,7 @@ export async function GET() {
         expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
         city_id: job.cityId,
         category_id: job.categoryId,
+        is_featured: job.isFeatured, // Explicitly map isFeatured to is_featured
         city: city ? {
           id: city.id,
           key: city.key,

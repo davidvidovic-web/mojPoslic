@@ -13,13 +13,8 @@ import {
   LayoutDashboard,
   Briefcase,
   MessageSquare,
-  Zap,
-  DollarSign,
-  BarChart3,
-  Puzzle,
-  Lock
+  Zap
 } from 'lucide-react'
-import { toast } from 'sonner'
 
 // Helper function to get full name display
 const getFullNameDisplay = (name?: string | null): string => {
@@ -50,9 +45,9 @@ export function DashboardLayout({
 
   // Determine active tab based on pathname if not provided
   const currentTab = activeTab || (() => {
-    if (pathname?.includes('/messages')) return 'messages'
+    if (pathname?.includes('/dashboard/messages')) return 'messages'
+    if (pathname?.includes('/dashboard/jobs')) return 'jobs'
     if (pathname?.includes('/connections')) return 'connections'
-    if (pathname?.includes('/dashboard') && pathname?.includes('tab=jobs')) return 'jobs'
     return 'overview'
   })()
 
@@ -63,22 +58,13 @@ export function DashboardLayout({
         router.push('/dashboard')
         break
       case 'jobs':
-        router.push('/dashboard?tab=jobs')
+        router.push('/dashboard/jobs')
         break
       case 'messages':
-        router.push('/messages')
+        router.push('/dashboard/messages')
         break
       case 'connections':
         router.push('/connections')
-        break
-      case 'finances':
-        toast.info('Finances feature coming soon!')
-        break
-      case 'analytics':
-        toast.info('Analytics feature coming soon!')
-        break
-      case 'integrations':
-        toast.info('Integrations feature coming soon!')
         break
       default:
         router.push('/dashboard')
@@ -92,9 +78,9 @@ export function DashboardLayout({
   const renderTimeIcon = () => {
     const iconProps = { className: "h-4 w-4" }
     switch (iconName) {
-      case 'sunrise': return <Sunrise {...iconProps} />
-      case 'sun': return <Sun {...iconProps} />
-      case 'moon': return <Moon {...iconProps} />
+      case 'Sunrise': return <Sunrise {...iconProps} />
+      case 'Sun': return <Sun {...iconProps} />
+      case 'Moon': return <Moon {...iconProps} />
       default: return <Sun {...iconProps} />
     }
   }
@@ -217,27 +203,6 @@ export function DashboardLayout({
                         Connections
                       </div>
                     </SelectItem>
-                    <SelectItem value="finances" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <DollarSign className="h-4 w-4 text-emerald-600" />
-                        Finances
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="analytics" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <BarChart3 className="h-4 w-4 text-indigo-600" />
-                        Analytics
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="integrations" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <Puzzle className="h-4 w-4 text-orange-600" />
-                        Integrations
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -247,43 +212,22 @@ export function DashboardLayout({
           {/* Tabs for tablet and desktop */}
           <div className="hidden md:block">
             <Tabs value={currentTab} onValueChange={navigateToSection} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span className="hidden lg:inline">Overview</span>
+                  <span>Overview</span>
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span className="hidden lg:inline">Jobs</span>
+                  <span>Jobs</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span className="hidden lg:inline">Messages</span>
+                  <span>Messages</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
-                  <span className="hidden lg:inline">Connections</span>
-                </TabsTrigger>
-                <TabsTrigger value="finances" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-emerald-600" />
-                    <span className="hidden lg:inline">Finances</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger value="analytics" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-indigo-600" />
-                    <span className="hidden lg:inline">Analytics</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger value="integrations" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <Puzzle className="h-4 w-4 text-orange-600" />
-                    <span className="hidden lg:inline">Integrations</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
+                  <span>Connections</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>

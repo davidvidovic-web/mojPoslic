@@ -17,11 +17,11 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
 
   // Get special and regular active cities
   const specialCities = Array.isArray(getSpecialCities()) 
-    ? getSpecialCities().filter(city => city.isActive) 
+    ? getSpecialCities().filter(city => city.is_active !== false && city.isActive !== false) 
     : []
     
   const regularCities = Array.isArray(getActiveCities())
-    ? getActiveCities().filter(city => !city.isSpecial)
+    ? getActiveCities().filter(city => !(city.is_special === true || city.isSpecial === true))
     : []
 
   return (
@@ -39,9 +39,9 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
               <SelectItem key={city.id} value={city.key}>
                 <span className="flex items-center gap-2">
                   {city.key === 'remote' && <Globe className="h-4 w-4" />}
-                  {city.nameEN}
-                  {city.nameBS !== city.nameEN && (
-                    <span className="text-muted-foreground text-sm">({city.nameBS})</span>
+                  {city.name_en || city.nameEN}
+                  {(city.name_bs || city.nameBS) !== (city.name_en || city.nameEN) && (
+                    <span className="text-muted-foreground text-sm">({city.name_bs || city.nameBS})</span>
                   )}
                 </span>
               </SelectItem>
@@ -59,9 +59,9 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
         {Array.isArray(regularCities) && regularCities.map((city) => (
           <SelectItem key={city.id} value={city.key}>
             <span className="flex items-center gap-2">
-              {city.nameEN}
-              {city.nameBS !== city.nameEN && (
-                <span className="text-muted-foreground text-sm">({city.nameBS})</span>
+              {city.name_en || city.nameEN}
+              {(city.name_bs || city.nameBS) !== (city.name_en || city.nameEN) && (
+                <span className="text-muted-foreground text-sm">({city.name_bs || city.nameBS})</span>
               )}
             </span>
           </SelectItem>

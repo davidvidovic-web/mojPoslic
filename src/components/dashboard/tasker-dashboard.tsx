@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { Job } from '@/types/job'
-import { ApplicationsSection } from './tasker/applications-section'
+import { AppliedJobsSection } from './tasker/applied-jobs-section'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { TaskerQuickActions } from './tasker/tasker-quick-actions'
 import { SavedJobsSection } from './tasker/saved-jobs-section'
@@ -20,11 +20,7 @@ import {
   LayoutDashboard,
   Briefcase,
   MessageSquare,
-  Zap,
-  DollarSign,
-  BarChart3,
-  Puzzle,
-  Lock
+  Zap
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -40,7 +36,7 @@ interface JobApplication {
   id: string
   job_id: string
   applied_at: string
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'completed'
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   job: Job
 }
 
@@ -87,22 +83,13 @@ export function TaskerDashboard() {
         router.push('/dashboard')
         break
       case 'jobs':
-        router.push('/jobs')
+        router.push('/dashboard/jobs')
         break
       case 'messages':
-        router.push('/messages')
+        router.push('/dashboard/messages')
         break
       case 'connections':
         router.push('/connections')
-        break
-      case 'finances':
-        // TODO: Implement finances page
-        break
-      case 'analytics':
-        // TODO: Implement analytics page
-        break
-      case 'integrations':
-        // TODO: Implement integrations page
         break
     }
   }
@@ -149,10 +136,10 @@ export function TaskerDashboard() {
           const apps = applicationsData || []
           const newStats: ApplicationStats = {
             total: apps.length,
-            pending: apps.filter((app: JobApplication) => app.status === 'pending').length,
-            accepted: apps.filter((app: JobApplication) => app.status === 'accepted').length,
-            completed: apps.filter((app: JobApplication) => app.status === 'completed').length,
-            rejected: apps.filter((app: JobApplication) => app.status === 'rejected').length,
+            pending: apps.filter((app: JobApplication) => app.status === 'PENDING').length,
+            accepted: apps.filter((app: JobApplication) => ['SHORTLISTED', 'SELECTED'].includes(app.status)).length,
+            completed: apps.filter((app: JobApplication) => app.status === 'SELECTED').length,
+            rejected: apps.filter((app: JobApplication) => app.status === 'REJECTED').length,
             totalEarnings: 0 // TODO: Calculate from completed jobs
           }
           setStats(newStats)
@@ -301,27 +288,6 @@ export function TaskerDashboard() {
                         Connections
                       </div>
                     </SelectItem>
-                    <SelectItem value="finances" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <DollarSign className="h-4 w-4 text-emerald-600" />
-                        Finances
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="analytics" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <BarChart3 className="h-4 w-4 text-indigo-600" />
-                        Analytics
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="integrations" disabled>
-                      <div className="flex items-center gap-2 opacity-50">
-                        <Puzzle className="h-4 w-4 text-orange-600" />
-                        Integrations
-                        <Lock className="h-3 w-3 ml-1" />
-                      </div>
-                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -331,43 +297,22 @@ export function TaskerDashboard() {
           {/* Tabs for tablet and desktop */}
           <div className="hidden md:block">
             <Tabs value={activeTab} onValueChange={navigateToSection} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span className="hidden lg:inline">Overview</span>
+                  <span>Overview</span>
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span className="hidden lg:inline">Jobs</span>
+                  <span>Jobs</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span className="hidden lg:inline">Messages</span>
+                  <span>Messages</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
-                  <span className="hidden lg:inline">Connections</span>
-                </TabsTrigger>
-                <TabsTrigger value="finances" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-emerald-600" />
-                    <span className="hidden lg:inline">Finances</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger value="analytics" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-indigo-600" />
-                    <span className="hidden lg:inline">Analytics</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger value="integrations" disabled className="opacity-50">
-                  <div className="flex items-center gap-2">
-                    <Puzzle className="h-4 w-4 text-orange-600" />
-                    <span className="hidden lg:inline">Integrations</span>
-                    <Lock className="h-3 w-3" />
-                  </div>
+                  <span>Connections</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -389,9 +334,9 @@ export function TaskerDashboard() {
                     <TaskerQuickActions />
                   </div>
                   
-                  {/* Applications - first/second on mobile */}
+                  {/* Applied Jobs - first/second on mobile */}
                   <div className="mb-8">
-                    <ApplicationsSection applications={applications.slice(0, 5)} />
+                    <AppliedJobsSection applications={applications.slice(0, 5)} />
                   </div>
                   
                   {/* Recommended Jobs - third on mobile */}
@@ -432,9 +377,9 @@ export function TaskerDashboard() {
                   <TaskerQuickActions />
                 </div>
                 
-                {/* Applications - second on mobile */}
+                {/* Applied Jobs - second on mobile */}
                 <div className="mb-8">
-                  <ApplicationsSection applications={applications} />
+                  <AppliedJobsSection applications={applications} />
                 </div>
                 
                 {/* Recommended Jobs - third on mobile */}

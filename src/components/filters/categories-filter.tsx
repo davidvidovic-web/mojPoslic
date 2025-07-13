@@ -50,9 +50,9 @@ export function CategoriesFilter({
           {Array.isArray(mainCategories) && mainCategories.map((category) => (
             <SelectItem key={category.id} value={category.key}>
               <span className="flex items-center gap-2">
-                {category.name_en}
-                {category.name_bs !== category.name_en && (
-                  <span className="text-muted-foreground text-sm">({category.name_bs})</span>
+                {category.nameEN || category.name_en}
+                {(category.nameBS || category.name_bs) !== (category.nameEN || category.name_en) && (
+                  <span className="text-muted-foreground text-sm">({category.nameBS || category.name_bs})</span>
                 )}
                 {category.is_popular && (
                   <span className="text-xs bg-secondary text-secondary-foreground px-1 rounded">Popular</span>
@@ -78,9 +78,9 @@ export function CategoriesFilter({
             {Array.isArray(subcategories) && subcategories.map((subcategory) => (
               <SelectItem key={subcategory.id} value={subcategory.key}>
                 <span className="flex items-center gap-2">
-                  {subcategory.name_en}
-                  {subcategory.name_bs !== subcategory.name_en && (
-                    <span className="text-muted-foreground text-sm">({subcategory.name_bs})</span>
+                  {subcategory.nameEN || subcategory.name_en}
+                  {(subcategory.nameBS || subcategory.name_bs) !== (subcategory.nameEN || subcategory.name_en) && (
+                    <span className="text-muted-foreground text-sm">({subcategory.nameBS || subcategory.name_bs})</span>
                   )}
                 </span>
               </SelectItem>

@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Job } from '@/types/job'
-import { MapPin, Calendar, DollarSign, Car } from 'lucide-react'
+import { MapPin, Calendar, DollarSign, Car, Star } from 'lucide-react'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
 
@@ -20,10 +20,6 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
     return new Date(dateString).toLocaleDateString()
   }
 
-  const handleFeatureToggle = () => {
-    onFeature?.(job.id, !job.is_featured)
-  }
-
   return (
     <Card className={`border-l-4 ${job.is_featured ? 'border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/20' : 'border-l-blue-500'}`}>
       <CardContent className="p-4 sm:p-6">
@@ -35,7 +31,8 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold">{job.title}</h3>
                   {job.is_featured && (
-                    <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs">
+                    <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-current" />
                       Featured
                     </Badge>
                   )}
@@ -65,7 +62,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
                 applicationCount={applicationCount}
                 onEdit={() => onEdit(job)}
                 onDelete={() => onDelete(job.id)}
-                onFeature={onFeature ? handleFeatureToggle : undefined}
+                onFeature={onFeature ? () => onFeature(job.id, !job.is_featured) : undefined}
                 isFeatured={job.is_featured}
               />
             </div>

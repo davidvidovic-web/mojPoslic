@@ -9,21 +9,33 @@ import { useQuery } from '@tanstack/react-query'
 interface City {
   id: string
   key: string
-  nameEN: string
-  nameBS: string
-  isSpecial: boolean
-  isActive: boolean
-  countryCode: string
+  name_en: string
+  name_bs: string
+  is_special: boolean
+  is_active: boolean
+  country?: string
+  state?: string
+  sort_order?: number
+  // Keep compatibility with old property names
+  nameEN?: string
+  nameBS?: string
+  isSpecial?: boolean
+  isActive?: boolean
+  countryCode?: string
 }
 
 interface Category {
   id: string
   key: string
-  name_en: string
-  name_bs: string
-  is_popular: boolean
-  parent_id: string | null
-  created_at: string
+  nameEN: string
+  nameBS: string
+  children?: Category[]
+  // Legacy flat structure compatibility
+  name_en?: string
+  name_bs?: string
+  is_popular?: boolean
+  parent_id?: string | null
+  created_at?: string
 }
 
 // Query Keys
@@ -40,19 +52,22 @@ export const dataKeys = {
 async function fetchCities(): Promise<City[]> {
   const response = await fetch('/api/cities')
   if (!response.ok) throw new Error('Failed to fetch cities')
-  return response.json()
+  const data = await response.json()
+  return data.cities || []
 }
 
 async function fetchPopularCities(): Promise<City[]> {
   const response = await fetch('/api/cities?popular=true')
   if (!response.ok) throw new Error('Failed to fetch popular cities')
-  return response.json()
+  const data = await response.json()
+  return data.cities || []
 }
 
 async function fetchCategories(): Promise<Category[]> {
   const response = await fetch('/api/categories')
   if (!response.ok) throw new Error('Failed to fetch categories')
-  return response.json()
+  const data = await response.json()
+  return data.categories || []
 }
 
 // Query Hooks
@@ -77,17 +92,23 @@ export function useCities() {
 
   const getCitiesByCountry = (countryCode: string) => {
     if (!Array.isArray(query.data)) return []
-    return query.data.filter((city: City) => city.countryCode === countryCode) || []
+    return query.data.filter((city: City) => 
+      (city.countryCode === countryCode) || (city.country === countryCode)
+    ) || []
   }
 
   const getActiveCities = () => {
     if (!Array.isArray(query.data)) return []
-    return query.data.filter((city: City) => city.isActive) || []
+    return query.data.filter((city: City) => 
+      city.is_active !== false && city.isActive !== false
+    ) || []
   }
 
   const getSpecialCities = () => {
     if (!Array.isArray(query.data)) return []
-    return query.data.filter((city: City) => city.isSpecial) || []
+    return query.data.filter((city: City) => 
+      city.is_special === true || city.isSpecial === true
+    ) || []
   }
 
   return {
@@ -134,29 +155,48 @@ export function useCategories() {
     if (!Array.isArray(query.data)) return []
     
     if (parentId === undefined) {
-      // Return main categories (no parent)
-      return query.data.filter((category: Category) => category.parent_id === null) || []
+      // For hierarchical data, return top-level categories
+      return query.data.filter((category: Category) => !category.parent_id) || []
     }
-    // Return subcategories
-    return query.data.filter((category: Category) => category.parent_id === parentId) || []
+    // For hierarchical data, look within children arrays
+    for (const category of query.data) {
+      if (category.id === parentId && category.children) {
+        return category.children
+      }
+    }
+    return []
   }
 
   const getMainCategories = () => {
     // Ensure query.data is an array before attempting to filter
     if (!Array.isArray(query.data)) return []
-    return query.data.filter((category: Category) => category.parent_id === null) || []
+    // For hierarchical data, return all top-level categories
+    return query.data || []
   }
 
   const getSubcategories = (parentId: string) => {
     // Ensure query.data is an array before attempting to filter
     if (!Array.isArray(query.data)) return []
-    return query.data.filter((category: Category) => category.parent_id === parentId) || []
+    // For hierarchical data, find the parent and return its children
+    const parent = query.data.find((category: Category) => category.id === parentId)
+    return parent?.children || []
   }
 
   const getPopularCategories = () => {
     // Ensure query.data is an array before attempting to filter
     if (!Array.isArray(query.data)) return []
-    return query.data.filter((category: Category) => category.is_popular) || []
+    // For hierarchical data, this is less straightforward
+    // We'll need to check both parent and child categories
+    const popular: Category[] = []
+    query.data.forEach((category: Category) => {
+      if (category.is_popular) popular.push(category)
+      if (category.children) {
+        category.children.forEach((child: Category) => {
+          if (child.is_popular) popular.push(child)
+        })
+      }
+    })
+    return popular
   }
 
   return {

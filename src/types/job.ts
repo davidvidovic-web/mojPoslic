@@ -106,6 +106,7 @@ export interface CreateJobData {
   contact_email?: string
   application_url?: string
   tags?: string[] // Keep for backward compatibility but deprecated
+  is_featured?: boolean // Whether the job should be featured
 }
 
 // Job filtering interface for TanStack Query

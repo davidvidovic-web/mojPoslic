@@ -39,8 +39,8 @@ async function fetchJob(id: string): Promise<Job> {
   return response.json()
 }
 
-async function fetchUserJobs(userId: string): Promise<Job[]> {
-  const response = await fetch(`/api/jobs/user/${userId}`)
+async function fetchUserJobs(): Promise<Job[]> {
+  const response = await fetch(`/api/jobs/my-jobs`)
   if (!response.ok) throw new Error('Failed to fetch user jobs')
   return response.json()
 }
@@ -70,6 +70,16 @@ async function deleteJob(id: string): Promise<void> {
   if (!response.ok) throw new Error('Failed to delete job')
 }
 
+async function featureJob(id: string, is_featured: boolean): Promise<Job> {
+  const response = await fetch(`/api/jobs/${id}/feature`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_featured }),
+  })
+  if (!response.ok) throw new Error('Failed to update job featured status')
+  return response.json()
+}
+
 // Query Hooks
 export function useJobs(filters?: JobFilters) {
   return useQuery({
@@ -90,11 +100,10 @@ export function useJob(id: string) {
   })
 }
 
-export function useUserJobs(userId: string) {
+export function useUserJobs() {
   return useQuery({
-    queryKey: jobKeys.user(userId),
-    queryFn: () => fetchUserJobs(userId),
-    enabled: !!userId,
+    queryKey: jobKeys.user('current'),
+    queryFn: () => fetchUserJobs(),
     staleTime: 2 * 60 * 1000, // 2 minutes for user's own jobs
   })
 }
@@ -176,6 +185,29 @@ export function useDeleteJob() {
     onError: (error) => {
       toast.error('Failed to delete job. Please try again.')
       console.error('Job deletion error:', error)
+    },
+  })
+}
+
+export function useFeatureJob() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ id, is_featured }: { id: string; is_featured: boolean }) =>
+      featureJob(id, is_featured),
+    onSuccess: (featuredJob) => {
+      // Update the specific job in cache
+      queryClient.setQueryData(jobKeys.detail(featuredJob.id), featuredJob)
+      
+      // Invalidate job lists to reflect changes
+      queryClient.invalidateQueries({ queryKey: jobKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: jobKeys.user('current') })
+      
+      toast.success(`Job ${featuredJob.is_featured ? 'featured' : 'unfeatured'} successfully!`)
+    },
+    onError: (error) => {
+      toast.error('Failed to update job featured status. Please try again.')
+      console.error('Job feature update error:', error)
     },
   })
 }

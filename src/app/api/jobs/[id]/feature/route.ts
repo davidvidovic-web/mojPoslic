@@ -1,53 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { PrismaClient } from '@prisma/client'
+import { auth } from '@/lib/auth'
 
-export async function PATCH(
+const prisma = new PrismaClient()
+
+export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     const { is_featured } = await request.json()
-    
-    if (typeof is_featured !== 'boolean') {
-      return NextResponse.json({ error: 'Invalid is_featured value' }, { status: 400 })
-    }
+    const jobId = params.id
 
-    // Check if the job exists and belongs to the user
-    const job = await prisma.job_listings.findUnique({
-      where: { id: params.id }
+    // Verify that the user owns this job
+    const job = await prisma.jobListing.findUnique({
+      where: { id: jobId },
+      select: { postedBy: true, isFeatured: true }
     })
 
     if (!job) {
-      return NextResponse.json({ error: 'Job not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Job not found' },
+        { status: 404 }
+      )
     }
 
-    if (job.posted_by !== session.user.id) {
-      return NextResponse.json({ error: 'You can only feature your own jobs' }, { status: 403 })
+    if (job.postedBy !== session.user.id) {
+      return NextResponse.json(
+        { error: 'You can only feature your own jobs' },
+        { status: 403 }
+      )
     }
 
     // Update the job's featured status
-    const updatedJob = await prisma.job_listings.update({
-      where: { id: params.id },
-      data: { is_featured }
+    const updatedJob = await prisma.jobListing.update({
+      where: { id: jobId },
+      data: { isFeatured: is_featured },
+      select: { id: true, isFeatured: true }
     })
 
-    return NextResponse.json({ 
-      success: true, 
-      is_featured: updatedJob.is_featured 
+    return NextResponse.json({
+      id: updatedJob.id,
+      is_featured: updatedJob.isFeatured
     })
 
   } catch (error) {
-    console.error('Error updating job feature status:', error)
+    console.error('Error updating job featured status:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update job featured status' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

@@ -7,19 +7,25 @@ import {
   Calendar, 
   DollarSign, 
   Tag,
-  Car
+  Car,
+  Star,
+  Users,
+  CheckCircle
 } from "lucide-react"
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
+import { useJobApplicantCount } from "@/hooks/use-applications"
 
 interface JobHeaderProps {
   job: Job
   formatDate: (dateString: string) => string
   formatSalary: (job: Job) => string | null
+  hasApplied?: boolean
 }
 
-export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
+export function JobHeader({ job, formatDate, formatSalary, hasApplied = false }: JobHeaderProps) {
   const getTypeVariant = getJobTypeBadgeVariant
+  const { data: applicantCount = 0 } = useJobApplicantCount(job.id)
 
   return (
     <Card>
@@ -34,9 +40,23 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
                 <h1 className="text-2xl font-bold">{job.title}</h1>
                 <p className="text-lg text-muted-foreground mt-1">{formatClientName(job.company)}</p>
               </div>
-              <Badge variant={getTypeVariant(job.type)}>
-                {formatJobType(job.type)}
-              </Badge>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={getTypeVariant(job.type)}>
+                  {formatJobType(job.type)}
+                </Badge>
+                {job.is_featured && (
+                  <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-current" />
+                    Featured
+                  </Badge>
+                )}
+                {hasApplied && (
+                  <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Applied
+                  </Badge>
+                )}
+              </div>
             </div>
             
             <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
@@ -64,6 +84,12 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
                 <div className="flex items-center gap-1">
                   <Car className="h-4 w-4" />
                   {formatTransportation(job.transportation, job.transportation_amount)}
+                </div>
+              )}
+              {applicantCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {applicantCount} {applicantCount === 1 ? 'applicant' : 'applicants'}
                 </div>
               )}
             </div>

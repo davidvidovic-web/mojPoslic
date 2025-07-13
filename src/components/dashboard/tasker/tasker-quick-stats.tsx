@@ -8,7 +8,7 @@ interface JobApplication {
   id: string
   job_id: string
   applied_at: string
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'completed'
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   job: Job
 }
 

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { getConnectionCost } from '@/lib/connections'
+import { ApplicationStatus } from '@/types/application'
+
+const prisma = new PrismaClient()
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,13 +15,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { message, resume } = await request.json()
+    const body = await request.json()
+    const { message, resume } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 })
     }
 
-    // Get user info using raw SQL
+    // Validate job exists and is active
+    const job = await prisma.jobListing.findFirst({
+      where: {
+        id,
+        status: 'active',
+        isActive: true
+      }
+    })
+
+    if (!job) {
+      return NextResponse.json({ error: 'Job not found or no longer active' }, { status: 404 })
+    }
+
+    // Get user info
     const userResult = await prisma.$queryRaw`
       SELECT id, connections 
       FROM users 
@@ -31,6 +47,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     const user = userResult[0]
+
+    // Check if user is trying to apply to their own job
+    if (job.postedById === user.id) {
+      return NextResponse.json({ error: 'Cannot apply to your own job' }, { status: 400 })
+    }
 
     // Check if user has enough connections
     const connectionCost = getConnectionCost('JOB_APPLICATION')
@@ -60,29 +81,76 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // Create application and spend connections in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create the application
+      // Create the application with enhanced data
       const application = await tx.application.create({
         data: {
           jobId: id,
           userId: user.id,
           message: message || null,
           resume: resume || null,
-          status: 'pending'
+          status: ApplicationStatus.PENDING
+        },
+        include: {
+          job: {
+            select: {
+              id: true,
+              title: true,
+              company: true,
+              type: true,
+              city: {
+                select: {
+                  id: true,
+                  nameEN: true,
+                  nameBS: true
+                }
+              },
+              category: {
+                select: {
+                  id: true,
+                  nameEN: true,
+                  nameBS: true
+                }
+              }
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true
+            }
+          }
         }
       })
 
-      // Spend connections using raw SQL
+      // Spend connections
       await tx.$executeRaw`
         UPDATE users 
         SET connections = connections - ${connectionCost}
         WHERE id = ${user.id}
       `
 
-      // Log connection usage using raw SQL
+      // Log connection usage
       await tx.$executeRaw`
         INSERT INTO connection_history (id, user_id, action, amount, description, job_id, created_at)
         VALUES (gen_random_uuid()::text, ${user.id}, 'JOB_APPLICATION'::"ConnectionAction", ${-connectionCost}, 'Applied for job', ${id}, NOW())
       `
+
+      // Create notification for job poster
+      await tx.notification.create({
+        data: {
+          userId: job.postedById,
+          type: 'JOB_APPLICATION',
+          title: 'New Job Application',
+          content: `${session.user.name || session.user.email} applied for your job: ${job.title}`,
+          data: {
+            jobId: id,
+            applicationId: application.id,
+            applicantId: user.id
+          }
+        }
+      })
 
       return application
     })
@@ -91,11 +159,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       success: true, 
       application: result,
       connectionsSpent: connectionCost,
-      remainingConnections: currentConnections - connectionCost
+      remainingConnections: currentConnections - connectionCost,
+      message: 'Application submitted successfully!'
     })
 
   } catch (error) {
     console.error('Error creating application:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to submit application. Please try again.',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    }, { status: 500 })
   }
 }

@@ -44,6 +44,7 @@ export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPo
         benefits: formData.benefits || null,
         application_url: formData.application_url || formData.website || null,
         contact_email: formData.contact_email || formData.email || user?.email,
+        is_featured: formData.is_featured || false,
       }),
     })
 

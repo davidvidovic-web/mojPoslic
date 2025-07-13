@@ -14,9 +14,9 @@ interface JobCardActionsProps {
 export function JobCardActions({ 
   applicationCount, 
   onEdit, 
-  onDelete, 
+  onDelete,
   onFeature,
-  isFeatured = false 
+  isFeatured = false
 }: JobCardActionsProps) {
   return (
     <div className="flex items-center gap-1">

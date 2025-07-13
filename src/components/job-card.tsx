@@ -3,15 +3,16 @@
 import { Job } from "@/types/job"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, MapPin, Briefcase } from "lucide-react"
+import { Calendar, MapPin, Briefcase, Star, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 interface JobCardProps {
   job: Job
   viewMode?: 'grid' | 'list'
+  hasApplied?: boolean
 }
 
-export function JobCard({ job, viewMode = 'grid' }: JobCardProps) {
+export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardProps) {
   // Get relative time string for job posting date
   const getRelativeTimeString = (date: string) => {
     const now = new Date()
@@ -75,10 +76,23 @@ export function JobCard({ job, viewMode = 'grid' }: JobCardProps) {
         <div className="flex flex-col justify-between md:items-end gap-4">
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{formatJobType(job.type)}</Badge>
-            {job.is_featured && <Badge variant="default">Featured</Badge>}
+            {job.is_featured && (
+              <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+                <Star className="h-3 w-3 fill-current" />
+                Featured
+              </Badge>
+            )}
+            {hasApplied && (
+              <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Applied
+              </Badge>
+            )}
           </div>
-          <Button asChild>
-            <Link href={`/jobs/${job.id}`}>View Job</Link>
+          <Button asChild variant={hasApplied ? "outline" : "default"}>
+            <Link href={`/jobs/${job.id}`}>
+              {hasApplied ? "View Application" : "View Job"}
+            </Link>
           </Button>
         </div>
       </div>
@@ -119,12 +133,25 @@ export function JobCard({ job, viewMode = 'grid' }: JobCardProps) {
       </p>
       
       <div className="flex flex-wrap gap-2 mb-4">
-        {job.is_featured && <Badge variant="default">Featured</Badge>}
+        {job.is_featured && (
+          <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+            <Star className="h-3 w-3 fill-current" />
+            Featured
+          </Badge>
+        )}
+        {hasApplied && (
+          <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Applied
+          </Badge>
+        )}
         {job.category && <Badge variant="secondary">{job.category.name}</Badge>}
       </div>
       
-      <Button asChild className="w-full mt-auto">
-        <Link href={`/jobs/${job.id}`}>View Details</Link>
+      <Button asChild className="w-full mt-auto" variant={hasApplied ? "outline" : "default"}>
+        <Link href={`/jobs/${job.id}`}>
+          {hasApplied ? "View Application" : "View Details"}
+        </Link>
       </Button>
     </div>
   )

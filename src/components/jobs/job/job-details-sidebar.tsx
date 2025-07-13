@@ -68,7 +68,9 @@ export function JobDetailsSidebar({ job, formatDate, formatSalary, showAddress =
           <>
             <Separator />
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Salary</span>
+              <span className="text-sm text-muted-foreground">
+                {job.type === 'quick_job' ? 'Payment' : 'Salary'}
+              </span>
               <span className="text-sm font-medium">{formatSalary(job)}</span>
             </div>
           </>

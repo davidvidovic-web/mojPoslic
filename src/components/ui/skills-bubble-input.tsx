@@ -8,15 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface Category {
-  id: string
-  key: string
-  name_bs: string
-  name_en: string
-  is_popular: boolean
-  parent_id?: string
-}
+import type { Category } from '@/types/job'
 
 interface SkillsBubbleInputProps {
   value: string[]
@@ -122,10 +114,11 @@ export function SkillsBubbleInput({
       if (categories && Array.isArray(categories)) {
         categories.forEach((category: Category) => {
           // Add category name if it matches search and isn't already selected
-          if (category.name_en && 
-              category.name_en.toLowerCase().includes(searchTerm) && 
-              !value.includes(category.name_en)) {
-            newSuggestions.push(category.name_en)
+          const categoryName = category.name_en
+          if (categoryName && 
+              categoryName.toLowerCase().includes(searchTerm) && 
+              !value.includes(categoryName)) {
+            newSuggestions.push(categoryName)
           }
         })
       }

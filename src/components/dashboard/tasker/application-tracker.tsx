@@ -1,0 +1,376 @@
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useApplications, useWithdrawApplication } from '@/hooks/use-applications'
+import { ApplicationStatus, JobApplication } from '@/types/application'
+import { 
+  Briefcase,
+  Search,
+  Calendar,
+  MapPin,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Star,
+  Eye,
+  MessageSquare,
+  X
+} from 'lucide-react'
+import { formatDistanceToNow, format } from 'date-fns'
+
+export function TaskerApplicationTracker() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState('all')
+
+  const { data: applications = [], isLoading } = useApplications({
+    search: searchQuery || undefined
+  })
+
+  // For now, calculate basic stats from the applications
+  const stats = {
+    total: applications.length,
+    pending: applications.filter(app => app.status === ApplicationStatus.PENDING).length,
+    reviewed: applications.filter(app => app.status === ApplicationStatus.REVIEWED).length,
+    shortlisted: applications.filter(app => app.status === ApplicationStatus.SHORTLISTED).length,
+    selected: applications.filter(app => app.status === ApplicationStatus.SELECTED).length,
+    rejected: applications.filter(app => app.status === ApplicationStatus.REJECTED).length,
+  }
+
+  const withdrawMutation = useWithdrawApplication()
+
+  // Filter applications by status
+  const filteredApplications = applications.filter(app => {
+    if (activeTab === 'all') return true
+    if (activeTab === 'pending') return app.status === ApplicationStatus.PENDING
+    if (activeTab === 'reviewed') return app.status === ApplicationStatus.REVIEWED
+    if (activeTab === 'shortlisted') return app.status === ApplicationStatus.SHORTLISTED
+    if (activeTab === 'selected') return app.status === ApplicationStatus.SELECTED
+    if (activeTab === 'rejected') return app.status === ApplicationStatus.REJECTED
+    return true
+  })
+
+  const handleWithdraw = async (applicationId: string) => {
+    if (confirm('Are you sure you want to withdraw this application?')) {
+      try {
+        await withdrawMutation.mutateAsync(applicationId)
+      } catch (error) {
+        console.error('Withdraw error:', error)
+      }
+    }
+  }
+
+  const getStatusBadge = (status: ApplicationStatus) => {
+    const colors = {
+      [ApplicationStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+      [ApplicationStatus.REVIEWED]: 'bg-blue-100 text-blue-800',
+      [ApplicationStatus.SHORTLISTED]: 'bg-purple-100 text-purple-800',
+      [ApplicationStatus.SELECTED]: 'bg-green-100 text-green-800',
+      [ApplicationStatus.REJECTED]: 'bg-red-100 text-red-800',
+      [ApplicationStatus.WITHDRAWN]: 'bg-gray-100 text-gray-800'
+    }
+
+    const icons = {
+      [ApplicationStatus.PENDING]: Clock,
+      [ApplicationStatus.REVIEWED]: Eye,
+      [ApplicationStatus.SHORTLISTED]: Star,
+      [ApplicationStatus.SELECTED]: CheckCircle,
+      [ApplicationStatus.REJECTED]: XCircle,
+      [ApplicationStatus.WITHDRAWN]: X
+    }
+
+    const Icon = icons[status]
+
+    return (
+      <Badge className={colors[status]}>
+        <Icon className="h-3 w-3 mr-1" />
+        {status.toLowerCase()}
+      </Badge>
+    )
+  }
+
+  const getStatusTimeline = (application: JobApplication) => {
+    const timeline = []
+    
+    if (application.appliedAt) {
+      timeline.push({
+        status: 'Applied',
+        date: application.appliedAt,
+        icon: Briefcase,
+        color: 'text-blue-600'
+      })
+    }
+    
+    if (application.reviewedAt) {
+      timeline.push({
+        status: 'Reviewed',
+        date: application.reviewedAt,
+        icon: Eye,
+        color: 'text-blue-600'
+      })
+    }
+    
+    if (application.shortlistedAt) {
+      timeline.push({
+        status: 'Shortlisted',
+        date: application.shortlistedAt,
+        icon: Star,
+        color: 'text-purple-600'
+      })
+    }
+    
+    if (application.selectedAt) {
+      timeline.push({
+        status: 'Selected',
+        date: application.selectedAt,
+        icon: CheckCircle,
+        color: 'text-green-600'
+      })
+    }
+    
+    if (application.rejectedAt) {
+      timeline.push({
+        status: 'Rejected',
+        date: application.rejectedAt,
+        icon: XCircle,
+        color: 'text-red-600'
+      })
+    }
+    
+    if (application.withdrawnAt) {
+      timeline.push({
+        status: 'Withdrawn',
+        date: application.withdrawnAt,
+        icon: X,
+        color: 'text-gray-600'
+      })
+    }
+
+    return timeline
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.total || 0}</div>
+            <div className="text-sm text-gray-600">Total</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-600">{stats.pending || 0}</div>
+            <div className="text-sm text-gray-600">Pending</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.reviewed || 0}</div>
+            <div className="text-sm text-gray-600">Reviewed</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">{stats.shortlisted || 0}</div>
+            <div className="text-sm text-gray-600">Shortlisted</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.selected || 0}</div>
+            <div className="text-sm text-gray-600">Selected</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{stats.rejected || 0}</div>
+            <div className="text-sm text-gray-600">Rejected</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Applications List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            My Applications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Search */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search applications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
+              <TabsTrigger value="shortlisted">Shortlisted</TabsTrigger>
+              <TabsTrigger value="selected">Selected</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeTab} className="mt-6">
+              {filteredApplications.length === 0 ? (
+                <div className="text-center py-12">
+                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">
+                    {searchQuery 
+                      ? 'No applications match your search'
+                      : activeTab === 'all' 
+                        ? 'No applications yet'
+                        : `No ${activeTab} applications`
+                    }
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredApplications.map((application) => (
+                    <Card key={application.id} className="border border-gray-200">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold">
+                                  {application.job?.title}
+                                </h3>
+                                <p className="text-gray-600 font-medium">
+                                  {application.job?.company}
+                                </p>
+                                
+                                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                  {application.job?.city && (
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="h-4 w-4" />
+                                      {application.job.city.nameEN}
+                                    </div>
+                                  )}
+                                  {application.job?.type && (
+                                    <div className="flex items-center gap-1">
+                                      <Briefcase className="h-4 w-4" />
+                                      {application.job.type}
+                                    </div>
+                                  )}
+                                  {(application.job?.salaryMin || application.job?.salary) && (
+                                    <div className="flex items-center gap-1">
+                                      <DollarSign className="h-4 w-4" />
+                                      {application.job.salary || 
+                                        `${application.job.salaryMin}${application.job.salaryMax ? `-${application.job.salaryMax}` : '+'} BAM`
+                                      }
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="text-right">
+                                {getStatusBadge(application.status)}
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Applied {formatDistanceToNow(new Date(application.appliedAt))} ago
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Application Timeline */}
+                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                              <p className="text-sm font-medium text-gray-700 mb-2">
+                                Application Timeline
+                              </p>
+                              <div className="flex items-center gap-4 overflow-x-auto">
+                                {getStatusTimeline(application).map((item, index) => (
+                                  <div key={index} className="flex items-center gap-2 whitespace-nowrap">
+                                    <item.icon className={`h-4 w-4 ${item.color}`} />
+                                    <div className="text-xs">
+                                      <div className="font-medium">{item.status}</div>
+                                      <div className="text-gray-500">
+                                        {format(new Date(item.date), 'MMM d, yyyy')}
+                                      </div>
+                                    </div>
+                                    {index < getStatusTimeline(application).length - 1 && (
+                                      <div className="w-4 h-px bg-gray-300 mx-2" />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Feedback */}
+                            {application.feedback && (
+                              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                                <p className="text-sm font-medium text-blue-800 mb-1">
+                                  Employer Feedback:
+                                </p>
+                                <p className="text-sm text-blue-700">
+                                  {application.feedback}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 mt-4">
+                              <Button size="sm" variant="outline">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Job
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <MessageSquare className="h-4 w-4 mr-1" />
+                                Message Employer
+                              </Button>
+                              {(application.status === ApplicationStatus.PENDING || 
+                                application.status === ApplicationStatus.REVIEWED) && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleWithdraw(application.id)}
+                                  disabled={withdrawMutation.isPending}
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Withdraw
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/contexts/auth-context'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
 import { ClientDashboard } from '@/components/dashboard/client-dashboard'
 import { CompanyDashboard } from '@/components/dashboard/company-dashboard'

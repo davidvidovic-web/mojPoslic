@@ -185,6 +185,12 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
               : job.salaryType === "monthly"
                 ? "/month"
                 : "";
+      
+      // Don't show "From" for fixed prices
+      if (job.salaryType === 'fixed') {
+        return `${min} BAM`;
+      }
+      
       return `From ${min} BAM${type}`;
     }
 
@@ -313,6 +319,13 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
 
         {/* 5. Bubble tags */}
         <div className="flex flex-wrap gap-2">
+          {job.is_featured && (
+            <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+              <Star className="h-3 w-3 fill-current" />
+              Featured
+            </Badge>
+          )}
+          
           <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs">
             {formatJobType(job.type)}
           </Badge>

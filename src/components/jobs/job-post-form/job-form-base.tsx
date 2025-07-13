@@ -143,6 +143,7 @@ export function JobFormBase({
           <ReviewStep
             formData={formData}
             onValidation={handleReviewValidation}
+            onChange={handleFormDataUpdate}
           />
         )
       default:

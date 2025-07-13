@@ -8,17 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreateJobData } from '@/types/job'
 import { CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-
-interface Category {
-  id: string
-  nameEN: string
-  nameBS: string
-  children: Array<{
-    id: string
-    nameEN: string
-    nameBS: string
-  }>
-}
+import { useCategories } from '@/hooks/use-data'
 
 interface BasicDetailsStepProps {
   formData: CreateJobData
@@ -28,9 +18,8 @@ interface BasicDetailsStepProps {
 
 export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDetailsStepProps) {
   const { user } = useAuth()
-  const [categories, setCategories] = useState<Category[]>([])
+  const { categories, isLoading: isLoadingCategories } = useCategories()
   const [selectedParentCategory, setSelectedParentCategory] = useState('')
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
 
   // Check if user can post all job types (companies and admins)
   const canPostAllJobTypes = user?.role === 'company' || user?.role === 'admin'
@@ -59,30 +48,13 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
   }, [canPostAllJobTypes, formData.requirements, formData.benefits, formData.type])
 
   // Load categories
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setIsLoadingCategories(true)
-        const response = await fetch('/api/categories')
-        if (!response.ok) throw new Error('Failed to fetch categories')
-        
-        const data = await response.json()
-        setCategories(data.categories || [])
-      } catch (error) {
-        console.error('Error loading categories:', error)
-      } finally {
-        setIsLoadingCategories(false)
-      }
-    }
-
-    loadCategories()
-  }, [])
+  // Categories are now loaded via useCategories hook from use-data.ts
 
   // Set initial parent category when editing
   useEffect(() => {
     if (formData.category_id && categories.length > 0) {
       const parentCategory = categories.find(cat =>
-        cat.children.some(child => child.id === formData.category_id)
+        cat.children?.some(child => child.id === formData.category_id)
       )
       if (parentCategory) {
         setSelectedParentCategory(parentCategory.id)

@@ -3,15 +3,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreateJobData } from '@/types/job'
-import { Rocket } from 'lucide-react'
+import { Rocket, Star } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useEffect, useState } from 'react'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
 import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 
 interface ReviewStepProps {
   formData: CreateJobData
   onValidation: (isValid: boolean) => void
+  onChange?: (updates: Partial<CreateJobData>) => void
 }
 
 interface City {
@@ -26,7 +28,7 @@ interface Category {
   nameBS: string
 }
 
-export function ReviewStep({ formData, onValidation }: ReviewStepProps) {
+export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps) {
   const { user } = useAuth()
   const [city, setCity] = useState<City | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
@@ -251,6 +253,36 @@ export function ReviewStep({ formData, onValidation }: ReviewStepProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Feature Job Option */}
+      <Card className="border-2 border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Star className="h-4 w-4 text-yellow-600" />
+            Feature Your Job
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Make this job featured</p>
+              <p className="text-xs text-muted-foreground">
+                Featured jobs appear at the top of job listings and get more visibility
+              </p>
+            </div>
+            <Switch
+              checked={formData.is_featured || false}
+              onCheckedChange={(checked) => onChange?.({ is_featured: checked })}
+            />
+          </div>
+          {formData.is_featured && (
+            <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded">
+              <Star className="h-3 w-3 inline mr-1" />
+              This job will be featured and appear at the top of search results
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
         <h4 className="text-sm font-medium mb-2 text-primary flex items-center gap-1">
