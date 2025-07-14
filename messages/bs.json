@@ -249,6 +249,10 @@
     "list": {
       "noJobs": "Nema pronađenih poslova",
       "noJobsWithFilters": "Nema poslova koji odgovaraju trenutnim filterima",
+      "noJobsMessage": "Još uvijek nema objavljenih poslova. Neko treba da probije led!",
+      "noJobsWithFiltersMessage": "Nismo mogli pronaći poslove koji odgovaraju vašim kriterijima. Pokušajte prilagoditi filtere pretrage ili se vratite kasnije za nove prilike.",
+      "clearAllFilters": "Obriši sve filtere",
+      "beTheFirst": "Budite prvi",
       "loadMore": "Učitaj više poslova",
       "showing": "Prikazuje se {count} od {total} poslova",
       "sortBy": "Sortiraj po",

@@ -11,8 +11,10 @@ import { HelpSupportCard } from '@/components/settings/help-support-card'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export default function SettingsPage() {
+  const t = useTranslations()
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -27,7 +29,7 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.status.loading')}</p>
         </div>
       </div>
     )
@@ -46,13 +48,13 @@ export default function SettingsPage() {
             <Link href="/dashboard">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                {t('settings.backToDashboard')}
               </Button>
             </Link>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your account settings and preferences.
+            {t('settings.description')}
           </p>
         </div>
 

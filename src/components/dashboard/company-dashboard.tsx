@@ -115,14 +115,14 @@ export function CompanyDashboard() {
   }
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm('Are you sure you want to delete this job posting?')) return
+    if (!confirm(t('jobs.deleteConfirm'))) return
 
     try {
       await deleteJobMutation.mutateAsync(jobId)
-      toast.success('Job deleted successfully')
+      toast.success(t('jobs.deleteSuccess'))
     } catch (error) {
       console.error('Error deleting job:', error)
-      toast.error('Failed to delete job')
+      toast.error(t('jobs.deleteError'))
     }
   }
 
@@ -140,7 +140,7 @@ export function CompanyDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your jobs...</p>
+          <p className="text-muted-foreground">{t('dashboard.loading.jobs')}</p>
         </div>
       </div>
     )
@@ -178,15 +178,15 @@ export function CompanyDashboard() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-blue-600 dark:text-blue-300">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span>Hiring Mode Active</span>
+                <span>{t('dashboard.status.hiringModeActive')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>Quick Post & Hire</span>
+                <span>{t('dashboard.status.quickPostHire')}</span>
               </div>
             </div>
           </div>
@@ -199,35 +199,35 @@ export function CompanyDashboard() {
             <div className="bg-card border rounded-lg p-4">
               <div className="flex items-center gap-4">
                 <label htmlFor="section-select" className="text-sm font-medium text-foreground whitespace-nowrap">
-                  View Section:
+                  {t('dashboard.navigation.viewSection')}:
                 </label>
                 <Select value={activeTab} onValueChange={navigateToSection}>
                   <SelectTrigger className="flex-1" id="section-select">
-                    <SelectValue placeholder="Select a section" />
+                    <SelectValue placeholder={t('dashboard.navigation.selectSection')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="overview">
                       <div className="flex items-center gap-2">
                         <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                        Overview
+                        {t('dashboard.navigation.overview')}
                       </div>
                     </SelectItem>
                     <SelectItem value="jobs">
                       <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-green-600" />
-                        Jobs & Talent
+                        {t('dashboard.navigation.jobsTalent')}
                       </div>
                     </SelectItem>
                     <SelectItem value="messages">
                       <div className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4 text-purple-600" />
-                        Messages
+                        {t('dashboard.navigation.messages')}
                       </div>
                     </SelectItem>
                     <SelectItem value="connections">
                       <div className="flex items-center gap-2">
                         <Zap className="h-4 w-4 text-yellow-600" />
-                        Connections
+                        {t('dashboard.navigation.connections')}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -242,23 +242,19 @@ export function CompanyDashboard() {
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span>Overview</span>
+                  <span>{t('dashboard.navigation.overview')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span>Jobs & Talent</span>
+                  <span>{t('dashboard.navigation.jobsTalent')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span>Messages</span>
+                  <span>{t('dashboard.navigation.messages')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
-                  <span>Connections</span>
-                </TabsTrigger>
-                <TabsTrigger value="connections" className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-yellow-600" />
-                  <span>Connections</span>
+                  <span>{t('dashboard.navigation.connections')}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -337,7 +333,7 @@ export function CompanyDashboard() {
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
             <DialogHeader>
-              <DialogTitle>Post a Job - Free & Easy</DialogTitle>
+              <DialogTitle>{t('jobs.dialogs.postJobDialog')}</DialogTitle>
             </DialogHeader>
             <MultiStepJobForm
               onJobPosted={handleJobPosted}
@@ -355,7 +351,7 @@ export function CompanyDashboard() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Job Posting</DialogTitle>
+              <DialogTitle>{t('jobs.dialogs.editJobDialog')}</DialogTitle>
             </DialogHeader>
             {editingJob && (
               <MultiStepJobForm 

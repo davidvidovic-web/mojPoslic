@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatSkillsList, formatSkillsWithExperience } from '@/lib/profile-format'
 import { Star } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface SkillsDisplayProps {
   skills?: string[] | string | null
@@ -20,6 +21,7 @@ export function SkillsDisplay({
   showTitle = true,
   variant = 'detailed'
 }: SkillsDisplayProps) {
+  const t = useTranslations()
   const skillsWithExperience = formatSkillsWithExperience(skills, experience)
   
   if (!skillsWithExperience || skillsWithExperience.length === 0) {
@@ -42,7 +44,7 @@ export function SkillsDisplay({
     return (
       <div className={className}>
         {showTitle && (
-          <h4 className="text-sm font-medium mb-2">Skills</h4>
+          <h4 className="text-sm font-medium mb-2">{t('profile.skills.title')}</h4>
         )}
         <p className="text-sm text-muted-foreground">
           {formatSkillsList(skills)}
@@ -58,7 +60,7 @@ export function SkillsDisplay({
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Star className="h-5 w-5" />
-            Skills & Experience
+            {t('profile.skills.skillsAndExperience')}
           </CardTitle>
         </CardHeader>
       )}
@@ -77,7 +79,7 @@ export function SkillsDisplay({
         
         {skillsWithExperience.length === 0 && (
           <p className="text-sm text-muted-foreground italic">
-            No skills specified yet
+            {t('profile.skills.noSkillsSpecified')}
           </p>
         )}
       </CardContent>

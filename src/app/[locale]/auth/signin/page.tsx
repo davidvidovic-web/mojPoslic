@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { showToast } from "@/lib/toast"
+import { useTranslations } from "next-intl"
 
 export default function SignInPage() {
+  const t = useTranslations('auth')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -30,13 +32,13 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        showToast.error('Invalid email or password')
+        showToast.error(t('invalidCredentials'))
       } else {
-        showToast.success('Signed in successfully!')
+        showToast.success(t('signedInSuccessfully'))
         window.location.href = '/dashboard'
       }
     } catch {
-      showToast.error('Sign in failed')
+      showToast.error(t('signInFailed'))
     } finally {
       setLoading(false)
     }
@@ -53,20 +55,20 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Sign in to mojPoslić</CardTitle>
+          <CardTitle className="text-2xl text-center">{t('signInToMojPoslic')}</CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to sign in
+            {t('signInDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('enterEmail')}
                 value={formData.email}
                 onChange={handleInputChange}
                 required
@@ -74,13 +76,13 @@ export default function SignInPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder={t('enterPassword')}
                   value={formData.password}
                   onChange={handleInputChange}
                   required
@@ -109,17 +111,17 @@ export default function SignInPage() {
               className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold border-0 transition-all duration-200" 
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t('signingIn') : t('signIn')}
             </Button>
           </form>
 
           <div className="text-center text-sm">
-            <span className="text-muted-foreground">Don&apos;t have an account? </span>
+            <span className="text-muted-foreground">{t('dontHaveAccount')} </span>
             <Link
               href="/auth/register"
               className="text-primary underline-offset-4 hover:underline"
             >
-              Create account
+              {t('register')}
             </Link>
           </div>
         </CardContent>

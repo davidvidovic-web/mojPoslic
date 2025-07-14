@@ -8,6 +8,7 @@ import { CitiesFilter } from "@/components/filters/cities-filter"
 import { CategoriesFilter } from "@/components/filters/categories-filter"
 import { Search, ChevronDown, Filter } from "lucide-react"
 import { useFilterStore } from "@/stores/filter-store"
+import { useTranslations } from "next-intl"
 
 interface JobFiltersProps {
   // Optional props for cases where you want to override the default Zustand behavior
@@ -35,6 +36,7 @@ export function JobFilters({
   subcategoryFilter: externalSubcategoryFilter,
   setSubcategoryFilter: externalSetSubcategoryFilter
 }: JobFiltersProps) {
+  const t = useTranslations('jobs.filters')
   const {
     jobSearch,
     jobCityFilter,
@@ -72,7 +74,7 @@ export function JobFilters({
             <Search className="h-4 w-4" />
           </span>
           <Input
-            placeholder="Search jobs, companies, skills, or categories..."
+            placeholder={t('searchPlaceholder') || "Search jobs, companies, skills, or categories..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 border-border/50"
@@ -88,10 +90,10 @@ export function JobFilters({
             >
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
-                <span>Filters</span>
+                <span>{t('filters') || 'Filters'}</span>
                 {hasActiveJobFilters() && (
                   <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                    Active
+                    {t('active') || 'Active'}
                   </span>
                 )}
               </div>
@@ -104,7 +106,7 @@ export function JobFilters({
               <CitiesFilter
                 value={cityFilter}
                 onChange={setCityFilter}
-                placeholder="All locations"
+                placeholder={t('allLocations') || "All locations"}
                 className="sm:w-64"
               />
               
@@ -117,7 +119,7 @@ export function JobFilters({
                     setSubcategoryFilter("all")
                   }
                 }}
-                placeholder="All categories"
+                placeholder={t('allCategories') || "All categories"}
                 className="sm:w-64"
                 showSubcategories={true}
                 subcategoryValue={subcategoryFilter}
@@ -126,14 +128,14 @@ export function JobFilters({
               
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="sm:w-48 border-border/50">
-                  <SelectValue placeholder="Job Type" />
+                  <SelectValue placeholder={t('jobType') || "Job Type"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="quick-job">Quick Job</SelectItem>
-                  <SelectItem value="full-time">Full Time</SelectItem>
-                  <SelectItem value="part-time">Part Time</SelectItem>
-                  <SelectItem value="remote">Remote</SelectItem>
+                  <SelectItem value="all">{t('allTypes')}</SelectItem>
+                  <SelectItem value="quick-job">{t('quickJob')}</SelectItem>
+                  <SelectItem value="full-time">{t('fullTime')}</SelectItem>
+                  <SelectItem value="part-time">{t('partTime')}</SelectItem>
+                  <SelectItem value="remote">{t('remote')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

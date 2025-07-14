@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTranslations } from 'next-intl'
 
 interface Category {
   id: string
@@ -15,6 +16,7 @@ interface Category {
 }
 
 export default function TestCategoriesPage() {
+  const t = useTranslations()
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedParentCategory, setSelectedParentCategory] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -43,18 +45,18 @@ export default function TestCategoriesPage() {
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Test Categories Page</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('testCategories.title')}</h1>
       
       <div className="space-y-4 max-w-md">
         <div>
-          <label className="block text-sm font-medium mb-2">Parent Category</label>
+          <label className="block text-sm font-medium mb-2">{t('testCategories.parentCategory')}</label>
           <Select 
             value={selectedParentCategory} 
             onValueChange={setSelectedParentCategory}
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder={isLoading ? "Loading categories..." : "Select a category"} />
+              <SelectValue placeholder={isLoading ? t('testCategories.loadingCategories') : t('testCategories.selectCategory')} />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
@@ -73,14 +75,14 @@ export default function TestCategoriesPage() {
 
         {availableChildCategories.length > 0 && (
           <div>
-            <label className="block text-sm font-medium mb-2">Subcategory (Optional)</label>
+            <label className="block text-sm font-medium mb-2">{t('testCategories.subcategory')}</label>
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Select a subcategory" />
+                <SelectValue placeholder={t('testCategories.selectSubcategory')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">
-                  <span className="text-muted-foreground">No specific subcategory</span>
+                  <span className="text-muted-foreground">{t('testCategories.noSpecificSubcategory')}</span>
                 </SelectItem>
                 {availableChildCategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
@@ -98,11 +100,11 @@ export default function TestCategoriesPage() {
         )}
 
         <div className="mt-6 p-4 bg-muted rounded">
-          <h3 className="font-medium mb-2">Debug Info:</h3>
-          <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
-          <p>Categories count: {categories.length}</p>
-          <p>Selected parent: {selectedParentCategory}</p>
-          <p>Child categories: {availableChildCategories.length}</p>
+          <h3 className="font-medium mb-2">{t('testCategories.debugInfo')}:</h3>
+          <p>{t('testCategories.loading')}: {isLoading ? t('common.yes') : t('common.no')}</p>
+          <p>{t('testCategories.categoriesCount')}: {categories.length}</p>
+          <p>{t('testCategories.selectedParent')}: {selectedParentCategory}</p>
+          <p>{t('testCategories.childCategories')}: {availableChildCategories.length}</p>
         </div>
       </div>
     </div>

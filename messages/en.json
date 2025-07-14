@@ -3,7 +3,27 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "register": "Register",
-    "menu": "Menu"
+    "menu": "Menu",
+    "createAccount": "Create an account",
+    "createAccountDescription": "Enter your email and password to create your account",
+    "signInToMojPoslic": "Sign in to mojPoslić",
+    "signInDescription": "Enter your email and password to sign in",
+    "email": "Email",
+    "password": "Password",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "createPassword": "Create a password",
+    "creatingAccount": "Creating Account...",
+    "createAccountButton": "Create Account",
+    "signingIn": "Signing in...",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "accountCreated": "Account created! Please check your email for your verification code.",
+    "accountCreatedWithCode": "Account created! Your verification code is: {code}",
+    "registrationFailed": "Registration failed",
+    "invalidCredentials": "Invalid email or password",
+    "signInFailed": "Sign in failed",
+    "signedInSuccessfully": "Signed in successfully!"
   },
   "header": {
     "postJob": "Post Job",
@@ -36,7 +56,9 @@
       "sort": "Sort",
       "export": "Export",
       "import": "Import",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "yes": "Yes",
+      "no": "No"
     },
     "status": {
       "loading": "Loading...",
@@ -51,7 +73,8 @@
       "published": "Published",
       "active": "Active",
       "inactive": "Inactive",
-      "completed": "Completed"
+      "completed": "Completed",
+      "comingSoon": "Soon"
     },
     "time": {
       "now": "now",
@@ -68,7 +91,10 @@
       "year": "year",
       "years": "years",
       "ago": "ago",
-      "remaining": "remaining"
+      "remaining": "remaining",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{count} days ago"
     },
     "forms": {
       "required": "This field is required",
@@ -82,7 +108,9 @@
       "selectOption": "Select an option",
       "enterValue": "Enter a value",
       "chooseFile": "Choose file",
-      "dragDropFile": "Drag and drop file here or click to browse"
+      "dragDropFile": "Drag and drop file here or click to browse",
+      "usernameAvailable": "Username is available!",
+      "tryTheseInstead": "Try these instead:"
     },
     "messages": {
       "noData": "No data available",
@@ -127,6 +155,7 @@
   "dashboard": {
     "welcome": "Welcome back, {name}!",
     "welcomeDefault": "Welcome back!",
+    "clientDashboard": "Client Dashboard",
     "stats": {
       "totalJobs": "Total Jobs",
       "activeJobs": "Active Jobs",
@@ -137,7 +166,14 @@
       "monthlyEarnings": "Monthly Earnings",
       "rating": "Rating",
       "reviews": "Reviews",
-      "profileViews": "Profile Views"
+      "profileViews": "Profile Views",
+      "totalApplications": "Total Applications",
+      "newMessages": "New Messages",
+      "thisMonth": "This Month",
+      "currentlyHiring": "Currently hiring",
+      "acrossAllJobs": "Across all jobs",
+      "fromApplicants": "From applicants",
+      "jobsPosted": "Jobs posted"
     },
     "sections": {
       "recentJobs": "Recent Jobs",
@@ -170,21 +206,75 @@
     "status": {
       "jobSeekingActive": "Job Seeking Active",
       "hiringActive": "Hiring Active",
-      "accountActive": "Account Active"
+      "accountActive": "Account Active",
+      "hiringModeActive": "Hiring Mode Active",
+      "quickPostHire": "Quick Post & Hire"
     },
     "loading": {
       "jobs": "Loading your jobs...",
       "dashboard": "Loading dashboard...",
-      "admin": "Loading admin dashboard..."
+      "admin": "Loading admin dashboard...",
+      "redirecting": "Redirecting to dashboard..."
     },
     "navigation": {
-      "viewSection": "View Section:",
+      "viewSection": "View Section",
       "selectSection": "Select a section",
+      "overview": "Overview",
+      "jobsTalent": "Jobs & Talent",
+      "messages": "Messages",
+      "connections": "Connections",
       "jobsAndApplications": "Jobs & Applications"
     },
     "quickActions": {
       "title": "Quick Actions",
       "description": "Common tasks at your fingertips"
+    },
+    "tasker": {
+      "quickActions": {
+        "findJobs": "Find Jobs",
+        "findJobsDesc": "Browse available opportunities",
+        "updateProfile": "Update Profile", 
+        "updateProfileDesc": "Enhance your visibility",
+        "manageSkills": "Manage Skills",
+        "manageSkillsDesc": "Add certifications",
+        "learningCenter": "Learning Center",
+        "learningCenterDesc": "Skill development",
+        "proTip": "Pro Tip",
+        "proTipMessage": "Complete your profile to increase your chances of getting hired and unlock Quick Apply features for faster job applications."
+      },
+      "stats": {
+        "pendingReview": "{count} pending review",
+        "shortlisted": "Shortlisted",
+        "waitingForInterview": "Waiting for interview",
+        "activeApplications": "Active Applications",
+        "accepted": "{count} accepted",
+        "thisMonth": "This month",
+        "allTime": "All time"
+      },
+      "applications": {
+        "title": "Active Applications",
+        "noActiveApplications": "No active applications",
+        "startApplying": "Start applying to jobs to track your progress here.",
+        "applied": "Applied",
+        "status": {
+          "pendingReview": "Pending Review",
+          "underReview": "Under Review",
+          "active": "Active"
+        }
+      }
+    },
+    "client": {
+      "quickActions": {
+        "postJobDesc": "Find the perfect tasker",
+        "browseTaskers": "Browse Taskers",
+        "browseTaskersDesc": "Find skilled professionals",
+        "manageApplications": "Manage Applications",
+        "manageApplicationsDesc": "Review submissions",
+        "messageCenter": "Message Center",
+        "messageCenterDesc": "Chat with taskers",
+        "viewAnalytics": "View Analytics",
+        "accountSettings": "Account Settings"
+      }
     },
     "features": {
       "quickPostHire": "Quick Post & Hire"
@@ -195,8 +285,60 @@
     "notifications": {
       "jobDeleted": "Job deleted successfully",
       "jobDeleteFailed": "Failed to delete job",
-      "jobFeaturedFailed": "Failed to update job featured status"
+      "jobFeaturedFailed": "Failed to update job featured status",
+      "paymentSuccessful": "Payment successful! Your connections have been added to your account.",
+      "paymentCancelled": "Payment was cancelled."
+    },
+    "access": {
+      "required": "Access Required",
+      "signInRequired": "You need to be signed in to access the dashboard."
     }
+  },
+  "roleSelection": {
+    "title": "Choose Your Role",
+    "subtitle": "Select how you'd like to use mojPoslić",
+    "tasker": {
+      "title": "Tasker",
+      "description": "Find and apply for jobs that match your skills",
+      "badge": "Most Popular",
+      "features": [
+        "Browse and apply for jobs",
+        "Build your professional profile",
+        "Receive job recommendations",
+        "Track your applications",
+        "Connect with clients"
+      ]
+    },
+    "client": {
+      "title": "Client",
+      "description": "Post jobs and hire talented professionals",
+      "features": [
+        "Post quick job opportunities",
+        "Browse and hire skilled workers",
+        "Manage your job postings",
+        "Review and rate workers",
+        "Access to verified professionals"
+      ]
+    },
+    "company": {
+      "title": "Company",
+      "description": "Scale your business with our talent network",
+      "badge": "Coming Soon",
+      "features": [
+        "Enterprise-level hiring solutions",
+        "Bulk job posting capabilities",
+        "Advanced candidate screening",
+        "Team collaboration tools",
+        "Priority customer support"
+      ]
+    },
+    "continue": "Continue as {role}",
+    "continueAsUser": "Continue as User",
+    "selectRole": "Please select a role to continue",
+    "settingUpAccount": "Setting up your account...",
+    "canChangeRole": "You can change your role later in account settings",
+    "welcomeMessage": "Welcome to mojPoslić as a {role}!",
+    "updateRoleFailed": "Failed to update role"
   },
   "jobs": {
     "title": "Jobs",
@@ -210,7 +352,18 @@
       "datePosted": "Date Posted",
       "status": "Status",
       "featured": "Featured Only",
-      "remote": "Remote Jobs"
+      "remoteJobs": "Remote Jobs",
+      "searchPlaceholder": "Search jobs, companies, skills, or categories...",
+      "filters": "Filters",
+      "active": "Active",
+      "allLocations": "All locations",
+      "allCategories": "All categories",
+      "jobType": "Job Type",
+      "allTypes": "All Types",
+      "quickJob": "Quick Job",
+      "fullTime": "Full Time",
+      "partTime": "Part Time",
+      "remote": "Remote"
     },
     "create": {
       "title": "Post New Job",
@@ -249,6 +402,10 @@
     "list": {
       "noJobs": "No jobs found",
       "noJobsWithFilters": "No jobs match your current filters",
+      "noJobsMessage": "No jobs have been posted yet. Someone needs to break the ice!",
+      "noJobsWithFiltersMessage": "We couldn't find any jobs matching your criteria. Try adjusting your search filters or check back later for new opportunities.",
+      "clearAllFilters": "Clear all filters",
+      "beTheFirst": "Be the first",
       "loadMore": "Load More Jobs",
       "showing": "Showing {count} of {total} jobs",
       "sortBy": "Sort by",
@@ -286,7 +443,9 @@
       "postedOn": "Posted on {date}",
       "deadline": "Deadline: {date}",
       "salary": "Salary: {amount}",
-      "negotiable": "Negotiable"
+      "negotiable": "Negotiable",
+      "viewApplication": "View Application",
+      "viewJob": "View Job"
     },
     "status": {
       "draft": "Draft",
@@ -298,11 +457,13 @@
     },
     "types": {
       "fullTime": "Full-time",
-      "partTime": "Part-time",
+      "partTime": "Part-time", 
       "contract": "Contract",
       "freelance": "Freelance",
       "internship": "Internship",
-      "temporary": "Temporary"
+      "temporary": "Temporary",
+      "quickJob": "Quick Job",
+      "remote": "Remote"
     },
     "experience": {
       "entry": "Entry Level",
@@ -320,7 +481,67 @@
       "featureSuccess": "Job featured successfully",
       "featureError": "Failed to feature job",
       "closeSuccess": "Job closed successfully",
-      "closeError": "Failed to close job"
+      "closeError": "Failed to close job",
+      "backToJobs": "Back to Jobs"
+    },
+    "dialogs": {
+      "postJobDialog": "Post a Job - Free & Easy",
+      "editJobDialog": "Edit Job Posting"
+    },
+    "deleteConfirm": "Are you sure you want to delete this job posting?",
+    "deleteSuccess": "Job deleted successfully",
+    "deleteError": "Failed to delete job",
+    "errors": {
+      "jobNotFound": "Job not found",
+      "loadFailed": "Failed to load job details",
+      "cannotApplyToOwnJob": "You cannot apply to your own job posting",
+      "alreadyApplied": "You have already applied for this job. You can check your application status in your dashboard",
+      "noPermissionViewJob": "You do not have permission to view this job",
+      "loadJobDetailsFailed": "Failed to load job details",
+      "jobNotFoundOrNoPermission": "Job not found or you do not have permission to view applications",
+      "noPermissionViewApplications": "You do not have permission to view applications for this job",
+      "loadApplicationsFailed": "Failed to load applications"
+    },
+    "messages": {
+      "loadingJobDetails": "Loading job details...",
+      "applicationPageOpened": "Application page opened in new tab"
+    },
+    "applications": {
+      "accessDenied": {
+        "title": "Access Denied",
+        "message": "You need to be a client or company to access this page.",
+        "buttonText": "Go to Dashboard"
+      },
+      "error": {
+        "title": "Error",
+        "goBack": "Go Back",
+        "goToDashboard": "Go to Dashboard",
+        "jobNotFound": "Job not found",
+        "noPermissionToViewJob": "You do not have permission to view this job",
+        "failedToLoadJobDetails": "Failed to load job details",
+        "applicationsNotFound": "Job not found or you do not have permission to view applications",
+        "noPermissionToViewApplications": "You do not have permission to view applications for this job",
+        "failedToLoadApplications": "Failed to load applications",
+        "generic": "An error occurred while loading the data"
+      },
+      "noData": {
+        "title": "No Data Found",
+        "message": "Unable to load job or application data.",
+        "buttonText": "Go to Dashboard"
+      },
+      "header": {
+        "back": "Back",
+        "jobId": "Job ID",
+        "posted": "Posted"
+      },
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "reviewed": "Reviewed",
+        "shortlisted": "Shortlisted",
+        "selected": "Selected",
+        "rejected": "Rejected"
+      }
     }
   },
   "messaging": {
@@ -451,14 +672,15 @@
     "invalidFileType": "Please upload a PDF or Word document",
     "previewApplication": "Preview Application",
     "submitApplication": "Submit Application",
-    "mb": "MB"
+    "mb": "MB",
+    "pleaseWriteCoverLetter": "Please write a cover letter"
   },
   "jobLocationMap": {
     "loadingMap": "Loading map..."
-  },
-  "interviewScheduling": {
+  },  "interviewScheduling": {
     "title": "Interview Scheduling",
     "subtitle": "Schedule and manage interviews with candidates",
+    "description": "Schedule and manage candidate interviews",
     "viewCalendar": "Calendar",
     "viewList": "List",
     "today": "Today",
@@ -468,29 +690,72 @@
     "noInterviewsScheduled": "No interviews scheduled",
     "noCandidatesAvailable": "No candidates available for scheduling",
     "scheduleInterview": "Schedule Interview",
+    "scheduleInterviewDescription": "Select a candidate to schedule an interview",
+    "scheduleInterviewWith": "Schedule an interview with {name}",
+    "calendarView": "Calendar View",
+    "calendarViewDescription": "Select a date to view scheduled interviews",
+    "allInterviews": "All Interviews", 
+    "allInterviewsDescription": "Manage all scheduled interviews",
     "name": "Name",
-    "email": "Email", 
+    "email": "Email",
     "role": "Role",
     "addInterviewer": "Add Interviewer",
     "remove": "Remove",
     "cancel": "Cancel",
     "schedule": "Schedule",
+    "confirm": "Confirm",
+    "markComplete": "Mark Complete",
     "location": "Location",
+    "meetingLink": "Meeting Link",
+    "notes": "Notes",
+    "interviewers": "Interviewers",
     "interviewType": "Interview Type",
+    "selectDate": "Date",
+    "selectTime": "Time",
+    "duration": "Duration (minutes)",
+    "30minutes": "30 minutes",
+    "45minutes": "45 minutes", 
+    "1hour": "1 hour",
+    "1point5hours": "1.5 hours",
+    "2hours": "2 hours",
     "video": "Video Call",
     "phone": "Phone Call",
     "inPerson": "In Person",
-    "selectDate": "Select date",
-    "selectTime": "Select time",
-    "locationPlaceholder": "Office address or meeting location"
+    "locationPlaceholder": "Office address or meeting location",
+    "unknownPosition": "Unknown Position"
   },
   "readMore": {
-    "readMore": "Read more",
-    "readLess": "Read less"
-  },
-  "applicationCount": {
+    "readMore": "Read more",      "readLess": "Read less"
+    },
+    "testCategories": {
+      "title": "Test Categories Page",
+      "parentCategory": "Parent Category",
+      "subcategory": "Subcategory (Optional)",
+      "loadingCategories": "Loading categories...",
+      "selectCategory": "Select a category",
+      "selectSubcategory": "Select a subcategory",
+      "noSpecificSubcategory": "No specific subcategory",
+      "debugInfo": "Debug Info",
+      "loading": "Loading",
+      "categoriesCount": "Categories count",
+      "selectedParent": "Selected parent",
+      "childCategories": "Child categories"
+    },
+    "applicationCount": {
     "person": "person",
     "people": "people",
     "applied": "applied"
+  },
+  "profile": {
+    "skills": {
+      "title": "Skills",
+      "skillsAndExperience": "Skills & Experience",
+      "noSkillsSpecified": "No skills specified yet"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your account settings and preferences.",
+    "backToDashboard": "Back to Dashboard"
   }
 }

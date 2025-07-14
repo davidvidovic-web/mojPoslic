@@ -12,8 +12,10 @@ import { JobsEmptyState } from '@/components/job-list/jobs-empty-state'
 import { JobsPagination } from '@/components/job-list/jobs-pagination'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { JobFilters as JobFiltersType } from '@/types/job'
+import { useTranslations } from 'next-intl'
 
 export function JobList() {
+  const t = useTranslations('common.messages')
   const { user } = useAuth()
   const {
     jobSearch,
@@ -75,7 +77,7 @@ export function JobList() {
       ) : isError ? (
         <Alert variant="destructive" className="my-4">
           <AlertDescription>
-            Error loading jobs: {error?.message || 'Please try again later'}
+            {t('somethingWentWrong')}: {error?.message || t('tryAgainLater')}
           </AlertDescription>
         </Alert>
       ) : jobs?.length === 0 ? (

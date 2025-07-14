@@ -12,12 +12,15 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { UserRole } from '@prisma/client'
 import { useEffect, Suspense, useRef } from 'react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 function DashboardContent() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectAttempted = useRef(false)
+  const tDashboard = useTranslations('dashboard')
+  const tAuth = useTranslations('auth')
 
   // Check if we've recently redirected (within last 5 seconds)
   const checkRecentRedirect = () => {
@@ -35,15 +38,15 @@ function DashboardContent() {
     const sessionId = searchParams.get('session_id')
     
     if (payment === 'success' && sessionId) {
-      toast.success('Payment successful! Your connections have been added to your account.')
+      toast.success(tDashboard('notifications.paymentSuccessful'))
       // Clean up URL
       router.replace('/dashboard')
     } else if (payment === 'cancelled') {
-      toast.error('Payment was cancelled.')
+      toast.error(tDashboard('notifications.paymentCancelled'))
       // Clean up URL
       router.replace('/dashboard')
     }
-  }, [searchParams, router])
+  }, [searchParams, router, tDashboard])
 
   // Redirect to role selection if no role, or profile setup if role but profile incomplete
   useEffect(() => {
@@ -69,7 +72,7 @@ function DashboardContent() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <p className="text-muted-foreground">{tDashboard('loading.dashboard')}</p>
         </div>
       </div>
     )
@@ -83,15 +86,15 @@ function DashboardContent() {
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <Shield className="h-6 w-6 text-muted-foreground" />
             </div>
-            <CardTitle>Access Required</CardTitle>
+            <CardTitle>{tDashboard('access.required')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              You need to be signed in to access the dashboard.
+              {tDashboard('access.signInRequired')}
             </p>
             <Button onClick={() => router.push('/auth/signin')} className="w-full">
               <LogIn className="h-4 w-4 mr-2" />
-              Sign In
+              {tAuth('signIn')}
             </Button>
           </CardContent>
         </Card>

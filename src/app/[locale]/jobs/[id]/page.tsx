@@ -15,8 +15,10 @@ import { JobApplicationSidebar } from "@/components/jobs/job/job-application-sid
 import { JobDetailsSidebar } from "@/components/jobs/job/job-details-sidebar"
 import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
+import { useTranslations } from 'next-intl'
 
 export default function JobDetailPage() {
+  const t = useTranslations()
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
@@ -38,7 +40,7 @@ export default function JobDetailPage() {
         if (!response.ok) {
           const errorData = await response.json()
           console.error('Error fetching job:', errorData)
-          toast.error('Job not found')
+          toast.error(t('jobs.errors.jobNotFound'))
           router.push('/')
           return
         }
@@ -59,7 +61,7 @@ export default function JobDetailPage() {
         }
       } catch (error) {
         console.error('Error fetching job:', error)
-        toast.error('Failed to load job details')
+        toast.error(t('jobs.errors.loadFailed'))
         router.push('/')
       } finally {
         setLoading(false)
@@ -69,7 +71,7 @@ export default function JobDetailPage() {
     if (params.id) {
       fetchJob(params.id as string)
     }
-  }, [params.id, router])
+  }, [params.id, router, t])
 
   const handleApply = async () => {
     // Check if user is logged in
@@ -84,20 +86,20 @@ export default function JobDetailPage() {
 
     // Check if user is the owner of this job
     if (isOwner) {
-      toast.error('You cannot apply to your own job posting.')
+      toast.error(t('jobs.errors.cannotApplyToOwnJob'))
       return
     }
 
     // Check if user has already applied
     if (hasApplied) {
-      toast.error('You have already applied for this job. You can check your application status in your dashboard.')
+      toast.error(t('jobs.errors.alreadyApplied'))
       return
     }
 
     // For jobs with external application URLs, open in new tab
     if (job.application_url) {
       window.open(job.application_url, '_blank')
-      toast.success('Application page opened in new tab')
+      toast.success(t('jobs.messages.applicationPageOpened'))
       return
     } 
 
@@ -122,9 +124,9 @@ export default function JobDetailPage() {
     const now = new Date()
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
     
-    if (diffInDays === 0) return "Today"
-    if (diffInDays === 1) return "Yesterday"
-    if (diffInDays < 7) return `${diffInDays} days ago`
+    if (diffInDays === 0) return t('common.time.today')
+    if (diffInDays === 1) return t('common.time.yesterday')
+    if (diffInDays < 7) return t('common.time.daysAgo', { count: diffInDays })
     return date.toLocaleDateString()
   }
 
@@ -133,27 +135,27 @@ export default function JobDetailPage() {
     if (job.salaryMin && job.salaryMax && job.salaryType) {
       const min = job.salaryMin.toLocaleString()
       const max = job.salaryMax.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
+      const type = job.salaryType === 'hourly' ? t('jobCard.hourly') : 
+                   job.salaryType === 'daily' ? t('jobCard.daily') :
+                   job.salaryType === 'weekly' ? t('jobCard.weekly') :
+                   job.salaryType === 'monthly' ? t('jobCard.monthly') : ''
       return `${min} - ${max} BAM${type}`
     }
     
     // If we only have minimum salary
     if (job.salaryMin && job.salaryType) {
       const min = job.salaryMin.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
+      const type = job.salaryType === 'hourly' ? t('jobCard.hourly') : 
+                   job.salaryType === 'daily' ? t('jobCard.daily') :
+                   job.salaryType === 'weekly' ? t('jobCard.weekly') :
+                   job.salaryType === 'monthly' ? t('jobCard.monthly') : ''
       
       // Don't show "From" for fixed prices
       if (job.salaryType === 'fixed') {
         return `${min} BAM`
       }
       
-      return `From ${min} BAM${type}`
+      return `${t('jobCard.from')} ${min} BAM${type}`
     }
     
     // Fallback to legacy salary field
@@ -165,7 +167,7 @@ export default function JobDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading job details...</p>
+          <p className="text-muted-foreground">{t('jobs.messages.loadingJobDetails')}</p>
         </div>
       </div>
     )
@@ -175,10 +177,10 @@ export default function JobDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Job not found</p>
+          <p className="text-muted-foreground mb-4">{t('jobs.errors.jobNotFound')}</p>
           <Button onClick={() => router.push('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Jobs
+            {t('jobs.actions.backToJobs')}
           </Button>
         </div>
       </div>
@@ -194,7 +196,7 @@ export default function JobDetailPage() {
           className="mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          {t('common.buttons.back')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

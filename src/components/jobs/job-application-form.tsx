@@ -66,7 +66,7 @@ export function JobApplicationForm({
     e.preventDefault()
 
     if (!coverLetter.trim()) {
-      toast.error('Please write a cover letter')
+      toast.error(t('pleaseWriteCoverLetter'))
       return
     }
 

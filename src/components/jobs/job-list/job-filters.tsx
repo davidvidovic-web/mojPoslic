@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { CitiesFilter } from "@/components/filters/cities-filter"
 import { CategoriesFilter } from "@/components/filters/categories-filter"
 import { Search, ChevronDown, Filter } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface JobFiltersProps {
   searchTerm: string
@@ -35,6 +36,7 @@ export function JobFilters({
   setSubcategoryFilter
 }: JobFiltersProps) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const t = useTranslations('jobs.filters')
 
   const hasActiveFilters = cityFilter !== "all" || 
                           categoryFilter !== "all" || 
@@ -84,14 +86,14 @@ export function JobFilters({
           />
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-44 flex-shrink-0 border-border/50">
-              <SelectValue placeholder="Job Type" />
+              <SelectValue placeholder={t('jobType')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="quick-job">Quick Job</SelectItem>
-              <SelectItem value="full-time">Full Time</SelectItem>
-              <SelectItem value="part-time">Part Time</SelectItem>
-              <SelectItem value="remote">Remote</SelectItem>
+              <SelectItem value="all">{t('allTypes')}</SelectItem>
+              <SelectItem value="quick-job">{t('quickJob')}</SelectItem>
+              <SelectItem value="full-time">{t('fullTime')}</SelectItem>
+              <SelectItem value="part-time">{t('partTime')}</SelectItem>
+              <SelectItem value="remote">{t('remote')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -122,10 +124,10 @@ export function JobFilters({
               >
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
-                  <span>Filters</span>
+                  <span>{t('filters')}</span>
                   {hasActiveFilters && (
                     <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                      Active
+                      {t('active')}
                     </span>
                   )}
                 </div>
@@ -138,7 +140,7 @@ export function JobFilters({
                 <CitiesFilter
                   value={cityFilter}
                   onChange={setCityFilter}
-                  placeholder="All locations"
+                  placeholder={t('allLocations')}
                   className="w-full"
                 />
                 
@@ -151,7 +153,7 @@ export function JobFilters({
                       setSubcategoryFilter("all")
                     }
                   }}
-                  placeholder="All categories"
+                  placeholder={t('allCategories')}
                   className="w-full"
                   showSubcategories={true}
                   subcategoryValue={subcategoryFilter}
@@ -160,14 +162,14 @@ export function JobFilters({
                 
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-full border-border/50">
-                    <SelectValue placeholder="Job Type" />
+                    <SelectValue placeholder={t('jobType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="quick-job">Quick Job</SelectItem>
-                    <SelectItem value="full-time">Full Time</SelectItem>
-                    <SelectItem value="part-time">Part Time</SelectItem>
-                    <SelectItem value="remote">Remote</SelectItem>
+                    <SelectItem value="all">{t('allTypes')}</SelectItem>
+                    <SelectItem value="quick-job">{t('quickJob')}</SelectItem>
+                    <SelectItem value="full-time">{t('fullTime')}</SelectItem>
+                    <SelectItem value="part-time">{t('partTime')}</SelectItem>
+                    <SelectItem value="remote">{t('remote')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

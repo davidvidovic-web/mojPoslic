@@ -5,8 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Star, BookOpen, User, BarChart } from "lucide-react"
 import Link from "next/link"
+import { useTranslations } from 'next-intl'
 
 export function TaskerQuickActions() {
+  const t = useTranslations()
+  
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -14,7 +17,7 @@ export function TaskerQuickActions() {
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40">
             <BarChart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
-          Quick Actions
+          {t('dashboard.quickActions.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -28,8 +31,8 @@ export function TaskerQuickActions() {
               <Search className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-left">
-              <div className="font-medium">Find Jobs</div>
-              <div className="text-xs text-muted-foreground">Browse available opportunities</div>
+              <div className="font-medium">{t('dashboard.tasker.quickActions.findJobs')}</div>
+              <div className="text-xs text-muted-foreground">{t('dashboard.tasker.quickActions.findJobsDesc')}</div>
             </div>
           </Button>
         </Link>
@@ -44,8 +47,8 @@ export function TaskerQuickActions() {
               <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-left">
-              <div className="font-medium">Update Profile</div>
-              <div className="text-xs text-muted-foreground">Enhance your visibility</div>
+              <div className="font-medium">{t('dashboard.tasker.quickActions.updateProfile')}</div>
+              <div className="text-xs text-muted-foreground">{t('dashboard.tasker.quickActions.updateProfileDesc')}</div>
             </div>
           </Button>
         </Link>
@@ -60,10 +63,10 @@ export function TaskerQuickActions() {
             <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium">Manage Skills</div>
-            <div className="text-xs text-muted-foreground">Add certifications</div>
+            <div className="font-medium">{t('dashboard.tasker.quickActions.manageSkills')}</div>
+            <div className="text-xs text-muted-foreground">{t('dashboard.tasker.quickActions.manageSkillsDesc')}</div>
           </div>
-          <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+          <Badge variant="secondary" className="ml-auto text-xs">{t('common.status.comingSoon')}</Badge>
         </Button>
 
         {/* Learning Center */}
@@ -76,20 +79,20 @@ export function TaskerQuickActions() {
             <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium">Learning Center</div>
-            <div className="text-xs text-muted-foreground">Skill development</div>
+            <div className="font-medium">{t('dashboard.tasker.quickActions.learningCenter')}</div>
+            <div className="text-xs text-muted-foreground">{t('dashboard.tasker.quickActions.learningCenterDesc')}</div>
           </div>
-          <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+          <Badge variant="secondary" className="ml-auto text-xs">{t('common.status.comingSoon')}</Badge>
         </Button>
 
-        {/* Tips Section - Restored to green theme */}
+        {/* Tips Section */}
         <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800">
           <h4 className="font-medium text-emerald-900 dark:text-emerald-100 mb-2 flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-            Pro Tip
+            {t('dashboard.tasker.quickActions.proTip')}
           </h4>
           <p className="text-sm text-emerald-700 dark:text-emerald-300">
-            Complete your profile to increase your chances of getting hired and unlock Quick Apply features for faster job applications.
+            {t('dashboard.tasker.quickActions.proTipMessage')}
           </p>
         </div>
       </CardContent>

@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, Briefcase } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface JobDetails {
   id: string
@@ -68,6 +69,7 @@ interface ManageApplicationsPageProps {
 export default function ManageApplicationsPage({ params }: ManageApplicationsPageProps) {
   const { user } = useAuth()
   const router = useRouter()
+  const t = useTranslations()
   const [jobId, setJobId] = useState<string | null>(null)
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null)
   const [applicationsData, setApplicationsData] = useState<ApplicationsData | null>(null)
@@ -98,22 +100,22 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
 
         if (!jobResponse.ok) {
           if (jobResponse.status === 404) {
-            setError('Job not found')
+            setError(t('jobs.applications.error.jobNotFound'))
           } else if (jobResponse.status === 403) {
-            setError('You do not have permission to view this job')
+            setError(t('jobs.applications.error.noPermissionToViewJob'))
           } else {
-            setError('Failed to load job details')
+            setError(t('jobs.applications.error.failedToLoadJobDetails'))
           }
           return
         }
 
         if (!applicationsResponse.ok) {
           if (applicationsResponse.status === 404) {
-            setError('Job not found or you do not have permission to view applications')
+            setError(t('jobs.applications.error.applicationsNotFound'))
           } else if (applicationsResponse.status === 403) {
-            setError('You do not have permission to view applications for this job')
+            setError(t('jobs.applications.error.noPermissionToViewApplications'))
           } else {
-            setError('Failed to load applications')
+            setError(t('jobs.applications.error.failedToLoadApplications'))
           }
           return
         }
@@ -126,14 +128,14 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
 
       } catch (error) {
         console.error('Error fetching data:', error)
-        setError('An error occurred while loading the data')
+        setError(t('jobs.applications.error.generic'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchJobAndApplications()
-  }, [jobId, user])
+  }, [jobId, user, t])
 
   const handleApplicationUpdate = async (applicationId: string, newStatus: string) => {
     // Optimistically update the local state
@@ -215,10 +217,10 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-4">You need to be a client or company to access this page.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('jobs.applications.accessDenied.title')}</h1>
+          <p className="text-gray-600 mb-4">{t('jobs.applications.accessDenied.message')}</p>
           <Link href="/dashboard">
-            <Button>Go to Dashboard</Button>
+            <Button>{t('jobs.applications.accessDenied.buttonText')}</Button>
           </Link>
         </div>
       </div>
@@ -275,15 +277,15 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('jobs.applications.error.title')}</h1>
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="space-x-2">
               <Button onClick={() => router.back()} variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Go Back
+                {t('jobs.applications.error.goBack')}
               </Button>
               <Link href="/dashboard">
-                <Button>Go to Dashboard</Button>
+                <Button>{t('jobs.applications.error.goToDashboard')}</Button>
               </Link>
             </div>
           </div>
@@ -298,10 +300,10 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">No Data Found</h1>
-            <p className="text-gray-600 mb-4">Unable to load job or application data.</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('jobs.applications.noData.title')}</h1>
+            <p className="text-gray-600 mb-4">{t('jobs.applications.noData.message')}</p>
             <Link href="/dashboard">
-              <Button>Go to Dashboard</Button>
+              <Button>{t('jobs.applications.noData.buttonText')}</Button>
             </Link>
           </div>
         </div>
@@ -323,7 +325,7 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
               onClick={() => router.back()}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              {t('jobs.applications.header.back')}
             </Button>
             <div>
               <h1 className="text-3xl font-bold">{jobDetails.title}</h1>
@@ -340,9 +342,10 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
           </div>
           
           <div className="text-right">
-            <p className="text-sm text-gray-600">Job ID: {jobDetails.id}</p>
+            <p className="text-sm text-gray-600">{t('jobs.applications.header.jobId')}: {jobDetails.id}</p>
             <p className="text-sm text-gray-600">
-              Posted {new Date(jobDetails.createdAt).toLocaleDateString()}
+              {t('jobs.applications.header.posted')}{' '}
+              {new Date(jobDetails.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -353,37 +356,37 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-                <div className="text-sm text-gray-600">Total</div>
+                <div className="text-sm text-gray-600">{t('jobs.applications.stats.total')}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                <div className="text-sm text-gray-600">Pending</div>
+                <div className="text-sm text-gray-600">{t('jobs.applications.stats.pending')}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-blue-600">{stats.reviewed}</div>
-                <div className="text-sm text-gray-600">Reviewed</div>
+                <div className="text-sm text-gray-600">{t('jobs.applications.stats.reviewed')}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-purple-600">{stats.shortlisted}</div>
-                <div className="text-sm text-gray-600">Shortlisted</div>
+                <div className="text-sm text-gray-600">{t('jobs.applications.stats.shortlisted')}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-green-600">{stats.selected}</div>
-                <div className="text-sm text-gray-600">Selected</div>
+                <div className="text-sm text-gray-600">{t('jobs.applications.stats.selected')}</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-                <div className="text-sm text-gray-600">Rejected</div>
+                <div className="text-sm text-gray-600">{t('jobs.applications.stats.rejected')}</div>
               </CardContent>
             </Card>
           </div>

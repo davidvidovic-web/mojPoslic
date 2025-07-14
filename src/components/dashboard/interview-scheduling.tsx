@@ -16,6 +16,7 @@ import { Calendar as CalendarIcon, Clock, MapPin, Video, Phone, Users, Plus, Tra
 import { format, isSameDay, startOfDay } from 'date-fns'
 import { toast } from 'sonner'
 import { JobApplication } from '@/types/application'
+import { useTranslations } from 'next-intl'
 
 interface Interview {
   id: string
@@ -50,12 +51,6 @@ interface InterviewSchedulingProps {
   onCancelInterview: (id: string) => void
 }
 
-const interviewTypes = [
-  { value: 'video', label: 'Video Call', icon: Video },
-  { value: 'phone', label: 'Phone Call', icon: Phone },
-  { value: 'in_person', label: 'In Person', icon: MapPin }
-]
-
 const timeSlots = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
   '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
@@ -84,6 +79,14 @@ export function InterviewScheduling({
   onUpdateInterview, 
   onCancelInterview 
 }: InterviewSchedulingProps) {
+  const t = useTranslations('interviewScheduling')
+  
+  const interviewTypes = [
+    { value: 'video', label: t('video'), icon: Video },
+    { value: 'phone', label: t('phone'), icon: Phone },
+    { value: 'in_person', label: t('inPerson'), icon: MapPin }
+  ]
+  
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
@@ -126,7 +129,7 @@ export function InterviewScheduling({
       candidateName: selectedApplication.user?.name || 'Unknown',
       candidateEmail: selectedApplication.user?.email || '',
       candidateAvatar: selectedApplication.user?.avatarUrl,
-      jobTitle: selectedApplication.job?.title || 'Unknown Position',
+      jobTitle: selectedApplication.job?.title || t('unknownPosition'),
       scheduledAt,
       duration: formData.duration,
       type: formData.type,
@@ -218,9 +221,9 @@ export function InterviewScheduling({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Interview Scheduling</h2>
+          <h2 className="text-2xl font-bold">{t('title')}</h2>
           <p className="text-muted-foreground">
-            Schedule and manage candidate interviews
+            {t('description')}
           </p>
         </div>
         <div className="flex space-x-2">
@@ -229,8 +232,8 @@ export function InterviewScheduling({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="calendar">Calendar</SelectItem>
-              <SelectItem value="list">List</SelectItem>
+              <SelectItem value="calendar">{t('viewCalendar')}</SelectItem>
+              <SelectItem value="list">{t('viewList')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -244,7 +247,7 @@ export function InterviewScheduling({
               <Clock className="h-4 w-4 text-blue-500" />
               <div>
                 <p className="text-2xl font-bold">{todaysInterviews.length}</p>
-                <p className="text-xs text-muted-foreground">Today</p>
+                <p className="text-xs text-muted-foreground">{t('today')}</p>
               </div>
             </div>
           </CardContent>
@@ -256,7 +259,7 @@ export function InterviewScheduling({
               <CalendarIcon className="h-4 w-4 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">{upcomingInterviews.length}</p>
-                <p className="text-xs text-muted-foreground">Upcoming</p>
+                <p className="text-xs text-muted-foreground">{t('upcoming')}</p>
               </div>
             </div>
           </CardContent>
@@ -270,7 +273,7 @@ export function InterviewScheduling({
                 <p className="text-2xl font-bold">
                   {interviews.filter(i => i.status === 'completed').length}
                 </p>
-                <p className="text-xs text-muted-foreground">Completed</p>
+                <p className="text-xs text-muted-foreground">{t('completed')}</p>
               </div>
             </div>
           </CardContent>
@@ -282,7 +285,7 @@ export function InterviewScheduling({
               <Users className="h-4 w-4 text-orange-500" />
               <div>
                 <p className="text-2xl font-bold">{applications.length}</p>
-                <p className="text-xs text-muted-foreground">Candidates</p>
+                <p className="text-xs text-muted-foreground">{t('candidates')}</p>
               </div>
             </div>
           </CardContent>
@@ -295,8 +298,8 @@ export function InterviewScheduling({
           {view === 'calendar' ? (
             <Card>
               <CardHeader>
-                <CardTitle>Calendar View</CardTitle>
-                <CardDescription>Select a date to view scheduled interviews</CardDescription>
+                <CardTitle>{t('calendarView')}</CardTitle>
+                <CardDescription>{t('calendarViewDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex space-x-4">
@@ -311,7 +314,7 @@ export function InterviewScheduling({
                       {format(selectedDate, 'EEEE, MMMM d, yyyy')}
                     </h4>
                     {selectedDateInterviews.length === 0 ? (
-                      <p className="text-muted-foreground">No interviews scheduled</p>
+                      <p className="text-muted-foreground">{t('noInterviewsScheduled')}</p>
                     ) : (
                       <div className="space-y-2">
                         {selectedDateInterviews
@@ -357,13 +360,13 @@ export function InterviewScheduling({
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>All Interviews</CardTitle>
-                <CardDescription>Manage all scheduled interviews</CardDescription>
+                <CardTitle>{t('allInterviews')}</CardTitle>
+                <CardDescription>{t('allInterviewsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {interviews.length === 0 ? (
-                    <p className="text-muted-foreground">No interviews scheduled</p>
+                    <p className="text-muted-foreground">{t('noInterviewsScheduled')}</p>
                   ) : (
                     interviews
                       .sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime())
@@ -405,14 +408,14 @@ export function InterviewScheduling({
                                         size="sm"
                                         onClick={() => handleUpdateInterviewStatus(interview.id, 'confirmed')}
                                       >
-                                        Confirm
+                                        {t('confirm')}
                                       </Button>
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleCancelInterview(interview.id)}
                                       >
-                                        Cancel
+                                        {t('cancel')}
                                       </Button>
                                     </>
                                   )}
@@ -422,7 +425,7 @@ export function InterviewScheduling({
                                       size="sm"
                                       onClick={() => handleUpdateInterviewStatus(interview.id, 'completed')}
                                     >
-                                      Mark Complete
+                                      {t('markComplete')}
                                     </Button>
                                   )}
                                 </div>
@@ -442,8 +445,8 @@ export function InterviewScheduling({
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Schedule Interview</CardTitle>
-              <CardDescription>Select a candidate to schedule an interview</CardDescription>
+              <CardTitle>{t('scheduleInterview')}</CardTitle>
+              <CardDescription>{t('scheduleInterviewDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -479,7 +482,7 @@ export function InterviewScheduling({
                   ))}
                 
                 {applications.filter(app => app.status === 'SHORTLISTED' || app.status === 'REVIEWED').length === 0 && (
-                  <p className="text-sm text-muted-foreground">No candidates available for scheduling</p>
+                  <p className="text-sm text-muted-foreground">{t('noCandidatesAvailable')}</p>
                 )}
               </div>
             </CardContent>
@@ -491,15 +494,15 @@ export function InterviewScheduling({
       <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Schedule Interview</DialogTitle>
+            <DialogTitle>{t('scheduleInterview')}</DialogTitle>
             <DialogDescription>
-              Schedule an interview with {selectedApplication?.user?.name}
+              {t('scheduleInterviewWith', { name: selectedApplication?.user?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Date</Label>
+                <Label>{t('selectDate')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start">
@@ -518,7 +521,7 @@ export function InterviewScheduling({
                 </Popover>
               </div>
               <div>
-                <Label>Time</Label>
+                <Label>{t('selectTime')}</Label>
                 <Select value={formData.time} onValueChange={(value) => setFormData({ ...formData, time: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -536,7 +539,7 @@ export function InterviewScheduling({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Duration (minutes)</Label>
+                <Label>{t('duration')}</Label>
                 <Select 
                   value={formData.duration.toString()} 
                   onValueChange={(value) => setFormData({ ...formData, duration: parseInt(value) })}
@@ -545,16 +548,16 @@ export function InterviewScheduling({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="45">45 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
-                    <SelectItem value="90">1.5 hours</SelectItem>
-                    <SelectItem value="120">2 hours</SelectItem>
+                    <SelectItem value="30">{t('30minutes')}</SelectItem>
+                    <SelectItem value="45">{t('45minutes')}</SelectItem>
+                    <SelectItem value="60">{t('1hour')}</SelectItem>
+                    <SelectItem value="90">{t('1point5hours')}</SelectItem>
+                    <SelectItem value="120">{t('2hours')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Interview Type</Label>
+                <Label>{t('interviewType')}</Label>
                 <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value as Interview['type'] })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -575,7 +578,7 @@ export function InterviewScheduling({
 
             {formData.type === 'video' && (
               <div>
-                <Label>Meeting Link</Label>
+                <Label>{t('meetingLink')}</Label>
                 <Input
                   value={formData.meetingLink}
                   onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
@@ -586,17 +589,17 @@ export function InterviewScheduling({
 
             {formData.type === 'in_person' && (
               <div>
-                <Label>Location</Label>
+                <Label>{t('location')}</Label>
                 <Input
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Office address or meeting location"
+                  placeholder={t('locationPlaceholder')}
                 />
               </div>
             )}
 
             <div>
-              <Label>Notes</Label>
+              <Label>{t('notes')}</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -606,27 +609,27 @@ export function InterviewScheduling({
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <Label>Interviewers</Label>
+                <Label>{t('interviewers')}</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addInterviewer}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Interviewer
+                  {t('addInterviewer')}
                 </Button>
               </div>
               <div className="space-y-3">
                 {formData.interviewers.map((interviewer, index) => (
                   <div key={index} className="flex space-x-2">
                     <Input
-                      placeholder="Name"
+                      placeholder={t('name')}
                       value={interviewer.name}
                       onChange={(e) => updateInterviewer(index, 'name', e.target.value)}
                     />
                     <Input
-                      placeholder="Email"
+                      placeholder={t('email')}
                       value={interviewer.email}
                       onChange={(e) => updateInterviewer(index, 'email', e.target.value)}
                     />
                     <Input
-                      placeholder="Role"
+                      placeholder={t('role')}
                       value={interviewer.role}
                       onChange={(e) => updateInterviewer(index, 'role', e.target.value)}
                     />
@@ -637,6 +640,7 @@ export function InterviewScheduling({
                       onClick={() => removeInterviewer(index)}
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">{t('remove')}</span>
                     </Button>
                   </div>
                 ))}
@@ -645,13 +649,13 @@ export function InterviewScheduling({
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsScheduleModalOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button 
                 onClick={handleScheduleInterview}
                 disabled={!selectedApplication || !formData.date || !formData.time}
               >
-                Schedule Interview
+                {t('schedule')}
               </Button>
             </div>
           </div>

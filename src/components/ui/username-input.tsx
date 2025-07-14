@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { validateUsernameFormat, generateUsernameSuggestions, checkUsernameAvailability } from '@/lib/username-validation'
 import { Check, X, RefreshCw, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface UsernameInputProps {
   value: string
@@ -29,6 +30,7 @@ export function UsernameInput({
   placeholder = 'Enter your username',
   required = false
 }: UsernameInputProps) {
+  const t = useTranslations('common.forms')
   const [isChecking, setIsChecking] = useState(false)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -135,7 +137,7 @@ export function UsernameInput({
 
         {/* Success message */}
         {isAvailable === true && (
-          <p className="text-sm text-green-600 mt-1">Username is available!</p>
+          <p className="text-sm text-green-600 mt-1">{t('usernameAvailable')}</p>
         )}
       </div>
 
@@ -143,7 +145,7 @@ export function UsernameInput({
       {showSuggestions && suggestions.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Try these instead:</p>
+            <p className="text-sm text-muted-foreground">{t('tryTheseInstead')}</p>
             <Button
               type="button"
               variant="ghost"

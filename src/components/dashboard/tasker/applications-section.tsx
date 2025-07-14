@@ -7,6 +7,7 @@ import { TrendingUp, Clock, CheckCircle, Briefcase, XCircle, Search } from 'luci
 import { Job } from '@/types/job'
 import { formatClientName } from '@/lib/job-utils'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 interface JobApplication {
   id: string
@@ -21,6 +22,8 @@ interface ApplicationsSectionProps {
 }
 
 export function ApplicationsSection({ applications }: ApplicationsSectionProps) {
+  const t = useTranslations()
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
@@ -46,6 +49,15 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
     }
   }
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return t('dashboard.tasker.applications.status.pendingReview')
+      case 'reviewed': return t('dashboard.tasker.applications.status.underReview')
+      case 'accepted': return t('dashboard.tasker.applications.status.active')
+      default: return status
+    }
+  }
+
   // Filter to only show active applications (pending, reviewed, accepted)
   const activeApplications = applications.filter(app => 
     app.status === 'pending' || app.status === 'reviewed' || app.status === 'accepted'
@@ -56,14 +68,14 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
       return (
         <div className="text-center py-8">
           <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">No active applications</h3>
+          <h3 className="text-lg font-semibold">{t('dashboard.tasker.applications.noActiveApplications')}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Start applying to jobs to track your progress here.
+            {t('dashboard.tasker.applications.startApplying')}
           </p>
           <Link href="/">
             <Button>
               <Search className="h-4 w-4 mr-2" />
-              Find Jobs
+              {t('dashboard.actions.findJobs')}
             </Button>
           </Link>
         </div>
@@ -90,14 +102,11 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
                 )}
               </div>
               <Badge className={getStatusColor(application.status)}>
-                {application.status === 'pending' ? 'Pending Review' : 
-                 application.status === 'reviewed' ? 'Under Review' :
-                 application.status === 'accepted' ? 'Active' :
-                 application.status}
+                {getStatusLabel(application.status)}
               </Badge>
             </div>
             <div className="flex justify-between items-center text-xs text-muted-foreground">
-              <span>Applied {formatDate(application.appliedAt)}</span>
+              <span>{t('dashboard.tasker.applications.applied')} {formatDate(application.appliedAt)}</span>
               {(application.job.salaryMin || application.job.salary) && (
                 <span className="text-foreground font-medium">
                   {application.job.salary || 
@@ -118,7 +127,7 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
       <CardHeader>
         <CardTitle className="flex items-center">
           <TrendingUp className="h-5 w-5 mr-2" />
-          Active Applications
+          {t('dashboard.tasker.applications.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">

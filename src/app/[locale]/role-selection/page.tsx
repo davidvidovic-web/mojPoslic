@@ -16,61 +16,45 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
+import { useTranslations } from 'next-intl'
 
 interface RoleOption {
   id: 'tasker' | 'client' | 'company'
-  title: string
-  description: string
+  titleKey: string
+  descriptionKey: string
   icon: React.ReactNode
-  features: string[]
-  badge?: string
+  featuresKey: string
+  badgeKey?: string
 }
 
 const roleOptions: RoleOption[] = [
   {
     id: 'tasker',
-    title: 'Tasker',
-    description: 'Find and apply for jobs that match your skills',
+    titleKey: 'roleSelection.tasker.title',
+    descriptionKey: 'roleSelection.tasker.description',
     icon: <User className="h-8 w-8" />,
-    features: [
-      'Browse and apply for jobs',
-      'Build your professional profile',
-      'Receive job recommendations',
-      'Track your applications',
-      'Connect with clients'
-    ],
-    badge: 'Most Popular'
+    featuresKey: 'roleSelection.tasker.features',
+    badgeKey: 'roleSelection.tasker.badge'
   },
   {
     id: 'client',
-    title: 'Client',
-    description: 'Post jobs and hire talented professionals',
+    titleKey: 'roleSelection.client.title',
+    descriptionKey: 'roleSelection.client.description',
     icon: <Briefcase className="h-8 w-8" />,
-    features: [
-      'Post quick job opportunities',
-      'Review applications',
-      'Hire qualified taskers',
-      'Direct messaging with taskers',
-      'Access to local talent pool'
-    ]
+    featuresKey: 'roleSelection.client.features'
   },
   {
     id: 'company',
-    title: 'Company',
-    description: 'Manage your team and scale your business',
+    titleKey: 'roleSelection.company.title',
+    descriptionKey: 'roleSelection.company.description',
     icon: <Building2 className="h-8 w-8" />,
-    features: [
-      'Everything in Client',
-      'Access to Professional job listings',
-      'Multiple concurrent job listings',
-      'Advanced hiring tools',
-      'Premium support'
-    ],
-    badge: 'Pro'
+    featuresKey: 'roleSelection.company.features',
+    badgeKey: 'roleSelection.company.badge'
   }
 ]
 
 export default function RoleSelectionPage() {
+  const t = useTranslations('roleSelection')
   const { refreshUser } = useAuth()
   const router = useRouter()
   const [selectedRole, setSelectedRole] = useState<'tasker' | 'client' | 'company' | null>(null)
@@ -86,7 +70,7 @@ export default function RoleSelectionPage() {
 
   const handleContinue = async () => {
     if (!selectedRole) {
-      toast.error('Please select a role to continue')
+      toast.error(t('selectRole'))
       return
     }
 
@@ -107,17 +91,17 @@ export default function RoleSelectionPage() {
         // Refresh user context to get updated role
         await refreshUser()
 
-        toast.success(`Welcome to MojPoslic as a ${selectedRole}!`)
+        toast.success(t('welcomeMessage', { role: t(`${selectedRole}.title`) }))
         
         // Redirect to profile setup to complete the onboarding
         router.push('/profile-setup')
       } else {
         const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to update role')
+        toast.error(errorData.error || t('updateRoleFailed'))
       }
     } catch (error) {
       console.error('Error updating role:', error)
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t('common.messages.somethingWentWrong'))
     } finally {
       setIsSubmitting(false)
     }
@@ -134,10 +118,10 @@ export default function RoleSelectionPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Choose Your Role
+            {t('title')}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Welcome to MojPoslic! Please select how you&apos;d like to use our platform to get started.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -162,17 +146,17 @@ export default function RoleSelectionPage() {
                   <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
                     <div className="text-center">
                       <Lock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm font-medium text-muted-foreground">Coming Soon</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('company.badge')}</p>
                     </div>
                   </div>
                 )}
 
-                {role.badge && !isCompanyDisabled && (
+                {role.badgeKey && !isCompanyDisabled && (
                   <Badge 
                     className="absolute -top-2 left-4 bg-primary text-primary-foreground"
                     variant="default"
                   >
-                    {role.badge}
+                    {t(role.badgeKey)}
                   </Badge>
                 )}
                 
@@ -192,15 +176,15 @@ export default function RoleSelectionPage() {
                       {role.icon}
                     </div>
                   </div>
-                  <CardTitle className="text-xl">{role.title}</CardTitle>
+                  <CardTitle className="text-xl">{t(role.titleKey)}</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {role.description}
+                    {t(role.descriptionKey)}
                   </p>
                 </CardHeader>
 
                 <CardContent>
                   <ul className="space-y-2">
-                    {role.features.map((feature, index) => (
+                    {(t.raw(role.featuresKey) as string[]).map((feature, index) => (
                       <li key={index} className="flex items-center text-sm text-foreground">
                         <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
                         {feature}
@@ -224,11 +208,11 @@ export default function RoleSelectionPage() {
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background mr-2"></div>
-                Setting up your account...
+                {t('settingUpAccount')}
               </>
             ) : (
               <>
-                Continue as {selectedRole ? roleOptions.find(r => r.id === selectedRole)?.title : 'User'}
+                {selectedRole ? t('continue', { role: t(`${selectedRole}.title`) }) : t('continueAsUser')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </>
             )}
@@ -236,7 +220,7 @@ export default function RoleSelectionPage() {
           
           {selectedRole && (
             <p className="text-sm text-muted-foreground mt-3">
-              You can change your role later in account settings
+              {t('canChangeRole')}
             </p>
           )}
         </div>

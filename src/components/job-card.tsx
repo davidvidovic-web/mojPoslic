@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Briefcase, Star, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 interface JobCardProps {
   job: Job
@@ -13,6 +14,8 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardProps) {
+  const t = useTranslations('jobs')
+  
   // Get relative time string for job posting date
   const getRelativeTimeString = (date: string) => {
     const now = new Date()
@@ -29,10 +32,10 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
   // Format job type for display
   const formatJobType = (type: string) => {
     switch(type) {
-      case 'quick_job': return 'Quick Job'
-      case 'full_time': return 'Full Time'
-      case 'part_time': return 'Part Time'
-      case 'remote': return 'Remote'
+      case 'quick_job': return t('types.quickJob') || 'Quick Job'
+      case 'full_time': return t('types.fullTime') || 'Full Time'
+      case 'part_time': return t('types.partTime') || 'Part Time'
+      case 'remote': return t('types.remote') || 'Remote'
       default: return type
     }
   }
@@ -66,7 +69,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
             )}
             <span className="flex items-center">
               <Calendar className="h-3.5 w-3.5 mr-1" />
-              {getRelativeTimeString(job.posted_at || job.created_at)}
+              {getRelativeTimeString(job.posted_at || job.createdAt)}
             </span>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -91,7 +94,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
           </div>
           <Button asChild variant={hasApplied ? "outline" : "default"}>
             <Link href={`/jobs/${job.id}`}>
-              {hasApplied ? "View Application" : "View Job"}
+              {hasApplied ? t('card.viewApplication') : t('card.viewJob')}
             </Link>
           </Button>
         </div>
@@ -105,7 +108,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
       <div className="flex items-center justify-between mb-2">
         <Badge variant="outline">{formatJobType(job.type)}</Badge>
         <span className="text-xs text-muted-foreground">
-          {getRelativeTimeString(job.posted_at || job.created_at)}
+          {getRelativeTimeString(job.posted_at || job.createdAt)}
         </span>
       </div>
       
@@ -150,7 +153,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
       
       <Button asChild className="w-full mt-auto" variant={hasApplied ? "outline" : "default"}>
         <Link href={`/jobs/${job.id}`}>
-          {hasApplied ? "View Application" : "View Details"}
+          {hasApplied ? t('card.viewApplication') : t('card.viewDetails')}
         </Link>
       </Button>
     </div>
