@@ -10,7 +10,7 @@ interface DashboardStatsCardsProps {
 
 export function DashboardStatsCards({ jobs }: DashboardStatsCardsProps) {
   const thisMonthJobs = jobs.filter(job => 
-    new Date(job.created_at).getMonth() === new Date().getMonth()
+    new Date(job.createdAt).getMonth() === new Date().getMonth()
   ).length
 
   const averageViewsPerJob = jobs.length > 0 ? 
@@ -96,7 +96,7 @@ export function DashboardStatsCards({ jobs }: DashboardStatsCardsProps) {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Posted {new Date(mostViewedJob.created_at).toLocaleDateString()}
+                  Posted {new Date(mostViewedJob.createdAt).toLocaleDateString()}
                 </p>
               </div>
             ) : (

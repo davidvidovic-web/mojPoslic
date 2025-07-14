@@ -1,0 +1,402 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/contexts/auth-context'
+import { ApplicationManager } from '@/components/dashboard/comprehensive-application-manager'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowLeft, Briefcase } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+interface JobDetails {
+  id: string
+  title: string
+  company: string
+  status: string
+  type: string
+  description: string
+  salary?: string
+  createdAt: string
+}
+
+interface JobApplication {
+  id: string
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  message?: string
+  resume?: string
+  clientNotes?: string
+  feedback?: string
+  appliedAt?: string
+  reviewedAt?: string
+  shortlistedAt?: string
+  selectedAt?: string
+  rejectedAt?: string
+  withdrawnAt?: string
+  createdAt: string
+  updatedAt: string
+  user: {
+    id: string
+    name: string
+    email: string
+    avatarUrl?: string
+    phone?: string
+    location?: string
+    bio?: string
+    skills?: string
+    experience?: string
+    position?: string
+    website?: string
+    createdAt: string
+    reviewsReceived?: { rating: number }[]
+  }
+}
+
+interface ApplicationsData {
+  jobId: string
+  applicationCount: number
+  canEdit: boolean
+  applications: JobApplication[]
+}
+
+interface ManageApplicationsPageProps {
+  params: Promise<{ id: string }>
+}
+
+export default function ManageApplicationsPage({ params }: ManageApplicationsPageProps) {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [jobDetails, setJobDetails] = useState<JobDetails | null>(null)
+  const [applicationsData, setApplicationsData] = useState<ApplicationsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const getJobId = async () => {
+      const resolvedParams = await params
+      setJobId(resolvedParams.id)
+    }
+    getJobId()
+  }, [params])
+
+  useEffect(() => {
+    const fetchJobAndApplications = async () => {
+      if (!jobId || !user) return
+
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Fetch job details and applications in parallel
+        const [jobResponse, applicationsResponse] = await Promise.all([
+          fetch(`/api/jobs/${jobId}`),
+          fetch(`/api/jobs/${jobId}/applications`)
+        ])
+
+        if (!jobResponse.ok) {
+          if (jobResponse.status === 404) {
+            setError('Job not found')
+          } else if (jobResponse.status === 403) {
+            setError('You do not have permission to view this job')
+          } else {
+            setError('Failed to load job details')
+          }
+          return
+        }
+
+        if (!applicationsResponse.ok) {
+          if (applicationsResponse.status === 404) {
+            setError('Job not found or you do not have permission to view applications')
+          } else if (applicationsResponse.status === 403) {
+            setError('You do not have permission to view applications for this job')
+          } else {
+            setError('Failed to load applications')
+          }
+          return
+        }
+
+        const job = await jobResponse.json()
+        const applications = await applicationsResponse.json()
+
+        setJobDetails(job)
+        setApplicationsData(applications)
+
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setError('An error occurred while loading the data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchJobAndApplications()
+  }, [jobId, user])
+
+  const handleApplicationUpdate = async (applicationId: string, newStatus: string) => {
+    // Optimistically update the local state
+    setApplicationsData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        applications: prev.applications.map(app =>
+          app.id === applicationId ? { ...app, status: newStatus as JobApplication['status'] } : app
+        )
+      }
+    })
+
+    // Refetch data to ensure consistency
+    setTimeout(() => {
+      if (jobId) {
+        fetch(`/api/jobs/${jobId}/applications`)
+          .then(res => res.json())
+          .then(data => setApplicationsData(data))
+          .catch(console.error)
+      }
+    }, 1000)
+  }
+
+  const handleBulkUpdate = async (applicationIds: string[], action: string, data?: { feedback?: string; clientNotes?: string }) => {
+    // Optimistically update the local state
+    setApplicationsData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        applications: prev.applications.map(app => {
+          if (applicationIds.includes(app.id)) {
+            let newStatus = app.status
+            switch (action) {
+              case 'move_to_reviewed':
+                newStatus = 'REVIEWED'
+                break
+              case 'shortlist':
+                newStatus = 'SHORTLISTED'
+                break
+              case 'reject':
+                newStatus = 'REJECTED'
+                break
+            }
+            return { ...app, status: newStatus, ...data }
+          }
+          return app
+        })
+      }
+    })
+
+    // Refetch data to ensure consistency
+    setTimeout(() => {
+      if (jobId) {
+        fetch(`/api/jobs/${jobId}/applications`)
+          .then(res => res.json())
+          .then(data => setApplicationsData(data))
+          .catch(console.error)
+      }
+    }, 1000)
+  }
+
+  const getStatusStats = () => {
+    if (!applicationsData) return null
+
+    const stats = {
+      total: applicationsData.applications.length,
+      pending: applicationsData.applications.filter(app => app.status === 'PENDING').length,
+      reviewed: applicationsData.applications.filter(app => app.status === 'REVIEWED').length,
+      shortlisted: applicationsData.applications.filter(app => app.status === 'SHORTLISTED').length,
+      selected: applicationsData.applications.filter(app => app.status === 'SELECTED').length,
+      rejected: applicationsData.applications.filter(app => app.status === 'REJECTED').length
+    }
+
+    return stats
+  }
+
+  if (!user || (user.role !== 'client' && user.role !== 'company' && user.role !== 'admin')) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-4">You need to be a client or company to access this page.</p>
+          <Link href="/dashboard">
+            <Button>Go to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-4 w-20" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <div className="space-x-2">
+              <Button onClick={() => router.back()} variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Go Back
+              </Button>
+              <Link href="/dashboard">
+                <Button>Go to Dashboard</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!jobDetails || !applicationsData) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">No Data Found</h1>
+            <p className="text-gray-600 mb-4">Unable to load job or application data.</p>
+            <Link href="/dashboard">
+              <Button>Go to Dashboard</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const stats = getStatusStats()
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">{jobDetails.title}</h1>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="outline">{jobDetails.type}</Badge>
+                <Badge variant={jobDetails.status === 'active' ? 'default' : 'secondary'}>
+                  {jobDetails.status}
+                </Badge>
+                {jobDetails.salary && (
+                  <Badge variant="outline">{jobDetails.salary}</Badge>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Job ID: {jobDetails.id}</p>
+            <p className="text-sm text-gray-600">
+              Posted {new Date(jobDetails.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Statistics Cards */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+                <div className="text-sm text-gray-600">Total</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                <div className="text-sm text-gray-600">Pending</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">{stats.reviewed}</div>
+                <div className="text-sm text-gray-600">Reviewed</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-purple-600">{stats.shortlisted}</div>
+                <div className="text-sm text-gray-600">Shortlisted</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">{stats.selected}</div>
+                <div className="text-sm text-gray-600">Selected</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+                <div className="text-sm text-gray-600">Rejected</div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Applications Manager */}
+        <ApplicationManager
+          jobId={jobId!}
+          applications={applicationsData.applications}
+          onApplicationUpdate={handleApplicationUpdate}
+          onBulkUpdate={handleBulkUpdate}
+        />
+      </div>
+    </div>
+  )
+}

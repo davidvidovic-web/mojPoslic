@@ -12,11 +12,14 @@ import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { JobsListSection } from './company/jobs-list-section'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
+import { UnifiedJobsSection } from './company/unified-jobs-section'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { getTimeBasedGreetingKey } from '@/lib/localized-greetings'
 import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useTranslations } from 'next-intl'
 import { 
   LayoutDashboard,
   Briefcase,
@@ -35,6 +38,7 @@ const getFullNameDisplay = (name?: string | null): string => {
 export function CompanyDashboard() {
   const { user } = useAuth()
   const router = useRouter()
+  const t = useTranslations()
   
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobs()
@@ -93,7 +97,8 @@ export function CompanyDashboard() {
   }
   
   // Get time-based greeting
-  const { greeting } = getTimeBasedGreetingWithIcon()
+  const greetingKey = getTimeBasedGreetingKey()
+  const { iconName } = getTimeBasedGreetingWithIcon()
   
   const handleJobPosted = () => {
     closeJobPostDialog()
@@ -157,7 +162,7 @@ export function CompanyDashboard() {
                 <div className="space-y-2">
                   {/* Greeting message */}
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300">
-                    <span className="text-lg font-medium">{greeting}!</span>
+                    <span className="text-lg font-medium">{t(`greetings.${greetingKey}`)}</span>
                   </div>
                   
                   {/* Full name - bold and prominent */}
@@ -167,7 +172,7 @@ export function CompanyDashboard() {
                   
                   {/* Role-appropriate tagline */}
                   <p className="text-sm text-blue-600 dark:text-blue-300">
-                    Scaling your business with top-tier talent
+                    {t('dashboard.taglines.company')}
                   </p>
                 </div>
               </div>
@@ -210,7 +215,7 @@ export function CompanyDashboard() {
                     <SelectItem value="jobs">
                       <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-green-600" />
-                        Jobs
+                        Jobs & Talent
                       </div>
                     </SelectItem>
                     <SelectItem value="messages">
@@ -241,11 +246,15 @@ export function CompanyDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span>Jobs</span>
+                  <span>Jobs & Talent</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
                   <span>Messages</span>
+                </TabsTrigger>
+                <TabsTrigger value="connections" className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-yellow-600" />
+                  <span>Connections</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
@@ -307,20 +316,13 @@ export function CompanyDashboard() {
 
           {activeTab === 'jobs' && (
             <div className="space-y-6">
-              {/* Quick Actions - first on mobile */}
-              <div className="block lg:hidden">
-                <ClientQuickActions 
-                  onPostNewJob={() => openJobPostDialog()}
-                />
-              </div>
-              
-              {/* Jobs List - second on mobile */}
-              <JobsListSection 
+              <UnifiedJobsSection 
                 jobs={jobs}
                 applicationCounts={applicationCounts}
                 onEdit={handleEditJob}
                 onDelete={handleDeleteJob}
                 onPostNewJob={() => openJobPostDialog()}
+                loading={isLoading}
               />
             </div>
           )}

@@ -24,8 +24,8 @@ import Link from 'next/link'
 interface JobApplication {
   id: string
   job_id: string
-  applied_at: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  appliedAt: string
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   job: Job
   message?: string
   feedback?: string
@@ -41,6 +41,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
       case 'PENDING': return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
       case 'REVIEWED': return 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
       case 'SHORTLISTED': return 'bg-purple-500/10 text-purple-600 border border-purple-500/20'
+      case 'INTERVIEW_SCHEDULED': return 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20'
       case 'SELECTED': return 'bg-green-500/10 text-green-600 border border-green-500/20'
       case 'REJECTED': return 'bg-red-500/10 text-red-600 border border-red-500/20'
       case 'WITHDRAWN': return 'bg-gray-500/10 text-gray-600 border border-gray-500/20'
@@ -101,7 +102,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
                 )}
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  Applied {formatDate(application.applied_at)}
+                  Applied {formatDate(application.appliedAt)}
                 </div>
                 {application.job.salary && (
                   <div className="font-medium text-foreground">

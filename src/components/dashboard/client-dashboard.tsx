@@ -12,11 +12,14 @@ import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { JobsListSection } from './client/jobs-list-section'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
+import { UnifiedJobsSection } from './client/unified-jobs-section'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
+import { getTimeBasedGreetingKey } from '@/lib/localized-greetings'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useTranslations } from 'next-intl'
 
 // Helper function to get full name display
 const getFullNameDisplay = (name?: string | null): string => {
@@ -38,6 +41,7 @@ import {
 export function ClientDashboard() {
   const { user } = useAuth()
   const router = useRouter()
+  const t = useTranslations()
   
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobs()
@@ -92,7 +96,8 @@ export function ClientDashboard() {
   }
   
   // Get time-based greeting with icon
-  const { greeting, iconName } = getTimeBasedGreetingWithIcon()
+  const greetingKey = getTimeBasedGreetingKey()
+  const { iconName } = getTimeBasedGreetingWithIcon()
   
   // Helper to render the appropriate icon
   const renderTimeIcon = () => {
@@ -131,14 +136,14 @@ export function ClientDashboard() {
   }
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm('Are you sure you want to delete this job posting?')) return
+    if (!confirm(t('dashboard.confirmations.deleteJob'))) return
 
     try {
       await deleteJobMutation.mutateAsync(jobId)
-      toast.success('Job deleted successfully')
+      toast.success(t('dashboard.notifications.jobDeleted'))
     } catch (error) {
       console.error('Error deleting job:', error)
-      toast.error('Failed to delete job')
+      toast.error(t('dashboard.notifications.jobDeleteFailed'))
     }
   }
 
@@ -147,7 +152,7 @@ export function ClientDashboard() {
       await featureJobMutation.mutateAsync({ id: jobId, is_featured: isFeatured })
     } catch (error) {
       console.error('Error updating job featured status:', error)
-      toast.error('Failed to update job featured status')
+      toast.error(t('dashboard.notifications.jobFeaturedFailed'))
     }
   }
 
@@ -156,7 +161,7 @@ export function ClientDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your jobs...</p>
+          <p className="text-muted-foreground">{t('dashboard.loading.jobs')}</p>
         </div>
       </div>
     )
@@ -179,7 +184,7 @@ export function ClientDashboard() {
                   {/* Greeting message */}
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300">
                     {renderTimeIcon()}
-                    <span className="text-lg font-medium">{greeting}</span>
+                    <span className="text-lg font-medium">{t(`greetings.${greetingKey}`)}</span>
                   </div>
                   
                   {/* Full name - bold and prominent */}
@@ -189,7 +194,7 @@ export function ClientDashboard() {
                   
                   {/* Role-appropriate tagline */}
                   <p className="text-sm text-blue-600 dark:text-blue-300">
-                    Ready to find the perfect talent for your projects?
+                    {t('dashboard.taglines.client')}
                   </p>
                 </div>
               </div>
@@ -199,7 +204,7 @@ export function ClientDashboard() {
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>Quick Post & Hire</span>
+                <span>{t('dashboard.features.quickPostHire')}</span>
               </div>
             </div>
           </div>
@@ -212,35 +217,35 @@ export function ClientDashboard() {
             <div className="bg-card border rounded-lg p-4">
               <div className="flex items-center gap-4">
                 <label htmlFor="section-select" className="text-sm font-medium text-foreground whitespace-nowrap">
-                  View Section:
+                  {t('dashboard.navigation.viewSection')}
                 </label>
                 <Select value={activeTab} onValueChange={navigateToSection}>
                   <SelectTrigger className="flex-1" id="section-select">
-                    <SelectValue placeholder="Select a section" />
+                    <SelectValue placeholder={t('dashboard.navigation.selectSection')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="overview">
                       <div className="flex items-center gap-2">
                         <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                        Overview
+                        {t('navigation.dashboard.overview')}
                       </div>
                     </SelectItem>
                     <SelectItem value="jobs">
                       <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-green-600" />
-                        Jobs
+                        {t('dashboard.navigation.jobsAndApplications')}
                       </div>
                     </SelectItem>
                     <SelectItem value="messages">
                       <div className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4 text-purple-600" />
-                        Messages
+                        {t('navigation.main.messages')}
                       </div>
                     </SelectItem>
                     <SelectItem value="connections">
                       <div className="flex items-center gap-2">
                         <Zap className="h-4 w-4 text-yellow-600" />
-                        Connections
+                        {t('navigation.main.connections')}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -255,19 +260,19 @@ export function ClientDashboard() {
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span>Overview</span>
+                  <span>{t('navigation.dashboard.overview')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span>Jobs</span>
+                  <span>{t('dashboard.navigation.jobsAndApplications')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span>Messages</span>
+                  <span>{t('navigation.main.messages')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
-                  <span>Connections</span>
+                  <span>{t('navigation.main.connections')}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -295,13 +300,14 @@ export function ClientDashboard() {
                   </div>
                   
                   {/* Jobs List - second on mobile */}
-                  <div className="mb-8">            <JobsListSection 
-              jobs={jobs}
-              applicationCounts={applicationCounts}
-              onEdit={handleEditJob}
-              onDelete={handleDeleteJob}
-              onFeature={handleFeatureJob}
-            />
+                  <div className="mb-8">
+                    <JobsListSection 
+                      jobs={jobs}
+                      applicationCounts={applicationCounts}
+                      onEdit={handleEditJob}
+                      onDelete={handleDeleteJob}
+                      onFeature={handleFeatureJob}
+                    />
                   </div>
                 </div>
 
@@ -324,20 +330,14 @@ export function ClientDashboard() {
 
           {activeTab === 'jobs' && (
             <div className="space-y-6">
-              {/* Quick Actions - first on mobile */}
-              <div className="block lg:hidden">
-                <ClientQuickActions 
-                  onPostNewJob={() => openJobPostDialog()}
-                />
-              </div>
-              
-              {/* Jobs List - second on mobile */}
-              <JobsListSection 
+              <UnifiedJobsSection 
                 jobs={jobs}
                 applicationCounts={applicationCounts}
                 onEdit={handleEditJob}
                 onDelete={handleDeleteJob}
                 onFeature={handleFeatureJob}
+                onPostNewJob={() => openJobPostDialog()}
+                loading={isLoading}
               />
             </div>
           )}
@@ -347,7 +347,7 @@ export function ClientDashboard() {
         <Dialog open={isJobPostDialogOpen} onOpenChange={(open) => open ? openJobPostDialog() : closeJobPostDialog()}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="hidden">
-              Post Job
+              {t('dashboard.actions.postJob')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">

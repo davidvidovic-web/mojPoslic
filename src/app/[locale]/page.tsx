@@ -6,9 +6,12 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Zap, UserPlus } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from 'next-intl';
 
 export default function Home() {
+  const t = useTranslations('homepage');
+  
   return (
     <>
       {/* Hero Section */}
@@ -21,19 +24,18 @@ export default function Home() {
                 className="text-sm font-medium px-3 py-1 flex items-center gap-1 w-fit mx-auto"
               >
                 <Zap className="h-4 w-4" />
-                Quick • Simple • Safe
+                {t('hero.badge')}
               </Badge>
 
               <h2 className="text-5xl md:text-6xl font-bold leading-tight">
-                Post & Find
+                {t('hero.title')}
                 <span className="block bg-gradient-brand bg-clip-text text-transparent">
-                  Quick Jobs
+                  {t('hero.titleHighlight')}
                 </span>
               </h2>
 
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                The fastest way to post quick jobs and find reliable workers in
-                Bosnia. Simple, free, and trusted by thousands.
+                {t('hero.subtitle')}
               </p>
 
               {/* Call to Action Button */}
@@ -44,7 +46,7 @@ export default function Home() {
                     className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <UserPlus className="h-5 w-5 mr-2" />
-                    Register for free
+                    {t('hero.registerButton')}
                   </Button>
                 </Link>
               </div>
@@ -62,9 +64,9 @@ export default function Home() {
       <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-2 mb-12">
-            <h3 className="text-3xl font-bold">Browse Available Jobs</h3>
+            <h3 className="text-3xl font-bold">{t('browseJobs.title')}</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover opportunities that match your skills and preferences
+              {t('browseJobs.subtitle')}
             </p>
           </div>
           <JobList />
@@ -76,10 +78,9 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center space-y-8">
             <div className="space-y-4">
-              <h3 className="text-3xl font-bold">Site Statistics</h3>
+              <h3 className="text-3xl font-bold">{t('siteStats.title')}</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                See how mojPoslić is connecting workers and clients across
-                Bosnia and Herzegovina
+                {t('siteStats.subtitle')}
               </p>
             </div>
             <SiteStats />
@@ -99,20 +100,19 @@ export default function Home() {
                 <span className="font-bold">mojPoslić</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Quick, simple & free job posting platform for Bosnia and
-                Herzegovina.
+                {t('footer.description')}
               </p>
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">For Workers</h4>
+              <h4 className="font-medium">{t('footer.forWorkers.title')}</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Find Quick Jobs
+                    {t('footer.forWorkers.findJobs')}
                   </a>
                 </li>
                 <li>
@@ -120,7 +120,7 @@ export default function Home() {
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Daily Work
+                    {t('footer.forWorkers.dailyWork')}
                   </a>
                 </li>
                 <li>
@@ -128,21 +128,21 @@ export default function Home() {
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Hourly Jobs
+                    {t('footer.forWorkers.hourlyJobs')}
                   </a>
                 </li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">For Clients</h4>
+              <h4 className="font-medium">{t('footer.forClients.title')}</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Post Quick Jobs
+                    {t('footer.forClients.postJobs')}
                   </a>
                 </li>
                 <li>
@@ -150,7 +150,7 @@ export default function Home() {
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Find Workers
+                    {t('footer.forClients.findWorkers')}
                   </a>
                 </li>
                 <li>
@@ -158,21 +158,21 @@ export default function Home() {
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    100% Free
+                    {t('footer.forClients.free')}
                   </a>
                 </li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">Company</h4>
+              <h4 className="font-medium">{t('footer.company.title')}</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    About Us
+                    {t('footer.company.about')}
                   </a>
                 </li>
                 <li>
@@ -180,7 +180,7 @@ export default function Home() {
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Contact
+                    {t('footer.company.contact')}
                   </a>
                 </li>
                 <li>
@@ -188,7 +188,7 @@ export default function Home() {
                     href="#"
                     className="hover:text-foreground transition-colors"
                   >
-                    Privacy
+                    {t('footer.company.privacy')}
                   </a>
                 </li>
               </ul>
@@ -199,7 +199,7 @@ export default function Home() {
 
           <div className="text-center text-sm text-default-600">
             <p>
-              &copy; 2025 mojPoslić. Built with Next.js, shadcn/ui, and Prisma.
+              {t('footer.copyright')}
             </p>
           </div>
         </div>

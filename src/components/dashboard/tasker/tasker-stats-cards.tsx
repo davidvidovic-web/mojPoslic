@@ -6,7 +6,7 @@ import { CheckCircle, DollarSign, Briefcase } from 'lucide-react'
 interface JobApplication {
   id: string
   job_id: string
-  applied_at: string
+  appliedAt: string
   status: 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'completed'
   job?: {
     title: string

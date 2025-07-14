@@ -67,7 +67,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
               )}
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                Posted {formatDate(job.created_at)}
+                Posted {formatDate(job.createdAt)}
               </div>
             </div>
             

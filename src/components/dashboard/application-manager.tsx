@@ -1,37 +1,92 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { 
-  useJobApplications, 
-  useBulkApplicationActions
-} from '@/hooks/use-applications'
-import { ApplicationStatus, JobApplication } from '@/types/application'
-import { 
-  Users, 
-  Search, 
-  Eye, 
-  MessageSquare, 
+  Clock, 
+  CheckCircle, 
   Star, 
-  CheckCircle2,
-  XCircle,
-  Filter
+  XCircle, 
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Search,
+  Filter,
+  Eye,
+  MessageSquare,
+  UserCheck,
+  UserX,
+  Users,
+  Briefcase,
+  Award,
+  Globe,
+  ChevronDown,
+  ChevronUp,
+  MoreHorizontal
 } from 'lucide-react'
-// import { ApplicationDetailsModal } from './application-details-modal'
 import { formatDistanceToNow } from 'date-fns'
+import { toast } from 'sonner'
+
+interface User {
+  id: string
+  name: string
+  email: string
+  avatarUrl?: string
+  phone?: string
+  location?: string
+  bio?: string
+  skills?: string
+  experience?: string
+  position?: string
+  website?: string
+  createdAt: string
+  reviewsReceived?: { rating: number }[]
+}
+
+interface JobApplication {
+  id: string
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  message?: string
+  resume?: string
+  clientNotes?: string
+  feedback?: string
+  appliedAt?: string
+  reviewedAt?: string
+  shortlistedAt?: string
+  selectedAt?: string
+  rejectedAt?: string
+  withdrawnAt?: string
+  createdAt: string
+  updatedAt: string
+  user: User
+}
 
 interface ApplicationManagerProps {
   jobId: string
-  jobTitle: string
+  applications: JobApplication[]
+  onApplicationUpdate?: (applicationId: string, newStatus: string) => void
+  onBulkUpdate?: (applicationIds: string[], action: string, data?: any) => void
 }
 
-export function ApplicationManager({ jobId, jobTitle }: ApplicationManagerProps) {
+export function ApplicationManager({ 
+  jobId, 
+  applications, 
+  onApplicationUpdate, 
+  onBulkUpdate 
+}: ApplicationManagerProps) {
   const [activeTab, setActiveTab] = useState('all')
   const [selectedApplications, setSelectedApplications] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')

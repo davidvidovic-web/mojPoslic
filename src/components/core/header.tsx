@@ -1,12 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from 'next-intl';
 import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { useAuth } from "@/contexts/auth-context";
 import { useDialogStore } from "@/stores/dialog-store";
 import { ThemeToggleButton } from "@/components/core/theme-toggle-button";
+import { LanguageSwitcher } from "@/components/common/language-switcher";
+import { NotificationCenter } from "@/components/ui/notification-center";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +30,6 @@ import {
   Zap,
   Menu,
   X,
-  Bell,
   UserPlus,
 } from "lucide-react";
 import {
@@ -49,6 +51,25 @@ export function Header() {
   } = useDialogStore();
   const { loading, user, signOut } = useAuth();
   const pathname = usePathname();
+  
+  // Scroll detection state
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Translation hooks
+  const tAuth = useTranslations('auth');
+  const tHeader = useTranslations('header');
+  const tNavigation = useTranslations('navigation.main');
+
+  // Scroll detection effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 100); // Fixed after scrolling 100px
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Helper function to check if a menu item is active
   const isActiveMenuItem = (href: string) => {
@@ -87,7 +108,15 @@ export function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm border-b border-border/40">
+    <>
+      {/* Placeholder to maintain layout when header becomes fixed */}
+      <div className={`transition-all duration-500 ease-in-out ${isScrolled ? 'h-[73px]' : 'h-0'}`} />
+      
+      <header className={`
+        ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : 'relative'} 
+        ${isScrolled ? 'bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg border-b border-border/40' : 'bg-transparent border-b border-transparent'} 
+        transition-all duration-500 ease-in-out
+      `}>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link
@@ -125,12 +154,12 @@ export function Header() {
                           onClick={handlePostJobClick}
                         >
                           <Plus className="h-4 w-4 mr-2" />
-                          Post Job
+                          {tHeader('postJob')}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
                         <DialogHeader>
-                          <DialogTitle>Post a Job - Free & Easy</DialogTitle>
+                          <DialogTitle>{tHeader('postJobDialog')}</DialogTitle>
                         </DialogHeader>
                         <MultiStepJobForm
                           onJobPosted={handleJobPosted}
@@ -143,13 +172,14 @@ export function Header() {
                 {/* Auth.js Authentication Components */}
                 {!user ? (
                   <div className="flex items-center gap-2">
+                    <LanguageSwitcher />
                     <Link href="/auth/signin">
                       <Button
                         variant="outline"
                         className="border-foreground text-foreground hover:bg-foreground hover:text-background font-bold transition-all duration-200"
                       >
                         <LogIn className="h-4 w-4 mr-2" />
-                        Sign In
+                        {tAuth('signIn')}
                       </Button>
                     </Link>
                     <Link href="/auth/register">
@@ -157,22 +187,14 @@ export function Header() {
                         className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
                       >
                         <UserPlus className="h-4 w-4 mr-2" />
-                        Register
+                        {tAuth('register')}
                       </Button>
                     </Link>
                   </div>
                 ) : (
                   <>
-                    {/* Notifications Bell */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="relative h-9 w-9 rounded-full"
-                    >
-                      <Bell className="h-7 w-7" />
-                      {/* Notification dot - you can conditionally show this */}
-                      {/* <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full"></span> */}
-                    </Button>
+                    {/* Notifications */}
+                    <NotificationCenter />
 
                     {/* Desktop Menu */}
                     <div className="hidden md:block">
@@ -197,7 +219,7 @@ export function Header() {
                               className={getMenuItemClass('/dashboard')}
                             >
                               <LayoutDashboard className="mr-2 h-6 w-6" />
-                              Dashboard
+                              {tNavigation('dashboard')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -207,7 +229,7 @@ export function Header() {
                               className={getMenuItemClass('/dashboard/jobs')}
                             >
                               <Briefcase className="mr-2 h-6 w-6" />
-                              Jobs
+                              {tNavigation('jobs')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
@@ -216,7 +238,7 @@ export function Header() {
                               className={getMenuItemClass('/dashboard/messages')}
                             >
                               <MessageSquare className="mr-2 h-6 w-6" />
-                              Messages
+                              {tNavigation('messages')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
@@ -225,14 +247,14 @@ export function Header() {
                               className={getMenuItemClass('/connections')}
                             >
                               <Zap className="mr-2 h-6 w-6" />
-                              Connections
+                              {tNavigation('connections')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
                             <Link href="/settings" className={getMenuItemClass('/settings')}>
                               <Settings className="mr-2 h-6 w-6" />
-                              Settings
+                              {tNavigation('settings')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
@@ -243,9 +265,14 @@ export function Header() {
                               />
                             </div>
                           </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <div className="cursor-pointer w-full p-2">
+                              <LanguageSwitcher />
+                            </div>
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={handleSignOut}>
                             <LogOut className="mr-2 h-6 w-6" />
-                            Sign Out
+                            {tAuth('signOut')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -269,7 +296,7 @@ export function Header() {
                         <div className="flex h-full flex-col bg-background">
                           {/* Header */}
                           <div className="flex items-center justify-between p-4 border-b">
-                            <h2 className="text-lg font-semibold">Menu</h2>
+                            <h2 className="text-lg font-semibold">{tAuth('menu')}</h2>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -289,7 +316,7 @@ export function Header() {
                                 onClick={() => closeMobileMenu()}
                               >
                                 <LayoutDashboard className="mr-4 h-6 w-6" />
-                                Dashboard
+                                {tNavigation('dashboard')}
                               </Link>
 
                               <Link
@@ -298,7 +325,7 @@ export function Header() {
                                 onClick={() => closeMobileMenu()}
                               >
                                 <Briefcase className="mr-4 h-6 w-6" />
-                                Jobs
+                                {tNavigation('jobs')}
                               </Link>
 
                               <Link
@@ -307,7 +334,7 @@ export function Header() {
                                 onClick={() => closeMobileMenu()}
                               >
                                 <MessageSquare className="mr-4 h-6 w-6" />
-                                Messages
+                                {tNavigation('messages')}
                               </Link>
 
                               <Link
@@ -316,7 +343,7 @@ export function Header() {
                                 onClick={() => closeMobileMenu()}
                               >
                                 <Zap className="mr-4 h-6 w-6" />
-                                Connections
+                                {tNavigation('connections')}
                               </Link>
 
                               <div className="border-t pt-6">
@@ -326,7 +353,7 @@ export function Header() {
                                   onClick={() => closeMobileMenu()}
                                 >
                                   <Settings className="mr-4 h-6 w-6" />
-                                  Settings
+                                  {tNavigation('settings')}
                                 </Link>
 
                                 <div className="py-4">
@@ -337,6 +364,10 @@ export function Header() {
                                   />
                                 </div>
 
+                                <div className="py-4">
+                                  <LanguageSwitcher />
+                                </div>
+
                                 <button
                                   onClick={() => {
                                     closeMobileMenu();
@@ -345,7 +376,7 @@ export function Header() {
                                   className="flex items-center py-4 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors w-full text-left"
                                 >
                                   <LogOut className="mr-4 h-6 w-6" />
-                                  Sign Out
+                                  {tAuth('signOut')}
                                 </button>
                               </div>
                             </nav>
@@ -361,5 +392,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

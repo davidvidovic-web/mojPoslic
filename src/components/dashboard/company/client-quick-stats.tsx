@@ -13,7 +13,7 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
   const activeJobs = jobs.length // All jobs are considered active for now
   const totalApplications = Object.values(applicationCounts).reduce((sum, count) => sum + count, 0)
   const thisMonthJobs = jobs.filter(job => 
-    new Date(job.created_at).getMonth() === new Date().getMonth()
+    new Date(job.createdAt).getMonth() === new Date().getMonth()
   ).length
 
   return (

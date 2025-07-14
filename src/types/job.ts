@@ -66,9 +66,9 @@ export interface Job {
     email: string | null
     role: string
   }
-  created_at: string
-  updated_at?: string
-  posted_at: string // Alias for created_at for compatibility
+  createdAt: string
+  updatedAt?: string
+  posted_at?: string // Alias for createdAt for compatibility
   
   // Additional fields that might be in the database
   requirements?: string

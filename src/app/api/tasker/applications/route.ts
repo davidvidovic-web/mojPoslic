@@ -68,13 +68,13 @@ export async function GET() {
     const transformedApplications = applications.map((application: any) => ({
       id: application.id,
       job_id: application.jobId,
-      applied_at: application.createdAt.toISOString(),
+      appliedAt: application.createdAt.toISOString(),
       status: application.status,
       message: application.message || undefined,
       feedback: application.feedback || undefined,
       job: {
         ...application.job,
-        posted_at: application.job.createdAt.toISOString(),
+        createdAt: application.job.createdAt.toISOString(),
         posted_by: application.job.postedById,
         city: application.job.city ? {
           ...application.job.city,

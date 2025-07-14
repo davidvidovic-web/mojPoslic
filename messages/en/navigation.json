@@ -1,0 +1,26 @@
+{
+  "main": {
+    "dashboard": "Dashboard",
+    "jobs": "Jobs",
+    "applications": "Applications",
+    "messages": "Messages",
+    "profile": "Profile",
+    "settings": "Settings",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "stats": "Statistics",
+    "recent": "Recent Activity",
+    "quickActions": "Quick Actions"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "back": "Back to {page}"
+  },
+  "menu": {
+    "toggle": "Toggle menu",
+    "close": "Close menu"
+  }
+}

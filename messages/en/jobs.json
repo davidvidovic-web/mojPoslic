@@ -1,0 +1,125 @@
+{
+  "title": "Jobs",
+  "searchPlaceholder": "Search jobs...",
+  "filters": {
+    "category": "Category",
+    "location": "Location",
+    "salary": "Salary",
+    "type": "Job Type",
+    "experience": "Experience Level",
+    "datePosted": "Date Posted",
+    "status": "Status",
+    "featured": "Featured Only",
+    "remote": "Remote Jobs"
+  },
+  "create": {
+    "title": "Post New Job",
+    "subtitle": "Create a new job posting",
+    "form": {
+      "title": "Job Title",
+      "description": "Job Description",
+      "requirements": "Requirements",
+      "responsibilities": "Responsibilities",
+      "salary": "Salary",
+      "salaryMin": "Minimum Salary",
+      "salaryMax": "Maximum Salary",
+      "location": "Location",
+      "category": "Category",
+      "type": "Job Type",
+      "experience": "Experience Level",
+      "deadline": "Application Deadline",
+      "skills": "Required Skills",
+      "benefits": "Benefits",
+      "company": "Company",
+      "contactEmail": "Contact Email",
+      "contactPhone": "Contact Phone",
+      "isRemote": "Remote Work Available",
+      "isFeatured": "Featured Job",
+      "isUrgent": "Urgent Hiring"
+    },
+    "success": "Job posted successfully!",
+    "error": "Failed to post job. Please try again."
+  },
+  "edit": {
+    "title": "Edit Job",
+    "subtitle": "Update job details",
+    "success": "Job updated successfully!",
+    "error": "Failed to update job. Please try again."
+  },
+  "list": {
+    "noJobs": "No jobs found",
+    "noJobsWithFilters": "No jobs match your current filters",
+    "loadMore": "Load More Jobs",
+    "showing": "Showing {count} of {total} jobs",
+    "sortBy": "Sort by",
+    "sortOptions": {
+      "newest": "Newest First",
+      "oldest": "Oldest First",
+      "salary": "Salary",
+      "relevance": "Relevance",
+      "deadline": "Application Deadline"
+    }
+  },
+  "card": {
+    "applicants": "{count} applicants",
+    "applicant": "{count} applicant",
+    "noApplicants": "No applicants yet",
+    "viewDetails": "View Details",
+    "apply": "Apply Now",
+    "edit": "Edit Job",
+    "delete": "Delete Job",
+    "feature": "Feature Job",
+    "unfeature": "Remove Featured",
+    "close": "Close Job",
+    "reopen": "Reopen Job",
+    "viewApplications": "View Applications",
+    "featured": "Featured",
+    "urgent": "Urgent",
+    "remote": "Remote",
+    "onsite": "On-site",
+    "hybrid": "Hybrid",
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "contract": "Contract",
+    "freelance": "Freelance",
+    "internship": "Internship",
+    "postedOn": "Posted on {date}",
+    "deadline": "Deadline: {date}",
+    "salary": "Salary: {amount}",
+    "negotiable": "Negotiable"
+  },
+  "status": {
+    "draft": "Draft",
+    "active": "Active",
+    "closed": "Closed",
+    "expired": "Expired",
+    "paused": "Paused",
+    "pending": "Pending Review"
+  },
+  "types": {
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "contract": "Contract",
+    "freelance": "Freelance",
+    "internship": "Internship",
+    "temporary": "Temporary"
+  },
+  "experience": {
+    "entry": "Entry Level",
+    "junior": "Junior",
+    "mid": "Mid Level",
+    "senior": "Senior",
+    "lead": "Lead",
+    "executive": "Executive"
+  },
+  "actions": {
+    "confirmDelete": "Are you sure you want to delete this job?",
+    "confirmClose": "Are you sure you want to close this job?",
+    "deleteSuccess": "Job deleted successfully",
+    "deleteError": "Failed to delete job",
+    "featureSuccess": "Job featured successfully",
+    "featureError": "Failed to feature job",
+    "closeSuccess": "Job closed successfully",
+    "closeError": "Failed to close job"
+  }
+}

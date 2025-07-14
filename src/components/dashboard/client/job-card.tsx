@@ -109,7 +109,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
             )}
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-              <span>Posted {formatDate(job.created_at)}</span>
+              <span>Posted {formatDate(job.createdAt)}</span>
             </div>
           </div>
         </div>

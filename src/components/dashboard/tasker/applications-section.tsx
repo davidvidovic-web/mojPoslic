@@ -11,7 +11,7 @@ import Link from 'next/link'
 interface JobApplication {
   id: string
   job_id: string
-  applied_at: string
+  appliedAt: string
   status: 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'completed'
   job: Job
 }
@@ -97,7 +97,7 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
               </Badge>
             </div>
             <div className="flex justify-between items-center text-xs text-muted-foreground">
-              <span>Applied {formatDate(application.applied_at)}</span>
+              <span>Applied {formatDate(application.appliedAt)}</span>
               {(application.job.salaryMin || application.job.salary) && (
                 <span className="text-foreground font-medium">
                   {application.job.salary || 

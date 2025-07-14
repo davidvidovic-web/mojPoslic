@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface JobLocationMapProps {
   latitude: number
@@ -17,6 +18,7 @@ export function JobLocationMap({
   jobTitle, 
   company 
 }: JobLocationMapProps) {
+  const t = useTranslations('jobLocationMap')
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<unknown>(null)
   const [isClient, setIsClient] = useState(false)
@@ -88,7 +90,7 @@ export function JobLocationMap({
   if (!isClient) {
     return (
       <div className="w-full h-[250px] rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
-        <p className="text-muted-foreground">Loading map...</p>
+        <p className="text-muted-foreground">{t('loadingMap')}</p>
       </div>
     )
   }

@@ -1,0 +1,496 @@
+{
+  "auth": {
+    "signIn": "Prijaviž se",
+    "signOut": "Odjavi se",
+    "register": "Registruj se",
+    "menu": "Meni"
+  },
+  "header": {
+    "postJob": "Objavi posao",
+    "postJobDialog": "Objavi posao - Besplatno i jednostavno"
+  },
+  "greetings": {
+    "morning": "Dobro jutro",
+    "day": "Dobar dan",
+    "evening": "Dobro veče"
+  },
+  "common": {
+    "buttons": {
+      "save": "Sačuvaj",
+      "cancel": "Otkaži",
+      "delete": "Obriši",
+      "edit": "Uredi",
+      "submit": "Pošalji",
+      "back": "Nazad",
+      "next": "Sljedeće",
+      "previous": "Prethodno",
+      "close": "Zatvori",
+      "confirm": "Potvrdi",
+      "loadMore": "Učitaj više",
+      "viewAll": "Prikaži sve",
+      "create": "Kreiraj",
+      "add": "Dodaj",
+      "remove": "Ukloni",
+      "search": "Pretraži",
+      "filter": "Filtriraj",
+      "sort": "Sortiraj",
+      "export": "Izvezi",
+      "import": "Uvezi",
+      "refresh": "Osvježi"
+    },
+    "status": {
+      "loading": "Učitava...",
+      "error": "Greška",
+      "success": "Uspjeh",
+      "warning": "Upozorenje",
+      "info": "Informacija",
+      "pending": "Na čekanju",
+      "approved": "Odobreno",
+      "rejected": "Odbačeno",
+      "draft": "Nacrt",
+      "published": "Objavljeno",
+      "active": "Aktivno",
+      "inactive": "Neaktivno",
+      "completed": "Završeno"
+    },
+    "time": {
+      "now": "sada",
+      "minute": "minuta",
+      "minutes": "minuta",
+      "hour": "sat",
+      "hours": "sati",
+      "day": "dan",
+      "days": "dana",
+      "week": "sedmica",
+      "weeks": "sedmica",
+      "month": "mjesec",
+      "months": "mjeseci",
+      "year": "godina",
+      "years": "godina",
+      "ago": "prije",
+      "remaining": "preostalo"
+    },
+    "forms": {
+      "required": "Ovo polje je obavezno",
+      "invalid": "Neispravna vrijednost",
+      "tooShort": "Prekratko",
+      "tooLong": "Predugačko",
+      "invalidEmail": "Neispravna email adresa",
+      "invalidPhone": "Neispravan broj telefona",
+      "invalidUrl": "Neispravna URL adresa",
+      "passwordMismatch": "Lozinke se ne poklapaju",
+      "selectOption": "Odaberite opciju",
+      "enterValue": "Unesite vrijednost",
+      "chooseFile": "Odaberite fajl",
+      "dragDropFile": "Povucite i spustite fajl ovdje ili kliknite za pretraživanje"
+    },
+    "messages": {
+      "noData": "Nema dostupnih podataka",
+      "noResults": "Nema rezultata",
+      "emptyList": "Lista je prazna",
+      "somethingWentWrong": "Nešto je pošlo po zlu",
+      "tryAgainLater": "Molimo pokušajte ponovo kasnije",
+      "sessionExpired": "Sesija je istekla",
+      "unauthorized": "Neovlašten pristup",
+      "forbidden": "Zabranjen pristup",
+      "notFound": "Nije pronađeno",
+      "serverError": "Greška servera"
+    }
+  },
+  "navigation": {
+    "main": {
+      "dashboard": "Kontrolna tabla",
+      "jobs": "Poslovi",
+      "applications": "Prijave",
+      "messages": "Poruke",
+      "profile": "Profil",
+      "settings": "Postavke",
+      "help": "Pomoć",
+      "logout": "Odjavi se",
+      "connections": "Veze"
+    },
+    "dashboard": {
+      "overview": "Pregled",
+      "stats": "Statistike",
+      "recent": "Nedavne aktivnosti",
+      "quickActions": "Brze akcije"
+    },
+    "breadcrumb": {
+      "home": "Početna",
+      "back": "Nazad na {page}"
+    },
+    "menu": {
+      "toggle": "Uključi/isključi meni",
+      "close": "Zatvori meni"
+    }
+  },
+  "dashboard": {
+    "welcome": "Dobrodošli nazad, {name}!",
+    "welcomeDefault": "Dobrodošli nazad!",
+    "stats": {
+      "totalJobs": "Ukupno poslova",
+      "activeJobs": "Aktivni poslovi",
+      "applications": "Prijave",
+      "pendingApplications": "Prijave na čekanju",
+      "completedJobs": "Završeni poslovi",
+      "totalEarnings": "Ukupna zarada",
+      "monthlyEarnings": "Mjesečna zarada",
+      "rating": "Ocjena",
+      "reviews": "Recenzije",
+      "profileViews": "Pregledi profila"
+    },
+    "sections": {
+      "recentJobs": "Nedavni poslovi",
+      "recentApplications": "Nedavne prijave",
+      "quickActions": "Brze akcije",
+      "notifications": "Obavještenja",
+      "activity": "Nedavne aktivnosti"
+    },
+    "actions": {
+      "postJob": "Objavi novi posao",
+      "findJobs": "Pronađi poslove",
+      "viewAllJobs": "Prikaži sve poslove",
+      "viewAllApplications": "Prikaži sve prijave",
+      "editProfile": "Uredi profil",
+      "viewProfile": "Prikaži profil",
+      "manageAccount": "Upravljaj računom"
+    },
+    "tabs": {
+      "overview": "Pregled",
+      "jobs": "Poslovi",
+      "applications": "Prijave",
+      "messages": "Poruke",
+      "settings": "Postavke"
+    },
+    "taglines": {
+      "tasker": "Spreman da pronađeš svoju sljedeću priliku i razviješ vještine",
+      "client": "Spreman da pronađeš savršen talent za svoje projekte?",
+      "company": "Uvećaj svoj biznis sa pravom radnom snagom"
+    },
+    "status": {
+      "jobSeekingActive": "Tražim posao - Aktivno",
+      "hiringActive": "Zapošljavam - Aktivno", 
+      "accountActive": "Račun - Aktivan"
+    },
+    "loading": {
+      "jobs": "Učitavam vaše poslove...",
+      "dashboard": "Učitavam kontrolnu tablu...",
+      "admin": "Učitavam admin kontrolnu tablu..."
+    },
+    "navigation": {
+      "viewSection": "Prikaži sekciju:",
+      "selectSection": "Odaberite sekciju",
+      "jobsAndApplications": "Poslovi i prijave"
+    },
+    "quickActions": {
+      "title": "Brze akcije",
+      "description": "Česti zadaci na dohvat ruke"
+    },
+    "features": {
+      "quickPostHire": "Brzo objavi i zaposli"
+    },
+    "confirmations": {
+      "deleteJob": "Da li ste sigurni da želite obrisati ovaj oglas za posao?"
+    },
+    "notifications": {
+      "jobDeleted": "Posao je uspješno obrisan",
+      "jobDeleteFailed": "Neuspješno brisanje posla",
+      "jobFeaturedFailed": "Neuspješno ažuriranje izdvojenog statusa posla"
+    }
+  },
+  "jobs": {
+    "title": "Poslovi",
+    "searchPlaceholder": "Pretraži poslove...",
+    "filters": {
+      "category": "Kategorija",
+      "location": "Lokacija",
+      "salary": "Plata",
+      "type": "Tip posla",
+      "experience": "Nivo iskustva",
+      "datePosted": "Datum objave",
+      "status": "Status",
+      "featured": "Samo izdvojeni",
+      "remote": "Udaljeni poslovi"
+    },
+    "create": {
+      "title": "Objavi novi posao",
+      "subtitle": "Kreiraj novi oglas za posao",
+      "form": {
+        "title": "Naziv posla",
+        "description": "Opis posla",
+        "requirements": "Zahtjevi",
+        "responsibilities": "Odgovornosti",
+        "salary": "Plata",
+        "salaryMin": "Minimalna plata",
+        "salaryMax": "Maksimalna plata",
+        "location": "Lokacija",
+        "category": "Kategorija",
+        "type": "Tip posla",
+        "experience": "Nivo iskustva",
+        "deadline": "Rok za prijavu",
+        "skills": "Potrebne vještine",
+        "benefits": "Benefiti",
+        "company": "Kompanija",
+        "contactEmail": "Kontakt email",
+        "contactPhone": "Kontakt telefon",
+        "isRemote": "Dostupan udaljeni rad",
+        "isFeatured": "Izdvojen posao",
+        "isUrgent": "Hitno zapošljavanje"
+      },
+      "success": "Posao je uspješno objavljen!",
+      "error": "Neuspješno objavljivanje posla. Molimo pokušajte ponovo."
+    },
+    "edit": {
+      "title": "Uredi posao",
+      "subtitle": "Ažuriraj detalje posla",
+      "success": "Posao je uspješno ažuriran!",
+      "error": "Neuspješno ažuriranje posla. Molimo pokušajte ponovo."
+    },
+    "list": {
+      "noJobs": "Nema pronađenih poslova",
+      "noJobsWithFilters": "Nema poslova koji odgovaraju trenutnim filterima",
+      "loadMore": "Učitaj više poslova",
+      "showing": "Prikazuje se {count} od {total} poslova",
+      "sortBy": "Sortiraj po",
+      "sortOptions": {
+        "newest": "Najnoviji prvo",
+        "oldest": "Najstariji prvo",
+        "salary": "Plata",
+        "relevance": "Relevantnost",
+        "deadline": "Rok za prijavu"
+      }
+    },
+    "card": {
+      "applicants": "{count} kandidata",
+      "applicant": "{count} kandidat",
+      "noApplicants": "Nema kandidata",
+      "viewDetails": "Prikaži detalje",
+      "apply": "Prijaviť se",
+      "edit": "Uredi posao",
+      "delete": "Obriši posao",
+      "feature": "Izdvoji posao",
+      "unfeature": "Ukloni izdvajanje",
+      "close": "Zatvori posao",
+      "reopen": "Ponovno otvori posao",
+      "viewApplications": "Prikaži prijave",
+      "featured": "Izdvojen",
+      "urgent": "Hitno",
+      "remote": "Udaljeno",
+      "onsite": "Na lokaciji",
+      "hybrid": "Hibridno",
+      "fullTime": "Puno radno vrijeme",
+      "partTime": "Skraćeno radno vrijeme",
+      "contract": "Ugovor",
+      "freelance": "Slobodni rad",
+      "internship": "Praksa",
+      "postedOn": "Objavljeno {date}",
+      "deadline": "Rok: {date}",
+      "salary": "Plata: {amount}",
+      "negotiable": "Po dogovoru"
+    },
+    "status": {
+      "draft": "Nacrt",
+      "active": "Aktivan",
+      "closed": "Zatvoren",
+      "expired": "Istekao",
+      "paused": "Pauziran",
+      "pending": "Na čekanju odobrenja"
+    },
+    "types": {
+      "fullTime": "Puno radno vrijeme",
+      "partTime": "Skraćeno radno vrijeme",
+      "contract": "Ugovor",
+      "freelance": "Slobodni rad",
+      "internship": "Praksa",
+      "temporary": "Privremeno"
+    },
+    "experience": {
+      "entry": "Početni nivo",
+      "junior": "Junior",
+      "mid": "Srednji nivo",
+      "senior": "Senior",
+      "lead": "Voditelj",
+      "executive": "Izvršni"
+    },
+    "actions": {
+      "confirmDelete": "Jeste li sigurni da želite obrisati ovaj posao?",
+      "confirmClose": "Jeste li sigurni da želite zatvoriti ovaj posao?",
+      "deleteSuccess": "Posao je uspješno obrisan",
+      "deleteError": "Neuspješno brisanje posla",
+      "featureSuccess": "Posao je uspješno izdvojen",
+      "featureError": "Neuspješno izdvajanje posla",
+      "closeSuccess": "Posao je uspješno zatvoren",
+      "closeError": "Neuspješno zatvaranje posla"
+    }
+  },
+  "messaging": {
+    "title": "Poruke",
+    "newMessage": "Nova poruka",
+    "send": "Pošalji",
+    "search": "Pretraži",
+    "edit": "Uredi",
+    "delete": "Obriši",
+    "reply": "Odgovori",
+    "typing": "Kuca...",
+    "placeholder": "Ukucajte poruku...",
+    "file": "Fajl",
+    "image": "Slika",
+    "upload": "Učitaj",
+    "download": "Preuzmi",
+    "clear": "Očisti",
+    "cancel": "Otkaži",
+    "confirm": "Potvrdi",
+    "loading": "Učitava...",
+    "noMessages": "Nema poruka",
+    "startConversation": "Započni razgovor",
+    "status": {
+      "sent": "Poslano",
+      "delivered": "Dostavljeno",
+      "read": "Pročitano",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "conversation": {
+      "archive": "Arhiviraj",
+      "block": "Blokiraj",
+      "report": "Prijaviť",
+      "jobApplication": "Prijava za posao",
+      "participants": "Učesnici",
+      "addParticipant": "Dodaj učesnika",
+      "removeParticipant": "Ukloni učesnika",
+      "leaveConversation": "Napusti razgovor"
+    },
+    "time": {
+      "justNow": "upravo sada",
+      "minuteAgo": "prije {count} minut",
+      "minutesAgo": "prije {count} minuta",
+      "hourAgo": "prije {count} sat",
+      "hoursAgo": "prije {count} sati",
+      "dayAgo": "jučer",
+      "daysAgo": "prije {count} dana",
+      "weekAgo": "prošle sedmice",
+      "weeksAgo": "prije {count} sedmica",
+      "monthAgo": "prošlog mjeseca",
+      "monthsAgo": "prije {count} mjeseci",
+      "yearAgo": "prošle godine",
+      "yearsAgo": "prije {count} godina"
+    },
+    "errors": {
+      "uploadFailed": "Neuspješno učitavanje fajla",
+      "connectionLost": "Veza je izgubljena",
+      "messageNotSent": "Poruka nije poslana",
+      "fileTooLarge": "Fajl je prevelik",
+      "invalidFileType": "Neispravan tip fajla",
+      "networkError": "Greška mreže"
+    }
+  },
+  "homepage": {
+    "hero": {
+      "badge": "Brzo • Jednostavno • Sigurno",
+      "title": "Objavi i Pronađi",
+      "titleHighlight": "Brze Poslove",
+      "subtitle": "Najbrži način da objavite brze poslove i pronađete pouzdane radnike u Bosni. Jednostavno, besplatno i pouzdano od strane hiljada korisnika.",
+      "registerButton": "Registruj se besplatno"
+    },
+    "browseJobs": {
+      "title": "Pregledaj Dostupne Poslove",
+      "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i preferencijama"
+    },
+    "siteStats": {
+      "title": "Statistike Sajta",
+      "subtitle": "Vidite kako mojPoslić povezuje radnike i klijente širom Bosne i Hercegovine"
+    },
+    "footer": {
+      "description": "Brza, jednostavna i besplatna platforma za objavljivanje poslova za Bosnu i Hercegovinu.",
+      "forWorkers": {
+        "title": "Za Radnike",
+        "findJobs": "Pronađi Brze Poslove",
+        "dailyWork": "Dnevni Rad",
+        "hourlyJobs": "Satni Poslovi"
+      },
+      "forClients": {
+        "title": "Za Klijente",
+        "postJobs": "Objavi Brze Poslove",
+        "findWorkers": "Pronađi Radnike",
+        "free": "100% Besplatno"
+      },
+      "company": {
+        "title": "Kompanija",
+        "about": "O Nama",
+        "contact": "Kontakt",
+        "privacy": "Privatnost"
+      },
+      "copyright": "© 2025 mojPoslić. Napravljeno sa Next.js, shadcn/ui i Prisma."
+    }
+  },
+  "jobCard": {
+    "hourly": "/sat",
+    "daily": "/dan",
+    "weekly": "/sedmica",
+    "monthly": "/mjesec",
+    "from": "Od",
+    "featured": "Izdvojeno",
+    "applied": "prijavljeno",
+    "signInToSave": "Molimo prijavite se da biste sačuvali poslove",
+    "jobRemovedFromSaved": "Posao uklonjen iz sačuvanih",
+    "failedToUnsaveJob": "Neuspješno uklanjanje posla iz sačuvanih",
+    "jobSavedSuccessfully": "Posao uspješno sačuvan",
+    "failedToSaveJob": "Neuspješno čuvanje posla",
+    "jobUpdatedSuccessfully": "Posao uspješno ažuriran"
+  },
+  "jobApplication": {
+    "applyFor": "Prijaviť se za",
+    "coverLetter": "Motivaciono Pismo",
+    "coverLetterRequired": "Motivaciono Pismo *",
+    "coverLetterPlaceholder": "Recite nam zašto ste savršen kandidat za ovaj posao...",
+    "charactersCount": "karaktera",
+    "resume": "CV (Opciono)",
+    "clickToUpload": "Kliknite da učitate vaš CV",
+    "fileFormat": "PDF ili Word dokument (maks 5MB)",
+    "fileTooLarge": "Veličina fajla mora biti manja od 5MB",
+    "invalidFileType": "Molimo učitajte PDF ili Word dokument",
+    "previewApplication": "Pregled Prijave",
+    "submitApplication": "Pošaljite Prijavu",
+    "mb": "MB"
+  },
+  "jobLocationMap": {
+    "loadingMap": "Učitavanje mape..."
+  },
+  "interviewScheduling": {
+    "title": "Zakazivanje Intervjua",
+    "subtitle": "Zakažite i upravljajte intervjuima sa kandidatima",
+    "viewCalendar": "Kalendar",
+    "viewList": "Lista",
+    "today": "Danas",
+    "upcoming": "Nadolazeći",
+    "completed": "Završeno",
+    "candidates": "Kandidati",
+    "noInterviewsScheduled": "Nema zakazanih intervjua",
+    "noCandidatesAvailable": "Nema dostupnih kandidata za zakazivanje",
+    "scheduleInterview": "Zakažite Intervju",
+    "name": "Ime",
+    "email": "Email", 
+    "role": "Uloga",
+    "addInterviewer": "Dodaj Tko Intervjuiše",
+    "remove": "Ukloni",
+    "cancel": "Otkaži",
+    "schedule": "Zakaži",
+    "location": "Lokacija",
+    "interviewType": "Tip Intervjua",
+    "video": "Video Poziv",
+    "phone": "Telefonski Poziv",
+    "inPerson": "Uživo",
+    "selectDate": "Odaberite datum",
+    "selectTime": "Odaberite vrijeme",
+    "locationPlaceholder": "Adresa kancelarije ili mjesto sastanka"
+  },
+  "readMore": {
+    "readMore": "Pročitaj više",
+    "readLess": "Pročitaj manje"
+  },
+  "applicationCount": {
+    "person": "osoba",
+    "people": "osoba",
+    "applied": "se prijavilo"
+  }
+}

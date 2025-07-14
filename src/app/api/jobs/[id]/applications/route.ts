@@ -34,16 +34,31 @@ export async function GET(
       },
       include: {
         applications: {
-          select: {
-            id: true,
-            createdAt: true,
+          include: {
             user: {
               select: {
                 id: true,
                 name: true,
-                email: true
+                email: true,
+                avatarUrl: true,
+                phone: true,
+                location: true,
+                bio: true,
+                skills: true,
+                experience: true,
+                position: true,
+                website: true,
+                createdAt: true,
+                reviewsReceived: {
+                  select: {
+                    rating: true
+                  }
+                }
               }
             }
+          },
+          orderBy: {
+            createdAt: 'desc'
           }
         }
       }

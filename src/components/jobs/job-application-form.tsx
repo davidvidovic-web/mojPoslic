@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useApplyToJob } from '@/hooks/use-applications'
 import { Upload, FileText, Send, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface JobApplicationFormProps {
   jobId: string
@@ -23,6 +24,7 @@ export function JobApplicationForm({
   onSuccess, 
   onCancel 
 }: JobApplicationFormProps) {
+  const t = useTranslations('jobApplication')
   const [coverLetter, setCoverLetter] = useState('')
   const [resume, setResume] = useState<File | null>(null)
   const [showPreview, setShowPreview] = useState(false)
@@ -40,12 +42,12 @@ export function JobApplicationForm({
       ]
       
       if (!allowedTypes.includes(file.type)) {
-        toast.error('Please upload a PDF or Word document')
+        toast.error(t('invalidFileType'))
         return
       }
 
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error('File size must be less than 5MB')
+        toast.error(t('fileTooLarge'))
         return
       }
 
@@ -177,7 +179,7 @@ export function JobApplicationForm({
     <Card className="w-full border-0 shadow-none">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">Apply for {jobTitle}</CardTitle>
+          <CardTitle className="text-xl">{t('applyFor')} {jobTitle}</CardTitle>
           {onCancel && (
             <Button
               variant="ghost"
@@ -194,11 +196,11 @@ export function JobApplicationForm({
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-3">
             <Label htmlFor="cover-letter" className="text-sm font-medium">
-              Cover Letter *
+              {t('coverLetterRequired')}
             </Label>
             <Textarea
               id="cover-letter"
-              placeholder="Tell us why you're the perfect fit for this job..."
+              placeholder={t('coverLetterPlaceholder')}
               value={coverLetter}
               onChange={(e) => setCoverLetter(e.target.value)}
               rows={10}
@@ -206,13 +208,13 @@ export function JobApplicationForm({
               required
             />
             <p className="text-xs text-muted-foreground">
-              {coverLetter.length}/2000 characters
+              {coverLetter.length}/2000 {t('charactersCount')}
             </p>
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="resume-upload" className="text-sm font-medium">
-              Resume (Optional)
+              {t('resume')}
             </Label>
             {!resume ? (
               <div>
@@ -224,10 +226,10 @@ export function JobApplicationForm({
                     <Upload className="mx-auto h-10 w-10 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                        Click to upload your resume
+                        {t('clickToUpload')}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        PDF or Word document (max 5MB)
+                        {t('fileFormat')}
                       </p>
                     </div>
                   </div>
@@ -248,7 +250,7 @@ export function JobApplicationForm({
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{resume.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {(resume.size / 1024 / 1024).toFixed(1)} MB
+                        {(resume.size / 1024 / 1024).toFixed(1)} {t('mb')}
                       </p>
                     </div>
                   </div>
@@ -274,14 +276,14 @@ export function JobApplicationForm({
               disabled={!coverLetter.trim()}
               className="flex-1"
             >
-              Preview Application
+              {t('previewApplication')}
             </Button>
             <Button
               type="submit"
               disabled={!coverLetter.trim()}
               className="flex-1"
             >
-              Submit Application
+              {t('submitApplication')}
             </Button>
           </div>
         </form>

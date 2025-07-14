@@ -44,10 +44,46 @@ type ParticipantWithUser = {
 
 export class ConversationService {
   /**
+   * Check if messaging tables exist in Supabase
+   */
+  private static async checkTablesExist(): Promise<boolean> {
+    try {
+      // Try a simple query to see if the conversations table exists
+      const { error } = await supabase
+        .from('conversations')
+        .select('id')
+        .limit(1)
+
+      // If error code indicates table doesn't exist, return false
+      if (error && (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist'))) {
+        console.warn('Messaging tables do not exist in Supabase. Messaging features will be disabled.')
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.warn('Could not check if messaging tables exist:', error)
+      return false
+    }
+  }
+
+  /**
    * Get all conversations for the current user
    */
   static async getUserConversations(userId: string): Promise<Conversation[]> {
     try {
+      // Check if tables exist first
+      const tablesExist = await this.checkTablesExist()
+      if (!tablesExist) {
+        console.info('Messaging tables not available, returning empty conversations list')
+        return []
+      }
+
+      // Check if userId is provided
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+
       const { data, error } = await supabase
         .from('conversations')
         .select(`
@@ -65,40 +101,68 @@ export class ConversationService {
         .is('conversation_participants.left_at', null)
         .order('last_message_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase query error:', error)
+        throw error
+      }
 
       // Transform the data to match our Conversation interface
       const conversations: Conversation[] = await Promise.all(
         (data || []).map(async (conv: ConversationWithParticipants) => {
-          // Get all participants for this conversation
-          const participants = await this.getConversationParticipants(conv.id)
-          
-          // Get last message
-          const lastMessage = await this.getLastMessage(conv.id)
-          
-          // Calculate unread count
-          const unreadCount = await this.getUnreadCount(conv.id, userId)
+          try {
+            // Get all participants for this conversation
+            const participants = await this.getConversationParticipants(conv.id)
+            
+            // Get last message
+            const lastMessage = await this.getLastMessage(conv.id)
+            
+            // Calculate unread count
+            const unreadCount = await this.getUnreadCount(conv.id, userId)
 
-          return {
-            id: conv.id,
-            type: conv.type,
-            title: conv.title,
-            job_id: conv.job_id,
-            created_at: conv.created_at,
-            updated_at: conv.updated_at,
-            last_message_at: conv.last_message_at,
-            archived: conv.archived,
-            participants,
-            last_message: lastMessage,
-            unread_count: unreadCount
+            return {
+              id: conv.id,
+              type: conv.type as 'direct' | 'group' | 'job_related',
+              title: conv.title || undefined,
+              job_id: conv.job_id || undefined,
+              created_at: conv.created_at,
+              updated_at: conv.updated_at,
+              last_message_at: conv.last_message_at || undefined,
+              archived: conv.archived,
+              participants,
+              last_message: lastMessage,
+              unread_count: unreadCount
+            }
+          } catch (convError) {
+            console.error(`Error processing conversation ${conv.id}:`, convError)
+            // Return a minimal conversation object on error
+            return {
+              id: conv.id,
+              type: conv.type as 'direct' | 'group' | 'job_related',
+              title: conv.title || undefined,
+              job_id: conv.job_id || undefined,
+              created_at: conv.created_at,
+              updated_at: conv.updated_at,
+              last_message_at: conv.last_message_at || undefined,
+              archived: conv.archived,
+              participants: [],
+              last_message: null,
+              unread_count: 0
+            }
           }
         })
       )
 
       return conversations
     } catch (error) {
-      console.error('Error fetching user conversations:', error)
-      throw error
+      console.error('Error fetching user conversations:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        userId
+      })
+      
+      // Return empty array instead of throwing to prevent app crashes
+      return []
     }
   }
 
@@ -107,6 +171,11 @@ export class ConversationService {
    */
   static async getConversationParticipants(conversationId: string): Promise<ConversationParticipant[]> {
     try {
+      if (!conversationId) {
+        console.warn('No conversation ID provided for getConversationParticipants')
+        return []
+      }
+
       const { data, error } = await supabase
         .from('conversation_participants')
         .select(`
@@ -122,7 +191,10 @@ export class ConversationService {
         .eq('conversation_id', conversationId)
         .is('left_at', null)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error in getConversationParticipants:', error)
+        return []
+      }
 
       return (data || []).map((participant: ParticipantWithUser) => ({
         id: participant.id,
@@ -141,8 +213,12 @@ export class ConversationService {
         }
       }))
     } catch (error) {
-      console.error('Error fetching conversation participants:', error)
-      throw error
+      console.error('Error fetching conversation participants:', {
+        error,
+        conversationId,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })
+      return []
     }
   }
 
@@ -367,35 +443,73 @@ export class ConversationService {
 
   // Helper methods
   private static async getLastMessage(conversationId: string) {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+    try {
+      if (!conversationId) return null
 
-    return data || null
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error fetching last message:', error)
+        return null
+      }
+
+      return data || null
+    } catch (error) {
+      console.error('Error in getLastMessage:', {
+        error,
+        conversationId,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })
+      return null
+    }
   }
 
   private static async getUnreadCount(conversationId: string, userId: string): Promise<number> {
-    const { data: participant } = await supabase
-      .from('conversation_participants')
-      .select('last_read_at')
-      .eq('conversation_id', conversationId)
-      .eq('user_id', userId)
-      .single()
+    try {
+      if (!conversationId || !userId) return 0
 
-    if (!participant?.last_read_at) return 0
+      const { data: participant, error: participantError } = await supabase
+        .from('conversation_participants')
+        .select('last_read_at')
+        .eq('conversation_id', conversationId)
+        .eq('user_id', userId)
+        .single()
 
-    const { count } = await supabase
-      .from('messages')
-      .select('id', { count: 'exact' })
-      .eq('conversation_id', conversationId)
-      .gt('created_at', participant.last_read_at)
-      .is('deleted_at', null)
+      if (participantError) {
+        console.error('Error fetching participant for unread count:', participantError)
+        return 0
+      }
 
-    return count || 0
+      if (!participant?.last_read_at) return 0
+
+      const { count, error: countError } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact' })
+        .eq('conversation_id', conversationId)
+        .gt('created_at', participant.last_read_at)
+        .is('deleted_at', null)
+
+      if (countError) {
+        console.error('Error counting unread messages:', countError)
+        return 0
+      }
+
+      return count || 0
+    } catch (error) {
+      console.error('Error in getUnreadCount:', {
+        error,
+        conversationId,
+        userId,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })
+      return 0
+    }
   }
 }

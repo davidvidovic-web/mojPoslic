@@ -38,6 +38,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { toast } from "sonner";
+import { useTranslations } from 'next-intl';
 
 interface JobCardProps {
   job: Job;
@@ -49,6 +50,7 @@ interface JobCardProps {
 export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: JobCardProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations('jobCard');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -68,7 +70,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
     e.stopPropagation(); // Prevent card click
     
     if (!user) {
-      toast.error('Please sign in to save jobs');
+      toast.error(t('signInToSave'));
       return;
     }
 
@@ -85,9 +87,9 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
         if (response.ok) {
           setIsJobSaved(false);
           onSaveToggle?.(job.id, false);
-          toast.success('Job removed from saved jobs');
+          toast.success(t('jobRemovedFromSaved'));
         } else {
-          throw new Error('Failed to unsave job');
+          throw new Error(t('failedToUnsaveJob'));
         }
       } else {
         // Save the job
@@ -102,9 +104,9 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
         if (response.ok) {
           setIsJobSaved(true);
           onSaveToggle?.(job.id, true);
-          toast.success('Job saved successfully');
+          toast.success(t('jobSavedSuccessfully'));
         } else {
-          throw new Error('Failed to save job');
+          throw new Error(t('failedToSaveJob'));
         }
       }
     } catch (error) {
@@ -161,13 +163,13 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
       const max = job.salaryMax.toLocaleString();
       const type =
         job.salaryType === "hourly"
-          ? "/hr"
+          ? t('hourly')
           : job.salaryType === "daily"
-            ? "/day"
+            ? t('daily')
             : job.salaryType === "weekly"
-              ? "/week"
+              ? t('weekly')
               : job.salaryType === "monthly"
-                ? "/month"
+                ? t('monthly')
                 : "";
       return `${min}-${max} BAM${type}`;
     }
@@ -177,21 +179,21 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
       const min = job.salaryMin.toLocaleString();
       const type =
         job.salaryType === "hourly"
-          ? "/hr"
+          ? t('hourly')
           : job.salaryType === "daily"
-            ? "/day"
+            ? t('daily')
             : job.salaryType === "weekly"
-              ? "/week"
+              ? t('weekly')
               : job.salaryType === "monthly"
-                ? "/month"
+                ? t('monthly')
                 : "";
-      
+
       // Don't show "From" for fixed prices
       if (job.salaryType === 'fixed') {
         return `${min} BAM`;
       }
       
-      return `From ${min} BAM${type}`;
+      return `${t('from')} ${min} BAM${type}`;
     }
 
     // Fallback to legacy salary field
@@ -210,7 +212,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
   const handleJobUpdated = () => {
     setIsEditDialogOpen(false);
     onJobUpdated?.();
-    toast.success("Job updated successfully!");
+    toast.success(t("jobUpdatedSuccessfully"));
   };
 
   const toggleDescription = (e: React.MouseEvent) => {
@@ -264,7 +266,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
             {isOwner && applicationCount !== null && (
               <Badge variant="secondary" className="text-xs">
                 <Users className="h-3 w-3 mr-1" />
-                {applicationCount} applied
+                {applicationCount} {t('applied')}
               </Badge>
             )}
           </div>
@@ -312,7 +314,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
               onClick={toggleDescription}
               className="text-xs text-blue-600 hover:text-blue-800 mt-1 font-medium"
             >
-              {showFullDescription ? "Read less" : "Read more"}
+              {showFullDescription ? t('readLess') : t('readMore')}
             </button>
           )}
         </div>
@@ -322,7 +324,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
           {job.is_featured && (
             <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
               <Star className="h-3 w-3 fill-current" />
-              Featured
+              {t('featured')}
             </Badge>
           )}
           
@@ -353,7 +355,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-              <span>{mockUserData.rating} ({mockUserData.reviewCount} reviews)</span>
+              <span>{mockUserData.rating} ({mockUserData.reviewCount} {t('reviews')})</span>
             </div>
           </div>
         </div>
@@ -362,8 +364,8 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
         {!isOwner && applicationCount !== null && (
           <div className="text-xs text-muted-foreground">
             <Users className="h-3 w-3 mr-1 inline" />
-            {applicationCount} {applicationCount === 1 ? "person" : "people"}{" "}
-            applied
+            {applicationCount} {applicationCount === 1 ? t('person') : t('people')}{" "}
+            {t('applied')}
           </div>
         )}
       </CardContent>
@@ -378,7 +380,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
             className="ml-auto"
           >
             <Edit className="h-4 w-4 mr-2" />
-            Edit Job
+            {t('editJob')}
           </Button>
         </CardFooter>
       )}
@@ -387,7 +389,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Job Posting</DialogTitle>
+            <DialogTitle>{t('editJobPosting')}</DialogTitle>
           </DialogHeader>
           <MultiStepJobForm
             initialData={job}

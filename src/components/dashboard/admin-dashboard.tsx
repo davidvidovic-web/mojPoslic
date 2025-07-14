@@ -8,8 +8,10 @@ import UserManagementTab from './admin/user-management-tab'
 import JobManagementTab from './admin/job-management-tab'
 import SystemManagementTab from './admin/system-management-tab'
 import BillingManagementTab from './admin/billing-management-tab'
-import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
+import { formatDisplayName } from '@/lib/utils'
+import { getTimeBasedGreetingKey } from '@/lib/localized-greetings'
 import { useNavigationStore } from '@/stores/navigation-store'
+import { useTranslations } from 'next-intl'
 import { 
   useAdminUsers, 
   useAdminJobs, 
@@ -21,6 +23,7 @@ import {
 export function AdminDashboard() {
   const { user } = useAuth()
   const { currentAdminTab, setAdminTab } = useNavigationStore()
+  const t = useTranslations()
   
   // TanStack Query hooks for all admin data
   const { data: users, isLoading: usersLoading } = useAdminUsers()
@@ -32,6 +35,9 @@ export function AdminDashboard() {
   // Check if any critical data is still loading
   const isLoading = usersLoading || jobsLoading || statsLoading
 
+  // Get greeting key for localization
+  const greetingKey = getTimeBasedGreetingKey()
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -39,7 +45,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading admin dashboard...</p>
+              <p className="text-muted-foreground">{t('dashboard.loading.admin')}</p>
             </div>
           </div>
         </div>
@@ -98,10 +104,10 @@ export function AdminDashboard() {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center">
             <Shield className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3" />
-            Admin Dashboard
+            {t('adminDashboard')}
           </h1>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-            {getTimeBasedGreeting()}, <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>!
+            {getTimeBasedGreetingKey()}, <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>!
           </p>
         </div>
 
@@ -116,21 +122,21 @@ export function AdminDashboard() {
             <TabsList className="w-full grid grid-cols-1 h-auto p-1 bg-muted">
               <div className="grid grid-cols-2 gap-1">
                 <TabsTrigger value="users" className="text-xs px-2 py-2">
-                  Users
+                  {t('userManagement')}
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="text-xs px-2 py-2">
-                  Jobs
+                  {t('jobManagement')}
                 </TabsTrigger>
               </div>
               <div className="grid grid-cols-3 gap-1 mt-1">
                 <TabsTrigger value="system" className="text-xs px-2 py-2">
-                  System
+                  {t('systemManagement')}
                 </TabsTrigger>
                 <TabsTrigger value="billing" className="text-xs px-2 py-2">
-                  Billing
+                  {t('billingManagement')}
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="text-xs px-2 py-2">
-                  Statistics
+                  {t('statistics')}
                 </TabsTrigger>
               </div>
             </TabsList>
@@ -139,11 +145,11 @@ export function AdminDashboard() {
           {/* Desktop: Horizontal tabs */}
           <div className="hidden sm:block">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              <TabsTrigger value="jobs">Job Management</TabsTrigger>
-              <TabsTrigger value="system">System Management</TabsTrigger>
-              <TabsTrigger value="billing">Billing Management</TabsTrigger>
-              <TabsTrigger value="analytics">Statistics</TabsTrigger>
+              <TabsTrigger value="users">{t('userManagement')}</TabsTrigger>
+              <TabsTrigger value="jobs">{t('jobManagement')}</TabsTrigger>
+              <TabsTrigger value="system">{t('systemManagement')}</TabsTrigger>
+              <TabsTrigger value="billing">{t('billingManagement')}</TabsTrigger>
+              <TabsTrigger value="analytics">{t('statistics')}</TabsTrigger>
             </TabsList>
           </div>
 
