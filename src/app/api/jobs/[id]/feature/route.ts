@@ -6,9 +6,9 @@ const prisma = new PrismaClient()
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context
+  const { id } = await params
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -19,7 +19,7 @@ export async function POST(
     }
 
     const { is_featured } = await request.json()
-    const jobId = params.id
+    const jobId = id
 
     // Verify that the user owns this job
     const job = await prisma.jobListing.findUnique({
