@@ -3,18 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { Job } from '@/types/job'
+import { JobApplication } from '@/types/application'
 import { ApplicationsSection } from '@/components/dashboard/tasker/applications-section'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
 import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
-
-interface JobApplication {
-  id: string
-  job_id: string
-  applied_at: string
-  status: 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'completed'
-  job: Job
-}
 
 export default function ApplicationsPage() {
   const { user } = useAuth()
