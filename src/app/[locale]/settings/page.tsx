@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl'
 
 export default function SettingsPage() {
   const t = useTranslations()
+  const tSettings = useTranslations('settings')
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -48,13 +49,13 @@ export default function SettingsPage() {
             <Link href="/dashboard">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                {t('settings.backToDashboard')}
+                {tSettings('backToDashboard')}
               </Button>
             </Link>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{tSettings('title')}</h1>
           <p className="text-muted-foreground">
-            {t('settings.description')}
+            {tSettings('description')}
           </p>
         </div>
 

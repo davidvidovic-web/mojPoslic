@@ -1,0 +1,18 @@
+{
+  "title": "Notifications",
+  "all": "All notifications",
+  "unread": "Unread",
+  "markAsRead": "Mark as read",
+  "markAllAsRead": "Mark all as read",
+  "clearAll": "Clear all",
+  "noNotifications": "No notifications",
+  "loading": "Loading notifications...",
+  "error": "Error loading notifications",
+  "new": "New",
+  "earlier": "Earlier",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "thisWeek": "This week",
+  "older": "Older",
+  "unreadNotifications": "unread notifications"
+} 

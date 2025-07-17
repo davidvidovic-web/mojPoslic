@@ -4,12 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Shield, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 export function SecurityCard() {
+  const t = useTranslations('settings.security')
+  
   const handleDeleteAccount = () => {
     // This would typically open a confirmation modal
     // For now, just show a toast
-    toast.error('Account deletion is not available at this time. Please contact support.')
+    toast.error(t('deleteAccountNotAvailable'))
   }
 
   return (
@@ -17,27 +20,26 @@ export function SecurityCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Security & Privacy
+          {t('title')}
         </CardTitle>
         <CardDescription>
-          Manage your account security settings and privacy preferences
+          {t('description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">Data Privacy</h4>
+            <h4 className="text-sm font-medium">{t('dataPrivacy')}</h4>
             <p className="text-sm text-muted-foreground">
-              We take your privacy seriously. Your personal information is securely stored and never shared without your explicit consent. 
-              As a Tasker or Client, your profile information helps others connect with you for job opportunities.
+              {t('privacyDescription')}
             </p>
           </div>
           
           <div className="space-y-4 pt-4 border-t">
-            <h4 className="text-sm font-medium text-destructive">Danger Zone</h4>
+            <h4 className="text-sm font-medium text-destructive">{t('dangerZone')}</h4>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Once you delete your account, there is no going back. Please be certain.
+                {t('deleteAccountDescription')}
               </p>
               <Button 
                 variant="destructive" 
@@ -46,7 +48,7 @@ export function SecurityCard() {
                 className="flex items-center gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete Account
+                {t('deleteAccount')}
               </Button>
             </div>
           </div>

@@ -1,0 +1,42 @@
+{
+  "unknownUserRole": "Unknown user role. Please contact support.",
+  "loadingDashboard": "Loading dashboard...",
+  "accessDenied": "Access denied",
+  "sessionExpired": "Session expired, please sign in again",
+  "failedToLoad": {
+    "dashboardData": "Failed to load dashboard data",
+    "billingData": "Failed to load billing data",
+    "applications": "Failed to load applications",
+    "jobs": "Failed to load jobs",
+    "statistics": "Failed to load statistics",
+    "connectionHistory": "Failed to load connection history",
+    "users": "Failed to load users",
+    "conversations": "Failed to load conversations",
+    "messages": "Failed to load messages",
+    "packages": "Failed to load packages"
+  },
+  "failedToUpdate": {
+    "application": "Failed to update application",
+    "applications": "Failed to update applications",
+    "jobStatus": "Failed to update job status",
+    "job": "Failed to update job",
+    "profile": "Failed to update profile. Please try again."
+  },
+  "general": {
+    "somethingWentWrong": "Something went wrong",
+    "tryAgainLater": "Please try again later",
+    "stripeFailed": "Stripe failed to load"
+  },
+  "auth": {
+    "tooManyAttempts": "Too many password change attempts. Please try again in {resetTime} minutes.",
+    "rateLimitedToast": "Too many attempts. Try again in {resetTime} minutes."
+  },
+  "validation": {
+    "pleaseSelectAccountType": "Please select an account type",
+    "pleaseSelectUser": "Please select a user and enter a valid connection amount",
+    "pleaseSelectApplicationsAndAction": "Please select applications and choose an action",
+    "pleaseSelectApplications": "Please select applications to update",
+    "pleaseSelectAction": "Please select an action",
+    "usernameExists": "Username already exists. Please choose another one."
+  }
+} 

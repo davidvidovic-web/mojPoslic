@@ -1,0 +1,19 @@
+{
+  "morning": "Good morning",
+  "afternoon": "Good afternoon",
+  "evening": "Good evening",
+  "night": "Good night",
+  "welcome": "Welcome",
+  "welcomeBack": "Welcome back, {name}",
+  "goodbye": "Goodbye",
+  "seeYouLater": "See you later",
+  "haveAGoodDay": "Have a good day",
+  "haveAGoodWeekend": "Have a good weekend",
+  "happyNewYear": "Happy New Year",
+  "merryChristmas": "Merry Christmas",
+  "happyBirthday": "Happy Birthday",
+  "congratulations": "Congratulations",
+  "thankYou": "Thank you",
+  "youAreWelcome": "You're welcome",
+  "day": "Good day"
+} 

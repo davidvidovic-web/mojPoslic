@@ -26,6 +26,7 @@ model User {
   phone                  String?
   website                String?
   location               String?
+  preferredLanguage      String?             @default("bs") @map("preferred_language")
   connections            Int                 @default(10)
   connectionsLastRefresh DateTime?           @map("connections_last_refresh")
   createdAt              DateTime            @default(now()) @map("created_at")

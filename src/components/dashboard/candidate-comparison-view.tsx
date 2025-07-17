@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from 'next-intl'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -24,39 +25,42 @@ interface ComparisonMetric {
   type: 'text' | 'number' | 'date' | 'rating'
 }
 
-const comparisonMetrics: ComparisonMetric[] = [
-  {
-    label: 'Experience',
-    getValue: (app) => app.user?.experience || 'Not specified',
-    type: 'text'
-  },
-  {
-    label: 'Location', 
-    getValue: (app) => app.user?.location || 'Not specified',
-    type: 'text'
-  },
-  {
-    label: 'Application Date',
-    getValue: (app) => new Date(app.createdAt).toLocaleDateString(),
-    type: 'date'
-  },
-  {
-    label: 'Response Time',
-    getValue: (app) => {
-      const diff = Date.now() - new Date(app.createdAt).getTime()
-      const hours = Math.floor(diff / (1000 * 60 * 60))
-      return `${hours}h ago`
-    },
-    type: 'text'
-  }
-]
-
 export function CandidateComparisonView({ 
   applications, 
   jobId, 
   onBack, 
   onSelect 
 }: CandidateComparisonViewProps) {
+  const t = useTranslations('applications')
+  const tCommon = useTranslations('common')
+  
+  const comparisonMetrics: ComparisonMetric[] = [
+    {
+      label: t('comparison.metrics.experience'),
+      getValue: (app) => app.user?.experience || tCommon('messages.notSpecified'),
+      type: 'text'
+    },
+    {
+      label: t('comparison.metrics.location'), 
+      getValue: (app) => app.user?.location || tCommon('messages.notSpecified'),
+      type: 'text'
+    },
+    {
+      label: t('comparison.metrics.applicationDate'),
+      getValue: (app) => new Date(app.createdAt).toLocaleDateString(),
+      type: 'date'
+    },
+    {
+      label: t('comparison.metrics.responseTime'),
+      getValue: (app) => {
+        const diff = Date.now() - new Date(app.createdAt).getTime()
+        const hours = Math.floor(diff / (1000 * 60 * 60))
+        return `${hours}h ago`
+      },
+      type: 'text'
+    }
+  ]
+  
   const addToShortlist = useAddToShortlist()
   const removeFromShortlist = useRemoveFromShortlist()
   const assignJob = useAssignJob()
@@ -127,10 +131,10 @@ export function CandidateComparisonView({
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-lg">{application.user?.name || 'Unknown'}</CardTitle>
+                    <CardTitle className="text-lg">{application.user?.name || tCommon('messages.unknown')}</CardTitle>
                     <CardDescription className="flex items-center space-x-2">
                       <MapPin className="h-3 w-3" />
-                      <span>{application.user?.location || 'Location not specified'}</span>
+                      <span>{application.user?.location || tCommon('messages.locationNotSpecified')}</span>
                     </CardDescription>
                   </div>
                 </div>
@@ -202,7 +206,7 @@ export function CandidateComparisonView({
                   className="w-full"
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  View Details
+                  {tCommon('actions.viewDetails')}
                 </Button>
                 
                 <div className="flex space-x-2">
@@ -229,20 +233,20 @@ export function CandidateComparisonView({
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Assign Job to {application.user?.name || 'Unknown'}</DialogTitle>
+                        <DialogTitle>{t('comparison.assignmentDialog.title', { name: application.user?.name || tCommon('messages.unknown') })}</DialogTitle>
                         <DialogDescription>
-                          This will assign the job to this candidate and close it to other applicants.
+                          {t('comparison.assignmentDialog.description')}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="flex justify-end space-x-2">
                         <Button variant="outline">
-                          Cancel
+                          {tCommon('buttons.cancel')}
                         </Button>
                         <Button 
                           onClick={() => handleAssignJob(application.id)}
                           disabled={assignJob.isPending}
                         >
-                          {assignJob.isPending ? 'Assigning...' : 'Confirm Assignment'}
+                          {assignJob.isPending ? tCommon('actions.assigning') : t('comparison.assignmentDialog.confirm')}
                         </Button>
                       </div>
                     </DialogContent>
@@ -275,7 +279,7 @@ export function CandidateComparisonView({
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{application.user?.name || 'Unknown'}</p>
+                      <p className="font-medium">{application.user?.name || tCommon('messages.unknown')}</p>
                       <p className="text-sm text-muted-foreground">
                         Applied {new Date(application.createdAt).toLocaleDateString()}
                       </p>

@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { parseSkillsArray, parseExperienceLevels, formatExperienceLevel } from '@/lib/profile-format'
 import { formatLocation } from '@/lib/location-format'
+import { useTranslations } from 'next-intl'
 
 interface UserProfile {
   name: string
@@ -32,6 +33,7 @@ interface UserProfile {
 
 export function ProfileSettingsCard() {
   const { user: authProfile, loading: authLoading, refreshUser } = useAuth()
+  const t = useTranslations('settings.profileSettings')
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
@@ -73,10 +75,10 @@ export function ProfileSettingsCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Profile Settings
+            {t('title')}
           </CardTitle>
           <CardDescription>
-            Loading your profile information...
+            {t('loadingProfile')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -132,16 +134,16 @@ export function ProfileSettingsCard() {
       })
 
       if (response.ok) {
-        toast.success('Profile updated successfully!')
+        toast.success(t('updated'))
         // Refresh the auth context to get updated user data
         await refreshUser()
       } else {
         const errorData = await response.json()
-        toast.error(errorData.message || 'Failed to update profile')
+        toast.error(errorData.message || t('updateFailed'))
       }
     } catch (error) {
       console.error('Error updating profile:', error)
-      toast.error('An error occurred while updating your profile')
+      toast.error(t('updateFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -155,13 +157,13 @@ export function ProfileSettingsCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
-          Profile Information
+          {t('title')}
         </CardTitle>
         <CardDescription>
-          Update your personal information and profile details
+          {t('description')}
           {isProfileSetupCompleted && (
             <span className="block text-xs text-muted-foreground mt-1">
-              Basic information is locked after profile setup. Contact support to modify.
+              {t('lockWarning')}
             </span>
           )}
         </CardDescription>
@@ -170,65 +172,65 @@ export function ProfileSettingsCard() {
         <form onSubmit={handleProfileUpdate} className="space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Basic Information</h3>
+            <h3 className="text-lg font-medium">{t('basicInformation')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Display Name</Label>
+                <Label htmlFor="name">{t('displayName')}</Label>
                 <Input
                   id="name"
                   value={profile.name}
                   onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                  placeholder="Your display name"
+                  placeholder={t('displayNamePlaceholder')}
                   disabled={isProfileSetupCompleted}
                   className={isProfileSetupCompleted ? "bg-muted" : ""}
                 />
                 {isProfileSetupCompleted && (
                   <p className="text-xs text-muted-foreground">
-                    This field is locked. Contact support to change.
+                    {t('fieldLockedMessage')}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t('phoneNumber')}</Label>
                 <Input
                   id="phone"
                   value={profile.phone || ''}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                  placeholder="Your phone number"
+                  placeholder={t('phoneNumberPlaceholder')}
                   disabled={isProfileSetupCompleted}
                   className={isProfileSetupCompleted ? "bg-muted" : ""}
                 />
                 {isProfileSetupCompleted && (
                   <p className="text-xs text-muted-foreground">
-                    This field is locked. Contact support to change.
+                    {t('fieldLockedMessage')}
                   </p>
                 )}
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">{t('location')}</Label>
                 <Input
                   id="location"
                   value={profile.location ? formatLocation(profile.location) : ''}
                   onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                  placeholder="City, Country"
+                  placeholder={t('locationPlaceholder')}
                   disabled={isProfileSetupCompleted}
                   className={isProfileSetupCompleted ? "bg-muted" : ""}
                 />
                 {isProfileSetupCompleted && (
                   <p className="text-xs text-muted-foreground">
-                    This field is locked. Contact support to change.
+                    {t('fieldLockedMessage')}
                   </p>
                 )}
               </div>
               {/* Website field for clients only in basic info */}
               {profile.role === 'client' && (
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="website">{t('website')}</Label>
                   <Input
                     id="website"
                     value={profile.website || ''}
                     onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                    placeholder="https://yourwebsite.com"
+                    placeholder={t('websitePlaceholder')}
                   />
                 </div>
               )}
@@ -238,46 +240,40 @@ export function ProfileSettingsCard() {
           {/* Professional Information - Only show for taskers and companies */}
           {profile.role !== 'client' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Professional Information</h3>
+              <h3 className="text-lg font-medium">{t('professionalInformation')}</h3>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">{t('bio')}</Label>
                   <SimpleRichTextEditor
                     value={profile.bio || ''}
                     onChange={(content) => setProfile({ ...profile, bio: content })}
-                    placeholder="Tell us about yourself..."
+                    placeholder={t('bioPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="website">{t('website')}</Label>
                   <Input
                     id="website"
                     value={profile.website || ''}
                     onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                    placeholder="https://yourwebsite.com"
+                    placeholder={t('websitePlaceholder')}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="skills">Skills</Label>
+                  <Label htmlFor="skills">{t('skills')}</Label>
                   <SkillsBubbleInput
                     value={profile.skills || []}
                     onChange={(skills) => setProfile({ ...profile, skills })}
-                    placeholder="Add your skills (e.g., React, Node.js, Design)"
+                    placeholder={t('skillsPlaceholder')}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Add skills that showcase your expertise
-                  </p>
                 </div>
 
                 {/* Experience levels for each skill */}
                 {profile.skills && profile.skills.length > 0 && (
                   <div className="space-y-3">
-                    <Label>Experience Levels</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Set your experience level for each skill
-                    </p>
+                    <Label>{t('experienceLevel')}</Label>
                     <div className="space-y-2">
                       {profile.skills.map((skill) => {
                         const currentLevel = profile.experienceLevels?.[skill] || 'not-specified'
@@ -311,7 +307,7 @@ export function ProfileSettingsCard() {
                               </Select>
                               {currentLevel !== 'not-specified' && (
                                 <span className="text-xs text-muted-foreground">
-                                  Current: {formatExperienceLevel(currentLevel)}
+                                  {t('currentExperience', { level: formatExperienceLevel(currentLevel) })}
                                 </span>
                               )}
                             </div>
@@ -326,7 +322,7 @@ export function ProfileSettingsCard() {
           )}
 
           <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
-            {isLoading ? 'Updating...' : 'Update Profile'}
+            {isLoading ? t('updating') : t('updateProfile')}
           </Button>
         </form>
       </CardContent>

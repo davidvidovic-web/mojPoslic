@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/auth-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { Zap, Check } from 'lucide-react'
@@ -10,6 +11,7 @@ interface JobCostInfoProps {
 }
 
 export function JobCostInfo({ className = '' }: JobCostInfoProps) {
+  const t = useTranslations('jobPost.costs')
   const { user } = useAuth()
   const [costInfo, setCostInfo] = useState<{
     count: number
@@ -87,16 +89,15 @@ export function JobCostInfo({ className = '' }: JobCostInfoProps) {
               {costInfo.willCostConnections ? (
                 <>
                   <p className="mb-1">
-                    You&apos;ve already posted <strong>{costInfo.count} job{costInfo.count > 1 ? 's' : ''}</strong> today.
+                    {t('alreadyPosted', { count: costInfo.count })}
                   </p>
                   <p>
-                    Additional jobs cost <strong>{costInfo.connectionCost} connections</strong> each.
+                    {t('additionalCost', { cost: costInfo.connectionCost })}
                   </p>
                 </>
               ) : (
                 <p>
-                  This is your <strong>first job today</strong> - it&apos;s completely free! 
-                  Additional jobs will cost <strong>3 connections</strong> each.
+                  {t('firstJobFree')}
                 </p>
               )}
             </div>

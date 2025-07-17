@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CreateJobData } from "@/types/job"
+import { useTranslations } from 'next-intl'
 
 interface SalarySectionProps {
   formData: CreateJobData
@@ -11,26 +12,28 @@ interface SalarySectionProps {
 }
 
 export function SalarySection({ formData, onChange }: SalarySectionProps) {
+  const t = useTranslations('jobs.postForm.salary')
+  
   return (
     <div className="space-y-4">
-      <Label>Salary Information (Optional)</Label>
+      <Label>{t('title')}</Label>
       
       <div className="space-y-3">
         <div className="space-y-2">
-          <Label htmlFor="salary-type">Salary Type</Label>
+          <Label htmlFor="salary-type">{t('type')}</Label>
           <Select 
             value={formData.salaryType || ''}
             onValueChange={(value) => onChange({ salaryType: value as 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select salary type" />
+              <SelectValue placeholder={t('selectSalaryType')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="fixed">Fixed Price</SelectItem>
-              <SelectItem value="hourly">Hourly Rate</SelectItem>
-              <SelectItem value="daily">Daily Rate (Dnevnica)</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="fixed">{t('types.fixed')}</SelectItem>
+              <SelectItem value="hourly">{t('types.hourly')}</SelectItem>
+              <SelectItem value="daily">{t('types.daily')}</SelectItem>
+              <SelectItem value="weekly">{t('types.weekly')}</SelectItem>
+              <SelectItem value="monthly">{t('types.monthly')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -44,7 +47,7 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                   <Input
                     id="salary-fixed"
                     type="number"
-                    placeholder="e.g., 1500"
+                    placeholder={t('enterAmount')}
                     value={formData.salaryMin || ''}
                     onChange={(e) => onChange({ 
                       salaryMin: e.target.value ? parseInt(e.target.value) : undefined,
@@ -58,7 +61,7 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                   <div className="grid grid-cols-2 gap-4">
                     <Input
                       type="number"
-                      placeholder="Min price"
+                      placeholder={t('minPlaceholder')}
                       value={formData.salaryMin || ''}
                       onChange={(e) => onChange({ 
                         salaryMin: e.target.value ? parseInt(e.target.value) : undefined
@@ -66,7 +69,7 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                     />
                     <Input
                       type="number"
-                      placeholder="Max price"
+                      placeholder={t('maxPlaceholder')}
                       value={formData.salaryMax || ''}
                       onChange={(e) => onChange({ 
                         salaryMax: e.target.value ? parseInt(e.target.value) : undefined 
@@ -85,9 +88,9 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                     id="salary-min"
                     type="number"
                     placeholder={
-                      formData.salaryType === 'hourly' ? 'e.g., 15' : 
-                      formData.salaryType === 'daily' ? 'e.g., 120' : 
-                      'e.g., 2000'
+                      formData.salaryType === 'hourly' ? t('hourlyPlaceholder') : 
+                      formData.salaryType === 'daily' ? t('dailyPlaceholder') : 
+                      t('monthlyPlaceholder')
                     }
                     value={formData.salaryMin || ''}
                     onChange={(e) => onChange({ 
@@ -103,9 +106,9 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                     id="salary-max"
                     type="number"
                     placeholder={
-                      formData.salaryType === 'hourly' ? 'e.g., 25' : 
-                      formData.salaryType === 'daily' ? 'e.g., 200' : 
-                      'e.g., 3000'
+                      formData.salaryType === 'hourly' ? t('enterMaxAmount') : 
+                      formData.salaryType === 'daily' ? '200' : 
+                      '3000'
                     }
                     value={formData.salaryMax || ''}
                     onChange={(e) => onChange({ 
@@ -122,7 +125,7 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
           <Label htmlFor="salary">Alternative Salary Description</Label>
           <Input
             id="salary"
-            placeholder="e.g., Competitive salary, To be discussed, etc."
+            placeholder={t('salaryTextExample')}
             value={formData.salary || ''}
             onChange={(e) => onChange({ salary: e.target.value })}
           />

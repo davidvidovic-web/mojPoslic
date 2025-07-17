@@ -1,0 +1,45 @@
+{
+  "main": {
+    "home": "Početna",
+    "jobs": "Poslovi",
+    "dashboard": "Kontrolna tabla",
+    "messages": "Poruke",
+    "connections": "Konekcije",
+    "settings": "Postavke",
+    "profile": "Profil",
+    "applications": "Prijave",
+    "admin": "Admin",
+    "logout": "Odjavi se",
+    "login": "Prijavi se",
+    "register": "Registruj se"
+  },
+  "dashboard": {
+    "overview": "Pregled",
+    "stats": "Statistika",
+    "recent": "Nedavna aktivnost",
+    "quickActions": "Brze akcije"
+  },
+  "breadcrumb": {
+    "home": "Početna",
+    "jobs": "Poslovi",
+    "dashboard": "Kontrolna tabla",
+    "settings": "Postavke",
+    "profile": "Profil",
+    "applications": "Prijave",
+    "messages": "Poruke",
+    "connections": "Konekcije"
+  },
+  "menu": {
+    "open": "Otvori meni",
+    "close": "Zatvori meni",
+    "toggle": "Prebaci meni"
+  },
+  "footer": {
+    "about": "O nama",
+    "contact": "Kontakt",
+    "privacy": "Privatnost",
+    "terms": "Uslovi",
+    "help": "Pomoć",
+    "support": "Podrška"
+  }
+} 

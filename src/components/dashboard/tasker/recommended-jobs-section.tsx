@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { JobCard } from '@/components/jobs/job-card'
 import { Target } from 'lucide-react'
 import { Job } from '@/types/job'
+import { useTranslations } from 'next-intl'
 
 interface RecommendedJobsSectionProps {
   recommendedJobs: Job[]
@@ -12,21 +13,23 @@ interface RecommendedJobsSectionProps {
 }
 
 export function RecommendedJobsSection({ recommendedJobs, savedJobIds, onSaveToggle }: RecommendedJobsSectionProps) {
+  const t = useTranslations('dashboard.tasker.recommendations')
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
           <Target className="h-5 w-5 mr-2" />
-          Recommended Jobs
+          {t('title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {recommendedJobs.length === 0 ? (
           <div className="text-center py-8">
             <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">No recommendations yet</h3>
+            <h3 className="text-lg font-semibold">{t('noRecommendationsYet')}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Complete your profile with location and skills to get personalized job recommendations.
+              {t('completeProfileForRecommendations')}
             </p>
           </div>
         ) : (

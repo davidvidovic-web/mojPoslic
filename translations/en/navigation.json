@@ -1,0 +1,50 @@
+{
+  "main": {
+    "home": "Home",
+    "jobs": "Jobs",
+    "dashboard": "Dashboard",
+    "messages": "Messages",
+    "connections": "Connections",
+    "settings": "Settings",
+    "profile": "Profile",
+    "applications": "Applications",
+    "admin": "Admin",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "savedJobs": "Saved Jobs",
+    "jobHistory": "Job History",
+    "myJobs": "My Jobs",
+    "userManagement": "User Management",
+    "systemHealth": "System Health"
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "stats": "Statistics",
+    "recent": "Recent Activity",
+    "quickActions": "Quick Actions"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "jobs": "Jobs",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile",
+    "applications": "Applications",
+    "messages": "Messages",
+    "connections": "Connections"
+  },
+  "menu": {
+    "open": "Open menu",
+    "close": "Close menu",
+    "toggle": "Toggle menu"
+  },
+  "footer": {
+    "about": "About",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "help": "Help",
+    "support": "Support"
+  }
+}

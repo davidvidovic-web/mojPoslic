@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
@@ -8,7 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreateJobData } from '@/types/job'
 import { CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { useCategories } from '@/hooks/use-data'
+
+interface Category {
+  id: string
+  nameEN: string
+  nameBS: string
+  children: Array<{
+    id: string
+    nameEN: string
+    nameBS: string
+  }>
+}
 
 interface BasicDetailsStepProps {
   formData: CreateJobData
@@ -18,8 +29,10 @@ interface BasicDetailsStepProps {
 
 export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDetailsStepProps) {
   const { user } = useAuth()
-  const { categories, isLoading: isLoadingCategories } = useCategories()
+  const t = useTranslations('jobPost.types')
+  const [categories, setCategories] = useState<Category[]>([])
   const [selectedParentCategory, setSelectedParentCategory] = useState('')
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
 
   // Check if user can post all job types (companies and admins)
   const canPostAllJobTypes = user?.role === 'company' || user?.role === 'admin'
@@ -48,13 +61,30 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
   }, [canPostAllJobTypes, formData.requirements, formData.benefits, formData.type])
 
   // Load categories
-  // Categories are now loaded via useCategories hook from use-data.ts
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setIsLoadingCategories(true)
+        const response = await fetch('/api/categories')
+        if (!response.ok) throw new Error('Failed to fetch categories')
+        
+        const data = await response.json()
+        setCategories(data.categories || [])
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      } finally {
+        setIsLoadingCategories(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   // Set initial parent category when editing
   useEffect(() => {
     if (formData.category_id && categories.length > 0) {
       const parentCategory = categories.find(cat =>
-        cat.children?.some(child => child.id === formData.category_id)
+        cat.children.some(child => child.id === formData.category_id)
       )
       if (parentCategory) {
         setSelectedParentCategory(parentCategory.id)
@@ -94,13 +124,13 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
     <div className="space-y-6">
       {/* Basic Information */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Basic Information</h3>
+        <h3 className="text-lg font-semibold">{t('sections.basicInformation')}</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="job-title">Job Title *</Label>
+          <Label htmlFor="job-title">{t('labels.jobTitle')} *</Label>
           <Input
             id="job-title"
-            placeholder="e.g. House Cleaning, Furniture Assembly, Garden Maintenance"
+            placeholder={t('placeholders.jobTitleExample')}
             value={formData.title}
             onChange={(e) => onChange({ title: e.target.value })}
           />
@@ -108,16 +138,16 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
         {canPostAllJobTypes && (
           <div className="space-y-2">
-            <Label htmlFor="job-type">Job Type *</Label>
+            <Label htmlFor="job-type">{t('labels.jobType')} *</Label>
             <Select value={formData.type || ''} onValueChange={(value) => onChange({ type: value as 'quick_job' | 'full_time' | 'part_time' | 'remote' })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select job type" />
+                <SelectValue placeholder={t('placeholders.selectJobType')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="quick_job">Quick Job</SelectItem>
-                <SelectItem value="full_time">Full-time</SelectItem>
-                <SelectItem value="part_time">Part-time</SelectItem>
-                <SelectItem value="remote">Remote</SelectItem>
+                <SelectItem value="quick_job">{t('quickJob')}</SelectItem>
+                <SelectItem value="full_time">{t('fullTime')}</SelectItem>
+                <SelectItem value="part_time">{t('partTime')}</SelectItem>
+                <SelectItem value="remote">{t('remote')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -126,17 +156,17 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
       {/* Category Selection */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Category</h3>
+        <h3 className="text-lg font-semibold">{t('sections.category')}</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="parent-category">Job Category *</Label>
+          <Label htmlFor="parent-category">{t('labels.jobCategory')} *</Label>
           <Select 
             value={selectedParentCategory} 
             onValueChange={setSelectedParentCategory}
             disabled={isLoadingCategories}
           >
             <SelectTrigger>
-              <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select a category"} />
+              <SelectValue placeholder={isLoadingCategories ? t('placeholders.loadingCategories') : t('placeholders.selectCategory')} />
             </SelectTrigger>              <SelectContent>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
@@ -154,7 +184,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
         {availableChildCategories.length > 0 && (
           <div className="space-y-2">
-            <Label htmlFor="child-category">Subcategory (Optional)</Label>
+            <Label htmlFor="child-category">{t('labels.subcategory')}</Label>
             <Select 
               value={
                 availableChildCategories.find(child => child.id === formData.category_id) ? formData.category_id : '__none__'
@@ -168,10 +198,10 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a subcategory (optional)" />
+                <SelectValue placeholder={t('placeholders.selectSubcategory')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">No specific subcategory</SelectItem>
+                <SelectItem value="__none__">{t('placeholders.noSpecificSubcategory')}</SelectItem>
                 {availableChildCategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.nameEN}
@@ -189,7 +219,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           <div className="p-3 bg-secondary/50 rounded-lg">
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <CheckCircle className="h-4 w-4" />
-              Category selected. This category doesn&apos;t have subcategories.
+              {t('messages.categorySelectedNoSubcategories')}
             </p>
           </div>
         )}
@@ -197,18 +227,18 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
       {/* Job Description */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Job Description</h3>
+        <h3 className="text-lg font-semibold">{t('sections.jobDescription')}</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="description">Description *</Label>
+          <Label htmlFor="description">{t('labels.description')} *</Label>
           <SimpleRichTextEditor
             value={formData.description || ''}
             onChange={(value) => onChange({ description: value })}
-            placeholder="Describe the job, what needs to be done, and any specific requirements..."
+            placeholder={t('placeholders.describeJob')}
             className="min-h-[150px]"
           />
           <p className="text-xs text-muted-foreground">
-            Be specific about what you need done. Timeline, compensation, and location will be added in the next step.
+            {t('messages.descriptionTimeline')}
           </p>
         </div>
 
@@ -217,24 +247,24 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           <>
             <div className="space-y-2">
               <Label htmlFor="requirements">
-                Requirements <span className="text-muted-foreground">(Optional)</span>
+                {t('labels.requirements')} <span className="text-muted-foreground">(Optional)</span>
               </Label>
               <SimpleRichTextEditor
                 value={formData.requirements || ''}
                 onChange={(value) => onChange({ requirements: value })}
-                placeholder="e.g. Own tools required, Experience preferred, References needed..."
+                placeholder={t('placeholders.requirementsExample')}
                 className="min-h-[100px]"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="benefits">
-                Benefits <span className="text-muted-foreground">(Optional)</span>
+                {t('labels.benefits')} <span className="text-muted-foreground">(Optional)</span>
               </Label>
               <SimpleRichTextEditor
                 value={formData.benefits || ''}
                 onChange={(value) => onChange({ benefits: value })}
-                placeholder="e.g. Flexible hours, Materials provided, Ongoing work opportunity..."
+                placeholder={t('placeholders.benefitsExample')}
                 className="min-h-[100px]"
               />
             </div>

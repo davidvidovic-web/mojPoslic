@@ -8,12 +8,15 @@ import {
   Users
 } from "lucide-react"
 import { Job } from "@/types/job"
+import { useTranslations } from 'next-intl'
 
 interface JobContentProps {
   job: Job
 }
 
 export function JobContent({ job }: JobContentProps) {
+  const t = useTranslations('jobs.content')
+  
   return (
     <div className="space-y-6">
       {/* Job Description */}
@@ -21,7 +24,7 @@ export function JobContent({ job }: JobContentProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Briefcase className="h-5 w-5" />
-            Job Description
+            {t('jobDescription')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -38,7 +41,7 @@ export function JobContent({ job }: JobContentProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Requirements
+              {t('requirements')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -56,7 +59,7 @@ export function JobContent({ job }: JobContentProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Benefits
+              {t('benefits')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -72,7 +75,7 @@ export function JobContent({ job }: JobContentProps) {
       {job.tags && job.tags.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Skills & Technologies</CardTitle>
+            <CardTitle>{t('skillsAndTechnologies')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">

@@ -90,7 +90,7 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
           ) : (
             <>
               <li>• Candidates will contact you through the platform</li>
-              <li>• You'll be notified of applications via email</li>
+              <li>• You&apos;ll be notified of applications via email</li>
               <li>• You can manage applications from your dashboard</li>
               <li>• Your contact details remain private until you choose to share</li>
             </>

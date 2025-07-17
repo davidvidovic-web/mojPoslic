@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { History, ChevronDown, ChevronUp } from 'lucide-react'
@@ -22,6 +23,7 @@ interface ConnectionActivityProps {
 }
 
 export function ConnectionActivity({ history }: ConnectionActivityProps) {
+  const t = useTranslations('dashboard.connections')
   const [showFullHistory, setShowFullHistory] = useState(false)
   
   const recentHistory = showFullHistory ? history : history.slice(0, 5)
@@ -31,7 +33,7 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
       <div className="flex items-center justify-between">
         <h4 className="font-medium flex items-center gap-2">
           <History className="h-4 w-4" />
-          Recent Activity
+          {t('activity.title')}
         </h4>
         {history.length > 5 && (
           <Button
@@ -42,12 +44,12 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
             {showFullHistory ? (
               <>
                 <ChevronUp className="h-4 w-4 mr-1" />
-                Show Less
+                {t('activity.showLess')}
               </>
             ) : (
               <>
                 <ChevronDown className="h-4 w-4 mr-1" />
-                Show All ({history.length})
+                {t('activity.showAll', { count: history.length })}
               </>
             )}
           </Button>

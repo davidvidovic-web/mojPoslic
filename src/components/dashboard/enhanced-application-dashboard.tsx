@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Users, FileText, Calendar, MessageSquare, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Users, FileText, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import { JobApplication } from '@/types/application'
 import { useJobApplications } from '@/hooks/use-applications'
 
@@ -81,12 +81,12 @@ export function EnhancedApplicationDashboard({ jobId, jobTitle }: EnhancedApplic
     setSelectedApplicationId(applicationId)
   }
 
-  const handleScheduleInterview = (interview: any) => {
+  const handleScheduleInterview = (interview: Record<string, unknown>) => {
     console.log('Schedule interview:', interview)
     // Here you would typically make an API call to schedule the interview
   }
 
-  const handleUpdateInterview = (id: string, updates: any) => {
+  const handleUpdateInterview = (id: string, updates: Record<string, unknown>) => {
     console.log('Update interview:', id, updates)
     // Here you would typically make an API call to update the interview
   }
@@ -96,7 +96,7 @@ export function EnhancedApplicationDashboard({ jobId, jobTitle }: EnhancedApplic
     // Here you would typically make an API call to cancel the interview
   }
 
-  const handleSelectTemplate = (template: any) => {
+  const handleSelectTemplate = (template: Record<string, unknown>) => {
     console.log('Selected template:', template)
     // Here you would typically open a message composer with the template
   }

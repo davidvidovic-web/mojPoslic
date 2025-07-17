@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,8 +11,9 @@ import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Plus, Edit, Trash2, Copy, Send, MessageSquare, FileText, CheckCircle, XCircle } from 'lucide-react'
+import { Plus, Edit, Trash2, Copy, MessageSquare, FileText } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface MessageTemplate {
   id: string
@@ -128,17 +129,6 @@ Best regards,
   }
 ]
 
-const categoryLabels = {
-  application_received: 'Application Received',
-  application_reviewed: 'Application Reviewed',
-  shortlisted: 'Shortlisted',
-  selected: 'Selected',
-  rejected: 'Rejected',
-  interview_invite: 'Interview Invitation',
-  follow_up: 'Follow Up',
-  custom: 'Custom'
-}
-
 const categoryColors = {
   application_received: 'bg-blue-100 text-blue-800',
   application_reviewed: 'bg-yellow-100 text-yellow-800',
@@ -150,7 +140,19 @@ const categoryColors = {
   custom: 'bg-gray-100 text-gray-800'
 }
 
-export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTemplatesProps) {
+export function MessageTemplates({ onSelectTemplate }: Omit<MessageTemplatesProps, 'onSendMessage'>) {
+  const t = useTranslations('messageTemplates')
+
+  const categoryLabels = {
+    application_received: t('categories.application_received'),
+    application_reviewed: t('categories.application_reviewed'),
+    shortlisted: t('categories.shortlisted'),
+    selected: t('categories.selected'),
+    rejected: t('categories.rejected'),
+    interview_invite: t('categories.interview_invite'),
+    follow_up: t('categories.follow_up'),
+    custom: t('categories.custom')
+  }
   const [templates, setTemplates] = useState<MessageTemplate[]>(defaultTemplates)
   const [selectedTemplate, setSelectedTemplate] = useState<MessageTemplate | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -189,7 +191,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
     setTemplates([...templates, newTemplate])
     setIsCreateModalOpen(false)
     resetForm()
-    toast.success('Template created successfully')
+    toast.success(t('success.created'))
   }
 
   const handleEditTemplate = () => {
@@ -209,23 +211,23 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
     setIsEditModalOpen(false)
     setSelectedTemplate(null)
     resetForm()
-    toast.success('Template updated successfully')
+    toast.success(t('success.updated'))
   }
 
   const handleDeleteTemplate = (templateId: string) => {
     const template = templates.find(t => t.id === templateId)
     if (template?.isDefault) {
-      toast.error('Cannot delete default templates')
+      toast.error(t('errors.cannotDeleteDefault'))
       return
     }
 
     setTemplates(templates.filter(t => t.id !== templateId))
-    toast.success('Template deleted successfully')
+    toast.success(t('success.deleted'))
   }
 
   const handleCopyTemplate = (template: MessageTemplate) => {
     navigator.clipboard.writeText(`Subject: ${template.subject}\n\n${template.content}`)
-    toast.success('Template copied to clipboard')
+    toast.success(t('success.copied'))
   }
 
   const openEditModal = (template: MessageTemplate) => {
@@ -259,38 +261,38 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Message Templates</h2>
+          <h2 className="text-2xl font-bold">{t('title')}</h2>
           <p className="text-muted-foreground">
-            Pre-built templates for common employer responses
+            {t('description')}
           </p>
         </div>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Create Template
+              {t('createTemplate')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create Message Template</DialogTitle>
+              <DialogTitle>{t('createTemplateTitle')}</DialogTitle>
               <DialogDescription>
-                Create a reusable template for candidate communications
+                {t('createTemplateDescription')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Template Name</Label>
+                  <Label htmlFor="name">{t('templateName')}</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., Interview Invitation"
+                    placeholder={t('templateNamePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">{t('category')}</Label>
                   <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value as MessageTemplate['category'] })}>
                     <SelectTrigger>
                       <SelectValue />
@@ -306,30 +308,30 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
                 </div>
               </div>
               <div>
-                <Label htmlFor="subject">Subject Line</Label>
+                <Label htmlFor="subject">{t('subjectLine')}</Label>
                 <Input
                   id="subject"
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  placeholder="Use {{variables}} for dynamic content"
+                  placeholder={t('subjectLinePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="content">Message Content</Label>
+                <Label htmlFor="content">{t('messageContent')}</Label>
                 <Textarea
                   id="content"
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Use {{variables}} for dynamic content like {{applicantName}}, {{jobTitle}}, etc."
+                  placeholder={t('messageContentPlaceholder')}
                   className="min-h-[200px]"
                 />
               </div>
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                  Cancel
+                  {t('cancel')}
                 </Button>
                 <Button onClick={handleCreateTemplate} disabled={!formData.name || !formData.content}>
-                  Create Template
+                  {t('create')}
                 </Button>
               </div>
             </div>
@@ -341,17 +343,17 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
       <div className="flex space-x-4">
         <div className="flex-1">
           <Input
-            placeholder="Search templates..."
+            placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by category" />
+            <SelectValue placeholder={t('filterByCategory')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t('allCategories')}</SelectItem>
             {Object.entries(categoryLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
@@ -375,7 +377,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
                 </div>
                 {template.isDefault && (
                   <Badge variant="outline" className="text-xs">
-                    Default
+                    {t('default')}
                   </Badge>
                 )}
               </div>
@@ -383,12 +385,12 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
 
             <CardContent className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Subject:</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('subject')}</p>
                 <p className="text-sm">{template.subject}</p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Preview:</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('preview')}</p>
                 <ScrollArea className="h-20">
                   <p className="text-sm text-muted-foreground">
                     {template.content.substring(0, 150)}
@@ -399,7 +401,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
 
               {template.variables.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Variables:</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">{t('variables')}</p>
                   <div className="flex flex-wrap gap-1">
                     {template.variables.slice(0, 3).map((variable) => (
                       <Badge key={variable} variant="outline" className="text-xs">
@@ -408,7 +410,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
                     ))}
                     {template.variables.length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{template.variables.length - 3} more
+                        +{template.variables.length - 3} {t('more')}
                       </Badge>
                     )}
                   </div>
@@ -463,11 +465,11 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
       {filteredTemplates.length === 0 && (
         <div className="text-center py-8">
           <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">No templates found</h3>
+          <h3 className="text-lg font-medium">{t('noTemplatesFound')}</h3>
           <p className="text-muted-foreground">
             {searchTerm || selectedCategory !== 'all' 
-              ? 'Try adjusting your search or filter criteria'
-              : 'Create your first message template to get started'
+              ? t('noTemplatesFoundDesc')
+              : t('createFirstTemplate')
             }
           </p>
         </div>
@@ -477,15 +479,15 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Message Template</DialogTitle>
+            <DialogTitle>{t('editTemplateTitle')}</DialogTitle>
             <DialogDescription>
-              Update the template content and settings
+              {t('editTemplateDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-name">Template Name</Label>
+                <Label htmlFor="edit-name">{t('templateName')}</Label>
                 <Input
                   id="edit-name"
                   value={formData.name}
@@ -493,7 +495,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
                 />
               </div>
               <div>
-                <Label htmlFor="edit-category">Category</Label>
+                <Label htmlFor="edit-category">{t('category')}</Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value as MessageTemplate['category'] })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -509,7 +511,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
               </div>
             </div>
             <div>
-              <Label htmlFor="edit-subject">Subject Line</Label>
+              <Label htmlFor="edit-subject">{t('subjectLine')}</Label>
               <Input
                 id="edit-subject"
                 value={formData.subject}
@@ -517,7 +519,7 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
               />
             </div>
             <div>
-              <Label htmlFor="edit-content">Message Content</Label>
+              <Label htmlFor="edit-content">{t('messageContent')}</Label>
               <Textarea
                 id="edit-content"
                 value={formData.content}
@@ -527,10 +529,10 @@ export function MessageTemplates({ onSelectTemplate, onSendMessage }: MessageTem
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button onClick={handleEditTemplate} disabled={!formData.name || !formData.content}>
-                Update Template
+                {t('update')}
               </Button>
             </div>
           </div>

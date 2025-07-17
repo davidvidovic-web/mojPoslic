@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +11,6 @@ import {
   useRemoveFromShortlist, 
   useAssignJob 
 } from '@/hooks/use-applications'
-import { JobApplication, ApplicationStatus } from '@/types/application'
 import { 
   Star, 
   MessageSquare, 
@@ -28,6 +28,7 @@ interface ShortlistManagerProps {
 }
 
 export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
+  const t = useTranslations('admin.applications')
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([])
   const [assignmentNotes, setAssignmentNotes] = useState('')
   const [selectedForAssignment, setSelectedForAssignment] = useState<string | null>(null)
@@ -88,17 +89,17 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Star className="h-5 w-5" />
-            Shortlisted Candidates
+            {t('shortlist.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
             <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 text-lg font-medium mb-2">
-              No candidates shortlisted yet
+              {t('shortlist.empty.title')}
             </p>
             <p className="text-gray-500">
-              Review applications and add promising candidates to your shortlist.
+              {t('shortlist.empty.description')}
             </p>
           </div>
         </CardContent>
@@ -113,10 +114,10 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5 text-purple-600" />
-              Shortlisted Candidates for {jobTitle}
+              {t('shortlist.titleWithJob', { jobTitle })}
             </CardTitle>
             <Badge variant="outline" className="text-purple-600 border-purple-200">
-              {shortlistedApplications.length} candidates
+              {t('shortlist.candidateCount', { count: shortlistedApplications.length })}
             </Badge>
           </div>
         </CardHeader>
@@ -126,7 +127,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-purple-800">
-                    {selectedForComparison.length} candidates selected for comparison
+                    {t('comparison.selectedCount', { count: selectedForComparison.length })}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -134,10 +135,10 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                       variant="outline"
                       onClick={() => setSelectedForComparison([])}
                     >
-                      Clear Selection
+                      {t('comparison.clearSelection')}
                     </Button>
                     <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                      Compare Candidates
+                      {t('comparison.compareCandidates')}
                     </Button>
                   </div>
                 </div>
@@ -186,7 +187,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
 
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className="bg-purple-100 text-purple-800">
-                      Shortlisted
+                      {t('status.shortlisted')}
                     </Badge>
                     {application.user?.averageRating && (
                       <div className="flex items-center gap-1">
@@ -195,7 +196,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                           {application.user.averageRating.toFixed(1)}
                         </span>
                         <span className="text-xs text-gray-500">
-                          ({application.user.totalReviews} reviews)
+                          {t('reviews.count', { count: application.user.totalReviews || 0 })}
                         </span>
                       </div>
                     )}
@@ -214,7 +215,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                   {application.user?.skills && (
                     <div>
                       <p className="text-xs font-medium text-gray-500 mb-1">
-                        Skills:
+                        {t('labels.skills')}:
                       </p>
                       <p className="text-sm text-gray-700 line-clamp-2">
                         {application.user.skills}
@@ -225,7 +226,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                   {application.message && (
                     <div>
                       <p className="text-xs font-medium text-gray-500 mb-1">
-                        Cover Letter:
+                        {t('labels.coverLetter')}:
                       </p>
                       <div className="p-2 bg-gray-50 rounded text-sm line-clamp-3">
                         {application.message}
@@ -236,7 +237,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                   <div className="flex items-center gap-1 text-xs text-gray-500">
                     <Calendar className="h-3 w-3" />
                     <span>
-                      Shortlisted {formatDistanceToNow(new Date(application.shortlistedAt!))} ago
+                      {t('shortlist.shortlistedAgo', { time: formatDistanceToNow(new Date(application.shortlistedAt!)) })}
                     </span>
                   </div>
 
@@ -251,11 +252,11 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                           : ''
                         }
                       >
-                        {selectedForComparison.includes(application.id) ? 'Remove' : 'Compare'}
+                        {selectedForComparison.includes(application.id) ? t('actions.remove') : t('actions.compare')}
                       </Button>
                       <Button size="sm" variant="outline">
                         <MessageSquare className="h-3 w-3 mr-1" />
-                        Message
+                        {t('actions.message')}
                       </Button>
                     </div>
 
@@ -266,7 +267,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                       disabled={assignJobMutation.isPending}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Select for Job
+                      {t('actions.selectForJob')}
                     </Button>
                   </div>
                 </CardContent>
@@ -281,30 +282,28 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
             <CardTitle className="text-green-800">
-              Confirm Job Assignment
+              {t('assignment.confirmTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-green-700">
-              You are about to assign this job to{' '}
-              <strong>
-                {shortlistedApplications.find(app => app.id === selectedForAssignment)?.user?.name}
-              </strong>.
-              This action will:
+              {t('assignment.confirmDescription', { 
+                candidateName: shortlistedApplications.find(app => app.id === selectedForAssignment)?.user?.name || 'Unknown'
+              })}
             </p>
             <ul className="list-disc list-inside text-sm text-green-700 space-y-1">
-              <li>Mark this candidate as selected</li>
-              <li>Automatically reject all other applications</li>
-              <li>Close the job to new applications</li>
-              <li>Send notifications to all applicants</li>
+              <li>{t('assignment.actions.markSelected')}</li>
+              <li>{t('assignment.actions.rejectOthers')}</li>
+              <li>{t('assignment.actions.closeJob')}</li>
+              <li>{t('assignment.actions.sendNotifications')}</li>
             </ul>
 
             <div>
               <label className="block text-sm font-medium text-green-800 mb-2">
-                Assignment Notes (Optional)
+                {t('assignment.notesLabel')}
               </label>
               <Textarea
-                placeholder="Add any notes about the assignment, start date, or special instructions..."
+                placeholder={t('assignment.notesPlaceholder')}
                 value={assignmentNotes}
                 onChange={(e) => setAssignmentNotes(e.target.value)}
                 rows={3}
@@ -320,10 +319,10 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                 {assignJobMutation.isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Assigning...
+                    {t('assignment.assigning')}
                   </div>
                 ) : (
-                  'Confirm Assignment'
+                  t('assignment.confirmButton')
                 )}
               </Button>
               <Button
@@ -334,7 +333,7 @@ export function ShortlistManager({ jobId, jobTitle }: ShortlistManagerProps) {
                 }}
                 disabled={assignJobMutation.isPending}
               >
-                Cancel
+                {t('assignment.cancel')}
               </Button>
             </div>
           </CardContent>

@@ -111,6 +111,7 @@ export async function GET() {
         skills: true,
         experience: true,
         preferredJobTypes: true,
+        preferredLanguage: true,
         role: true,
         profileSetupCompleted: true,
         createdAt: true,

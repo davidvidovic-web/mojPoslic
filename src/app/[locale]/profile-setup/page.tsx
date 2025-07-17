@@ -13,6 +13,7 @@ import { CitiesFilter } from '@/components/filters/cities-filter'
 import { Badge } from '@/components/ui/badge'
 import { X, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface SkillExperience {
   skill: string
@@ -21,6 +22,8 @@ interface SkillExperience {
 }
 
 export default function ProfileSetupPage() {
+  const t = useTranslations()
+  const tErrors = useTranslations('errors')
   const { user, loading, refreshUser } = useAuth()
   const router = useRouter()
   
@@ -86,7 +89,7 @@ export default function ProfileSetupPage() {
         if (usernameCheckResponse.ok) {
           const { exists } = await usernameCheckResponse.json()
           if (exists) {
-            toast.error('Username already exists. Please choose a different one.')
+            toast.error(tErrors('validation.usernameExists'))
             setIsSubmitting(false)
             return
           }
@@ -115,7 +118,7 @@ export default function ProfileSetupPage() {
       router.push('/dashboard')
     } catch (error) {
       console.error('Error updating profile:', error)
-      toast.error('Failed to update profile. Please try again.')
+      toast.error(tErrors('failedToUpdate.profile'))
     } finally {
       setIsSubmitting(false)
     }
@@ -174,7 +177,7 @@ export default function ProfileSetupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('profileSetup.loading')}</p>
         </div>
       </div>
     )
@@ -189,28 +192,28 @@ export default function ProfileSetupPage() {
     switch (user.role) {
       case 'client':
         return {
-          title: 'Complete Your Client Profile',
-          description: 'Set up your profile to easily post jobs and connect with taskers'
+          title: t('profileSetup.titles.client'),
+          description: t('profileSetup.descriptions.client')
         }
       case 'company':
         return {
-          title: 'Complete Your Company Profile',
-          description: 'Build your company profile to attract top talent and manage projects'
+          title: t('profileSetup.titles.company'),
+          description: t('profileSetup.descriptions.company')
         }
       case 'tasker':
         return {
-          title: 'Complete Your Tasker Profile',
-          description: 'Build your professional profile to attract clients and showcase your skills'
+          title: t('profileSetup.titles.tasker'),
+          description: t('profileSetup.descriptions.tasker')
         }
       case 'admin':
         return {
-          title: 'Complete Your Admin Profile',
-          description: 'Set up your administrator profile'
+          title: t('profileSetup.titles.admin'),
+          description: t('profileSetup.descriptions.admin')
         }
       default:
         return {
-          title: 'Complete Your Profile',
-          description: 'Set up your profile to get started'
+          title: t('profileSetup.titles.default'),
+          description: t('profileSetup.descriptions.default')
         }
     }
   }
@@ -231,45 +234,45 @@ export default function ProfileSetupPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information - Show for all roles */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <h3 className="text-lg font-semibold">{t('profileSetup.sections.basicInformation')}</h3>
                 
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    {user.role === 'company' ? 'Company Name' : 'Full Name'} *
+                    {user.role === 'company' ? t('profileSetup.fields.companyName') : t('profileSetup.fields.fullName')} *
                   </Label>
                   <Input
                     id="name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder={user.role === 'company' ? 'Your company name' : 'Your full name'}
+                    placeholder={user.role === 'company' ? t('profileSetup.placeholders.companyName') : t('profileSetup.placeholders.fullName')}
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username (optional)</Label>
+                  <Label htmlFor="username">{t('profileSetup.fields.username')}</Label>
                   <Input
                     id="username"
                     value={formData.username}
                     onChange={(e) => handleInputChange('username', e.target.value)}
-                    placeholder="Choose a username (we'll create one if left empty)"
+                    placeholder={t('profileSetup.placeholders.chooseUsername')}
                   />
                   {!formData.username && (
                     <p className="text-sm text-muted-foreground">
-                      We&apos;ll automatically create: {generateUsernameFromName(formData.name || 'user')}
+                      {t('autoGenerateUsername')}: {generateUsernameFromName(formData.name || 'user')}
                     </p>
                   )}
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">{t('profileSetup.fields.phoneNumber')} *</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Your phone number"
+                    placeholder={t('profileSetup.placeholders.phoneNumber')}
                     required
                   />
                 </div>
@@ -277,13 +280,13 @@ export default function ProfileSetupPage() {
 
               {/* Location - Show for all roles */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Location</h3>
+                <h3 className="text-lg font-semibold">{t('profileSetup.sections.location')}</h3>
                 <div className="space-y-2">
-                  <Label>Your City *</Label>
+                  <Label>{t('profileSetup.fields.yourCity')} *</Label>
                   <CitiesFilter
                     value={formData.location}
                     onChange={(value) => handleInputChange('location', value)}
-                    placeholder="Select your city"
+                                          placeholder={t('profileSetup.placeholders.selectYourCity')}
                     className="w-full"
                     includeAllOption={false}
                   />
@@ -295,21 +298,21 @@ export default function ProfileSetupPage() {
                 <>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Professional Skills</h3>
+                      <h3 className="text-lg font-semibold">{t('profileSetup.sections.professionalSkills')}</h3>
                       <div className="flex items-start gap-2 text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                         <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-                        <span>You can add this later in settings, but we highly recommend completing it now for a better success rate</span>
+                        <span>{t('profileSetup.helpText.skillsRecommendation')}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Your Skills</Label>
+                      <Label>{t('profileSetup.fields.yourSkills')}</Label>
                       <SkillsBubbleInput
                         value={formData.skills}
                         onChange={handleSkillsChange}
-                        placeholder="Add your skills (e.g., Plumbing, Web Design, Tutoring...)"
+                        placeholder={t('profileSetup.placeholders.addSkills')}
                       />
                       <p className="text-sm text-muted-foreground">
-                        Choose from existing categories or add your own custom skills
+                        {t('profileSetup.helpText.skillsDescription')}
                       </p>
                     </div>
                   </div>
@@ -317,9 +320,9 @@ export default function ProfileSetupPage() {
                   {/* Experience Levels - Only show for taskers */}
                   {formData.skillExperiences.length > 0 && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Experience Levels</h3>
+                      <h3 className="text-lg font-semibold">{t('profileSetup.sections.experienceLevels')}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Set your experience level for each skill to help clients understand your expertise
+                        {t('profileSetup.helpText.experienceDescription')}
                       </p>
                       
                       <div className="space-y-3">
@@ -337,11 +340,11 @@ export default function ProfileSetupPage() {
                                 <SelectValue className="truncate" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="not-specified">Not Specified</SelectItem>
-                                <SelectItem value="beginner">Beginner (&lt; 1 year)</SelectItem>
-                                <SelectItem value="1-2-years">1-2 Years</SelectItem>
-                                <SelectItem value="3-5-years">3-5 Years</SelectItem>
-                                <SelectItem value="5plus-years">5+ Years</SelectItem>
+                                <SelectItem value="not-specified">{t('profileSetup.experienceLevels.notSpecified')}</SelectItem>
+                                <SelectItem value="beginner">{t('profileSetup.experienceLevels.beginner')}</SelectItem>
+                                <SelectItem value="1-2-years">{t('profileSetup.experienceLevels.oneToTwoYears')}</SelectItem>
+                                <SelectItem value="3-5-years">{t('profileSetup.experienceLevels.threeToFiveYears')}</SelectItem>
+                                <SelectItem value="5plus-years">{t('profileSetup.experienceLevels.fivePlusYears')}</SelectItem>
                               </SelectContent>
                             </Select>
                             
@@ -362,14 +365,14 @@ export default function ProfileSetupPage() {
 
                   {/* Website/Portfolio - Show for taskers and companies */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Portfolio</h3>
+                    <h3 className="text-lg font-semibold">{t('profileSetup.sections.portfolio')}</h3>
                     <div className="space-y-2">
-                      <Label htmlFor="website">Website or Portfolio URL</Label>
+                                              <Label htmlFor="website">{t('profileSetup.fields.websitePortfolio')}</Label>
                       <Input
                         id="website"
                         value={formData.website}
                         onChange={(e) => handleInputChange('website', e.target.value)}
-                        placeholder="https://yourwebsite.com or https://yourportfolio.com"
+                        placeholder={t('profileSetup.placeholders.websitePortfolio')}
                       />
                     </div>
                   </div>
@@ -379,14 +382,14 @@ export default function ProfileSetupPage() {
               {/* Website/Company URL - Show for companies only */}
               {user.role === 'company' && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Company Information</h3>
+                  <h3 className="text-lg font-semibold">{t('profileSetup.sections.companyInformation')}</h3>
                   <div className="space-y-2">
-                    <Label htmlFor="website">Company Website</Label>
+                                          <Label htmlFor="website">{t('profileSetup.fields.companyWebsite')}</Label>
                     <Input
                       id="website"
                       value={formData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder="https://yourcompany.com"
+                      placeholder={t('profileSetup.placeholders.companyWebsite')}
                     />
                   </div>
                 </div>
@@ -397,7 +400,7 @@ export default function ProfileSetupPage() {
                 className="w-full"
                 disabled={isSubmitting || !formData.name || !formData.phone || formData.location === 'all'}
               >
-                {isSubmitting ? 'Saving...' : 'Complete Setup'}
+                {isSubmitting ? t('profileSetup.saving') : t('profileSetup.completeSetup')}
               </Button>
             </form>
           </CardContent>

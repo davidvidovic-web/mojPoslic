@@ -23,11 +23,7 @@ export function JobList() {
     jobCategoryFilter,
     jobSubcategoryFilter,
     jobTypeFilter,
-    currentPage,
-    itemsPerPage,
     viewMode,
-    sortBy,
-    sortOrder,
   } = useFilterStore()
 
   // Map the filter store types to JobFilters type

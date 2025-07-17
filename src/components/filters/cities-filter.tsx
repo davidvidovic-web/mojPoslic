@@ -2,6 +2,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Globe } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCities } from '@/hooks/use-data'
 
 interface CitiesFilterProps {
@@ -12,8 +13,11 @@ interface CitiesFilterProps {
   includeAllOption?: boolean
 }
 
-export function CitiesFilter({ value, onChange, placeholder = "All locations", className, includeAllOption = true }: CitiesFilterProps) {
+export function CitiesFilter({ value, onChange, placeholder, className, includeAllOption = true }: CitiesFilterProps) {
   const { isLoading, getSpecialCities, getActiveCities } = useCities()
+  const t = useTranslations('filters')
+  
+  const defaultPlaceholder = placeholder || t('allLocations')
 
   // Get special and regular active cities
   const specialCities = Array.isArray(getSpecialCities()) 
@@ -27,10 +31,10 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
   return (
     <Select value={value} onValueChange={onChange} disabled={isLoading}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder={isLoading ? "Loading locations..." : placeholder} />
+        <SelectValue placeholder={isLoading ? t('loadingLocations') : defaultPlaceholder} />
       </SelectTrigger>
       <SelectContent>
-        {includeAllOption && <SelectItem value="all">All locations</SelectItem>}
+        {includeAllOption && <SelectItem value="all">{t('allLocations')}</SelectItem>}
         
         {/* Special cities (major cities + remote) */}
         {Array.isArray(specialCities) && specialCities.length > 0 && (
@@ -49,7 +53,7 @@ export function CitiesFilter({ value, onChange, placeholder = "All locations", c
             
             {Array.isArray(regularCities) && regularCities.length > 0 && (
               <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-t">
-                Other cities
+                {t('otherCities')}
               </div>
             )}
           </>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,33 +32,6 @@ interface JobStatusManagerProps {
   disabled?: boolean
 }
 
-const statusConfig = {
-  active: {
-    label: 'Active',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
-    icon: Play,
-    description: 'Job is currently accepting applications'
-  },
-  inactive: {
-    label: 'Inactive',
-    color: 'bg-muted text-muted-foreground',
-    icon: Pause,
-    description: 'Job is paused and not accepting applications'
-  },
-  completed: {
-    label: 'Completed',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
-    icon: CheckCircle,
-    description: 'Position has been filled successfully'
-  },
-  expired: {
-    label: 'Expired',
-    color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300',
-    icon: Clock,
-    description: 'Job posting has expired'
-  }
-}
-
 export function JobStatusManager({ 
   jobId, 
   currentStatus, 
@@ -65,6 +39,36 @@ export function JobStatusManager({
   onStatusUpdate, 
   disabled = false 
 }: JobStatusManagerProps) {
+  const t = useTranslations('jobs')
+  const tCommon = useTranslations('common')
+
+  const statusConfig = {
+    active: {
+      label: t('status.active'),
+      color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
+      icon: Play,
+      description: t('statusManager.statusDescriptions.active')
+    },
+    inactive: {
+      label: t('status.inactive'),
+      color: 'bg-muted text-muted-foreground',
+      icon: Pause,
+      description: t('statusManager.statusDescriptions.inactive')
+    },
+    completed: {
+      label: t('status.completed'),
+      color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
+      icon: CheckCircle,
+      description: t('statusManager.statusDescriptions.completed')
+    },
+    expired: {
+      label: t('status.expired'),
+      color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300',
+      icon: Clock,
+      description: t('statusManager.statusDescriptions.expired')
+    }
+  }
+
   const [selectedStatus, setSelectedStatus] = useState<JobStatus>(currentStatus)
   const [isLoading, setIsLoading] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -128,15 +132,15 @@ export function JobStatusManager({
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Update Job Status</DialogTitle>
+              <DialogTitle>{t('statusManager.updateJobStatus')}</DialogTitle>
               <DialogDescription>
-                Change the status of &quot;{jobTitle}&quot;
+                {t('statusManager.changeStatusOf', { title: jobTitle })}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Current Status</label>
+                <label className="text-sm font-medium">{t('statusManager.currentStatus')}</label>
                 <div className="flex items-center gap-2">
                   <StatusIcon className="h-4 w-4" />
                   <span className="text-sm">{statusConfig[currentStatus].label}</span>
@@ -147,7 +151,7 @@ export function JobStatusManager({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">New Status</label>
+                <label className="text-sm font-medium">{t('statusManager.newStatus')}</label>
                 <Select value={selectedStatus} onValueChange={(value: JobStatus) => setSelectedStatus(value)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -183,13 +187,13 @@ export function JobStatusManager({
                 }}
                 disabled={isLoading}
               >
-                Cancel
+                {tCommon('buttons.cancel')}
               </Button>
               <Button
                 onClick={handleStatusUpdate}
                 disabled={isLoading || selectedStatus === currentStatus}
               >
-                {isLoading ? 'Updating...' : 'Update Status'}
+                {isLoading ? tCommon('actions.updating') : tCommon('actions.updateStatus')}
               </Button>
             </div>
           </DialogContent>

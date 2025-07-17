@@ -100,7 +100,7 @@ export function JobApplicationForm({
       <Card className="w-full border-0 shadow-none">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center justify-between text-xl">
-            Application Preview
+            {t('applicationPreview')}
             <Button
               variant="ghost"
               size="sm"
@@ -114,14 +114,14 @@ export function JobApplicationForm({
         <CardContent className="space-y-6 pt-0">
           <div>
             <Label className="text-sm font-medium text-gray-700">
-              Applying for:
+              {t('applyingFor')}
             </Label>
             <p className="text-lg font-semibold">{jobTitle}</p>
           </div>
 
           <div>
             <Label className="text-sm font-medium text-gray-700">
-              Cover Letter:
+              {t('coverLetter')}:
             </Label>
             <div className="mt-1 p-3 bg-gray-50 rounded-md border">
               <p className="whitespace-pre-wrap">{coverLetter}</p>
@@ -131,13 +131,13 @@ export function JobApplicationForm({
           {resume && (
             <div>
               <Label className="text-sm font-medium text-gray-700">
-                Resume:
+                {t('resume')}:
               </Label>
               <div className="flex items-center gap-2 mt-1 p-2 bg-gray-50 rounded-md border">
                 <FileText className="h-4 w-4 text-gray-600" />
                 <span className="text-sm">{resume.name}</span>
                 <span className="text-xs text-gray-500">
-                  ({(resume.size / 1024 / 1024).toFixed(1)} MB)
+                  ({(resume.size / 1024 / 1024).toFixed(1)} {t('mb')})
                 </span>
               </div>
             </div>
@@ -152,12 +152,12 @@ export function JobApplicationForm({
               {applyMutation.isPending ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Submitting...
+                  {t('submitting')}
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Send className="h-4 w-4" />
-                  Submit Application
+                  {t('submitApplication')}
                 </div>
               )}
             </Button>
@@ -167,7 +167,7 @@ export function JobApplicationForm({
               disabled={applyMutation.isPending}
               className="flex-1"
             >
-              Back to Edit
+              {t('backToEdit')}
             </Button>
           </div>
         </CardContent>

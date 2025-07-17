@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Conversation, Message, MessageAttachment, TypingUser } from '@/types/messaging';
 import { ConversationList } from './conversation-list';
@@ -49,7 +50,6 @@ interface ConversationViewProps {
     messages?: boolean;
   };
   hasMoreMessages?: boolean;
-  locale?: 'bs' | 'en';
   isMobile?: boolean;
   className?: string;
 }
@@ -62,7 +62,6 @@ interface ConversationHeaderProps {
   onLeave?: () => void;
   onCall?: (type: 'audio' | 'video') => void;
   onViewParticipants?: () => void;
-  locale?: 'bs' | 'en';
   isMobile?: boolean;
 }
 
@@ -74,7 +73,6 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   onLeave,
   onCall,
   onViewParticipants,
-  locale = 'bs',
   isMobile = false,
 }) => {
   const getConversationTitle = () => {
@@ -83,11 +81,11 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
     }
     
     if (conversation.type === 'job_related') {
-      return locale === 'bs' ? 'Posao chat' : 'Job chat';
+      return t('jobChat');
     }
     
     if (conversation.type === 'group') {
-      return locale === 'bs' ? 'Grupni chat' : 'Group chat';
+      return t('groupChat');
     }
     
     // For direct conversations, show the other participant's name
@@ -95,7 +93,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
       p => p.user_id !== conversation.participants[0]?.user_id
     );
     
-    return otherParticipant?.user.name || (locale === 'bs' ? 'Nepoznato' : 'Unknown');
+    return otherParticipant?.user.name || t('unknown');
   };
 
   const getParticipantCount = () => {
@@ -103,30 +101,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
     return activeParticipants.length;
   };
 
-  const translations = {
-    bs: {
-      archive: 'Arhiviraj',
-      delete: 'Obriši',
-      leave: 'Napusti',
-      audioCall: 'Audio poziv',
-      videoCall: 'Video poziv',
-      viewParticipants: 'Pogledaj učesnike',
-      participants: 'učesnika',
-      online: 'online',
-    },
-    en: {
-      archive: 'Archive',
-      delete: 'Delete',
-      leave: 'Leave',
-      audioCall: 'Audio call',
-      videoCall: 'Video call',
-      viewParticipants: 'View participants',
-      participants: 'participants',
-      online: 'online',
-    },
-  };
-
-  const t = translations[locale];
+  const t = useTranslations('messaging');
 
   return (
     <div className="flex items-center justify-between p-4 border-b bg-background dark:bg-background">
@@ -164,15 +139,15 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
             <h2 className="font-semibold text-foreground dark:text-foreground">{getConversationTitle()}</h2>
             <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
               {conversation.type === 'group' && (
-                <span>{getParticipantCount()} {t.participants}</span>
+                <span>{getParticipantCount()} {t('actions.participants')}</span>
               )}
               {conversation.type === 'direct' && (
-                <span>{t.online}</span>
+                <span>{t('status.online')}</span>
               )}
               {conversation.archived && (
                 <Badge variant="secondary" className="text-xs">
                   <Archive className="w-3 h-3 mr-1" />
-                  {locale === 'bs' ? 'Arhivirano' : 'Archived'}
+                  {t('actions.archived')}
                 </Badge>
               )}
             </div>
@@ -187,7 +162,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => onCall('audio')}
-              title={t.audioCall}
+              title={t('actions.audioCall')}
               className="p-2"
             >
               <Phone className="w-4 h-4" />
@@ -196,7 +171,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => onCall('video')}
-              title={t.videoCall}
+              title={t('actions.videoCall')}
               className="p-2"
             >
               <Video className="w-4 h-4" />
@@ -215,7 +190,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
               <>
                 <DropdownMenuItem onClick={onViewParticipants}>
                   <Users className="w-4 h-4 mr-2" />
-                  {t.viewParticipants}
+                  {t('actions.viewParticipants')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -223,17 +198,17 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
             
             <DropdownMenuItem onClick={onArchive}>
               <Archive className="w-4 h-4 mr-2" />
-              {t.archive}
+              {t('archive')}
             </DropdownMenuItem>
             
             {conversation.type === 'group' && (
               <DropdownMenuItem onClick={onLeave} className="text-orange-600">
-                {t.leave}
+                {t('actions.leave')}
               </DropdownMenuItem>
             )}
             
             <DropdownMenuItem onClick={onDelete} className="text-red-600">
-              {t.delete}
+              {t('delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -260,10 +235,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   typingUsers = [],
   loading = {},
   hasMoreMessages = false,
-  locale = 'bs',
   isMobile = false,
   className,
 }) => {
+  const t = useTranslations('messaging');
   const [showConversationList, setShowConversationList] = useState(!isMobile);
 
   // On mobile, show conversation list when no conversation is selected
@@ -326,7 +301,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         <div className={cn("h-full bg-background dark:bg-background", className)}>
           <div className="flex items-center justify-between p-4 border-b">
             <h1 className="text-lg font-semibold">
-              {locale === 'bs' ? 'Poruke' : 'Messages'}
+              {t('title')}
             </h1>
             <Button variant="ghost" size="sm" className="p-2">
               <Search className="w-4 h-4" />
@@ -337,7 +312,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
             selectedConversationId={selectedConversation?.id}
             onSelectConversation={handleSelectConversation}
             loading={loading.conversations}
-            locale={locale}
             className="flex-1"
           />
         </div>
@@ -354,7 +328,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           onLeave={handleLeave}
           onCall={handleCall}
           onViewParticipants={handleViewParticipants}
-          locale={locale}
           isMobile={isMobile}
         />
         <MessageArea
@@ -365,13 +338,11 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           onLoadMore={onLoadMoreMessages}
           onAttachmentClick={onAttachmentClick}
           typingUsers={typingUsers}
-          locale={locale}
           className="flex-1"
         />
         <MessageInput
           onSendMessage={onSendMessage}
           onTyping={onTyping}
-          locale={locale}
         />
       </div>
     );
@@ -383,7 +354,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       <div className="w-80 border-r flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <h1 className="text-lg font-semibold">
-            {locale === 'bs' ? 'Poruke' : 'Messages'}
+            {t('title')}
           </h1>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" className="p-2">
@@ -399,7 +370,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           selectedConversationId={selectedConversation?.id}
           onSelectConversation={onSelectConversation}
           loading={loading.conversations}
-          locale={locale}
           className="flex-1"
         />
       </div>
@@ -415,7 +385,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
               onLeave={handleLeave}
               onCall={handleCall}
               onViewParticipants={handleViewParticipants}
-              locale={locale}
               isMobile={false}
             />
             <MessageArea
@@ -426,13 +395,11 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
               onLoadMore={onLoadMoreMessages}
               onAttachmentClick={onAttachmentClick}
               typingUsers={typingUsers}
-              locale={locale}
               className="flex-1"
             />
             <MessageInput
               onSendMessage={onSendMessage}
               onTyping={onTyping}
-              locale={locale}
             />
           </>
         ) : (
@@ -442,13 +409,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                 <MessageCircle className="w-10 h-10 text-muted-foreground dark:text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium text-foreground dark:text-foreground mb-2">
-                {locale === 'bs' ? 'Izaberite konverzaciju' : 'Select a conversation'}
+                {t('selectConversation')}
               </h3>
               <p className="text-muted-foreground dark:text-muted-foreground">
-                {locale === 'bs' 
-                  ? 'Izaberite postojeću konverzaciju ili započnite novu'
-                  : 'Choose an existing conversation or start a new one'
-                }
+                {t('startConversation')}
               </p>
             </div>
           </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useTranslations } from 'next-intl'
 
 interface ConnectionPackage {
   id: string
@@ -15,6 +16,7 @@ interface ConnectionPackage {
 }
 
 export default function AdminPackagesPage() {
+  const t = useTranslations()
   const { data: session, status } = useSession()
   const { isAdmin } = useAuth()
   const router = useRouter()
@@ -97,7 +99,7 @@ export default function AdminPackagesPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <p className="mt-4 text-muted-foreground">{t('admin.packages.loading')}</p>
         </div>
       </div>
     )
@@ -109,10 +111,10 @@ export default function AdminPackagesPage() {
         <div className="bg-card rounded-lg shadow">
           <div className="px-6 py-4 border-b border-border">
             <h1 className="text-2xl font-bold text-foreground">
-              Connection Packages Management
+              {t('admin.packages.title')}
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Manage pricing and details for connection packages
+              {t('admin.packages.subtitle')}
             </p>
           </div>
 
@@ -133,7 +135,7 @@ export default function AdminPackagesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1">
-                        Package Name
+                        {t('admin.packages.packageName')}
                       </label>
                       <input
                         type="text"
@@ -145,7 +147,7 @@ export default function AdminPackagesPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1">
-                        Connections
+                        {t('admin.packages.connections')}
                       </label>
                       <input
                         type="number"
@@ -157,7 +159,7 @@ export default function AdminPackagesPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1">
-                        Price (€)
+                        {t('admin.packages.price')}
                       </label>
                       <input
                         type="number"
@@ -170,7 +172,7 @@ export default function AdminPackagesPage() {
 
                     <div className="md:col-span-2 lg:col-span-3">
                       <label className="block text-sm font-medium text-foreground mb-1">
-                        Description
+                        {t('admin.packages.packageDescription')}
                       </label>
                       <input
                         type="text"
@@ -182,7 +184,7 @@ export default function AdminPackagesPage() {
                   </div>
 
                   <div className="mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium">Price per connection:</span> €{calculatePerConnectionPrice(pkg.price, pkg.connections)}
+                    <span className="font-medium">{t('admin.packages.pricePerConnection')}:</span> €{calculatePerConnectionPrice(pkg.price, pkg.connections)}
                   </div>
                 </div>
               ))}
@@ -193,7 +195,7 @@ export default function AdminPackagesPage() {
                 onClick={() => router.push('/dashboard')}
                 className="px-4 py-2 text-foreground bg-secondary rounded-md hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                Back to Dashboard
+                {t('admin.packages.backToDashboard')}
               </button>
               
               <button
@@ -201,7 +203,7 @@ export default function AdminPackagesPage() {
                 disabled={saving}
                 className="px-6 py-2 bg-blue-600 text-background rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? t('admin.packages.saving') : t('admin.packages.saveChanges')}
               </button>
             </div>
           </div>

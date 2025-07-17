@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -15,6 +16,7 @@ interface JobApplicationsManagerProps {
 }
 
 export function JobApplicationsManager({}: JobApplicationsManagerProps) {
+  const tCommon = useTranslations('common')
   const { data: applications = [], isLoading } = useApplications()
 
   const pendingApplications = applications.filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
@@ -92,10 +94,10 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
         <Tabs defaultValue="pending">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="pending">
-              Pending ({pendingApplications.length})
+              {tCommon('pending')} ({pendingApplications.length})
             </TabsTrigger>
             <TabsTrigger value="reviewed">
-              Reviewed ({reviewedApplications.length})
+              {tCommon('reviewed')} ({reviewedApplications.length})
             </TabsTrigger>
           </TabsList>
 
@@ -103,8 +105,8 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
             {pendingApplications.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No pending applications</h3>
-                <p className="text-muted-foreground">New applications will appear here.</p>
+                <h3 className="text-lg font-semibold mb-2">{tCommon('noPendingApplications')}</h3>
+                <p className="text-muted-foreground">{tCommon('newApplicationsWillAppearHere')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -121,7 +123,7 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                         <h4 className="font-medium">{application.user?.name || 'Unknown User'}</h4>
                         <p className="text-sm text-muted-foreground">{application.job?.title || 'Job Title'}</p>
                         <p className="text-xs text-muted-foreground">
-                          Applied {new Date(application.appliedAt).toLocaleDateString()}
+                          {tCommon('applied')} {new Date(application.appliedAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -147,8 +149,8 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
             {reviewedApplications.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No reviewed applications</h3>
-                <p className="text-muted-foreground">Applications you&apos;ve reviewed will appear here.</p>
+                <h3 className="text-lg font-semibold mb-2">{tCommon('noReviewedApplications')}</h3>
+                <p className="text-muted-foreground">{tCommon('applicationsYouReviewedWillAppearHere')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -165,7 +167,7 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                         <h4 className="font-medium">{application.user?.name || 'Unknown User'}</h4>
                         <p className="text-sm text-muted-foreground">{application.job?.title || 'Job Title'}</p>
                         <p className="text-xs text-muted-foreground">
-                          Applied {new Date(application.appliedAt).toLocaleDateString()}
+                          {tCommon('applied')} {new Date(application.appliedAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>

@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         const currentConnections = userExistsResult[0].connections
         
         // Update the user's connections using raw SQL to avoid TypeScript issues
-        const updateResult = await prisma.$executeRaw`
+        await prisma.$executeRaw`
           UPDATE users 
           SET connections = connections + ${connectionsAmount} 
           WHERE id = ${userId}
@@ -110,22 +110,22 @@ export async function POST(request: NextRequest) {
         }
         
         // Log this payment event so we can manually recover if needed
+        console.log('Payment successful:', {
           userId,
           connections: connectionsAmount,
           packageId,
           sessionId: session.id,
           timestamp: new Date().toISOString()
-        }))
+        })
         
         // Try to create history entry but don't fail the whole operation if it doesn't work
         try {
           // Create connection history using raw SQL to avoid TypeScript issues
-          const historyResult = await prisma.$queryRaw`
+          await prisma.$queryRaw`
             INSERT INTO connection_history (id, user_id, action, amount, description, created_at)
             VALUES (gen_random_uuid(), ${userId}, 'PURCHASE'::"ConnectionAction", ${connectionsAmount}, ${packageDescription}, NOW())
             RETURNING id, action, amount, description, created_at
-          ` as Array<{ id: string; action: string; amount: number; description: string; created_at: Date }>
-          
+          `
         } catch (historyError) {
           console.error('Failed to create connection history:', historyError)
           // Provide very specific error information for debugging

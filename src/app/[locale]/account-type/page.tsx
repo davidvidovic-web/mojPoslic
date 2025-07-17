@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -13,6 +14,7 @@ import { showToast } from '@/lib/toast'
 export default function AccountTypePage() {
   const router = useRouter()
   const { data: session, status } = useSession()
+  const tValidation = useTranslations('errors.validation')
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [loading, setLoading] = useState(false)
 
@@ -37,7 +39,7 @@ export default function AccountTypePage() {
     e.preventDefault()
     
     if (!selectedRole) {
-      showToast.error('Please select an account type')
+      showToast.error(tValidation('pleaseSelectAccountType'))
       return
     }
 

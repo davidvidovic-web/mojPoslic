@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, X, Minimize2, Maximize2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MessageAttachment, Conversation } from '@/types/messaging';
+import { useTranslations } from 'next-intl';
 
 interface MessagingModalProps {
   open: boolean;
@@ -28,10 +29,10 @@ interface MessagingToggleProps {
 export const MessagingToggle: React.FC<MessagingToggleProps> = ({
   onClick,
   unreadCount,
-  locale = 'bs',
   className,
 }) => {
-  const title = locale === 'bs' ? 'Poruke' : 'Messages';
+  const t = useTranslations('messaging');
+  const title = t('title');
 
   return (
     <Button
@@ -61,6 +62,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
   locale = 'bs',
   className,
 }) => {
+  const t = useTranslations('messaging');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
@@ -163,7 +165,6 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
               messages: state.isLoadingMessages,
             }}
             hasMoreMessages={state.messages.length > 0}
-            locale={locale}
             isMobile={true}
             className="h-full"
           />
@@ -182,7 +183,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
           <div className="flex items-center gap-2">
             <MessageCircle className="w-4 h-4" />
             <span className="font-medium">
-              {locale === 'bs' ? 'Poruke' : 'Messages'}
+              {t('title')}
             </span>
             {totalUnreadCount > 0 && (
               <Badge variant="secondary" className="bg-white text-blue-500">
@@ -272,10 +273,9 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
             conversations: state.isLoading,
             messages: state.isLoadingMessages,
           }}
-          hasMoreMessages={state.messages.length > 0}
-          locale={locale}
-          isMobile={false}
-          className="h-full"
+                      hasMoreMessages={state.messages.length > 0}
+            isMobile={false}
+            className="h-full"
         />
       </div>
     </div>

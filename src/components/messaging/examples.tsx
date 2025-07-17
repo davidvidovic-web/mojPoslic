@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
 import { useMessagingUtils, createMessageUserLink } from '@/lib/messaging/messaging-utils';
@@ -99,6 +100,8 @@ export const JobApplicantCard: React.FC<JobApplicantCardProps> = ({
   applicant,
   locale = 'bs',
 }) => {
+  const t = useTranslations('dashboard');
+  
   return (
     <div className="border rounded-lg p-4 space-y-4">
       <div className="flex items-center gap-3">
@@ -120,7 +123,7 @@ export const JobApplicantCard: React.FC<JobApplicantCardProps> = ({
       
       <div className="flex gap-2">
         <Button variant="outline" size="sm">
-          {locale === 'bs' ? 'Prikaži profil' : 'View Profile'}
+          {t('viewProfile')}
         </Button>
         <MessageUserButton
           userId={applicant.id}

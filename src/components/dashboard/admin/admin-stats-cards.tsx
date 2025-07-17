@@ -10,6 +10,7 @@ import {
   User
 } from 'lucide-react'
 import { type AdminStats } from '@/hooks/use-admin'
+import { useTranslations } from 'next-intl'
 
 interface AdminStatsCardsProps {
   stats: AdminStats | null
@@ -17,6 +18,8 @@ interface AdminStatsCardsProps {
 }
 
 export function AdminStatsCards({ stats, isLoading = false }: AdminStatsCardsProps) {
+  const t = useTranslations('dashboard.admin.stats')
+  
   // Handle loading state or missing data
   if (isLoading || !stats) {
     return (
@@ -62,62 +65,62 @@ export function AdminStatsCards({ stats, isLoading = false }: AdminStatsCardsPro
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 mb-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('totalUsers')}</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{userStats.total}</div>
-          <p className="text-xs text-muted-foreground">Registered users</p>
+          <p className="text-xs text-muted-foreground">{t('registeredUsers')}</p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Clients</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('clients')}</CardTitle>
           <Building className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{userStats.clients}</div>
-          <p className="text-xs text-muted-foreground">Hiring clients</p>
+          <p className="text-xs text-muted-foreground">{t('hiringClients')}</p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Taskers</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('taskers')}</CardTitle>
           <User className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{userStats.taskers}</div>
-          <p className="text-xs text-muted-foreground">Service providers</p>
+          <p className="text-xs text-muted-foreground">{t('serviceProviders')}</p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Companies</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('companies')}</CardTitle>
           <Building2 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{userStats.companies}</div>
-          <p className="text-xs text-muted-foreground">Company accounts</p>
+          <p className="text-xs text-muted-foreground">{t('companyAccounts')}</p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('totalJobs')}</CardTitle>
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{jobStats.total}</div>
-          <p className="text-xs text-muted-foreground">Job postings</p>
+          <p className="text-xs text-muted-foreground">{t('jobPostings')}</p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Growth</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('growth')}</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -126,7 +129,7 @@ export function AdminStatsCards({ stats, isLoading = false }: AdminStatsCardsPro
               ? `${growthStats.percentage > 0 ? '+' : ''}${growthStats.percentage}%` 
               : '0%'}
           </div>
-          <p className="text-xs text-muted-foreground">This month</p>
+          <p className="text-xs text-muted-foreground">{t('monthOverMonth')}</p>
         </CardContent>
       </Card>
     </div>

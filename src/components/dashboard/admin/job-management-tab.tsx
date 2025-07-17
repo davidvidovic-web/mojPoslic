@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +29,8 @@ interface JobManagementTabProps {
 }
 
 export function JobManagementTab({ jobs }: JobManagementTabProps) {
+  const t = useTranslations('admin.jobs')
+  const locale = useLocale()
   const [jobSearchTerm, setJobSearchTerm] = useState('')
   const [jobPage, setJobPage] = useState(1)
   const itemsPerPage = 10
@@ -38,7 +41,7 @@ export function JobManagementTab({ jobs }: JobManagementTabProps) {
   const updateFeaturedMutation = useUpdateJobFeatured()
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm('Are you sure you want to delete this job?')) return
+    if (!confirm(t('confirmDelete'))) return
     deleteJobMutation.mutate(jobId)
   }
 
@@ -123,7 +126,7 @@ export function JobManagementTab({ jobs }: JobManagementTabProps) {
                     <p><span className="font-medium">Location:</span> {job.city.name}</p>
                   )}
                   {job.category && (
-                    <p><span className="font-medium">Category:</span> {job.category.name}</p>
+                    <p><span className="font-medium">Category:</span> {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}</p>
                   )}
                   {job.salary && (
                     <p><span className="font-medium">Salary:</span> {job.salary}</p>
@@ -187,7 +190,7 @@ export function JobManagementTab({ jobs }: JobManagementTabProps) {
           {filteredJobs.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No jobs found matching your search.</p>
+              <p>{t('noJobsFound')}</p>
             </div>
           )}
 

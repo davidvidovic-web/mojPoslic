@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { PurchaseConnections } from '@/components/common/purchase-connections'
+import { useTranslations } from 'next-intl'
 
 interface PurchaseConnectionsSectionProps {
   userRole?: string
@@ -11,16 +12,17 @@ interface PurchaseConnectionsSectionProps {
 
 export function PurchaseConnectionsSection({ userRole = 'tasker' }: PurchaseConnectionsSectionProps) {
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false)
+  const t = useTranslations('dashboard.connections')
 
   const getDescription = () => {
     switch (userRole) {
       case 'client':
-        return 'Need more connections? Purchase additional connects to post multiple jobs daily.'
+        return t('purchaseAdditionalClient')
       case 'company':
-        return 'Need more connections? Purchase additional connects to continue posting jobs.'
+        return t('purchaseAdditionalCompany')
       case 'tasker':
       default:
-        return 'Need more connections? Purchase additional connects to continue applying for professional jobs.'
+        return t('purchaseAdditionalTasker')
     }
   }
 
@@ -32,12 +34,12 @@ export function PurchaseConnectionsSection({ userRole = 'tasker' }: PurchaseConn
             variant="default"
             className="w-full"
           >
-            Purchase Connects
+            {t('purchaseConnects')}
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Purchase Connections</DialogTitle>
+            <DialogTitle>{t('purchaseConnections')}</DialogTitle>
           </DialogHeader>
           <PurchaseConnections onClose={() => setPurchaseDialogOpen(false)} />
         </DialogContent>

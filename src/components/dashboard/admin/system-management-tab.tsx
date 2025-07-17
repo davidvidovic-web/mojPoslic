@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/ui/pagination'
 import { Shield, Users } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import ConnectionGrantHistory from './connection-grant-history'
 
 interface AdminCategory {
@@ -50,6 +51,7 @@ interface SystemManagementTabProps {
 }
 
 export function SystemManagementTab({ categories, cities }: SystemManagementTabProps) {
+  const t = useTranslations('admin.system')
   const [systemActiveTab, setSystemActiveTab] = useState('categories')
   const [connectionUsers, setConnectionUsers] = useState<ConnectionUser[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -338,7 +340,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                       onClick={fetchUsersForConnections}
                       disabled={loadingConnections}
                     >
-                      {loadingConnections ? 'Loading...' : 'Refresh'}
+                      {loadingConnections ? t('loading') : t('refresh')}
                     </Button>
                   </div>
                   
@@ -369,7 +371,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                       ))}
                       {connectionUsers.length === 0 && (
                         <div className="text-center py-8">
-                          <div className="text-muted-foreground">No users found.</div>
+                          <div className="text-muted-foreground">{t('noUsersFound')}</div>
                         </div>
                       )}
                     </div>

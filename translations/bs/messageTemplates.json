@@ -1,0 +1,52 @@
+{
+  "title": "Predlošci poruka",
+  "description": "Kreirajte i upravljajte email predlošcima za komunikaciju s kandidatima",
+  "createTemplate": "Kreiraj predložak",
+  "categories": {
+    "application_received": "Prijava primljena",
+    "application_reviewed": "Prijava pregledana",
+    "shortlisted": "Uži izbor",
+    "selected": "Odabran",
+    "rejected": "Odbijen",
+    "interview_invite": "Poziv na intervju",
+    "follow_up": "Nastavak",
+    "custom": "Prilagođeno"
+  },
+  "success": {
+    "created": "Predložak uspješno kreiran",
+    "updated": "Predložak uspješno ažuriran",
+    "deleted": "Predložak uspješno obrisan",
+    "copied": "Predložak kopiran u clipboard"
+  },
+  "errors": {
+    "cannotDeleteDefault": "Nije moguće obrisati zadane predloške"
+  },
+  "form": {
+    "name": "Naziv predloška",
+    "subject": "Email naslov",
+    "content": "Email sadržaj",
+    "category": "Kategorija",
+    "variables": "Dostupne varijable",
+    "preview": "Pregled"
+  },
+  "actions": {
+    "edit": "Uredi",
+    "delete": "Obriši",
+    "copy": "Kopiraj",
+    "send": "Pošalji",
+    "preview": "Pregled"
+  },
+  "variables": {
+    "applicantName": "Ime kandidata",
+    "jobTitle": "Naziv posla",
+    "companyName": "Naziv kompanije",
+    "reviewTimeframe": "Rok za pregled",
+    "highlightedSkills": "Istaknute vještine",
+    "contactTimeframe": "Rok za kontakt",
+    "recruiterName": "Ime regrutera",
+    "startDate": "Datum početka",
+    "salaryOffer": "Ponuda plate",
+    "jobLocation": "Lokacija posla",
+    "responseDeadline": "Rok za odgovor"
+  }
+} 

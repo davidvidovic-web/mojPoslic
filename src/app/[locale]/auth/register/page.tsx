@@ -52,14 +52,8 @@ export default function RegisterPage() {
         throw new Error(data.error || t('registrationFailed'))
       }
 
-      // Show success message with verification code in development
-      if (process.env.NODE_ENV === 'development' && data.verificationCode) {
-        showToast.success(t('accountCreatedWithCode', { code: data.verificationCode }))
-        // Also show an alert for easier copying
-        alert(t('accountCreatedWithCode', { code: data.verificationCode }))
-      } else {
-        showToast.success(t('accountCreated'))
-      }
+      // Show success message - email should be sent automatically
+      showToast.success(t('accountCreated'))
       
       // Redirect to verification page
       if (data.redirectTo) {

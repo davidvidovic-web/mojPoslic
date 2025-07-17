@@ -1,0 +1,175 @@
+{
+  "title": "Jobs",
+  "searchPlaceholder": "Search jobs...",
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear All",
+    "apply": "Apply Filters",
+    "categories": "Categories",
+    "cities": "Cities",
+    "jobTypes": "Job Types",
+    "salary": "Salary Range",
+    "experience": "Experience Level",
+    "searchPlaceholder": "Search jobs, companies, skills, or categories...",
+    "filters": "Filters",
+    "active": "Active",
+    "allLocations": "All locations",
+    "allCategories": "All categories",
+    "jobType": "Job Type",
+    "allTypes": "All Types",
+    "quickJob": "Quick Job",
+    "fullTime": "Full Time",
+    "partTime": "Part Time",
+    "remote": "Remote"
+  },
+  "types": {
+    "quickJob": "Quick Job",
+    "fullTime": "Full Time",
+    "partTime": "Part Time",
+    "remote": "Remote"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "completed": "Completed",
+    "expired": "Expired"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "apply": "Apply",
+    "save": "Save Job",
+    "feature": "Feature",
+    "unfeature": "Unfeature",
+    "backToJobs": "Back to Jobs"
+  },
+  "emptyStates": {
+    "noJobs": "No jobs found",
+    "noJobsDescription": "Try adjusting your filters or search terms",
+    "noSavedJobs": "No saved jobs",
+    "noSavedJobsDescription": "Save jobs you're interested in to see them here"
+  },
+  "list": {
+    "noJobs": "No jobs found",
+    "noJobsMessage": "There are currently no job postings available. Check back later for new opportunities.",
+    "noJobsWithFiltersMessage": "No jobs match your current filters. Try adjusting your search criteria.",
+    "clearAllFilters": "Clear all filters"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{count} days ago",
+    "weeksAgo": "{count} weeks ago",
+    "monthsAgo": "{count} months ago"
+  },
+  "card": {
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "posted": "Posted",
+    "expires": "Expires",
+    "salary": "Salary",
+    "location": "Location",
+    "type": "Type",
+    "experience": "Experience",
+    "featured": "Featured",
+    "applied": "Applied",
+    "viewJob": "View Job",
+    "viewDetails": "View Details",
+    "viewApplication": "View Application"
+  },
+  "form": {
+    "sections": {
+      "basicInformation": "Basic Information",
+      "jobDetails": "Job Details",
+      "requirements": "Requirements",
+      "compensation": "Compensation",
+      "contactInformation": "Contact Information"
+    },
+    "labels": {
+      "jobTitle": "Job Title",
+      "jobType": "Job Type",
+      "category": "Category",
+      "description": "Description",
+      "requirements": "Requirements",
+      "salaryType": "Salary Type",
+      "salaryMin": "Minimum Salary",
+      "salaryMax": "Maximum Salary",
+      "location": "Location",
+      "contactName": "Contact Name",
+      "contactEmail": "Contact Email",
+      "contactPhone": "Contact Phone"
+    },
+    "placeholders": {
+      "jobTitleExample": "e.g., Web Developer, Graphic Designer",
+      "selectJobType": "Select job type",
+      "selectCategory": "Select category",
+      "selectLocation": "Select location",
+      "enterSalary": "Enter salary amount"
+    },
+    "quickJob": "Quick Job",
+    "fullTime": "Full Time",
+    "partTime": "Part Time",
+    "remote": "Remote",
+    "hourly": "/hour",
+    "daily": "/day",
+    "weekly": "/week",
+    "monthly": "/month",
+    "from": "From"
+  },
+  "messages": {
+    "loadingJobDetails": "Loading job details...",
+    "jobNotFound": "Job not found",
+    "errorLoadingJob": "Error loading job details"
+  },
+  "errors": {
+    "jobNotFound": "Job not found",
+    "loadFailed": "Failed to load job details",
+    "cannotApplyToOwnJob": "You cannot apply to your own job",
+    "alreadyApplied": "You have already applied to this job"
+  },
+  "details": {
+    "jobDetails": "Job Details",
+    "jobType": "Job Type",
+    "category": "Category",
+    "posted": "Posted",
+    "startDate": "Start Date",
+    "expires": "Expires",
+    "payment": "Payment",
+    "salary": "Salary",
+    "transportation": "Transportation",
+    "address": "Address"
+  },
+  "content": {
+    "jobDescription": "Job Description",
+    "requirements": "Requirements",
+    "benefits": "Benefits",
+    "skillsAndTechnologies": "Skills & Technologies"
+  },
+  "timeline": {
+    "scheduleAndTimeline": "Schedule & Timeline",
+    "startDate": "Start Date",
+    "expectedDuration": "Expected Duration",
+    "applicationDeadline": "Application Deadline",
+    "at": "at"
+  },
+  "location": {
+    "jobLocation": "Job Location",
+    "exactAddressMessage": "📍 Exact address and map will be revealed to the selected tasker for client safety."
+  },
+  "statusManager": {
+    "updateJobStatus": "Update Job Status",
+    "changeStatusOf": "Change status of: {title}",
+    "statusDescriptions": {
+      "active": "Job is visible to candidates and accepting applications",
+      "inactive": "Job is hidden from candidates and not accepting applications",
+      "completed": "Job is completed and no longer accepting applications",
+      "expired": "Job has expired and no longer accepting applications"
+    }
+  },
+  "jobUpdatedSuccessfully": "Job updated successfully",
+  "hourly": "/hour",
+  "daily": "/day",
+  "weekly": "/week",
+  "monthly": "/month"
+}

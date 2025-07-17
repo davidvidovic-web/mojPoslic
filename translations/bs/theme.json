@@ -1,0 +1,11 @@
+{
+  "title": "Tema",
+  "light": "Svijetla",
+  "dark": "Tamna",
+  "system": "Sistemska",
+  "auto": "Automatski",
+  "toggle": "Prebacivanje teme",
+  "preferences": "Preferencije teme",
+  "customize": "Prilagodi temu",
+  "reset": "Resetuj temu"
+} 

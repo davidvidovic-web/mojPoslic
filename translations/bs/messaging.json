@@ -1,0 +1,109 @@
+{
+  "title": "Poruke",
+  "subtitle": "Ostanite povezani sa svojim klijentima",
+  "startConversation": "Započni razgovor",
+  "noConversations": "Nema razgovora",
+  "noConversationsDesc": "Započnite razgovor s klijentom ili radnikom",
+  "newConversation": "Novi razgovor",
+  "searchConversations": "Pretraži razgovore",
+  "allConversations": "Svi razgovori",
+  "unreadMessages": "Nepročitane poruke",
+  "recentMessages": "Nedavne poruke",
+  "archivedConversations": "Arhivirani razgovori",
+  "startNew": "Započni novi razgovor",
+  "messages": {
+    "title": "Poruke",
+    "noMessages": "Nema poruka",
+    "sendMessage": "Pošalji poruku",
+    "messagePlaceholder": "Napišite svoju poruku...",
+    "groupChat": "Grupni razgovor",
+    "directMessage": "Direktna poruka",
+    "unknown": "Nepoznato",
+    "direct": "Direktna poruka",
+    "group": "Grupni razgovor"
+  },
+  "conversationTypes": {
+    "jobChat": "Razgovor o poslu",
+    "groupChat": "Grupni razgovor",
+    "directMessage": "Direktna poruka",
+    "unknown": "Nepoznato"
+  },
+  "attachments": {
+    "title": "Prilozi",
+    "image": "Slika",
+    "document": "Dokument",
+    "video": "Video",
+    "audio": "Audio",
+    "attachFile": "Priloži fajl",
+    "removeAttachment": "Ukloni prilog",
+    "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 10MB.",
+    "invalidFileType": "Neispravan tip fajla. Molimo odaberite ispravan fajl.",
+    "dropFilesHere": "Pustite fajlove ovde"
+  },
+  "actions": {
+    "send": "Pošalji",
+    "reply": "Odgovori",
+    "forward": "Proslijedi",
+    "delete": "Obriši",
+    "archive": "Arhiviraj",
+    "markAsRead": "Označi kao pročitano",
+    "markAsUnread": "Označi kao nepročitano"
+  },
+  "status": {
+    "sending": "Slanje...",
+    "sent": "Poslano",
+    "delivered": "Dostavljeno",
+    "read": "Pročitano",
+    "failed": "Neuspješno"
+  },
+  "notifications": {
+    "newMessage": "Nova poruka",
+    "messageInJob": "Nova poruka u poslu: {jobTitle}",
+    "conversationStarted": "Započet novi razgovor",
+    "messageReceived": "Primili ste novu poruku"
+  },
+  "templates": {
+    "title": "Predlošci",
+    "application_received": "Prijava primljena",
+    "application_reviewed": "Prijava pregledana",
+    "shortlisted": "Uži izbor",
+    "selected": "Odabran",
+    "rejected": "Odbijen",
+    "interview_invite": "Poziv na intervju",
+    "follow_up": "Nastavak",
+    "custom": "Prilagođeno",
+    "quickReplies": "Brzi odgovori",
+    "hello": "Zdravo!",
+    "thanks": "Hvala!",
+    "goodbye": "Doviđenja!"
+  },
+  "pageMessages": {
+    "title": "Poruke i razgovori",
+    "stayConnected": "Ostanite povezani",
+    "realTimeMessaging": "Poruke u realnom vremenu",
+    "messagesAndConversations": "Poruke i razgovori",
+    "noMessages": "Još nema poruka",
+    "startConversation": "Započnite razgovor da počnete slanje poruka",
+    "loadingMessages": "Učitavanje poruka...",
+    "failedToLoad": "Neuspješno učitavanje poruka"
+  },
+  "setup": {
+    "title": "Postavke poruka",
+    "description": "Konfigurišite svoje postavke za poruke"
+  },
+  "placeholder": "Napišite svoju poruku...",
+  "send": "Pošalji",
+  "emoji": "Dodaj emoji",
+  "typing": "kuca...",
+  "online": "Online",
+  "offline": "Offline",
+  "lastSeen": "Posljednji put viđen",
+  "unread": "nepročitano",
+  "archive": "Arhiviraj",
+  "delete": "Obriši",
+  "leave": "Napusti",
+  "minimize": "Minimizuj",
+  "maximize": "Maksimizuj",
+  "close": "Zatvori",
+  "selectConversation": "Odaberite razgovor"
+} 

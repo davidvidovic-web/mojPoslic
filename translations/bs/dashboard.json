@@ -1,0 +1,387 @@
+{
+  "welcome": "Dobrodošli na vašu kontrolnu tablu",
+  "welcomeDefault": "Dobrodošli",
+  "quickActions": {
+    "title": "Brze akcije"
+  },
+  "actions": {
+    "postJob": "Objavi posao"
+  },
+  "stats": {
+    "totalJobs": "Ukupno poslova",
+    "activeJobs": "Aktivnih poslova",
+    "totalApplications": "Ukupno prijava",
+    "pendingApplications": "Prijava na čekanju",
+    "completedJobs": "Završenih poslova",
+    "earnings": "Ukupna zarada",
+    "applications": "Prijave",
+    "totalEarnings": "Ukupna zarada",
+    "connections": "Konekcije",
+    "messages": "Poruke",
+    "newMessages": "Nove poruke",
+    "currentlyHiring": "Trenutno zapošljavamo",
+    "acrossAllJobs": "na svim poslovima",
+    "fromApplicants": "od prijavljenih",
+    "jobsPosted": "Objavljenih poslova",
+    "thisMonth": "Ovaj mjesec",
+    "totalViews": "Ukupno pregleda",
+    "featuredJobs": "Istaknuti poslovi",
+    "averageViews": "Prosječno pregleda",
+    "responseRate": "Stopa odgovora",
+    "topPerformingJob": "Najbolji posao",
+    "viewCount": "pregleda",
+    "applicationCount": "prijava",
+    "hireTime": "dana do zapošljavanja",
+    "quickStats": "Brza statistika",
+    "unreadMessages": "Nepročitanih poruka",
+    "averageHireTime": "Prosječno vrijeme zapošljavanja",
+    "days": "dana",
+    "allTimePosts": "Ukupno objava",
+    "perJobPosting": "po oglasu za posao"
+  },
+  "sections": {
+    "recentJobs": "Nedavni poslovi",
+    "applications": "Prijave",
+    "connections": "Konekcije",
+    "messages": "Poruke",
+    "finances": "Finansije",
+    "integrations": "Integracije"
+  },
+  "navigation": {
+    "viewSection": "Pogledaj sekciju",
+    "selectSection": "Odaberi sekciju",
+    "jobsAndApplications": "Poslovi i prijave",
+    "overview": "Pregled",
+    "jobs": "Poslovi",
+    "messages": "Poruke",
+    "connections": "Konekcije"
+  },
+  "tabs": {
+    "overview": "Pregled",
+    "jobs": "Poslovi",
+    "applications": "Prijave",
+    "connections": "Konekcije",
+    "messages": "Poruke",
+    "finances": "Finansije",
+    "integrations": "Integracije",
+    "statistics": "Statistika"
+  },
+  "taglines": {
+    "client": "Objavite poslove i pronađite savršene kandidate",
+    "tasker": "Pronađite svoju sljedeću priliku",
+    "company": "Efikasno upravljajte svojom radnom snagom",
+    "admin": "Sistemska administracija i praćenje"
+  },
+  "features": {
+    "quickPostHire": "Brzo objavi, brzo zaposli",
+    "findOpportunities": "Pronađite prilike koje odgovaraju vašim vještinama",
+    "manageWorkforce": "Efikasno upravljajte svojom radnom snagom",
+    "systemAdmin": "Sistemska administracija i praćenje"
+  },
+  "loading": {
+    "dashboard": "Učitavanje kontrolne table...",
+    "admin": "Učitavanje admin kontrolne table...",
+    "client": "Učitavanje klijentske kontrolne table...",
+    "tasker": "Učitavanje kontrolne table izvršioca...",
+    "company": "Učitavanje kontrolne table kompanije...",
+    "jobs": "Učitavanje poslova..."
+  },
+  "header": {
+    "subtitle": {
+      "company": "Pronađite vrhunske talente za vaše projekte",
+      "admin": "Upravljanje sistemom i nadzor",
+      "tasker": "Spremni da prihvatite nove izazove",
+      "client": "Pronađite vrhunske talente za vaše projekte"
+    },
+    "actionText": {
+      "company": "Objavi poslove i upravljaj",
+      "admin": "Nadzor i upravljanje", 
+      "tasker": "Brzo aplikovanje i praćenje",
+      "client": "Objavi poslove i upravljaj"
+    },
+    "status": {
+      "company": "Kontrolna tabla za zapošljavanje aktivna",
+      "admin": "Admin panel aktivan",
+      "tasker": "Traženje posla aktivno",
+      "client": "Kontrolna tabla za zapošljavanje aktivna"
+    }
+  },
+  "jobCard": {
+    "featured": "Istaknuto",
+    "applications": "prijava",
+    "application": "prijava",
+    "edit": "Uredi",
+    "delete": "Obriši",
+    "view": "Pogledaj",
+    "status": "Status",
+    "type": "Tip",
+    "posted": "Objavljeno",
+    "expires": "Ističe"
+  },
+  "company": {
+    "quickActions": {
+      "title": "Brze akcije",
+      "postNewJob": "Objavi novi posao",
+      "postNewJobDesc": "Kreiraj oglas za posao",
+      "manageTeam": "Upravljaj timom",
+      "manageTeamDesc": "Dodaj članove tima",
+      "companySettings": "Postavke kompanije",
+      "companySettingsDesc": "Upravljaj postavkama",
+      "promoteJobs": "Promoviraj poslove",
+      "promoteJobsDesc": "Povećaj vidljivost",
+      "enterpriseHub": "Enterprise Hub",
+      "enterpriseHubDesc": "Napredni alati",
+      "enterpriseTip": "Enterprise Savjet",
+      "enterpriseTipText": "Istaknuti oglasi za posao dobijaju 3x više kvalifikovanih prijava i brže rezultate zapošljavanja."
+    },
+    "messages": {
+      "title": "Poruke",
+      "unreadMessages": "Nepročitane poruke",
+      "fromCandidatesAndTeam": "Od kandidata i tima",
+      "activeConversations": "Aktivni razgovori",
+      "ongoingDiscussions": "Tekuće diskusije",
+      "recentMessages": "Nedavne poruke",
+      "noMessages": "Još nema poruka",
+      "composeMessage": "Napiši poruku"
+    },
+    "applications": {
+      "title": "Prijave",
+      "comingSoon": "Dolazi uskoro"
+    },
+    "analytics": {
+      "title": "Analitika",
+      "comingSoon": "Dolazi uskoro"
+    }
+  },
+  "finances": {
+    "totalSpent": "Ukupno potrošeno",
+    "totalProjectPayments": "Ukupno plaćanja za projekte",
+    "currentMonthSpending": "Potrošnja ovog mjeseca",
+    "pendingPayments": "Plaćanja na čekanju",
+    "awaitingCompletion": "Čeka završetak"
+  },
+  "tasker": {
+    "quickActions": {
+      "findJobs": "Pronađi poslove",
+      "findJobsDesc": "Pretraži dostupne poslove",
+      "updateProfile": "Ažuriraj profil",
+      "updateProfileDesc": "Uredi svoj profil",
+      "manageSkills": "Upravljaj vještinama",
+      "manageSkillsDesc": "Dodaj i uredi vještine",
+      "learningCenter": "Centar za učenje",
+      "learningCenterDesc": "Resursi za razvoj vještina",
+      "proTip": "Profesionalni savjet",
+      "proTipMessage": "Kompletraj svoj profil i dodaj vještine da dobivaš bolje preporuke za poslove!"
+    },
+    "quickStats": {
+      "title": "Brza statistika",
+      "activeJobs": "Aktivnih poslova",
+      "totalApplications": "Ukupno prijava",
+      "unreadMessages": "Nepročitanih poruka",
+      "averageHireTime": "Prosječno vrijeme zapošljavanja",
+      "days": "dana",
+      "totalJobPosts": "Ukupno objava poslova",
+      "allTimePosts": "Sve objave",
+      "averageViews": "Prosječno pregleda",
+      "perJobPosting": "Po oglasu za posao",
+      "thisMonth": "Ovaj mjesec",
+      "jobsPosted": "Objavljenih poslova",
+      "responseRate": "Stopa odgovora",
+      "averageResponse": "Prosječan odgovor",
+      "topPerformingJob": "Najbolji posao",
+      "views": "pregleda",
+      "applications": "prijava",
+      "posted": "Objavljeno",
+      "noJobsPostedYet": "Još nema objavljenih poslova"
+    },
+    "stats": {
+      "pendingReview": "{count} čeka pregled",
+      "shortlisted": "Na kratkoj listi",
+      "waitingForInterview": "Čeka intervju",
+      "activeApplications": "Aktivne prijave",
+      "accepted": "{count} prihvaćeno",
+      "thisMonth": "Ovaj mjesec",
+      "allTime": "Ukupno"
+    },
+    "messages": {
+      "title": "Poruke",
+      "unreadMessages": "Nepročitane poruke",
+      "fromEmployers": "Od poslodavaca",
+      "activeConversations": "Aktivni razgovori",
+      "ongoingDiscussions": "Tekuće diskusije",
+      "recentMessages": "Nedavne poruke",
+      "noMessages": "Još nema poruka",
+      "composeMessage": "Napiši poruku",
+      "newMessagesFromClients": "Nove poruke od klijenata",
+      "ongoingConversations": "Tekući razgovori",
+      "noMessagesYet": "Još nema poruka",
+      "messagesFromClientsWillAppear": "Poruke od klijenata će se pojaviti ovdje",
+      "startConversation": "Počni razgovor"
+    },
+    "applications": {
+      "title": "Moje prijave za posao",
+      "tabs": {
+        "applied": "Prijavljeni poslovi",
+        "active": "Aktivni poslovi"
+      },
+      "empty": {
+        "applied": "Još nema prijava",
+        "active": "Nema aktivnih poslova"
+      },
+      "emptyDescription": {
+        "applied": "Počnite se prijavljivati na poslove da biste ovdje pratili svoje prijave.",
+        "active": "Kada klijenti prihvate vaše prijave, ti poslovi će se pojaviti ovdje."
+      },
+      "findJobs": "Pronađi poslove",
+      "viewJob": "Pogledaj posao",
+      "message": "Poruka",
+      "congratulations": "Čestitamo!",
+      "successMessage": "Imate {count} aktivnih poslova gdje su klijenti prihvatili vašu prijavu. Pratite ažuriranja i brzo odgovarajte na poruke.",
+      "status": {
+        "pending": "Čeka pregled",
+        "reviewed": "U pregledu",
+        "shortlisted": "Na kratkoj listi",
+        "interviewScheduled": "Intervju zakazan",
+        "selected": "Odabrano",
+        "rejected": "Odbačeno",
+        "withdrawn": "Povučeno",
+        "pendingReview": "Čeka pregled",
+        "underReview": "U pregledu",
+        "active": "Aktivno"
+      },
+      "noActiveApplications": "Nema aktivnih prijava",
+      "startApplying": "Počnite se prijavljivati na poslove da ih vidite ovdje",
+      "applied": "Prijavljeno",
+      "yourApplicationMessage": "Vaša poruka prijave",
+      "clientFeedback": "Povratne informacije klijenta"
+    },
+    "recommendations": {
+      "title": "Preporučeni poslovi",
+      "noRecommendations": "Nema preporučenih poslova",
+      "noRecommendationsDescription": "Nema preporučenih poslova za vas trenutno",
+      "noRecommendationsYet": "Još nema preporuka",
+      "completeProfileForRecommendations": "Kompletajte svoj profil da dobijete personalizirane preporuke za poslove"
+    },
+    "shortlisted": {
+      "title": "Prilike na kratkoj listi",
+      "employersInterested": "{count} poslodavac{count, plural, one {} other {a}} zainteresovan{count, plural, one {} other {o}}"
+    },
+    "savedJobs": {
+      "title": "Sačuvani poslovi",
+      "noSavedJobs": "Nemate sačuvanih poslova",
+      "saveJobsToSeeHere": "Sačuvajte poslove da biste ih ovdje vidjeli"
+    }
+  },
+  "client": {
+    "quickActions": {
+      "postJobDesc": "Objavi novi posao",
+      "browseTaskers": "Pregledaj izvršioce",
+      "browseTaskersDesc": "Pronađi kvalifikovane kandidate",
+      "manageApplications": "Upravljaj prijavama",
+      "manageApplicationsDesc": "Pregledaj i odgovori na prijave",
+      "messageCenter": "Centar poruka",
+      "messageCenterDesc": "Komuniciraj s kandidatima",
+      "viewAnalytics": "Pogledaj analitiku",
+      "accountSettings": "Postavke računa"
+    },
+    "messages": {
+      "title": "Poruke",
+      "unreadMessages": "Nepročitane poruke",
+      "fromCandidates": "Od kandidata",
+      "activeConversations": "Aktivni razgovori",
+      "ongoingDiscussions": "Tekuće diskusije",
+      "recentMessages": "Nedavne poruke",
+      "noMessages": "Još nema poruka",
+      "composeMessage": "Napiši poruku"
+    }
+  },
+  "applications": {
+    "title": "Prijave",
+    "noApplications": "Nema prijava",
+    "noApplicationsDescription": "Još niste podnijeli nijednu prijavu",
+    "tabs": {
+      "all": "Sve",
+      "pending": "Na čekanju",
+      "shortlisted": "U užem izboru",
+      "accepted": "Prihvaćene",
+      "completed": "Završene",
+      "rejected": "Odbijene"
+    }
+  },
+  "connections": {
+    "title": "Konekcije",
+    "subtitle": "Upravljajte svojim konekcijama i pregledajte istoriju transakcija",
+    "overview": "Pregled konekcija",
+    "availableConnections": "Dostupne konekcije",
+    "connectionCosts": "Troškovi konekcija",
+    "monthlyRefresh": "Mjesečno osvježavanje",
+    "purchaseConnects": "Kupi konekcije",
+    "purchaseConnections": "Kupovina konekcija",
+    "fullHistory": "Potpuna istorija konekcija",
+    "recentActivity": "Nedavna aktivnost",
+    "recentActivityPreview": "Nedavna aktivnost (Pregled)",
+    "viewFullHistory": "Pogledaj potpunu istoriju u sekciji 'Istorija konekcija' ispod",
+    "totalEarned": "Ukupno zarađeno",
+    "totalSpent": "Ukupno potrošeno",
+    "netChange": "Neto promjena",
+    "searchTransactions": "Pretraži transakcije...",
+    "all": "Sve",
+    "credits": "Krediti",
+    "debits": "Debiti",
+    "newest": "Najnovije",
+    "oldest": "Najstarije",
+    "export": "Izvezi",
+    "noTransactionsFound": "Nema pronađenih transakcija",
+    "tryAdjustingSearch": "Pokušajte prilagoditi pretragu ili filtere.",
+    "connectionHistoryWillAppear": "Vaša istorija konekcija će se ovdje pojaviti.",
+    "showingTransactions": "Prikazuje se {count} od {total} transakcija",
+    "jobApplication": "Prijava za posao",
+    "jobApplicationProfessional": "Prijava za posao (Profesionalni)",
+    "quickJobPosting": "Brzo objavljivanje posla",
+    "partTimeJobPosting": "Objavljivanje posla sa skraćenim radnim vremenom",
+    "fullTimeJobPosting": "Objavljivanje posla sa punim radnim vremenom",
+    "remoteJobPosting": "Objavljivanje remote posla",
+    "connections": "konekcija",
+    "taskerInfo": "Konekcije se koriste za prijavu na profesionalne poslove samo. Brzi poslovi ne zahtijevaju konekcije.",
+    "clientInfo": "Konekcije se koriste za objavljivanje više od 1 posla dnevno. Brzi poslovi koštaju 3 konekcije.",
+    "companyInfo": "Konekcije se koriste za objavljivanje poslova.",
+    "monthlyRefreshInfo": "Dobijate 10 konekcija automatski 1. svakog mjeseca.",
+    "nextRefresh": "Sljedeće osvježavanje: {date}",
+    "lastRefresh": "Zadnje osvježavanje: {date}",
+    "needMoreConnections": "Trebate više konekcija?",
+    "purchaseAdditionalTasker": "Kupite dodatne konekcije za nastavak prijave na profesionalne poslove.",
+    "purchaseAdditionalClient": "Kupite dodatne konekcije za objavljivanje više poslova dnevno.",
+    "purchaseAdditionalCompany": "Kupite dodatne konekcije za nastavak objavljivanja poslova.",
+    "lowConnectionsWarning": "Malo konekcija!",
+    "lowConnectionsTasker": "Malo konekcija! Trebate konekcije za prijavu na profesionalne poslove.",
+    "lowConnectionsClient": "Malo konekcija! Trebate konekcije za objavljivanje više poslova dnevno. Brzi poslovi zahtijevaju 3 konekcije svaki.",
+    "lowConnectionsCompany": "Malo konekcija! Trebate konekcije za objavljivanje poslova na platformi.",
+    "sharingReward": "Uvijek vam možemo dati konekcije za dijeljenje naše web stranice, pošaljite dokaz dijeljenja korisničkoj podršci i dodaćemo vam konekcije.",
+    "purchase": "Kupovina",
+    "bonus": "Bonus",
+    "refund": "Povrat",
+    "activity": {
+      "title": "Aktivnost konekcija"
+    },
+    "noConnections": "Nema konekcija",
+    "noConnectionsDescription": "Još niste uspostavili nijednu konekciju"
+  },
+  "admin": {
+    "stats": {
+      "title": "Admin statistika",
+      "totalUsers": "Ukupno korisnika",
+      "totalJobs": "Ukupno poslova",
+      "totalApplications": "Ukupno prijava",
+      "totalRevenue": "Ukupna zarada"
+    }
+  },
+  "notifications": {
+    "paymentSuccessful": "Plaćanje uspješno",
+    "paymentCancelled": "Plaćanje otkazano"
+  },
+  "jobs": {
+    "title": "Poslovi",
+    "subtitle": "Upravljajte svojim prijavama, sačuvanim poslovima i pronađite nove prilike",
+    "loading": "Učitavanje poslova..."
+  }
+} 

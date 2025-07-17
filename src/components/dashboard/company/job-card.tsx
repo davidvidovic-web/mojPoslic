@@ -6,6 +6,7 @@ import { Job } from '@/types/job'
 import { MapPin, Calendar, DollarSign, Car, Star } from 'lucide-react'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
+import { useTranslations } from 'next-intl'
 
 interface JobCardProps {
   job: Job
@@ -16,6 +17,8 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: JobCardProps) {
+  const t = useTranslations('dashboard.jobCard')
+  
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
   }
@@ -30,7 +33,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
               {job.is_featured && (
                 <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
                   <Star className="h-3 w-3 fill-current" />
-                  Featured
+                  {t('featured')}
                 </Badge>
               )}
               <Badge variant="secondary">{formatJobType(job.type)}</Badge>
@@ -45,7 +48,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
                   variant={applicationCount > 0 ? "default" : "outline"}
                   className="text-xs"
                 >
-                  {applicationCount} application{applicationCount !== 1 ? 's' : ''}
+                  {applicationCount} {applicationCount !== 1 ? t('applications') : t('application')}
                 </Badge>
               )}
             </div>
@@ -58,7 +61,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center">
                 <MapPin className="h-4 w-4 mr-1" />
-                {job.city?.name || 'Remote'}
+                {job.city?.name || t('remote')}
               </div>
               {job.salary && (
                 <div className="flex items-center">
@@ -68,7 +71,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
               )}
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-1" />
-                Posted {formatDate(job.createdAt)}
+                {t('posted')} {formatDate(job.createdAt)}
               </div>
             </div>
             
@@ -81,7 +84,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
                 ))}
                 {job.tags.length > 3 && (
                   <Badge variant="outline" className="text-xs">
-                    +{job.tags.length - 3} more
+                    +{job.tags.length - 3} {t('more')}
                   </Badge>
                 )}
               </div>

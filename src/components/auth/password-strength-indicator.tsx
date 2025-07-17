@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 import {
   validatePassword,
   getPasswordStrengthColor,
@@ -30,6 +31,7 @@ export function PasswordStrengthIndicator({
   showStrengthBar = true,
   className
 }: PasswordStrengthIndicatorProps) {
+  const t = useTranslations('auth')
   const strength = useMemo(() => {
     if (!password) return null
     return validatePassword(password, userInfo)
@@ -75,7 +77,7 @@ export function PasswordStrengthIndicator({
       {showStrengthBar && (
         <div className="space-y-2">
           <div className="flex justify-between items-center text-sm">
-            <span className="font-medium">Password Strength</span>
+            <span className="font-medium">{t('passwordStrength')}</span>
             <span className={cn('font-medium', getPasswordStrengthColor(strength.level))}>
               {getPasswordStrengthText(strength.level)} ({strength.score}%)
             </span>
@@ -93,7 +95,7 @@ export function PasswordStrengthIndicator({
           
           {!strength.isValid && (
             <p className="text-sm text-red-600 dark:text-red-400">
-              Please meet all required criteria for a secure password
+              {t('meetAllCriteria')}
             </p>
           )}
         </div>
@@ -103,7 +105,7 @@ export function PasswordStrengthIndicator({
       {showRequirements && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-foreground">
-            Password Requirements:
+            {t('passwordRequirements')}
           </h4>
           
           <div className="space-y-1">
@@ -113,7 +115,7 @@ export function PasswordStrengthIndicator({
                 <span className={getRequirementTextColor(requirement)}>
                   {requirement.label}
                   {requirement.severity === 'warning' && (
-                    <span className="ml-1 text-xs text-muted-foreground">(optional)</span>
+                    <span className="ml-1 text-xs text-muted-foreground">{t('optional')}</span>
                   )}
                 </span>
               </div>

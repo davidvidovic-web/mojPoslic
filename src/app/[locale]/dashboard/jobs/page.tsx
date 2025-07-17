@@ -7,6 +7,7 @@ import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-secti
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
 import { AppliedJobsSection } from '@/components/dashboard/tasker/applied-jobs-section'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
+import { useTranslations } from 'next-intl'
 
 interface JobApplication {
   id: string
@@ -18,6 +19,7 @@ interface JobApplication {
 
 export default function JobsPage() {
   const { user } = useAuth()
+  const t = useTranslations('dashboard.jobs')
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])
@@ -60,11 +62,11 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout activeTab="jobs" title="Jobs" subtitle="Loading your opportunities...">
+      <DashboardLayout activeTab="jobs" title={t('title')} subtitle={t('loading')}>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading jobs...</p>
+            <p className="text-muted-foreground">{t('loading')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -74,8 +76,8 @@ export default function JobsPage() {
   return (
     <DashboardLayout 
       activeTab="jobs" 
-      title="Jobs" 
-      subtitle="Manage your applications, saved jobs, and find new opportunities"
+      title={t('title')} 
+      subtitle={t('subtitle')}
       userRole={user?.role}
     >
       <div className="space-y-8 max-w-4xl">

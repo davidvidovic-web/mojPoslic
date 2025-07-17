@@ -1,0 +1,404 @@
+{
+  "welcome": "Welcome to your dashboard",
+  "welcomeDefault": "Welcome",
+  "quickActions": {
+    "title": "Quick Actions"
+  },
+  "actions": {
+    "postJob": "Post Job"
+  },
+  "stats": {
+    "totalJobs": "Total Jobs",
+    "activeJobs": "Active Jobs",
+    "totalApplications": "Total Applications",
+    "pendingApplications": "Pending Applications",
+    "completedJobs": "Completed Jobs",
+    "earnings": "Total Earnings",
+    "applications": "Applications",
+    "totalEarnings": "Total Earnings",
+    "connections": "Connections",
+    "messages": "Messages",
+    "newMessages": "New Messages",
+    "currentlyHiring": "Currently hiring",
+    "acrossAllJobs": "across all jobs",
+    "fromApplicants": "from applicants",
+    "jobsPosted": "Jobs posted",
+    "thisMonth": "This month",
+    "totalViews": "Total Views",
+    "featuredJobs": "Featured Jobs",
+    "averageViews": "Average Views",
+    "responseRate": "Response Rate",
+    "topPerformingJob": "Top Performing Job",
+    "viewCount": "views",
+    "applicationCount": "applications",
+    "hireTime": "days to hire",
+    "quickStats": "Quick Stats",
+    "unreadMessages": "Unread Messages",
+    "averageHireTime": "Average Hire Time",
+    "days": "days",
+    "allTimePosts": "All-time posts",
+    "perJobPosting": "per job posting"
+  },
+  "sections": {
+    "recentJobs": "Recent Jobs",
+    "applications": "Applications",
+    "connections": "Connections",
+    "messages": "Messages",
+    "finances": "Finances",
+    "integrations": "Integrations"
+  },
+  "navigation": {
+    "viewSection": "View section",
+    "selectSection": "Select section",
+    "jobsAndApplications": "Jobs and applications",
+    "overview": "Overview",
+    "jobs": "Jobs",
+    "messages": "Messages",
+    "connections": "Connections"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "jobs": "Jobs",
+    "applications": "Applications",
+    "connections": "Connections",
+    "messages": "Messages",
+    "finances": "Finances",
+    "integrations": "Integrations",
+    "statistics": "Statistics"
+  },
+  "taglines": {
+    "client": "Post jobs and find the perfect candidates",
+    "tasker": "Find your next opportunity",
+    "company": "Manage your workforce efficiently",
+    "admin": "System administration and monitoring"
+  },
+  "roles": {
+    "client": "Client",
+    "tasker": "Tasker", 
+    "admin": "Administrator"
+  },
+  "status": {
+    "client": "Ready to post jobs and hire talent",
+    "tasker": "Ready to find and apply for jobs",
+    "admin": "Monitoring system health and user activity",
+    "default": "Welcome to your dashboard"
+  },
+  "header": {
+    "subtitle": {
+      "company": "Find top talent for your projects",
+      "admin": "System management and oversight",
+      "tasker": "Ready to take on new challenges",
+      "client": "Find top talent for your projects"
+    },
+    "actionText": {
+      "company": "Post Jobs & Manage",
+      "admin": "Monitor & Manage", 
+      "tasker": "Quick Apply & Track",
+      "client": "Post Jobs & Manage"
+    },
+    "status": {
+      "company": "Hiring dashboard active",
+      "admin": "Admin panel active",
+      "tasker": "Job seeking active",
+      "client": "Hiring dashboard active"
+    }
+  },
+  "features": {
+    "quickPostHire": "Quick post, quick hire",
+    "findOpportunities": "Find opportunities that match your skills",
+    "manageWorkforce": "Manage your workforce efficiently",
+    "systemAdmin": "System administration and monitoring",
+    "postJob": "Post Job",
+    "findTaskers": "Find Taskers",
+    "browseJobs": "Browse Jobs",
+    "manageApplications": "Manage Applications",
+    "userManagement": "User Management",
+    "systemMonitoring": "System Monitoring"
+  },
+  "loading": {
+    "dashboard": "Loading dashboard...",
+    "admin": "Loading admin dashboard...",
+    "client": "Loading client dashboard...",
+    "tasker": "Loading tasker dashboard...",
+    "company": "Loading company dashboard...",
+    "jobs": "Loading jobs..."
+  },
+  "jobCard": {
+    "featured": "Featured",
+    "applications": "applications",
+    "application": "application",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "status": "Status",
+    "type": "Type",
+    "posted": "Posted",
+    "expires": "Expires"
+  },
+  "company": {
+    "quickActions": {
+      "title": "Quick Actions",
+      "postNewJob": "Post New Job",
+      "postNewJobDesc": "Create job listing",
+      "manageTeam": "Manage Team",
+      "manageTeamDesc": "Add team members",
+      "companySettings": "Company Settings",
+      "companySettingsDesc": "Manage settings",
+      "promoteJobs": "Promote Jobs",
+      "promoteJobsDesc": "Boost visibility",
+      "enterpriseHub": "Enterprise Hub",
+      "enterpriseHubDesc": "Advanced tools",
+      "enterpriseTip": "Enterprise Tip",
+      "enterpriseTipText": "Featured job postings receive 3x more qualified applications and faster hiring results."
+    },
+    "messages": {
+      "title": "Messages",
+      "unreadMessages": "Unread Messages",
+      "fromCandidatesAndTeam": "From candidates and team",
+      "activeConversations": "Active Conversations",
+      "ongoingDiscussions": "Ongoing discussions",
+      "recentMessages": "Recent Messages",
+      "noMessages": "No messages yet",
+      "composeMessage": "Compose Message"
+    },
+    "applications": {
+      "title": "Applications",
+      "comingSoon": "Coming soon"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "comingSoon": "Coming soon"
+    }
+  },
+  "finances": {
+    "totalSpent": "Total Spent",
+    "totalProjectPayments": "Total project payments",
+    "currentMonthSpending": "Current month spending",
+    "pendingPayments": "Pending Payments",
+    "awaitingCompletion": "Awaiting completion"
+  },
+  "tasker": {
+    "quickActions": {
+      "findJobs": "Find Jobs",
+      "findJobsDesc": "Search available jobs",
+      "updateProfile": "Update Profile",
+      "updateProfileDesc": "Edit your profile",
+      "manageSkills": "Manage Skills",
+      "manageSkillsDesc": "Add and edit skills",
+      "learningCenter": "Learning Center",
+      "learningCenterDesc": "Skill development resources",
+      "proTip": "Pro Tip",
+      "proTipMessage": "Complete your profile and add skills to get better job recommendations!"
+    },
+    "quickStats": {
+      "title": "Quick Stats",
+      "activeJobs": "Active Jobs",
+      "totalApplications": "Total Applications",
+      "unreadMessages": "Unread Messages",
+      "averageHireTime": "Average Hire Time",
+      "days": "days",
+      "totalJobPosts": "Total Job Posts",
+      "allTimePosts": "All time posts",
+      "averageViews": "Average Views",
+      "perJobPosting": "Per job posting",
+      "thisMonth": "This Month",
+      "jobsPosted": "Jobs posted",
+      "responseRate": "Response Rate",
+      "averageResponse": "Average response",
+      "topPerformingJob": "Top Performing Job",
+      "views": "views",
+      "applications": "applications",
+      "posted": "Posted",
+      "noJobsPostedYet": "No jobs posted yet"
+    },
+    "stats": {
+      "pendingReview": "{count} pending review",
+      "shortlisted": "Shortlisted",
+      "waitingForInterview": "Waiting for interview",
+      "activeApplications": "Active Applications",
+      "accepted": "{count} accepted",
+      "thisMonth": "This month",
+      "allTime": "All time"
+    },
+    "messages": {
+      "title": "Messages",
+      "unreadMessages": "Unread Messages",
+      "fromEmployers": "From employers",
+      "activeConversations": "Active Conversations",
+      "ongoingDiscussions": "Ongoing discussions",
+      "recentMessages": "Recent Messages",
+      "noMessages": "No messages yet",
+      "composeMessage": "Compose Message",
+      "newMessagesFromClients": "New messages from clients",
+      "ongoingConversations": "Ongoing conversations",
+      "noMessagesYet": "No messages yet",
+      "messagesFromClientsWillAppear": "Messages from clients will appear here",
+      "startConversation": "Start Conversation"
+    },
+    "applications": {
+      "title": "My Job Applications",
+      "tabs": {
+        "applied": "Applied Jobs",
+        "active": "Active Jobs"
+      },
+      "empty": {
+        "applied": "No applications yet",
+        "active": "No active jobs"
+      },
+      "emptyDescription": {
+        "applied": "Start applying to jobs to track your applications here.",
+        "active": "Once clients accept your applications, those jobs will appear here."
+      },
+      "findJobs": "Find Jobs",
+      "viewJob": "View Job",
+      "message": "Message",
+      "congratulations": "Congratulations!",
+      "successMessage": "You have {count} active job{count, plural, one {} other {s}} where clients have accepted your application. Keep checking for updates and respond promptly to messages.",
+      "status": {
+        "pending": "Pending Review",
+        "reviewed": "Under Review",
+        "shortlisted": "Shortlisted",
+        "interviewScheduled": "Interview Scheduled",
+        "selected": "Selected",
+        "rejected": "Rejected",
+        "withdrawn": "Withdrawn",
+        "pendingReview": "Pending Review",
+        "underReview": "Under Review", 
+        "active": "Active"
+      },
+      "noActiveApplications": "No active applications",
+      "startApplying": "Start applying to jobs to see them here",
+      "applied": "Applied",
+      "yourApplicationMessage": "Your application message",
+      "clientFeedback": "Client feedback"
+    },
+    "recommendations": {
+      "title": "Recommended Jobs",
+      "noRecommendations": "No recommended jobs",
+      "noRecommendationsDescription": "No recommended jobs for you at the moment",
+      "noRecommendationsYet": "No recommendations yet",
+      "completeProfileForRecommendations": "Complete your profile to get personalized job recommendations"
+    },
+    "shortlisted": {
+      "title": "Shortlisted Opportunities",
+      "employersInterested": "{count} employer{count, plural, one {} other {s}} interested"
+    },
+    "savedJobs": {
+      "title": "Saved Jobs",
+      "noSavedJobs": "No saved jobs",
+      "saveJobsToSeeHere": "Save jobs to see them here"
+    }
+  },
+  "client": {
+    "quickActions": {
+      "postJobDesc": "Post new job",
+      "browseTaskers": "Browse Taskers",
+      "browseTaskersDesc": "Find qualified candidates",
+      "manageApplications": "Manage Applications",
+      "manageApplicationsDesc": "Review and respond to applications",
+      "messageCenter": "Message Center",
+      "messageCenterDesc": "Communicate with candidates",
+      "viewAnalytics": "View Analytics",
+      "accountSettings": "Account Settings"
+    },
+    "messages": {
+      "title": "Messages",
+      "unreadMessages": "Unread Messages",
+      "fromCandidates": "From candidates",
+      "activeConversations": "Active Conversations",
+      "ongoingDiscussions": "Ongoing discussions",
+      "recentMessages": "Recent Messages",
+      "noMessages": "No messages yet",
+      "composeMessage": "Compose Message"
+    }
+  },
+  "applications": {
+    "title": "Applications",
+    "noApplications": "No applications",
+    "noApplicationsDescription": "You haven't submitted any applications yet",
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "shortlisted": "Shortlisted",
+      "accepted": "Accepted",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    }
+  },
+  "connections": {
+    "title": "Connections",
+    "subtitle": "Manage your connections and view transaction history",
+    "overview": "Connections Overview",
+    "availableConnections": "Available connections",
+    "connectionCosts": "Connection Costs",
+    "monthlyRefresh": "Monthly Refresh",
+    "purchaseConnects": "Purchase Connects",
+    "purchaseConnections": "Purchase Connections",
+    "fullHistory": "Full Connection History",
+    "recentActivity": "Recent Activity",
+    "recentActivityPreview": "Recent Activity (Preview)",
+    "viewFullHistory": "View full history in the 'Connections History' section below",
+    "totalEarned": "Total Earned",
+    "totalSpent": "Total Spent",
+    "netChange": "Net Change",
+    "searchTransactions": "Search transactions...",
+    "all": "All",
+    "credits": "Credits",
+    "debits": "Debits",
+    "newest": "Newest",
+    "oldest": "Oldest",
+    "export": "Export",
+    "noTransactionsFound": "No transactions found",
+    "tryAdjustingSearch": "Try adjusting your search or filters.",
+    "connectionHistoryWillAppear": "Your connection history will appear here.",
+    "showingTransactions": "Showing {count} of {total} transactions",
+    "jobApplication": "Job Application",
+    "jobApplicationProfessional": "Job Application (Professional)",
+    "quickJobPosting": "Quick Job Posting",
+    "partTimeJobPosting": "Part-time Job Posting",
+    "fullTimeJobPosting": "Full-time Job Posting",
+    "remoteJobPosting": "Remote Job Posting",
+    "connections": "connections",
+    "taskerInfo": "Connections are used to apply for professional jobs only. Quick jobs don't require connections.",
+    "clientInfo": "Connections are used to post more than 1 job daily. Quick jobs cost 3 connections.",
+    "companyInfo": "Connections are used to post jobs.",
+    "monthlyRefreshInfo": "You receive 10 connections automatically on the 1st of each month.",
+    "nextRefresh": "Next refresh: {date}",
+    "lastRefresh": "Last refresh: {date}",
+    "needMoreConnections": "Need more connections?",
+    "purchaseAdditionalTasker": "Purchase additional connects to continue applying for professional jobs.",
+    "purchaseAdditionalClient": "Purchase additional connects to post multiple jobs daily.",
+    "purchaseAdditionalCompany": "Purchase additional connects to continue posting jobs.",
+    "lowConnectionsWarning": "Low connections!",
+    "lowConnectionsTasker": "Low connections! You need connections to apply for professional jobs.",
+    "lowConnectionsClient": "Low connections! You need connections to post multiple jobs daily. Quick jobs require 3 connections each.",
+    "lowConnectionsCompany": "Low connections! You need connections to post jobs on the platform.",
+    "sharingReward": "We can always give you connects for sharing our website, send customer support proof of sharing and we will grant you connects.",
+    "purchase": "Purchase",
+    "bonus": "Bonus",
+    "refund": "Refund",
+    "activity": {
+      "title": "Connection activity"
+    },
+    "noConnections": "No connections",
+    "noConnectionsDescription": "You haven't established any connections yet"
+  },
+  "admin": {
+    "stats": {
+      "title": "Admin Stats",
+      "totalUsers": "Total Users",
+      "totalJobs": "Total Jobs",
+      "totalApplications": "Total Applications",
+      "totalRevenue": "Total Revenue"
+    }
+  },
+  "notifications": {
+    "paymentSuccessful": "Payment successful",
+    "paymentCancelled": "Payment cancelled"
+  },
+  "jobs": {
+    "title": "Jobs",
+    "subtitle": "Manage your applications, saved jobs, and find new opportunities",
+    "loading": "Loading jobs..."
+  }
+}

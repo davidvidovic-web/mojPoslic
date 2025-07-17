@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
+import { useTranslations } from 'next-intl'
 
 interface JobsViewControlsProps {
   filteredJobsCount: number
@@ -19,6 +20,8 @@ export function JobsViewControls({
   hasActiveFilters,
   onClearFilters
 }: JobsViewControlsProps) {
+  const t = useTranslations('common')
+  
   return (
     <div className="flex items-center justify-between">
       <div className="text-sm text-muted-foreground">
@@ -36,7 +39,7 @@ export function JobsViewControls({
             onClick={onClearFilters}
             className="border-border/50"
           >
-            Clear filters
+            {t('actions.clearFilters')}
           </Button>
         )}
       </div>

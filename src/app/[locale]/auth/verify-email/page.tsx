@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { signIn } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ import { CheckCircle, XCircle, Mail } from 'lucide-react'
 import Link from 'next/link'
 
 function VerifyEmailForm() {
+  const t = useTranslations('auth.verifyEmail')
   const [code, setCode] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -68,9 +70,9 @@ function VerifyEmailForm() {
             }
           } else {
             // Fallback: redirect to signin if auto-login fails
-            setMessage('Redirecting to sign in...')
+            setMessage(t('redirectingToSignIn'))
             setTimeout(() => {
-              router.push('/auth/signin?message=Email verified. Please sign in to continue.')
+              router.push('/auth/signin?message=' + encodeURIComponent(t('emailVerifiedSignIn')))
             }, 1000)
           }
         }, 1500)
@@ -121,14 +123,7 @@ function VerifyEmailForm() {
       
       if (response.ok) {
         setStatus('idle')
-        // Show verification code in development
-        if (process.env.NODE_ENV === 'development' && data.verificationCode) {
-          setMessage(`A new verification code has been sent: ${data.verificationCode}`)
-          // Also show an alert for easier copying
-          alert(`Your new verification code is: ${data.verificationCode}`)
-        } else {
-          setMessage('A new verification code has been sent to your email.')
-        }
+        setMessage('A new verification code has been sent to your email.')
       } else {
         setStatus('error')
         setMessage(data.error || 'Failed to resend verification code')
@@ -216,7 +211,7 @@ function VerifyEmailForm() {
                   href="/auth/signin"
                   className="text-sm text-muted-foreground hover:text-foreground hover:underline"
                 >
-                  Back to sign in
+                  {t('backToSignIn')}
                 </Link>
               </div>
             </form>

@@ -1,0 +1,104 @@
+{
+  "title": "Profil",
+  "subtitle": "Upravljajte svojim profilom i postavkama",
+  "setup": {
+    "loading": "Učitavanje...",
+    "titles": {
+      "client": "Završite svoj profil klijenta",
+      "company": "Završite svoj profil kompanije",
+      "tasker": "Završite svoj profil radnika",
+      "admin": "Završite svoj admin profil",
+      "default": "Završite svoj profil"
+    },
+    "sections": {
+      "basicInformation": "Osnovne informacije",
+      "location": "Lokacija",
+      "professionalSkills": "Profesionalne vještine",
+      "experienceLevels": "Nivoi iskustva",
+      "portfolio": "Portfolio",
+      "companyInformation": "Informacije o kompaniji"
+    },
+    "fields": {
+      "fullName": "Puno ime",
+      "companyName": "Naziv kompanije",
+      "username": "Korisničko ime",
+      "phoneNumber": "Broj telefona",
+      "yourCity": "Vaš grad",
+      "yourSkills": "Vaše vještine",
+      "websitePortfolio": "Website ili Portfolio URL",
+      "companyWebsite": "Website kompanije"
+    },
+    "placeholders": {
+      "fullName": "Unesite vaše puno ime",
+      "companyName": "Unesite naziv vaše kompanije",
+      "chooseUsername": "Odaberite korisničko ime",
+      "phoneNumber": "Unesite vaš broj telefona",
+      "selectYourCity": "Odaberite vaš grad",
+      "addSkills": "Dodajte vaše vještine (npr., Vodovodstvo, Web Dizajn, Podučavanje...)",
+      "websitePortfolio": "https://vašastranica.com ili https://vašportfolio.com",
+      "companyWebsite": "https://vašakompanija.com"
+    },
+    "helpText": {
+      "skillsRecommendation": "Možete ovo dodati kasnije u postavkama, ali toplo preporučujemo da završite sada za bolju stopu uspjeha",
+      "skillsDescription": "Odaberite iz postojećih kategorija ili dodajte vlastite prilagođene vještine",
+      "experienceDescription": "Postavite svoj nivo iskustva za svaku vještinu da pomognete klijentima razumjeti vašu stručnost"
+    },
+    "experienceLevels": {
+      "notSpecified": "Nije specificirano",
+      "beginner": "Početnik (< 1 godina)",
+      "oneToTwoYears": "1-2 godine",
+      "threeToFiveYears": "3-5 godina",
+      "fivePlusYears": "5+ godina"
+    },
+    "errors": {
+      "usernameAlreadyExists": "Korisničko ime već postoji. Molimo odaberite drugo.",
+      "profileSetupCompleted": "Podešavanje profila završeno!",
+      "failedToUpdateProfile": "Neuspješno ažuriranje profila. Molimo pokušajte ponovo.",
+      "saving": "Čuva se...",
+      "completeSetup": "Završi podešavanje"
+    }
+  },
+  "settings": {
+    "title": "Postavke",
+    "accountInfo": {
+      "title": "Informacije o računu",
+      "accountType": "Tip računa",
+      "memberSince": "Član od",
+      "email": "Email adresa",
+      "username": "Korisničko ime",
+      "role": "Uloga",
+      "status": "Status"
+    },
+    "profileSettings": {
+      "title": "Postavke profila",
+      "personalInfo": "Lične informacije",
+      "contactInfo": "Kontakt informacije",
+      "professionalInfo": "Profesionalne informacije",
+      "preferences": "Preferencije",
+      "privacy": "Privatnost",
+      "notifications": "Obavještenja"
+    },
+    "appearance": {
+      "title": "Izgled",
+      "theme": "Tema",
+      "language": "Jezik",
+      "timezone": "Vremenska zona",
+      "dateFormat": "Format datuma",
+      "timeFormat": "Format vremena"
+    },
+    "security": {
+      "title": "Sigurnost",
+      "changePassword": "Promijeni lozinku",
+      "twoFactorAuth": "Dvofaktorska autentifikacija",
+      "loginHistory": "Historija prijava",
+      "activeSessions": "Aktivne sesije"
+    },
+    "helpSupport": {
+      "title": "Pomoć i podrška",
+      "documentation": "Dokumentacija",
+      "contactSupport": "Kontaktirajte podršku",
+      "feedback": "Povratne informacije",
+      "about": "O aplikaciji"
+    }
+  }
+} 

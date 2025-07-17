@@ -65,6 +65,7 @@ export async function GET() {
     })
 
     // Transform the data to match the expected format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformedApplications = applications.map((application: any) => ({
       id: application.id,
       job_id: application.jobId,

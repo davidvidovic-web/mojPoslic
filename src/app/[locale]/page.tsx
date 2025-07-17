@@ -199,7 +199,7 @@ export default function Home() {
 
           <div className="text-center text-sm text-default-600">
             <p>
-              {t('footer.copyright')}
+              {t('footer.copyright', { year: new Date().getFullYear() })}
             </p>
           </div>
         </div>

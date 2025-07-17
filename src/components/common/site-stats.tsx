@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Briefcase, Users, CheckCircle, Building2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslations } from 'next-intl';
 
 interface StatsData {
   activeJobs: number;
@@ -12,6 +13,7 @@ interface StatsData {
 }
 
 const SiteStats = () => {
+  const t = useTranslations('homepage.siteStats');
   const [stats, setStats] = useState<StatsData>({
     activeJobs: 0,
     clients: 0,
@@ -98,7 +100,7 @@ const SiteStats = () => {
         <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.activeJobs} suffix="" />
         </div>
-        <div className="text-sm text-muted-foreground font-medium">Active Jobs</div>
+        <div className="text-sm text-muted-foreground font-medium">{t('activeJobs')}</div>
       </div>
 
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
@@ -109,7 +111,7 @@ const SiteStats = () => {
           <AnimatedNumber value={stats.clients} suffix="" />
         </div>
         <div className="text-sm text-muted-foreground font-medium">
-          Registered Clients & Companies
+          {t('registeredClients')}
         </div>
       </div>
 
@@ -120,7 +122,7 @@ const SiteStats = () => {
         <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.totalUsers} suffix="" />
         </div>
-        <div className="text-sm text-muted-foreground font-medium">Registered Users</div>
+        <div className="text-sm text-muted-foreground font-medium">{t('registeredUsers')}</div>
       </div>
 
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
@@ -130,7 +132,7 @@ const SiteStats = () => {
         <div className="text-3xl font-bold flex items-center justify-center">
           <AnimatedNumber value={stats.finishedJobs} suffix="" />
         </div>
-        <div className="text-sm text-muted-foreground font-medium">Finished Jobs</div>
+        <div className="text-sm text-muted-foreground font-medium">{t('finishedJobs')}</div>
       </div>
     </div>
   );

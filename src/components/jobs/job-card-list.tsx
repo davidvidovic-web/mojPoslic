@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback } from "react"
+import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +22,9 @@ interface JobCardListProps {
 export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const tCommon = useTranslations('common')
+  const t = useTranslations('jobApplication')
+  const locale = useLocale()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [applicationCount, setApplicationCount] = useState<number | null>(null)
 
@@ -88,9 +92,9 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
     const now = new Date()
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
     
-    if (diffInDays === 0) return "Today"
-    if (diffInDays === 1) return "Yesterday"
-    if (diffInDays < 7) return `${diffInDays} days ago`
+    if (diffInDays === 0) return tCommon('time.today')
+    if (diffInDays === 1) return tCommon('time.yesterday')
+    if (diffInDays < 7) return tCommon('time.daysAgo', { count: diffInDays })
     return date.toLocaleDateString()
   }
 
@@ -152,13 +156,13 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
             
             {job.category && (
               <Badge variant="secondary" className="text-xs">
-                {job.category.name}
+                {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
               </Badge>
             )}
             
             <Badge variant="outline" className="text-xs">
               <MapPin className="h-3 w-3 mr-1" />
-              {job.city?.name || 'Remote'}
+              {job.city?.name || tCommon('jobTypes.remote')}
             </Badge>
             
             {formatSalary(job) && (
@@ -177,7 +181,7 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
             
             <Badge variant="outline" className="text-xs">
               <Calendar className="h-3 w-3 mr-1" />
-              {formatDate(job.posted_at)}
+              {job.posted_at ? formatDate(job.posted_at) : ''}
             </Badge>
           </div>
           
@@ -211,7 +215,7 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
                 size="sm"
                 className="w-full sm:w-auto"
               >
-                View Details & Apply
+                {t('viewDetailsAndApply')}
                 <ExternalLink className="h-3 w-3 ml-1" />
               </Button>
             )}

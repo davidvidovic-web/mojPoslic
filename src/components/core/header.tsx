@@ -1,25 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
-import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { useAuth } from "@/contexts/auth-context";
 import { useDialogStore } from "@/stores/dialog-store";
-import { ThemeToggleButton } from "@/components/core/theme-toggle-button";
-import { LanguageSwitcher } from "@/components/common/language-switcher";
-import { NotificationCenter } from "@/components/ui/notification-center";
+import { OptimizedNotificationCenter } from "./optimized-notification-center";
+import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
+import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Plus,
   LogIn,
   LogOut,
   User,
@@ -40,7 +31,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-export function Header() {
+export const Header = React.memo(function Header() {
   const { 
     isJobPostDialogOpen, 
     openJobPostDialog, 
@@ -60,63 +51,85 @@ export function Header() {
   const tHeader = useTranslations('header');
   const tNavigation = useTranslations('navigation.main');
 
-  // Scroll detection effect
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 100); // Fixed after scrolling 100px
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  // Throttled scroll handler for better performance
+  const handleScroll = useCallback(() => {
+    const scrollTop = window.scrollY;
+    setIsScrolled(scrollTop > 100);
   }, []);
 
-  // Helper function to check if a menu item is active
-  const isActiveMenuItem = (href: string) => {
+  // Scroll detection effect with throttling
+  useEffect(() => {
+    let ticking = false;
+    
+    const throttledScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    return () => window.removeEventListener('scroll', throttledScroll);
+  }, [handleScroll]);
+
+  // Memoized helper functions
+  const isActiveMenuItem = useCallback((href: string) => {
     if (href === '/dashboard') {
       return pathname === '/dashboard';
     }
     return pathname?.startsWith(href);
-  };
+  }, [pathname]);
 
-  const getMenuItemClass = (href: string) => {
+  const getMenuItemClass = useCallback((href: string) => {
     const baseClass = "cursor-pointer";
     const activeClass = "bg-primary text-primary-foreground";
     return isActiveMenuItem(href) ? `${baseClass} ${activeClass}` : baseClass;
-  };
+  }, [isActiveMenuItem]);
 
-  const getMobileMenuItemClass = (href: string) => {
+  const getMobileMenuItemClass = useCallback((href: string) => {
     const baseClass = "flex items-center py-4 text-lg font-medium transition-colors";
     const activeClass = "bg-primary text-primary-foreground rounded-lg px-2 -mx-2";
     const inactiveClass = "hover:text-primary";
     return isActiveMenuItem(href) ? `${baseClass} ${activeClass}` : `${baseClass} ${inactiveClass}`;
-  };
+  }, [isActiveMenuItem]);
 
-  const handleJobPosted = () => {
+  // Memoized handlers
+  const handleJobPosted = useCallback(() => {
     closeJobPostDialog();
-    // TanStack Query automatically handles cache invalidation after job creation
-    // No manual refresh needed!
-  };
+  }, [closeJobPostDialog]);
 
-  const handlePostJobClick = () => {
-    // Open the dialog - Auth.js will handle authentication
+  const handlePostJobClick = useCallback(() => {
     openJobPostDialog();
-  };
+  }, [openJobPostDialog]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
-  };
+  }, [signOut]);
 
+  // Memoized user checks
+  const canPostJob = useMemo(() => {
+    return user && (user.role === "client" || user.role === "company" || user.role === "admin");
+  }, [user]);
+
+  // Memoized header classes
+  const headerClasses = useMemo(() => `
+    ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : 'relative'} 
+    ${isScrolled ? 'bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg border-b border-border/40' : 'bg-transparent border-b border-transparent'} 
+    transition-all duration-500 ease-in-out
+  `, [isScrolled]);
+
+  const placeholderClasses = useMemo(() => `
+    transition-all duration-500 ease-in-out ${isScrolled ? 'h-[73px]' : 'h-0'}
+  `, [isScrolled]);
   return (
     <>
       {/* Placeholder to maintain layout when header becomes fixed */}
-      <div className={`transition-all duration-500 ease-in-out ${isScrolled ? 'h-[73px]' : 'h-0'}`} />
+      <div className={placeholderClasses} />
       
-      <header className={`
-        ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : 'relative'} 
-        ${isScrolled ? 'bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg border-b border-border/40' : 'bg-transparent border-b border-transparent'} 
-        transition-all duration-500 ease-in-out
-      `}>
+      <header className={headerClasses}>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link
@@ -130,49 +143,30 @@ export function Header() {
             </div>
           </Link>
           <div className="flex items-center space-x-4">
-            {/* Show loading skeleton briefly */}
+            {/* Optimized loading state with skeleton components */}
             {loading ? (
-              <div className="flex items-center space-x-2">
-                <div className="h-9 w-20 bg-muted animate-pulse rounded-md" />
-                <div className="h-9 w-9 bg-muted animate-pulse rounded-full" />
-              </div>
+              user ? <AuthenticatedHeaderSkeleton /> : <HeaderLoadingSkeleton />
             ) : (
               <div className="flex items-center space-x-2">
                 {/* Post Job Button - only visible when signed in and not a tasker */}
-                {user &&
-                  (user.role === "client" ||
-                    user.role === "company" ||
-                    user.role === "admin") && (
-                    <Dialog open={isJobPostDialogOpen} onOpenChange={(open) => {
+                {canPostJob && (
+                  <OptimizedJobPostDialog
+                    isOpen={isJobPostDialogOpen}
+                    onOpenChange={(open) => {
                       if (!open) {
                         closeJobPostDialog();
                       }
-                    }}>
-                      <DialogTrigger asChild>
-                        <Button
-                          className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
-                          onClick={handlePostJobClick}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          {tHeader('postJob')}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
-                        <DialogHeader>
-                          <DialogTitle>{tHeader('postJobDialog')}</DialogTitle>
-                        </DialogHeader>
-                        <MultiStepJobForm
-                          onJobPosted={handleJobPosted}
-                          showCard={false}
-                        />
-                      </DialogContent>
-                    </Dialog>
-                  )}
+                    }}
+                    onJobPosted={handleJobPosted}
+                    triggerText={tHeader('postJob')}
+                    dialogTitle={tHeader('postJobDialog')}
+                    onTriggerClick={handlePostJobClick}
+                  />
+                )}
 
                 {/* Auth.js Authentication Components */}
                 {!user ? (
                   <div className="flex items-center gap-2">
-                    <LanguageSwitcher />
                     <Link href="/auth/signin">
                       <Button
                         variant="outline"
@@ -193,8 +187,8 @@ export function Header() {
                   </div>
                 ) : (
                   <>
-                    {/* Notifications */}
-                    <NotificationCenter />
+                    {/* Optimized Notifications */}
+                    <OptimizedNotificationCenter />
 
                     {/* Desktop Menu */}
                     <div className="hidden md:block">
@@ -258,17 +252,8 @@ export function Header() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <div className="cursor-pointer w-full">
-                              <ThemeToggleButton 
-                                className="py-0 hover:text-inherit"
-                                iconClassName="h-6 w-6"
-                              />
-                            </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <div className="cursor-pointer w-full p-2">
-                              <LanguageSwitcher />
-                            </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={handleSignOut}>
                             <LogOut className="mr-2 h-6 w-6" />
@@ -357,15 +342,9 @@ export function Header() {
                                 </Link>
 
                                 <div className="py-4">
-                                  <ThemeToggleButton 
-                                    className="text-lg font-medium hover:text-primary"
-                                    iconClassName="h-6 w-6"
-                                    onToggle={() => {}}
-                                  />
                                 </div>
 
                                 <div className="py-4">
-                                  <LanguageSwitcher />
                                 </div>
 
                                 <button
@@ -394,4 +373,4 @@ export function Header() {
     </header>
     </>
   );
-}
+});

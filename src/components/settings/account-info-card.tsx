@@ -5,14 +5,16 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { UserCircle, Crown, Building2, User } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { useTranslations } from 'next-intl'
 
 export function AccountInfoCard() {
   const { user: profile, loading } = useAuth()
+  const t = useTranslations('settings.accountInfo')
 
   const formatMemberSince = (date?: string | Date) => {
     if (!date) {
       // If no creation date is available, check if we have session data
-      return 'Recent Member'
+      return t('recentMember')
     }
     
     try {
@@ -20,7 +22,7 @@ export function AccountInfoCard() {
       
       // Check if date is valid
       if (isNaN(dateObj.getTime())) {
-        return 'Recent Member'
+        return t('recentMember')
       }
       
       return dateObj.toLocaleDateString('en-US', {
@@ -28,16 +30,16 @@ export function AccountInfoCard() {
         month: 'long'
       })
     } catch {
-      return 'Recent Member'
+      return t('recentMember')
     }
   }
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin': return 'Administrator'
-      case 'client': return 'Client'
-      case 'tasker': return 'Tasker'
-      case 'company': return 'Company'
+      case 'admin': return t('roles.administrator')
+      case 'client': return t('roles.client')
+      case 'tasker': return t('roles.tasker')
+      case 'company': return t('roles.company')
       default: return role
     }
   }
@@ -68,10 +70,10 @@ export function AccountInfoCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCircle className="h-5 w-5" />
-            Account Information
+            {t('title')}
           </CardTitle>
           <CardDescription>
-            Loading account information...
+            {t('loadingAccount')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,15 +91,15 @@ export function AccountInfoCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCircle className="h-5 w-5" />
-            Account Information
+            {t('title')}
           </CardTitle>
           <CardDescription>
-            No account information available
+            {t('noAccountInfo')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Please log in to view your account information.
+            {t('pleaseLogin')}
           </p>
         </CardContent>
       </Card>
@@ -109,23 +111,23 @@ export function AccountInfoCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserCircle className="h-5 w-5" />
-          Account Information
+          {t('title')}
         </CardTitle>
         <CardDescription>
-          View your account details and membership information
+          {t('description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div>
-            <Label className="text-sm font-medium">Username</Label>
+            <Label className="text-sm font-medium">{t('username')}</Label>
             <p className="text-sm text-muted-foreground">
-              {profile.username ? `@${profile.username}` : 'No username set'}
+              {profile.username ? `@${profile.username}` : t('noUsername')}
             </p>
           </div>
           
           <div>
-            <Label className="text-sm font-medium">Account Type</Label>
+            <Label className="text-sm font-medium">{t('accountType')}</Label>
             <div className="mt-1">
               <Badge variant={getRoleBadgeVariant(profile.role)} className="flex items-center w-fit">
                 {getRoleIcon(profile.role)}
@@ -135,14 +137,14 @@ export function AccountInfoCard() {
           </div>
           
           <div>
-            <Label className="text-sm font-medium">Member Since</Label>
+            <Label className="text-sm font-medium">{t('memberSince')}</Label>
             <p className="text-sm text-muted-foreground">
               {formatMemberSince(profile.createdAt)}
             </p>
           </div>
           
           <div>
-            <Label className="text-sm font-medium">Email Address</Label>
+            <Label className="text-sm font-medium">{t('emailAddress')}</Label>
             <p className="text-sm text-muted-foreground">
               {profile.email}
             </p>

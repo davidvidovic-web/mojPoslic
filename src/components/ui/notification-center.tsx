@@ -9,10 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { formatDistanceToNow } from 'date-fns'
+import { useTranslations } from 'next-intl'
 import { useNotificationStore, type Notification } from '@/stores/notification-store'
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false)
+  const t = useTranslations('notifications')
   const { 
     notifications, 
     unreadCount, 
@@ -68,7 +70,7 @@ export function NotificationCenter() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('title')}</CardTitle>
               <div className="flex items-center space-x-2">
                 {unreadCount > 0 && (
                   <Button 
@@ -78,7 +80,7 @@ export function NotificationCenter() {
                     className="text-xs"
                   >
                     <CheckCheck className="h-3 w-3 mr-1" />
-                    Mark all read
+                    {t('markAllRead')}
                   </Button>
                 )}
                 {notifications.length > 0 && (
@@ -89,14 +91,14 @@ export function NotificationCenter() {
                     className="text-xs text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    Clear all
+                    {t('clearAll')}
                   </Button>
                 )}
               </div>
             </div>
             {unreadCount > 0 && (
               <p className="text-xs text-muted-foreground">
-                {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
+                {unreadCount} {t('unreadNotifications', { count: unreadCount })}
               </p>
             )}
           </CardHeader>
@@ -104,7 +106,7 @@ export function NotificationCenter() {
           <CardContent className="p-0">
             {notifications.length === 0 ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
-                No notifications yet
+                {t('noNotifications')}
               </div>
             ) : (
               <ScrollArea className="h-[300px]">

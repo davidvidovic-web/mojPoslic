@@ -9,6 +9,7 @@ import { getTimeBasedGreetingWithIcon } from '@/lib/utils'
 import { Conversation } from '@/types/messaging'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useTranslations } from 'next-intl'
 import { 
   Sunrise, 
   Sun, 
@@ -33,6 +34,8 @@ const getFullNameDisplay = (name?: string | null): string => {
 }
 
 export default function MessagesPage() {
+  const t = useTranslations('navigation.tabs')
+  const tGeneral = useTranslations()
   const { user } = useAuth()
   const router = useRouter()
 
@@ -152,7 +155,7 @@ export default function MessagesPage() {
                   
                   {/* Page-specific tagline */}
                   <p className={`text-sm ${theme.textColor}`}>
-                    Messages & Conversations
+                    {tGeneral('pageMessages.messagesAndConversations')}
                   </p>
                 </div>
               </div>
@@ -160,11 +163,11 @@ export default function MessagesPage() {
             <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm ${theme.textColor}`}>
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 ${theme.iconColor.replace('text-', 'bg-')} rounded-full`}></div>
-                <span>Stay Connected</span>
+                <span>{tGeneral('pageMessages.stayConnected')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                <span>Real-time Messaging</span>
+                <span>{tGeneral('pageMessages.realTimeMessaging')}</span>
               </div>
             </div>
           </div>
@@ -177,55 +180,55 @@ export default function MessagesPage() {
             <div className="bg-card border rounded-lg p-4">
               <div className="flex items-center gap-4">
                 <label htmlFor="section-select" className="text-sm font-medium text-foreground whitespace-nowrap">
-                  View Section:
+                  {tGeneral('dashboard.navigation.viewSection')}
                 </label>
                 <Select value="messages" onValueChange={navigateToSection}>
                   <SelectTrigger className="flex-1" id="section-select">
-                    <SelectValue placeholder="Select a section" />
+                    <SelectValue placeholder={tGeneral('dashboard.navigation.selectSection')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="overview">
                       <div className="flex items-center gap-2">
                         <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                        Overview
+                        {t('overview')}
                       </div>
                     </SelectItem>
                     <SelectItem value="jobs">
                       <div className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-green-600" />
-                        Jobs
+                        {t('jobs')}
                       </div>
                     </SelectItem>
                     <SelectItem value="messages">
                       <div className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4 text-purple-600" />
-                        Messages
+                        {t('messages')}
                       </div>
                     </SelectItem>
                     <SelectItem value="connections">
                       <div className="flex items-center gap-2">
                         <Zap className="h-4 w-4 text-yellow-600" />
-                        Connections
+                        {t('connections')}
                       </div>
                     </SelectItem>
                     <SelectItem value="finances" disabled>
                       <div className="flex items-center gap-2 opacity-50">
                         <DollarSign className="h-4 w-4 text-emerald-600" />
-                        Finances
+                        {t('finances')}
                         <Lock className="h-3 w-3 ml-1" />
                       </div>
                     </SelectItem>
                     <SelectItem value="analytics" disabled>
                       <div className="flex items-center gap-2 opacity-50">
                         <BarChart3 className="h-4 w-4 text-indigo-600" />
-                        Analytics
+                        {t('analytics')}
                         <Lock className="h-3 w-3 ml-1" />
                       </div>
                     </SelectItem>
                     <SelectItem value="integrations" disabled>
                       <div className="flex items-center gap-2 opacity-50">
                         <Puzzle className="h-4 w-4 text-orange-600" />
-                        Integrations
+                        {t('integrations')}
                         <Lock className="h-3 w-3 ml-1" />
                       </div>
                     </SelectItem>
@@ -241,38 +244,38 @@ export default function MessagesPage() {
               <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span className="hidden lg:inline">Overview</span>
+                  <span className="hidden lg:inline">{t('overview')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="jobs" className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-green-600" />
-                  <span className="hidden lg:inline">Jobs</span>
+                  <span className="hidden lg:inline">{t('jobs')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span className="hidden lg:inline">Messages</span>
+                  <span className="hidden lg:inline">{t('messages')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="connections" className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-yellow-600" />
-                  <span className="hidden lg:inline">Connections</span>
+                  <span className="hidden lg:inline">{t('connections')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="finances" disabled className="opacity-50">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-emerald-600" />
-                    <span className="hidden lg:inline">Finances</span>
+                    <span className="hidden lg:inline">{t('finances')}</span>
                     <Lock className="h-3 w-3" />
                   </div>
                 </TabsTrigger>
                 <TabsTrigger value="analytics" disabled className="opacity-50">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-indigo-600" />
-                    <span className="hidden lg:inline">Analytics</span>
+                    <span className="hidden lg:inline">{t('analytics')}</span>
                     <Lock className="h-3 w-3" />
                   </div>
                 </TabsTrigger>
                 <TabsTrigger value="integrations" disabled className="opacity-50">
                   <div className="flex items-center gap-2">
                     <Puzzle className="h-4 w-4 text-orange-600" />
-                    <span className="hidden lg:inline">Integrations</span>
+                    <span className="hidden lg:inline">{t('integrations')}</span>
                     <Lock className="h-3 w-3" />
                   </div>
                 </TabsTrigger>

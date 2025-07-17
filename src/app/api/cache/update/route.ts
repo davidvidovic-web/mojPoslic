@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { writeFileSync, readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { PrismaClient } from '@prisma/client'
@@ -15,7 +15,7 @@ const CACHE_METADATA_FILE = join(CACHE_DIR, 'metadata.json')
 import { mkdirSync } from 'fs'
 try {
   mkdirSync(CACHE_DIR, { recursive: true })
-} catch (error) {
+} catch {
   // Directory already exists
 }
 
@@ -28,7 +28,7 @@ interface CacheMetadata {
 }
 
 // Simple hash function for detecting changes
-function simpleHash(data: any): string {
+function simpleHash(data: unknown): string {
   return Buffer.from(JSON.stringify(data)).toString('base64').slice(0, 16)
 }
 
@@ -102,8 +102,32 @@ async function shouldUpdateCache(): Promise<boolean> {
   }
 }
 
+interface DatabaseCity {
+  id: string
+  key: string
+  nameBS: string
+  nameEN: string
+  isSpecial: boolean
+  sortOrder: number
+  isActive: boolean
+}
+
+interface DatabaseCategory {
+  id: string
+  key: string
+  nameBS: string
+  nameEN: string
+  description: string | null
+  icon: string | null
+  color: string | null
+  sortOrder: number
+  isActive: boolean
+  parentId: string | null
+  isPopular: boolean
+}
+
 // Transform database data to API format
-function transformCityData(city: any) {
+function transformCityData(city: DatabaseCity) {
   return {
     id: city.id,
     key: city.key,
@@ -118,7 +142,7 @@ function transformCityData(city: any) {
   }
 }
 
-function transformCategoryData(category: any) {
+function transformCategoryData(category: DatabaseCategory) {
   return {
     id: category.id,
     key: category.key,
@@ -135,7 +159,7 @@ function transformCategoryData(category: any) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Check if update is needed
     const needsUpdate = await shouldUpdateCache()
@@ -221,7 +245,7 @@ export async function GET() {
         categories: categoriesExists
       }
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to get cache status' },
       { status: 500 }

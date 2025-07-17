@@ -4,6 +4,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { bs, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import { Conversation } from '@/types/messaging';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   onClick,
   locale = 'bs',
 }) => {
+  const t = useTranslations('messaging')
   const dateLocale = locale === 'bs' ? bs : enUS;
 
   const formatLastMessageTime = (dateString?: string) => {
@@ -60,11 +62,11 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     }
     
     if (conversation.type === 'job_related') {
-      return locale === 'bs' ? 'Posao chat' : 'Job chat';
+      return t('jobChat');
     }
     
     if (conversation.type === 'group') {
-      return locale === 'bs' ? 'Grupni chat' : 'Group chat';
+      return t('groupChat');
     }
     
     // For direct conversations, show the other participant's name
@@ -72,7 +74,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       p => p.user_id !== conversation.participants[0]?.user_id
     );
     
-    return otherParticipant?.user.name || (locale === 'bs' ? 'Nepoznato' : 'Unknown');
+    return otherParticipant?.user.name || t('unknown');
   };
 
   const getConversationAvatar = () => {
@@ -113,7 +115,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
   const getLastMessagePreview = () => {
     if (!conversation.last_message) {
-      return locale === 'bs' ? 'Nema poruka' : 'No messages';
+      return t('noMessages');
     }
     
     const message = conversation.last_message;
@@ -122,7 +124,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       return (
         <span className="flex items-center gap-1">
           <Paperclip className="w-3 h-3" />
-          {locale === 'bs' ? 'Fajl' : 'File'}
+          {t('file')}
         </span>
       );
     }
@@ -131,7 +133,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       return (
         <span className="flex items-center gap-1">
           <ImageIcon className="w-3 h-3" />
-          {locale === 'bs' ? 'Slika' : 'Image'}
+          {t('image')}
         </span>
       );
     }
@@ -216,6 +218,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   locale = 'bs',
   className,
 }) => {
+  const t = useTranslations('messaging')
   if (loading) {
     return (
       <div className={cn("w-full", className)}>
@@ -233,13 +236,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           <Users className="w-8 h-8 text-gray-400" />
         </div>
         <h3 className="font-medium text-gray-900 mb-2">
-          {locale === 'bs' ? 'Nema konverzacija' : 'No conversations'}
+          {t('noConversations')}
         </h3>
         <p className="text-sm text-gray-500">
-          {locale === 'bs' 
-            ? 'Počnite novu konverzaciju ili sačekajte da vam neko pošalje poruku'
-            : 'Start a new conversation or wait for someone to message you'
-          }
+          {t('startConversation')}
         </p>
       </div>
     );

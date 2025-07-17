@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { CreateJobData } from "@/types/job"
 import { useAuth } from "@/hooks/useAuth"
 import { toast } from "sonner"
+import { useTranslations } from 'next-intl'
 import { BasicInformationSection } from "./job-post-form/basic-information-section"
 import { JobDetailsSection } from "./job-post-form/job-details-section"
 import { SalarySection } from "./job-post-form/salary-section"
@@ -17,6 +18,7 @@ interface JobPostFormProps {
 }
 
 export function JobPostForm({ onJobPosted }: JobPostFormProps) {
+  const t = useTranslations('jobs.postForm')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [cities, setCities] = useState<Array<{ id: number; key: string; nameEN: string; nameBS: string }>>([])
   const [categories, setCategories] = useState<Array<{
@@ -137,24 +139,24 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     e.preventDefault()
     
     if (!user) {
-      toast.error('You must be logged in to post a job')
+      toast.error(t('errors.mustBeLoggedIn'))
       return
     }
 
     if (!formData.title || !formData.description || !formData.city_id) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('errors.fillRequiredFields'))
       return
     }
 
     if (!formData.category_id) {
-      toast.error('Please select a category and subcategory')
+      toast.error(t('errors.selectCategorySubcategory'))
       return
     }
 
     // Ensure we have an email (either from form or user)
     const contactEmail = formData.email || user.email
     if (!contactEmail) {
-      toast.error('A contact email is required to post a job')
+      toast.error(t('errors.contactEmailRequired'))
       return
     }
 
@@ -277,7 +279,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Posting Job..." : "Post Job"}
+          {isSubmitting ? t('posting') : t('submit')}
         </Button>
       </form>
     </div>

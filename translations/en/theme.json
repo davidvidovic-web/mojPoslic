@@ -1,0 +1,11 @@
+{
+  "title": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  "auto": "Auto",
+  "toggle": "Toggle theme",
+  "preferences": "Theme preferences",
+  "customize": "Customize theme",
+  "reset": "Reset theme"
+} 

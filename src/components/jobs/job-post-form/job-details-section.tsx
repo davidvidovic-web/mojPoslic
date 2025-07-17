@@ -7,6 +7,7 @@ import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { LocationPicker } from "@/components/ui/location-picker"
 import { CreateJobData } from "@/types/job"
 import { toast } from "sonner"
+import { useTranslations } from 'next-intl'
 
 interface JobDetailsSectionProps {
   formData: CreateJobData
@@ -23,10 +24,12 @@ export function JobDetailsSection({
   onIncludeStartTimeChange,
   getSelectedCityCoordinates
 }: JobDetailsSectionProps) {
+  const t = useTranslations('jobPost');
+
   return (
     <>
       <div className="space-y-2">
-        <Label>Job Location Address (Optional)</Label>
+        <Label>{t('locationAddressLabel')}</Label>
         <LocationPicker
           key={formData.city_id} // Force re-render when city changes
           value={formData.job_address ? {
@@ -39,35 +42,35 @@ export function JobDetailsSection({
             job_latitude: location.latitude,
             job_longitude: location.longitude
           })}
-          placeholder="Enter the specific job location address"
+          placeholder={t('locationAddressPlaceholder')}
           selectedCityCoordinates={getSelectedCityCoordinates()}
           className="w-full"
         />
         <p className="text-sm text-muted-foreground">
-          Add a specific address for this job (in addition to the city selection above). The map will center on your selected city.
+          {t('locationAddressHelper')}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="job-type">Job Type *</Label>
+        <Label htmlFor="job-type">{t('jobTypeLabel')}</Label>
         <Select 
           value={formData.type}
           onValueChange={(value) => onChange({ type: value as 'quick_job' | 'full_time' | 'part_time' | 'remote' })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select job type" />
+            <SelectValue placeholder={t('placeholders.selectJobType')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="quick_job">Quick Job</SelectItem>
-            <SelectItem value="full_time">Full Time</SelectItem>
-            <SelectItem value="part_time">Part Time</SelectItem>
-            <SelectItem value="remote">Remote</SelectItem>
+            <SelectItem value="quick_job">{t('types.quickJob')}</SelectItem>
+            <SelectItem value="full_time">{t('types.fullTime')}</SelectItem>
+            <SelectItem value="part_time">{t('types.partTime')}</SelectItem>
+            <SelectItem value="remote">{t('types.remote')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="start-date">Start Date (Optional)</Label>
+        <Label htmlFor="start-date">{t('startDateLabel')}</Label>
         
         {/* Checkbox to control time inclusion */}
         <div className="flex items-center space-x-2 mb-2">
@@ -80,7 +83,7 @@ export function JobDetailsSection({
             htmlFor="include-time" 
             className="text-sm font-normal cursor-pointer"
           >
-            Include specific time
+            {t('includeTimeLabel')}
           </Label>
         </div>
 
@@ -89,7 +92,7 @@ export function JobDetailsSection({
           onChange={(date) => {
             // Validate that the date is not in the past
             if (date && date < new Date()) {
-              toast.error('Start date cannot be in the past')
+              toast.error(t('startDateError'))
               return
             }
             
@@ -102,14 +105,14 @@ export function JobDetailsSection({
               onChange({ start_date: date ? date.toISOString() : undefined })
             }
           }}
-          placeholder={includeStartTime ? "When should this work start?" : "Pick a start date"}
+          placeholder={includeStartTime ? t('startDateTimePlaceholder') : t('startDatePlaceholder')}
           className="w-full"
           showTime={includeStartTime}
         />
         <p className="text-sm text-muted-foreground">
           {includeStartTime 
-            ? "Specify when this job or project should begin with exact time (cannot be in the past)"
-            : "Specify the date when this job or project should begin"
+            ? t('startDateTimeHelper')
+            : t('startDateHelper')
           }
         </p>
       </div>

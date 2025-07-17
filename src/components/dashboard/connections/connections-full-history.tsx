@@ -18,6 +18,7 @@ import {
   Activity
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface ConnectionHistoryEntry {
   id: string
@@ -36,11 +37,32 @@ interface ConnectionsFullHistoryProps {
 }
 
 export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProps) {
+  const t = useTranslations('dashboard.connections')
   const [history, setHistory] = useState<ConnectionHistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'positive' | 'negative'>('all')
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
+
+  // Function to translate action labels
+  const getTranslatedActionLabel = (actionLabel: string) => {
+    // Map common action labels to translation keys
+    const actionMap: Record<string, string> = {
+      'Job Application': 'jobApplication',
+      'Job Application (Professional)': 'jobApplicationProfessional',
+      'Quick Job Posting': 'quickJobPosting',
+      'Part-time Job Posting': 'partTimeJobPosting',
+      'Full-time Job Posting': 'fullTimeJobPosting',
+      'Remote Job Posting': 'remoteJobPosting',
+      'Purchase': 'purchase',
+      'Monthly Refresh': 'monthlyRefresh',
+      'Bonus': 'bonus',
+      'Refund': 'refund'
+    }
+    
+    // Return translated label if exists, otherwise return original
+    return actionMap[actionLabel] ? t(actionMap[actionLabel]) : actionLabel
+  }
 
   useEffect(() => {
     fetchConnectionHistory()
@@ -70,7 +92,9 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
   // Filter and sort history - ensure history is always an array
   const filteredHistory = (Array.isArray(history) ? history : [])
     .filter(entry => {
-      const matchesSearch = entry.actionLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const translatedLabel = getTranslatedActionLabel(entry.actionLabel)
+      const matchesSearch = translatedLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           entry.actionLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (entry.description && entry.description.toLowerCase().includes(searchTerm.toLowerCase()))
       
       const matchesFilter = filterType === 'all' || 
@@ -117,7 +141,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            Full Connection History
+            {t('fullHistory')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -134,7 +158,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-5 w-5" />
-          Full Connection History
+          {t('fullHistory')}
         </CardTitle>
         
         {/* Summary Stats */}
@@ -142,7 +166,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
           <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium">Total Earned</span>
+              <span className="text-sm font-medium">{t('totalEarned')}</span>
             </div>
             <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{totalPositive}</p>
           </div>
@@ -150,7 +174,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
           <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-800">
             <div className="flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-red-600" />
-              <span className="text-sm font-medium">Total Spent</span>
+              <span className="text-sm font-medium">{t('totalSpent')}</span>
             </div>
             <p className="text-lg font-bold text-red-600 dark:text-red-400">-{totalNegative}</p>
           </div>
@@ -158,7 +182,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
           <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">Net Change</span>
+              <span className="text-sm font-medium">{t('netChange')}</span>
             </div>
             <p className={`text-lg font-bold ${netChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               {netChange >= 0 ? '+' : ''}{netChange}
@@ -174,7 +198,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search transactions..."
+                placeholder={t('searchTransactions')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -189,9 +213,9 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="positive">Credits</SelectItem>
-                <SelectItem value="negative">Debits</SelectItem>
+                <SelectItem value="all">{t('all')}</SelectItem>
+                <SelectItem value="positive">{t('credits')}</SelectItem>
+                <SelectItem value="negative">{t('debits')}</SelectItem>
               </SelectContent>
             </Select>
             
@@ -201,14 +225,14 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
+                <SelectItem value="newest">{t('newest')}</SelectItem>
+                <SelectItem value="oldest">{t('oldest')}</SelectItem>
               </SelectContent>
             </Select>
             
             <Button variant="outline" size="sm" onClick={exportHistory}>
               <Download className="h-4 w-4 mr-2" />
-              Export
+              {t('export')}
             </Button>
           </div>
         </div>
@@ -224,7 +248,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">{entry.actionLabel}</h4>
+                      <h4 className="font-medium">{getTranslatedActionLabel(entry.actionLabel)}</h4>
                       <Badge variant={entry.isPositive ? 'default' : 'destructive'} className="text-xs">
                         {entry.isPositive ? '+' : '-'}{entry.amount}
                       </Badge>
@@ -260,11 +284,11 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         ) : (
           <div className="text-center py-8">
             <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No transactions found</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('noTransactionsFound')}</h3>
             <p className="text-sm text-muted-foreground">
               {searchTerm || filterType !== 'all' 
-                ? 'Try adjusting your search or filters.' 
-                : 'Your connection history will appear here.'}
+                ? t('tryAdjustingSearch')
+                : t('connectionHistoryWillAppear')}
             </p>
           </div>
         )}
@@ -272,7 +296,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         {/* Results count */}
         {filteredHistory.length > 0 && (
           <div className="text-sm text-muted-foreground text-center pt-2 border-t">
-            Showing {filteredHistory.length} of {history.length} transactions
+            {t('showingTransactions', { count: filteredHistory.length, total: history.length })}
           </div>
         )}
       </CardContent>

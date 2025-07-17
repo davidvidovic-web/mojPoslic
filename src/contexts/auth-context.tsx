@@ -5,7 +5,7 @@ import { useSession, signOut as nextAuthSignOut } from 'next-auth/react'
 
 type UserRole = 'admin' | 'client' | 'tasker' | 'company'
 
-interface AuthUser {
+export interface AuthUser {
   id: string
   name?: string | null
   email?: string | null
@@ -21,6 +21,7 @@ interface AuthUser {
   skills?: string | null
   experience?: string | null
   preferredJobTypes?: string[] | null
+  preferredLanguage?: string | null
 }
 
 interface AuthContextType {
@@ -33,6 +34,7 @@ interface AuthContextType {
   isCompany: boolean
   refreshUser: () => Promise<void>
   signOut: () => Promise<void>
+  updateLanguagePreference: (language: string) => Promise<void>
 }
 
 // Auth.js-powered auth context
@@ -46,6 +48,7 @@ const AuthContext = createContext<AuthContextType>({
   isCompany: false,
   refreshUser: async () => {},
   signOut: async () => {},
+  updateLanguagePreference: async () => {},
 })
 
 export const useAuth = () => {
@@ -83,6 +86,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
           skills: userData.skills,
           experience: userData.experience,
           preferredJobTypes: userData.preferredJobTypes,
+          preferredLanguage: userData.preferredLanguage,
           createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
         })
         setDataFetched(true)
@@ -147,6 +151,53 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     // Force page reload to clear any cached state
     window.location.href = "/"
   }, [])
+
+  // Update user language preference
+  const updateLanguagePreference = useCallback(async (language: string) => {
+    if (!session?.user?.id) return
+
+    try {
+      const response = await fetch('/api/user/language-preference', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ language }),
+      })
+
+      if (response.ok) {
+        // Update local state
+        setDbUser(prev => prev ? { ...prev, preferredLanguage: language } : null)
+        
+        // Redirect to the appropriate domain
+        const currentUrl = new URL(window.location.href)
+        
+        if (language === 'en') {
+          // Redirect to English subdomain
+          let targetUrl: string
+          if (process.env.NODE_ENV === 'development') {
+            const port = currentUrl.port || '3000'
+            targetUrl = `${currentUrl.protocol}//en.localhost:${port}${currentUrl.pathname}${currentUrl.search}`
+          } else {
+            targetUrl = `${currentUrl.protocol}//en.mojposlic.com${currentUrl.pathname}${currentUrl.search}`
+          }
+          window.location.href = targetUrl
+        } else {
+          // Redirect to main domain (Bosnian)
+          let targetUrl: string
+          if (process.env.NODE_ENV === 'development') {
+            const port = currentUrl.port || '3000'
+            targetUrl = `${currentUrl.protocol}//localhost:${port}${currentUrl.pathname}${currentUrl.search}`
+          } else {
+            targetUrl = `${currentUrl.protocol}//mojposlic.com${currentUrl.pathname}${currentUrl.search}`
+          }
+          window.location.href = targetUrl
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update language preference:', error)
+    }
+  }, [session?.user?.id])
   
   // Convert Auth.js session to our app's user format, with database fallback
   const user: AuthUser | null = useMemo(() => {
@@ -228,6 +279,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     isCompany,
     refreshUser,
     signOut,
+    updateLanguagePreference,
   }), [
     user,
     status,
@@ -239,7 +291,8 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     isTasker,
     isCompany,
     refreshUser,
-    signOut
+    signOut,
+    updateLanguagePreference
   ])
 
   return (

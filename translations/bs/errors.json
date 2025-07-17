@@ -1,0 +1,42 @@
+{
+  "unknownUserRole": "Nepoznata uloga korisnika. Molimo kontaktirajte podršku.",
+  "loadingDashboard": "Učitavanje kontrolne table...",
+  "accessDenied": "Pristup odbačen",
+  "sessionExpired": "Sesija je istekla, molimo prijavite se ponovo",
+  "failedToLoad": {
+    "dashboardData": "Neuspješno učitavanje podataka kontrolne table",
+    "billingData": "Neuspješno učitavanje podataka naplate",
+    "applications": "Neuspješno učitavanje prijava",
+    "jobs": "Neuspješno učitavanje poslova",
+    "statistics": "Neuspješno učitavanje statistika",
+    "connectionHistory": "Neuspješno učitavanje istorije konekcija",
+    "users": "Neuspješno učitavanje korisnika",
+    "conversations": "Neuspješno učitavanje konverzacija",
+    "messages": "Neuspješno učitavanje poruka",
+    "packages": "Neuspješno učitavanje paketa"
+  },
+  "failedToUpdate": {
+    "application": "Neuspješno ažuriranje prijave",
+    "applications": "Neuspješno ažuriranje prijava",
+    "jobStatus": "Neuspješno ažuriranje statusa posla",
+    "job": "Neuspješno ažuriranje posla",
+    "profile": "Neuspješno ažuriranje profila. Molimo pokušajte ponovo."
+  },
+  "general": {
+    "somethingWentWrong": "Nešto je pošlo po zlu",
+    "tryAgainLater": "Molimo pokušajte ponovo kasnije",
+    "stripeFailed": "Stripe se nije uspješno učitao"
+  },
+  "auth": {
+    "tooManyAttempts": "Previše pokušaja izmjene lozinke. Molimo pokušajte ponovo za {resetTime} minuta.",
+    "rateLimitedToast": "Previše pokušaja. Pokušajte ponovo za {resetTime} minuta."
+  },
+  "validation": {
+    "pleaseSelectAccountType": "Molimo odaberite tip računa",
+    "pleaseSelectUser": "Molimo odaberite korisnika i unesite važeći iznos konekcija",
+    "pleaseSelectApplicationsAndAction": "Molimo odaberite prijave i odaberite akciju",
+    "pleaseSelectApplications": "Molimo odaberite prijave za ažuriranje",
+    "pleaseSelectAction": "Molimo odaberite akciju",
+    "usernameExists": "Korisničko ime već postoji. Molimo odaberite drugo."
+  }
+} 

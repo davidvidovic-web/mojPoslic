@@ -54,7 +54,7 @@ export function JobFilters({
               <Search className="h-4 w-4" />
             </span>
             <Input
-              placeholder="Search jobs, companies, skills, or categories..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 border-border/50"
@@ -65,7 +65,7 @@ export function JobFilters({
           <CitiesFilter
             value={cityFilter}
             onChange={setCityFilter}
-            placeholder="All locations"
+            placeholder={t('allLocations')}
             className="w-52 flex-shrink-0"
           />
           
@@ -78,7 +78,7 @@ export function JobFilters({
                 setSubcategoryFilter("all")
               }
             }}
-            placeholder="All categories"
+            placeholder={t('allCategories')}
             className="w-52 flex-shrink-0"
             showSubcategories={true}
             subcategoryValue={subcategoryFilter}
@@ -108,7 +108,7 @@ export function JobFilters({
               <Search className="h-4 w-4" />
             </span>
             <Input
-              placeholder="Search jobs, companies, skills, or categories..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 border-border/50"

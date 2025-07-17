@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
 import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
+import { useTranslations } from 'next-intl'
 
 interface ReviewStepProps {
   formData: CreateJobData
@@ -30,6 +31,8 @@ interface Category {
 
 export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps) {
   const { user } = useAuth()
+  const t = useTranslations('jobs')
+  const tCommon = useTranslations('common')
   const [city, setCity] = useState<City | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
 
@@ -77,15 +80,15 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
   }, [onValidation])
 
   const getSalaryDisplay = () => {
-    if (!formData.salaryType && !formData.salary) return 'Not specified'
+    if (!formData.salaryType && !formData.salary) return tCommon('messages.notSpecified')
     
     if (formData.salaryType === 'fixed' && formData.salaryMin) {
       return `${formData.salaryMin} BAM (${formData.salaryType})`
     }
     
     if (formData.salaryType && (formData.salaryMin || formData.salaryMax)) {
-      const min = formData.salaryMin || 'Not specified'
-      const max = formData.salaryMax || 'Not specified'
+      const min = formData.salaryMin || tCommon('messages.notSpecified')
+      const max = formData.salaryMax || tCommon('messages.notSpecified')
       return `${min} - ${max} BAM (${formData.salaryType})`
     }
     
@@ -93,15 +96,15 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
       return formData.salary
     }
     
-    return 'Not specified'
+    return tCommon('messages.notSpecified')
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Review Your Job Posting</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('review.title')}</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Please review all the information below before submitting your job posting.
+          {t('review.description')}
         </p>
       </div>
 
@@ -111,7 +114,7 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              Basic Information
+              {t('review.sections.basicInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -137,7 +140,7 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
         {/* Job Description */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Job Description</CardTitle>
+            <CardTitle className="text-base">{t('review.sections.jobDescription')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div 
@@ -146,7 +149,7 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
             />
             {formData.requirements && (
               <div className="mt-4">
-                <h5 className="font-medium text-sm mb-2">Requirements:</h5>
+                <h5 className="font-medium text-sm mb-2">{t('form.requirements')}:</h5>
                 <div 
                   className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: formData.requirements }}
@@ -155,7 +158,7 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
             )}
             {formData.benefits && (
               <div className="mt-4">
-                <h5 className="font-medium text-sm mb-2">Benefits:</h5>
+                <h5 className="font-medium text-sm mb-2">{t('form.benefits')}:</h5>
                 <div 
                   className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: formData.benefits }}
@@ -171,7 +174,7 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Location & Schedule
+                {t('review.sections.locationSchedule')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">

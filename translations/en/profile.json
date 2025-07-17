@@ -1,0 +1,104 @@
+{
+  "title": "Profile",
+  "subtitle": "Manage your profile and settings",
+  "setup": {
+    "loading": "Loading...",
+    "titles": {
+      "client": "Complete your client profile",
+      "company": "Complete your company profile",
+      "tasker": "Complete your tasker profile",
+      "admin": "Complete your admin profile",
+      "default": "Complete your profile"
+    },
+    "sections": {
+      "basicInformation": "Basic Information",
+      "location": "Location",
+      "professionalSkills": "Professional Skills",
+      "experienceLevels": "Experience Levels",
+      "portfolio": "Portfolio",
+      "companyInformation": "Company Information"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "companyName": "Company Name",
+      "username": "Username",
+      "phoneNumber": "Phone Number",
+      "yourCity": "Your City",
+      "yourSkills": "Your Skills",
+      "websitePortfolio": "Website or Portfolio URL",
+      "companyWebsite": "Company Website"
+    },
+    "placeholders": {
+      "fullName": "Enter your full name",
+      "companyName": "Enter your company name",
+      "chooseUsername": "Choose a username",
+      "phoneNumber": "Enter your phone number",
+      "selectYourCity": "Select your city",
+      "addSkills": "Add your skills (e.g., Plumbing, Web Design, Tutoring...)",
+      "websitePortfolio": "https://yourwebsite.com or https://yourportfolio.com",
+      "companyWebsite": "https://yourcompany.com"
+    },
+    "helpText": {
+      "skillsRecommendation": "You can add this later in settings, but we highly recommend completing it now for a better success rate",
+      "skillsDescription": "Choose from existing categories or add your own custom skills",
+      "experienceDescription": "Set your experience level for each skill to help clients understand your expertise"
+    },
+    "experienceLevels": {
+      "notSpecified": "Not Specified",
+      "beginner": "Beginner (< 1 year)",
+      "oneToTwoYears": "1-2 Years",
+      "threeToFiveYears": "3-5 Years",
+      "fivePlusYears": "5+ Years"
+    },
+    "errors": {
+      "usernameAlreadyExists": "Username already exists. Please choose another one.",
+      "profileSetupCompleted": "Profile setup completed!",
+      "failedToUpdateProfile": "Failed to update profile. Please try again.",
+      "saving": "Saving...",
+      "completeSetup": "Complete Setup"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "accountInfo": {
+      "title": "Account Information",
+      "accountType": "Account Type",
+      "memberSince": "Member Since",
+      "email": "Email Address",
+      "username": "Username",
+      "role": "Role",
+      "status": "Status"
+    },
+    "profileSettings": {
+      "title": "Profile Settings",
+      "personalInfo": "Personal Information",
+      "contactInfo": "Contact Information",
+      "professionalInfo": "Professional Information",
+      "preferences": "Preferences",
+      "privacy": "Privacy",
+      "notifications": "Notifications"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "language": "Language",
+      "timezone": "Timezone",
+      "dateFormat": "Date Format",
+      "timeFormat": "Time Format"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change Password",
+      "twoFactorAuth": "Two-Factor Authentication",
+      "loginHistory": "Login History",
+      "activeSessions": "Active Sessions"
+    },
+    "helpSupport": {
+      "title": "Help & Support",
+      "documentation": "Documentation",
+      "contactSupport": "Contact Support",
+      "feedback": "Feedback",
+      "about": "About"
+    }
+  }
+} 

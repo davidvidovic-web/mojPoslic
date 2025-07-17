@@ -1,0 +1,45 @@
+{
+  "title": "Admin Dashboard",
+  "loading": "Loading admin data...",
+  "systemManagement": {
+    "title": "System Management",
+    "categories": {
+      "title": "Category Management",
+      "addCategory": "Add Category",
+      "edit": "Edit",
+      "delete": "Delete",
+      "popular": "Popular",
+      "inactive": "Inactive",
+      "key": "Key"
+    },
+    "cities": {
+      "title": "City Management",
+      "addCity": "Add City",
+      "edit": "Edit",
+      "delete": "Delete",
+      "special": "Special",
+      "inactive": "Inactive",
+      "key": "Key"
+    }
+  },
+  "stats": {
+    "totalUsers": "Total Users",
+    "totalJobs": "Total Jobs",
+    "totalApplications": "Total Applications",
+    "activeJobs": "Active Jobs"
+  },
+  "users": {
+    "title": "User Management",
+    "search": "Search users...",
+    "role": "Role",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "jobs": {
+    "title": "Job Management",
+    "search": "Search jobs...",
+    "status": "Status",
+    "type": "Type",
+    "actions": "Actions"
+  }
+} 

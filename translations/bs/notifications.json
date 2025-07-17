@@ -1,0 +1,18 @@
+{
+  "title": "Obaveštenja",
+  "all": "Sva obaveštenja",
+  "unread": "Nepročitana",
+  "markAsRead": "Označi kao pročitano",
+  "markAllAsRead": "Označi sve kao pročitano",
+  "clearAll": "Obriši sve",
+  "noNotifications": "Nema obaveštenja",
+  "loading": "Učitavanje obaveštenja...",
+  "error": "Greška pri učitavanju obaveštenja",
+  "new": "Novo",
+  "earlier": "Ranije",
+  "today": "Danas",
+  "yesterday": "Juče",
+  "thisWeek": "Ove sedmice",
+  "older": "Starija",
+  "unreadNotifications": "nepročitanih obaveštenja"
+} 

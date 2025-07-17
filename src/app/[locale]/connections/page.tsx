@@ -3,12 +3,15 @@
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { ConnectionsWidget } from '@/components/dashboard/connections/connections-widget'
 import { ConnectionsFullHistory } from '@/components/dashboard/connections/connections-full-history'
+import { useTranslations } from 'next-intl'
 
 export default function ConnectionsPage() {
+  const t = useTranslations('dashboard.connections')
+  
   return (
     <DashboardLayout 
-      title="Connections"
-      subtitle="Manage your connections and view transaction history"
+      title={t('title')}
+      subtitle={t('subtitle')}
       activeTab="connections"
     >
       {/* Responsive grid layout - stacked on mobile, side by side on desktop */}

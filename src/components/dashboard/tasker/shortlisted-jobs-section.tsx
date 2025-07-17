@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,9 @@ interface ShortlistedJobsSectionProps {
 }
 
 export function ShortlistedJobsSection({ shortlistedApplications, loading = false }: ShortlistedJobsSectionProps) {
+  const t = useTranslations('dashboard')
+  const tCommon = useTranslations('common')
+
   // Filter to only show shortlisted and interview scheduled applications
   const filteredApplications = shortlistedApplications.filter(app => 
     app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED'
@@ -105,7 +109,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
     if (job.salary) {
       return job.salary
     }
-    return 'Salary not specified'
+    return tCommon('messages.salaryNotSpecified')
   }
 
   const getStatusBadge = (status: string) => {
@@ -114,14 +118,14 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
         return (
           <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
             <Star className="h-3 w-3 mr-1" />
-            Shortlisted
+            {t('shortlistedJobs.statuses.shortlisted')}
           </Badge>
         )
       case 'INTERVIEW_SCHEDULED':
         return (
           <Badge className="bg-blue-100 text-blue-800 border-blue-300">
             <Calendar className="h-3 w-3 mr-1" />
-            Interview Scheduled
+            {t('shortlistedJobs.statuses.interviewScheduled')}
           </Badge>
         )
       default:
@@ -139,7 +143,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
-            Shortlisted Opportunities
+            {t('shortlistedJobs.title')}
             <Badge variant="secondary" className="ml-2">
               {filteredApplications.length}
             </Badge>
@@ -147,7 +151,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
           {filteredApplications.length > 3 && (
             <Link href="/dashboard/applications">
               <Button variant="ghost" size="sm">
-                View All
+                {tCommon('buttons.viewAll')}
               </Button>
             </Link>
           )}
@@ -175,7 +179,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <MapPin className="h-4 w-4" />
-                  <span>{application.job.job_address || 'Location not specified'}</span>
+                  <span>{application.job.job_address || tCommon('messages.locationNotSpecified')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <DollarSign className="h-4 w-4" />
@@ -232,7 +236,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
                 <Link href={`/jobs/${application.job.id}`}>
                   <Button size="sm" variant="outline">
                     <ExternalLink className="h-4 w-4 mr-1" />
-                    View Details
+                    {tCommon('actions.viewDetails')}
                   </Button>
                 </Link>
               </div>
@@ -243,7 +247,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
             <div className="text-center pt-4">
               <Link href="/dashboard/applications?filter=shortlisted">
                 <Button variant="outline">
-                  View All {filteredApplications.length} Shortlisted Applications
+                  {t('viewAllShortlistedApplications', { count: filteredApplications.length })}
                 </Button>
               </Link>
             </div>

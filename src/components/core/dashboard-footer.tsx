@@ -3,8 +3,10 @@
 import { Briefcase } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export function DashboardFooter() {
+  const t = useTranslations('common.footer')
   return (
     <footer className="border-t bg-background/50 backdrop-blur-sm mt-auto">
       <div className="container mx-auto px-4 py-8">
@@ -18,27 +20,27 @@ export function DashboardFooter() {
               <span className="font-bold">mojPoslić</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Quick, simple & free job posting platform for Bosnia and Herzegovina.
+              {t('description')}
             </p>
           </div>
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h4 className="font-medium">Quick Links</h4>
+            <h4 className="font-medium">{t('quickLinks')}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link href="/" className="hover:text-foreground transition-colors">
-                  Browse Jobs
+                  {t('browseJobs')}
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard" className="hover:text-foreground transition-colors">
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
               </li>
               <li>
                 <Link href="/settings" className="hover:text-foreground transition-colors">
-                  Settings
+                  {t('settings')}
                 </Link>
               </li>
             </ul>
@@ -46,21 +48,21 @@ export function DashboardFooter() {
 
           {/* Support */}
           <div className="space-y-4">
-            <h4 className="font-medium">Support</h4>
+            <h4 className="font-medium">{t('support')}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
-                  Help Center
+                  {t('helpCenter')}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
-                  Contact Support
+                  {t('contactSupport')}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
-                  Privacy Policy
+                  {t('privacyPolicy')}
                 </a>
               </li>
             </ul>
@@ -71,7 +73,7 @@ export function DashboardFooter() {
 
         <div className="text-center text-sm text-muted-foreground">
           <p>
-            &copy; 2025 mojPoslić. Built with Next.js, shadcn/ui, and Prisma.
+            {t('copyright')}
           </p>
         </div>
       </div>

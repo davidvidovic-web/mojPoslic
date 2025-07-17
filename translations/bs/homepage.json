@@ -1,0 +1,93 @@
+{
+  "hero": {
+    "title": "Pronađite svoj savršen posao",
+    "subtitle": "Povežite se s prilikama koje odgovaraju vašim vještinama i aspiracijama",
+    "searchPlaceholder": "Pretraži poslove, kompanije ili vještine...",
+    "browseJobs": "Pregledaj poslove",
+    "postJob": "Objavi posao",
+    "badge": "Brzo zapošljavanje",
+    "titleHighlight": "ili pronađite savršenog kandidata",
+    "registerButton": "Registruj se besplatno"
+  },
+  "browseJobs": {
+    "title": "Pregledaj Dostupne Poslove",
+    "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i preferencijama"
+  },
+  "siteStats": {
+    "title": "Statistika platforme",
+    "subtitle": "Povežite se s hiljadama korisnika koji već koriste našu platformu",
+    "jobsPosted": "Objavljenih poslova",
+    "activeUsers": "Aktivnih korisnika",
+    "successfulHires": "Uspješnih zapošljavanja",
+    "companies": "Kompanija",
+    "activeJobs": "Aktivnih poslova",
+    "registeredClients": "Registriranih klijenata",
+    "registeredUsers": "Registriranih korisnika",
+    "finishedJobs": "Završenih poslova"
+  },
+  "features": {
+    "title": "Zašto odabrati nas",
+    "quickHiring": "Brzo zapošljavanje",
+    "qualityCandidates": "Kvalitetni kandidati",
+    "securePlatform": "Sigurna platforma",
+    "easyManagement": "Lako upravljanje"
+  },
+  "howItWorks": {
+    "title": "Kako funkcioniše",
+    "step1": "Kreiraj račun",
+    "step2": "Objavi ili pronađi poslove",
+    "step3": "Poveži se i zaposli"
+  },
+  "testimonials": {
+    "title": "Šta kažu naši korisnici",
+    "clientTestimonial": "Pronašao sam savršenog kandidata za samo 2 dana!",
+    "taskerTestimonial": "Odlična platforma za pronalaženje kvalitetnih poslova."
+  },
+  "cta": {
+    "title": "Spremni da počnete?",
+    "subtitle": "Pridružite se hiljadama korisnika koji pronalaze svoj savršen spoj",
+    "getStarted": "Započnite",
+    "learnMore": "Saznajte više"
+  },
+  "footer": {
+    "description": "Povežite se s prilikama koje odgovaraju vašim vještinama i aspiracijama",
+    "forWorkers": {
+      "title": "Za radnike",
+      "findJobs": "Pronađi poslove",
+      "dailyWork": "Dnevni poslovi",
+      "hourlyJobs": "Poslovi po satu"
+    },
+    "forClients": {
+      "title": "Za klijente",
+      "postJobs": "Objavi posao",
+      "findWorkers": "Pronađi radnike",
+      "free": "Besplatno"
+    },
+    "company": {
+      "title": "Kompanija",
+      "about": "O nama",
+      "careers": "Karijera",
+      "contact": "Kontakt",
+      "privacy": "Privatnost"
+    },
+    "services": {
+      "title": "Usluge",
+      "jobPosting": "Objavljivanje poslova",
+      "candidateSearch": "Pretraga kandidata",
+      "hiringTools": "Alati za zapošljavanje"
+    },
+    "support": {
+      "title": "Podrška",
+      "helpCenter": "Centar za pomoć",
+      "contactSupport": "Kontaktirajte podršku",
+      "faq": "Često postavljana pitanja"
+    },
+    "legal": {
+      "title": "Pravno",
+      "privacyPolicy": "Politika privatnosti",
+      "termsOfService": "Uslovi korištenja",
+      "cookiePolicy": "Politika kolačića"
+    },
+    "copyright": "© {year} mojPoslić. Sva prava zadržana."
+  }
+} 

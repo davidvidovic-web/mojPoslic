@@ -2,7 +2,7 @@ import {defineRouting} from 'next-intl/routing';
 
 export const routing = defineRouting({
   // A list of all locales that are supported
-  locales: ['en', 'bs'],
+  locales: ['bs', 'en'],
 
   // Used when no locale matches - Bosnian is the main language
   defaultLocale: 'bs',
@@ -13,12 +13,12 @@ export const routing = defineRouting({
   // Domain-based routing configuration
   domains: [
     {
-      domain: 'localhost:3000', // Main domain - Bosnian
+      domain: process.env.NODE_ENV === 'development' ? 'localhost:3000' : 'mojposlic.com', // Main domain - Bosnian
       defaultLocale: 'bs',
       locales: ['bs']
     },
     {
-      domain: 'en.localhost:3000', // English subdomain
+      domain: process.env.NODE_ENV === 'development' ? 'en.localhost:3000' : 'en.mojposlic.com', // English subdomain
       defaultLocale: 'en',
       locales: ['en']
     }

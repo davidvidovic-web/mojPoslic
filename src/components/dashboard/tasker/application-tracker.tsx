@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +12,6 @@ import { ApplicationStatus, JobApplication } from '@/types/application'
 import { 
   Briefcase,
   Search,
-  Calendar,
   MapPin,
   DollarSign,
   Clock,
@@ -25,6 +25,7 @@ import {
 import { formatDistanceToNow, format } from 'date-fns'
 
 export function TaskerApplicationTracker() {
+  const t = useTranslations('dashboard.applications')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('all')
 
@@ -56,7 +57,7 @@ export function TaskerApplicationTracker() {
   })
 
   const handleWithdraw = async (applicationId: string) => {
-    if (confirm('Are you sure you want to withdraw this application?')) {
+    if (confirm(t('confirmWithdraw'))) {
       try {
         await withdrawMutation.mutateAsync(applicationId)
       } catch (error) {
@@ -222,7 +223,7 @@ export function TaskerApplicationTracker() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search applications..."
+                placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"

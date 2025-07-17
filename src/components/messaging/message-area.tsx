@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Message, MessageAttachment, TypingUser } from '@/types/messaging';
 import { MessageBubble } from './message-bubble';
@@ -94,6 +95,8 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   className,
   error,
 }) => {
+  const t = useTranslations('messaging')
+  const tErrors = useTranslations('errors');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
@@ -165,11 +168,11 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     yesterday.setDate(yesterday.getDate() - 1);
     
     if (date.toDateString() === today.toDateString()) {
-      return locale === 'bs' ? 'Danas' : 'Today';
+      return t('dates.today');
     }
     
     if (date.toDateString() === yesterday.toDateString()) {
-      return locale === 'bs' ? 'Juče' : 'Yesterday';
+      return t('dates.yesterday');
     }
     
     return date.toLocaleDateString(locale === 'bs' ? 'bs-BA' : 'en-US', {
@@ -186,7 +189,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
         <div className="text-center py-8">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h3 className="font-medium text-gray-900 mb-2">
-            {locale === 'bs' ? 'Greška pri učitavanju poruka' : 'Error loading messages'}
+            {tErrors('failedToLoad.messages')}
           </h3>
           <p className="text-sm text-gray-500">{error}</p>
         </div>
@@ -237,7 +240,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
                   <div className="flex items-center gap-2 text-gray-500">
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
                     <span className="text-sm">
-                      {locale === 'bs' ? 'Učitavanje...' : 'Loading...'}
+                      {t('loading')}
                     </span>
                   </div>
                 </div>

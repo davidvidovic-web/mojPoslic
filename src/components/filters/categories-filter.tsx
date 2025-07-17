@@ -1,6 +1,7 @@
 'use client'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTranslations, useLocale } from 'next-intl'
 import { useCategories } from '@/hooks/use-data'
 
 interface CategoriesFilterProps {
@@ -17,7 +18,7 @@ interface CategoriesFilterProps {
 export function CategoriesFilter({ 
   value, 
   onChange, 
-  placeholder = "All categories", 
+  placeholder, 
   className,
   includeAllOption = true,
   subcategoryValue,
@@ -25,37 +26,52 @@ export function CategoriesFilter({
   showSubcategories = false
 }: CategoriesFilterProps) {
   const { categories, isLoading, getCategoriesByParent } = useCategories()
+  const t = useTranslations('filters')
+  const locale = useLocale()
+  
+  const defaultPlaceholder = placeholder || t('allCategories')
 
   // Get only main categories (no parent)
   const mainCategories = getCategoriesByParent(undefined)
   
-  // Get subcategories for the selected main category
-  const selectedCategory = Array.isArray(categories) 
-    ? categories.find(cat => cat.key === value) 
-    : undefined
-  const subcategories = selectedCategory ? getCategoriesByParent(selectedCategory.id) : []
+  // Get ALL subcategories from all main categories
+  const allSubcategories = Array.isArray(categories) 
+    ? categories.filter(cat => cat.parent_id) 
+    : []
+
+  // Helper function to get category name based on locale
+  const getCategoryName = (category: {
+    nameBS?: string
+    name_bs?: string
+    nameEN?: string
+    name_en?: string
+    name?: string
+  }) => {
+    if (locale === 'bs') {
+      return category.nameBS || category.name_bs || category.nameEN || category.name_en || category.name
+    } else {
+      return category.nameEN || category.name_en || category.nameBS || category.name_bs || category.name
+    }
+  }
 
   return (
     <div className="flex gap-4">
       {/* Main Categories Dropdown */}
       <Select value={value} onValueChange={onChange} disabled={isLoading}>
         <SelectTrigger className={className}>
-          <SelectValue placeholder={isLoading ? "Loading categories..." : placeholder} />
+          <SelectValue placeholder={isLoading ? t('loadingCategories') : defaultPlaceholder} />
         </SelectTrigger>
         <SelectContent>
           {includeAllOption && (
-            <SelectItem value="all">All categories</SelectItem>
+            <SelectItem value="all">{t('allCategories')}</SelectItem>
           )}
           
           {Array.isArray(mainCategories) && mainCategories.map((category) => (
             <SelectItem key={category.id} value={category.key}>
               <span className="flex items-center gap-2">
-                {category.nameEN || category.name_en}
-                {(category.nameBS || category.name_bs) !== (category.nameEN || category.name_en) && (
-                  <span className="text-muted-foreground text-sm">({category.nameBS || category.name_bs})</span>
-                )}
+                {getCategoryName(category)}
                 {category.is_popular && (
-                  <span className="text-xs bg-secondary text-secondary-foreground px-1 rounded">Popular</span>
+                  <span className="text-xs bg-secondary text-secondary-foreground px-1 rounded">{t('popular')}</span>
                 )}
               </span>
             </SelectItem>
@@ -63,26 +79,21 @@ export function CategoriesFilter({
         </SelectContent>
       </Select>
 
-      {/* Subcategories Dropdown - only show if main category is selected and has subcategories */}
-      {showSubcategories && value !== "all" && Array.isArray(subcategories) && subcategories.length > 0 && (
+      {/* Subcategories Dropdown - always show when enabled */}
+      {showSubcategories && (
         <Select 
           value={subcategoryValue || "all"} 
           onValueChange={onSubcategoryChange || (() => {})}
           disabled={isLoading}
         >
           <SelectTrigger className={className}>
-            <SelectValue placeholder="All subcategories" />
+            <SelectValue placeholder={t('allSubcategories')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All subcategories</SelectItem>
-            {Array.isArray(subcategories) && subcategories.map((subcategory) => (
+            <SelectItem value="all">{t('allSubcategories')}</SelectItem>
+            {Array.isArray(allSubcategories) && allSubcategories.map((subcategory) => (
               <SelectItem key={subcategory.id} value={subcategory.key}>
-                <span className="flex items-center gap-2">
-                  {subcategory.nameEN || subcategory.name_en}
-                  {(subcategory.nameBS || subcategory.name_bs) !== (subcategory.nameEN || subcategory.name_en) && (
-                    <span className="text-muted-foreground text-sm">({subcategory.nameBS || subcategory.name_bs})</span>
-                  )}
-                </span>
+                {getCategoryName(subcategory)}
               </SelectItem>
             ))}
           </SelectContent>

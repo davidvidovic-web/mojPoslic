@@ -71,25 +71,28 @@ export async function POST(request: NextRequest) {
     
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error)
-      // Don't fail registration if email fails, but log it
-    }
-
-    // For localhost development, log the verification code
-    if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development') {
-      // Verification code available in development via response message
+      // Continue with registration but inform user of email issue
+      return NextResponse.json({
+        message: 'Account created successfully, but there was an issue sending the verification email. Please try resending it.',
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+        },
+        redirectTo: `/auth/verify-email?email=${encodeURIComponent(email)}`,
+        emailError: true
+      })
     }
 
     return NextResponse.json({
-      message: process.env.NODE_ENV === 'development' 
-        ? `Account created successfully. Your verification code is: ${verificationCode}` 
-        : 'Account created successfully. Please check your email for your verification code.',
+      message: 'Account created successfully. Please check your email for your verification code.',
       user: {
         id: user.id,
         email: user.email,
         username: user.username,
         role: user.role,
       },
-      ...(process.env.NODE_ENV === 'development' && { verificationCode }),
       redirectTo: `/auth/verify-email?email=${encodeURIComponent(email)}`
     })
 

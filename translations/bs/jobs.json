@@ -1,0 +1,175 @@
+{
+  "title": "Poslovi",
+  "searchPlaceholder": "Pretraži poslove...",
+  "filters": {
+    "title": "Filteri",
+    "clearAll": "Očisti sve",
+    "apply": "Primijeni filtere",
+    "categories": "Kategorije",
+    "cities": "Gradovi",
+    "jobTypes": "Tipovi poslova",
+    "salary": "Raspon plate",
+    "experience": "Nivo iskustva",
+    "searchPlaceholder": "Pretraži poslove, kompanije, vještine ili kategorije...",
+    "filters": "Filteri",
+    "active": "Aktivno",
+    "allLocations": "Sve lokacije",
+    "allCategories": "Sve kategorije",
+    "jobType": "Tip posla",
+    "allTypes": "Svi tipovi",
+    "quickJob": "Brzi posao",
+    "fullTime": "Puno radno vrijeme",
+    "partTime": "Djelomično radno vrijeme",
+    "remote": "Udaljeni rad"
+  },
+  "types": {
+    "quickJob": "Brzi posao",
+    "fullTime": "Puno radno vrijeme",
+    "partTime": "Djelomično radno vrijeme",
+    "remote": "Udaljeni rad"
+  },
+  "status": {
+    "active": "Aktivno",
+    "inactive": "Neaktivno",
+    "completed": "Završeno",
+    "expired": "Isteklo"
+  },
+  "actions": {
+    "view": "Pogledaj",
+    "edit": "Uredi",
+    "delete": "Obriši",
+    "apply": "Prijavi se",
+    "save": "Sačuvaj posao",
+    "feature": "Istakni",
+    "unfeature": "Ukloni istaknutost",
+    "backToJobs": "Nazad na poslove"
+  },
+  "emptyStates": {
+    "noJobs": "Nema pronađenih poslova",
+    "noJobsDescription": "Pokušajte prilagoditi svoje filtere ili pojmove za pretragu",
+    "noSavedJobs": "Nema sačuvanih poslova",
+    "noSavedJobsDescription": "Sačuvajte poslove koji vas zanimaju da ih vidite ovdje"
+  },
+  "list": {
+    "noJobs": "Nema pronađenih poslova",
+    "noJobsMessage": "Trenutno nema dostupnih oglasa za posao. Provjerite kasnije za nove prilike.",
+    "noJobsWithFiltersMessage": "Nijedan posao ne odgovara vašim trenutnim filterima. Pokušajte prilagoditi kriterije pretrage.",
+    "clearAllFilters": "Očisti sve filtere"
+  },
+  "time": {
+    "today": "Danas",
+    "yesterday": "Juče",
+    "daysAgo": "prije {count} dana",
+    "weeksAgo": "prije {count} nedjelja",
+    "monthsAgo": "prije {count} mjeseci"
+  },
+  "card": {
+    "readMore": "Pročitaj više",
+    "readLess": "Pročitaj manje",
+    "posted": "Objavljeno",
+    "expires": "Ističe",
+    "salary": "Plata",
+    "location": "Lokacija",
+    "type": "Tip",
+    "experience": "Iskustvo",
+    "featured": "Istaknuto",
+    "applied": "Prijavljeno",
+    "viewJob": "Pogledaj posao",
+    "viewDetails": "Pogledaj detalje",
+    "viewApplication": "Pogledaj prijavu"
+  },
+  "form": {
+    "sections": {
+      "basicInformation": "Osnovne informacije",
+      "jobDetails": "Detalji posla",
+      "requirements": "Zahtjevi",
+      "compensation": "Naknada",
+      "contactInformation": "Kontakt informacije"
+    },
+    "labels": {
+      "jobTitle": "Naziv posla",
+      "jobType": "Tip posla",
+      "category": "Kategorija",
+      "description": "Opis",
+      "requirements": "Zahtjevi",
+      "salaryType": "Tip plate",
+      "salaryMin": "Minimalna plata",
+      "salaryMax": "Maksimalna plata",
+      "location": "Lokacija",
+      "contactName": "Ime za kontakt",
+      "contactEmail": "Email za kontakt",
+      "contactPhone": "Telefon za kontakt"
+    },
+    "placeholders": {
+      "jobTitleExample": "npr., Web Developer, Graphic Designer",
+      "selectJobType": "Odaberite tip posla",
+      "selectCategory": "Odaberite kategoriju",
+      "selectLocation": "Odaberite lokaciju",
+      "enterSalary": "Unesite iznos plate"
+    },
+    "quickJob": "Brzi posao",
+    "fullTime": "Puno radno vrijeme",
+    "partTime": "Djelomično radno vrijeme",
+    "remote": "Udaljeni rad",
+    "hourly": "/sat",
+    "daily": "/dan",
+    "weekly": "/nedjelju",
+    "monthly": "/mjesec",
+    "from": "Od"
+  },
+  "messages": {
+    "loadingJobDetails": "Učitavanje detalja posla...",
+    "jobNotFound": "Posao nije pronađen",
+    "errorLoadingJob": "Greška pri učitavanju detalja posla"
+  },
+  "errors": {
+    "jobNotFound": "Posao nije pronađen",
+    "loadFailed": "Greška pri učitavanju detalja posla",
+    "cannotApplyToOwnJob": "Ne možete se prijaviti na svoj vlastiti posao",
+    "alreadyApplied": "Već ste se prijavili na ovaj posao"
+  },
+  "details": {
+    "jobDetails": "Detalji posla",
+    "jobType": "Tip posla",
+    "category": "Kategorija",
+    "posted": "Objavljeno",
+    "startDate": "Datum početka",
+    "expires": "Ističe",
+    "payment": "Plaćanje",
+    "salary": "Plata",
+    "transportation": "Prevoz",
+    "address": "Adresa"
+  },
+  "content": {
+    "jobDescription": "Opis posla",
+    "requirements": "Zahtjevi",
+    "benefits": "Benefiti",
+    "skillsAndTechnologies": "Vještine i tehnologije"
+  },
+  "timeline": {
+    "scheduleAndTimeline": "Raspored i vremenska linija",
+    "startDate": "Datum početka",
+    "expectedDuration": "Očekivano trajanje",
+    "applicationDeadline": "Rok za prijave",
+    "at": "u"
+  },
+  "location": {
+    "jobLocation": "Lokacija posla",
+    "exactAddressMessage": "📍 Tačna adresa i mapa će biti otkrivene odabranom radniku iz sigurnosnih razloga."
+  },
+  "statusManager": {
+    "updateJobStatus": "Ažuriraj status posla",
+    "changeStatusOf": "Promijeni status: {title}",
+    "statusDescriptions": {
+      "active": "Posao je vidljiv kandidatima i prima prijave",
+      "inactive": "Posao je skriven od kandidata i ne prima prijave",
+      "completed": "Posao je završen i više ne prima prijave",
+      "expired": "Posao je istekao i više ne prima prijave"
+    }
+  },
+  "jobUpdatedSuccessfully": "Posao uspješno ažuriran",
+  "hourly": "/sat",
+  "daily": "/dan",
+  "weekly": "/nedjelju",
+  "monthly": "/mjesec"
+} 

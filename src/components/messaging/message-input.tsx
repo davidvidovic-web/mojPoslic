@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslations } from 'next-intl';
 import { 
   Send, 
   Paperclip, 
@@ -68,38 +69,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onTyping,
   disabled = false,
   placeholder,
-  locale = 'bs',
   className,
 }) => {
+  const t = useTranslations('messaging')
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const translations = {
-    bs: {
-      placeholder: placeholder || 'Ukucajte poruku...',
-      send: 'Pošalji',
-      attach: 'Priloži fajl',
-      emoji: 'Emoji',
-      removeAttachment: 'Ukloni prilog',
-      fileTooLarge: 'Fajl je prevelik (maksimalno 10MB)',
-      invalidFileType: 'Nepodržan tip fajla',
-    },
-    en: {
-      placeholder: placeholder || 'Type a message...',
-      send: 'Send',
-      attach: 'Attach file',
-      emoji: 'Emoji',
-      removeAttachment: 'Remove attachment',
-      fileTooLarge: 'File too large (max 10MB)',
-      invalidFileType: 'Unsupported file type',
-    },
-  };
-
-  const t = translations[locale];
 
   const handleTyping = useCallback((value: string) => {
     setMessage(value);
@@ -159,12 +137,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
     acceptedFiles.forEach((file) => {
       if (file.size > MAX_FILE_SIZE) {
-        alert(t.fileTooLarge);
+        alert(t('fileTooLarge'));
         return;
       }
 
       if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-        alert(t.invalidFileType);
+        alert(t('invalidFileType'));
         return;
       }
 
@@ -190,7 +168,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     });
 
     setAttachments(prev => [...prev, ...newAttachments]);
-  }, [t.fileTooLarge, t.invalidFileType]);
+  }, [t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -240,7 +218,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           <div className="text-center">
             <Paperclip className="w-8 h-8 text-blue-500 mx-auto mb-2" />
             <p className="text-blue-700 font-medium">
-              {locale === 'bs' ? 'Pustite fajlove ovde' : 'Drop files here'}
+              {t('dropFilesHere')}
             </p>
           </div>
         </div>
@@ -283,7 +261,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     size="sm"
                     onClick={() => removeAttachment(attachment.id)}
                     className="p-1 h-auto w-auto"
-                    title={t.removeAttachment}
+                    title={t('removeAttachment')}
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -302,7 +280,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             size="sm"
             onClick={openFileDialog}
             disabled={disabled}
-            title={t.attach}
+            title={t('attachFile')}
             className="p-2"
           >
             <Paperclip className="w-4 h-4" />
@@ -312,7 +290,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             variant="ghost"
             size="sm"
             disabled={disabled}
-            title={t.emoji}
+            title={t('emoji')}
             className="p-2"
           >
             <Smile className="w-4 h-4" />
@@ -325,7 +303,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             value={message}
             onChange={(e) => handleTyping(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t.placeholder}
+            placeholder={placeholder || t('placeholder')}
             disabled={disabled}
             className="min-h-[40px] max-h-32 resize-none"
             rows={1}
@@ -337,7 +315,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           disabled={disabled || (!message.trim() && attachments.length === 0)}
           size="sm"
           className="p-2"
-          title={t.send}
+          title={t('send')}
         >
           <Send className="w-4 h-4" />
         </Button>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,8 @@ import { Eye, EyeOff, Lock, Shield } from 'lucide-react'
 
 export function ChangePasswordForm() {
   const { user } = useAuth()
+  const t = useTranslations('auth.changePassword')
+  const tErrors = useTranslations('errors.auth')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -36,7 +39,7 @@ export function ChangePasswordForm() {
     e.preventDefault()
     
     if (!canSubmit) {
-      toast.error('Please meet all password requirements')
+      toast.error(t('passwordMustMeetRequirements'))
       return
     }
 
@@ -58,7 +61,7 @@ export function ChangePasswordForm() {
       const data = await response.json()
 
       if (response.ok) {
-        toast.success('Password changed successfully!')
+        toast.success(t('passwordChangedSuccessfully'))
         // Clear form
         setCurrentPassword('')
         setNewPassword('')
@@ -67,17 +70,17 @@ export function ChangePasswordForm() {
         if (data.rateLimited) {
           setRateLimited(true)
           setResetTime(data.resetTime)
-          toast.error(`Too many attempts. Try again in ${data.resetTime} minutes.`)
+          toast.error(tErrors('rateLimitedToast', { resetTime: data.resetTime }))
         } else {
-          toast.error(data.error || 'Failed to change password')
+          toast.error(data.error || t('failedToChangePassword'))
           if (data.remainingAttempts !== undefined) {
-            toast.warning(`${data.remainingAttempts} attempts remaining`)
+            toast.warning(t('attemptsRemaining', { count: data.remainingAttempts }))
           }
         }
       }
     } catch (err) {
       console.error('Password change error:', err)
-      toast.error('An error occurred while changing password')
+      toast.error(t('changeError'))
     } finally {
       setIsLoading(false)
     }
@@ -88,10 +91,10 @@ export function ChangePasswordForm() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lock className="h-5 w-5" />
-          Change Password
+          {t('title')}
         </CardTitle>
         <CardDescription>
-          Update your password to keep your account secure
+          {t('description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -99,7 +102,7 @@ export function ChangePasswordForm() {
           <Alert className="mb-4 border-destructive/50 text-destructive">
             <Shield className="h-4 w-4" />
             <AlertDescription>
-              Too many password change attempts. Please try again in {resetTime} minutes.
+              {tErrors('tooManyAttempts', { resetTime })}
             </AlertDescription>
           </Alert>
         )}
@@ -107,14 +110,14 @@ export function ChangePasswordForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Current Password */}
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
+            <Label htmlFor="currentPassword">{t('currentPassword')}</Label>
             <div className="relative">
               <Input
                 id="currentPassword"
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter your current password"
+                placeholder={t('enterCurrentPassword')}
                 disabled={rateLimited}
                 required
               />
@@ -137,14 +140,14 @@ export function ChangePasswordForm() {
 
           {/* New Password */}
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
+            <Label htmlFor="newPassword">{t('newPassword')}</Label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter your new password"
+                placeholder={t('enterNewPassword')}
                 disabled={rateLimited}
                 required
               />
@@ -167,14 +170,14 @@ export function ChangePasswordForm() {
 
           {/* Confirm Password */}
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your new password"
+                placeholder={t('confirmNewPassword')}
                 disabled={rateLimited}
                 required
               />
@@ -202,14 +205,14 @@ export function ChangePasswordForm() {
                     <div className="h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center">
                       <div className="h-2 w-2 bg-background rounded-full" />
                     </div>
-                    <span className="text-blue-600">Passwords match</span>
+                    <span className="text-blue-600">{t('passwordsMatch')}</span>
                   </>
                 ) : (
                   <>
                     <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center">
                       <div className="h-1 w-2 bg-background rounded-full" />
                     </div>
-                    <span className="text-red-600">Passwords do not match</span>
+                    <span className="text-red-600">{t('passwordsDoNotMatch')}</span>
                   </>
                 )}
               </div>
@@ -234,7 +237,7 @@ export function ChangePasswordForm() {
             disabled={isLoading || !canSubmit || rateLimited}
             className="w-full"
           >
-            {isLoading ? 'Changing Password...' : 'Change Password'}
+            {isLoading ? t('changingPassword') : t('changePasswordButton')}
           </Button>
         </form>
 
@@ -242,12 +245,12 @@ export function ChangePasswordForm() {
           <div className="flex items-start gap-2">
             <Shield className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div className="text-xs text-muted-foreground">
-              <p className="font-medium mb-1">Security Notes:</p>
+              <p className="font-medium mb-1">{t('securityNotes')}</p>
               <ul className="space-y-1">
-                <li>• Maximum 3 password change attempts per 15 minutes</li>
-                <li>• Account will be temporarily locked after exceeding limit</li>
-                <li>• Use a strong, unique password</li>
-                <li>• Don&apos;t reuse your current password</li>
+                <li>• {t('maxAttempts')}</li>
+                <li>• {t('accountLocked')}</li>
+                <li>• {t('useStrongPassword')}</li>
+                <li>• {t('dontReuseCurrentPassword')}</li>
               </ul>
             </div>
           </div>

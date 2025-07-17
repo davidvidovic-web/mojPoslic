@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useAuth } from '@/contexts/auth-context'
+import { useTranslations } from 'next-intl'
 import { useNotificationStore } from '@/stores/notification-store'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -65,6 +66,8 @@ interface JobApplication {
 export function DashboardApplicationManager() {
   const { user } = useAuth()
   const { addNotification } = useNotificationStore()
+  const t = useTranslations('admin.applications')
+  const tErrors = useTranslations('errors')
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedApplications, setSelectedApplications] = useState<string[]>([])
@@ -91,14 +94,14 @@ export function DashboardApplicationManager() {
         setApplications(data.applications || [])
       } catch (error) {
         console.error('Error fetching applications:', error)
-        toast.error('Failed to load applications')
+        toast.error(tErrors('failedToLoad.applications'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchApplications()
-  }, [user])
+  }, [user, tErrors])
 
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
@@ -201,7 +204,7 @@ export function DashboardApplicationManager() {
       toast.success(`Application ${newStatus.toLowerCase()}`)
     } catch (error) {
       console.error('Error updating application:', error)
-      toast.error('Failed to update application')
+      toast.error(tErrors('failedToUpdate.application'))
     }
   }
 
@@ -244,7 +247,7 @@ export function DashboardApplicationManager() {
       toast.success(`${applicationIds.length} applications updated`)
     } catch (error) {
       console.error('Error updating applications:', error)
-      toast.error('Failed to update applications')
+      toast.error(tErrors('failedToUpdate.applications'))
     }
   }
 
@@ -303,7 +306,7 @@ export function DashboardApplicationManager() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-medium text-gray-900 truncate">
-                    {application.user.name || 'No name provided'}
+                    {application.user.name || t('noNameProvided')}
                   </h3>
                   <Badge className={`ml-2 ${getStatusColor(application.status)}`}>
                     {application.status.replace('_', ' ')}
@@ -315,11 +318,11 @@ export function DashboardApplicationManager() {
                 <p className="text-xs text-gray-400">
                   Applied {(() => {
                     const dateStr = application.createdAt || application.appliedAt
-                    if (!dateStr) return 'recently'
+                    if (!dateStr) return t('recently')
                     try {
                       return formatDistanceToNow(new Date(dateStr), { addSuffix: true })
                     } catch {
-                      return 'recently'
+                      return t('recently')
                     }
                   })()}
                 </p>
@@ -357,7 +360,7 @@ export function DashboardApplicationManager() {
 
               {application.user.skills && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Skills</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">{t('skills')}</h4>
                   <div className="flex flex-wrap gap-2">
                     {application.user.skills.split(',').filter(Boolean).map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
@@ -375,7 +378,7 @@ export function DashboardApplicationManager() {
                   disabled={application.status === 'SHORTLISTED'}
                 >
                   <Star className="h-4 w-4 mr-1" />
-                  Shortlist
+                  {t('shortlist')}
                 </Button>
                 
                 <Button
@@ -385,7 +388,7 @@ export function DashboardApplicationManager() {
                   disabled={application.status === 'INTERVIEW_SCHEDULED'}
                 >
                   <Clock className="h-4 w-4 mr-1" />
-                  Schedule Interview
+                  {t('scheduleInterview')}
                 </Button>
                 
                 <Button
@@ -396,7 +399,7 @@ export function DashboardApplicationManager() {
                   disabled={application.status === 'ACCEPTED'}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
-                  Accept
+                  {t('accept')}
                 </Button>
                 
                 <Button
@@ -407,7 +410,7 @@ export function DashboardApplicationManager() {
                   disabled={application.status === 'REJECTED'}
                 >
                   <XCircle className="h-4 w-4 mr-1" />
-                  Reject
+                  {t('reject')}
                 </Button>
               </div>
             </div>
@@ -462,13 +465,13 @@ export function DashboardApplicationManager() {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="REVIEWED">Reviewed</SelectItem>
-              <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
-              <SelectItem value="INTERVIEW_SCHEDULED">Interview</SelectItem>
-              <SelectItem value="ACCEPTED">Accepted</SelectItem>
-              <SelectItem value="REJECTED">Rejected</SelectItem>
+              <SelectItem value="all">{t('allStatuses')}</SelectItem>
+              <SelectItem value="PENDING">{t('status.pending')}</SelectItem>
+              <SelectItem value="REVIEWED">{t('status.reviewed')}</SelectItem>
+              <SelectItem value="SHORTLISTED">{t('status.shortlisted')}</SelectItem>
+              <SelectItem value="INTERVIEW_SCHEDULED">{t('status.interview')}</SelectItem>
+              <SelectItem value="ACCEPTED">{t('status.accepted')}</SelectItem>
+              <SelectItem value="REJECTED">{t('status.rejected')}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -477,7 +480,7 @@ export function DashboardApplicationManager() {
               <SelectValue placeholder="Job" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Jobs</SelectItem>
+              <SelectItem value="all">{t('allJobs')}</SelectItem>
               {uniqueJobs.map((job) => (
                 <SelectItem key={job.id} value={job.id}>
                   {job.title}
@@ -491,9 +494,9 @@ export function DashboardApplicationManager() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="oldest">Oldest</SelectItem>
-              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="newest">{t('sort.newest')}</SelectItem>
+              <SelectItem value="oldest">{t('sort.oldest')}</SelectItem>
+              <SelectItem value="name">{t('sort.name')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

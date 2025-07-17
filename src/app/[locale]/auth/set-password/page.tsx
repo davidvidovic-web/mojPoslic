@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,7 @@ function SetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
+  const t = useTranslations('auth.setPassword')
   
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -24,22 +26,22 @@ function SetPasswordForm() {
     e.preventDefault()
     
     if (!password || !confirmPassword) {
-      showToast.error('Please fill in all fields')
+      showToast.error(t('pleaseEnterAllFields'))
       return
     }
 
     if (password !== confirmPassword) {
-      showToast.error('Passwords do not match')
+      showToast.error(t('passwordsDoNotMatch'))
       return
     }
 
     if (password.length < 8) {
-      showToast.error('Password must be at least 8 characters long')
+      showToast.error(t('passwordMustBeAtLeast8Chars'))
       return
     }
 
     if (!token) {
-      showToast.error('Invalid or missing token')
+      showToast.error(t('invalidOrMissingToken'))
       return
     }
 
@@ -62,7 +64,7 @@ function SetPasswordForm() {
         throw new Error(errorData.error || 'Failed to set password')
       }
 
-      showToast.success('Password set successfully!')
+      showToast.success(t('passwordSetSuccessfully'))
       router.push('/auth/signin?message=password-set')
     } catch (error) {
       showToast.error(error instanceof Error ? error.message : 'Failed to set password')
@@ -104,14 +106,14 @@ function SetPasswordForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">{t('newPassword')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your new password"
+                  placeholder={t('enterNewPassword')}
                   required
                   minLength={8}
                 />
@@ -132,14 +134,14 @@ function SetPasswordForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your new password"
+                  placeholder={t('confirmNewPassword')}
                   required
                   minLength={8}
                 />
@@ -164,7 +166,7 @@ function SetPasswordForm() {
               className="w-full" 
               disabled={loading}
             >
-              {loading ? 'Setting Password...' : 'Set Password'}
+              {loading ? t('settingPassword') : t('setPasswordButton')}
             </Button>
           </form>
         </CardContent>

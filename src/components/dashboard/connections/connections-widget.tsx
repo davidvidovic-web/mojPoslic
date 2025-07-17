@@ -9,12 +9,14 @@ import { PurchaseConnectionsSection } from './purchase-connections-section'
 import { LowConnectionsWarning } from './low-connections-warning'
 import { ConnectionActivity } from './connection-activity'
 import { Zap, TrendingUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface ConnectionsWidgetProps {
   className?: string
 }
 
 export function ConnectionsWidget({ className }: ConnectionsWidgetProps) {
+  const t = useTranslations('dashboard.connections')
   const [connections, setConnections] = useState(0)
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
@@ -61,7 +63,7 @@ export function ConnectionsWidget({ className }: ConnectionsWidgetProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            Connections Overview
+            {t('overview')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -78,7 +80,7 @@ export function ConnectionsWidget({ className }: ConnectionsWidgetProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5" />
-          Connections Overview
+          {t('overview')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -102,11 +104,11 @@ export function ConnectionsWidget({ className }: ConnectionsWidgetProps) {
           <div>
             <h4 className="font-medium flex items-center gap-2 mb-3">
               <TrendingUp className="h-4 w-4" />
-              Recent Activity (Preview)
+              {t('recentActivityPreview')}
             </h4>
             <ConnectionActivity history={history.slice(0, 3)} />
             <p className="text-xs text-muted-foreground text-center mt-2">
-              View full history in the "Connections History" section below
+              {t('viewFullHistory')}
             </p>
           </div>
         )}

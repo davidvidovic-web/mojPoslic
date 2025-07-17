@@ -13,9 +13,15 @@ import { UserRole } from '@prisma/client'
 import { useEffect, Suspense, useRef } from 'react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import type { AuthUser } from '@/contexts/auth-context';
 
-function DashboardContent() {
-  const { user, loading } = useAuth()
+type DashboardContentProps = {
+  user: AuthUser | null;
+  loading: boolean;
+};
+
+function DashboardContent({ user, loading }: DashboardContentProps) {
+  const t = useTranslations()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectAttempted = useRef(false)
@@ -134,7 +140,7 @@ function DashboardContent() {
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-8">
               <p className="text-muted-foreground">
-                Unknown user role. Please contact support.
+                {t('errors.unknownUserRole')}
               </p>
             </CardContent>
           </Card>
@@ -144,16 +150,18 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations('dashboard');
+  const { user, loading } = useAuth();
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <p className="text-muted-foreground">{t('loading.dashboard')}</p>
         </div>
       </div>
     }>
-      <DashboardContent />
+      <DashboardContent user={user} loading={loading} />
     </Suspense>
   )
 }

@@ -1,16 +1,70 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
 // Create a simple Prisma client for this endpoint
 const simplePrisma = new PrismaClient()
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Get basic job data first
+    const { searchParams } = new URL(request.url)
+    
+    // Extract filter parameters
+    const search = searchParams.get('search')
+    const city = searchParams.get('city')
+    const category = searchParams.get('category')
+    const type = searchParams.get('type')
+    
+    // Build where clause based on filters
+    const where: {
+      isActive: boolean
+      OR?: Array<{
+        title?: { contains: string; mode: 'insensitive' }
+        company?: { contains: string; mode: 'insensitive' }
+        description?: { contains: string; mode: 'insensitive' }
+      }>
+      cityId?: string
+      categoryId?: string
+      type?: 'quick_job' | 'full_time' | 'part_time' | 'remote'
+    } = {
+      isActive: true
+    }
+    
+    // Search filter - search in title, company, description
+    if (search && search.trim() !== '') {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { company: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+    
+    // City filter
+    if (city && city !== 'all') {
+      where.cityId = city
+    }
+    
+    // Category filter
+    if (category && category !== 'all') {
+      where.categoryId = category
+    }
+    
+    // Job type filter
+    if (type && type !== 'all') {
+      const typeMap: { [key: string]: string } = {
+        'quick_job': 'quick_job',
+        'full_time': 'full_time', 
+        'part_time': 'part_time',
+        'remote': 'remote'
+      }
+      const mappedType = typeMap[type] || type
+      if (['quick_job', 'full_time', 'part_time', 'remote'].includes(mappedType)) {
+        where.type = mappedType as 'quick_job' | 'full_time' | 'part_time' | 'remote'
+      }
+    }
+    
+    // Get filtered job data
     const jobs = await simplePrisma.jobListing.findMany({
-      where: {
-        isActive: true
-      },
+      where,
       orderBy: {
         createdAt: 'desc'
       }

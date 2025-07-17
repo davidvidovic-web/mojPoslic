@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Briefcase, Star, CheckCircle } from "lucide-react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 
 interface JobCardProps {
   job: Job
@@ -15,6 +15,7 @@ interface JobCardProps {
 
 export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardProps) {
   const t = useTranslations('jobs')
+  const locale = useLocale()
   
   // Get relative time string for job posting date
   const getRelativeTimeString = (date: string) => {
@@ -22,11 +23,11 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
     const postDate = new Date(date)
     const diffInDays = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24))
     
-    if (diffInDays === 0) return 'Today'
-    if (diffInDays === 1) return 'Yesterday'
-    if (diffInDays < 7) return `${diffInDays} days ago`
-    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`
-    return `${Math.floor(diffInDays / 30)} months ago`
+    if (diffInDays === 0) return t('time.today')
+    if (diffInDays === 1) return t('time.yesterday')
+    if (diffInDays < 7) return t('time.daysAgo', { count: diffInDays })
+    if (diffInDays < 30) return t('time.weeksAgo', { count: Math.floor(diffInDays / 7) })
+    return t('time.monthsAgo', { count: Math.floor(diffInDays / 30) })
   }
   
   // Format job type for display
@@ -72,9 +73,12 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
               {getRelativeTimeString(job.posted_at || job.createdAt)}
             </span>
           </div>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {truncateDescription(job.description, 160)}
-          </p>
+          <div 
+            className="text-sm text-muted-foreground line-clamp-2"
+            dangerouslySetInnerHTML={{ 
+              __html: truncateDescription(job.description, 160) 
+            }}
+          />
         </div>
         <div className="flex flex-col justify-between md:items-end gap-4">
           <div className="flex flex-wrap gap-2">
@@ -82,13 +86,13 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
             {job.is_featured && (
               <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
                 <Star className="h-3 w-3 fill-current" />
-                Featured
+                {t('card.featured')}
               </Badge>
             )}
             {hasApplied && (
               <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs flex items-center gap-1">
                 <CheckCircle className="h-3 w-3" />
-                Applied
+                {t('card.applied')}
               </Badge>
             )}
           </div>
@@ -131,24 +135,27 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
         )}
       </div>
       
-      <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
-        {truncateDescription(job.description, 120)}
-      </p>
+      <div 
+        className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3"
+        dangerouslySetInnerHTML={{ 
+          __html: truncateDescription(job.description, 120) 
+        }}
+      />
       
       <div className="flex flex-wrap gap-2 mb-4">
         {job.is_featured && (
           <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
             <Star className="h-3 w-3 fill-current" />
-            Featured
+            {t('card.featured')}
           </Badge>
         )}
         {hasApplied && (
           <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-xs flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
-            Applied
+            {t('card.applied')}
           </Badge>
         )}
-        {job.category && <Badge variant="secondary">{job.category.name}</Badge>}
+        {job.category && <Badge variant="secondary">{locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}</Badge>}
       </div>
       
       <Button asChild className="w-full mt-auto" variant={hasApplied ? "outline" : "default"}>

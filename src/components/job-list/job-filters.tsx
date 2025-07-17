@@ -67,21 +67,8 @@ export function JobFilters({
 
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
-      {/* Search Bar - Always Visible */}
+      {/* Collapsible Filters with Search Included */}
       <div className="flex flex-col gap-4">
-        <div className="flex-1 relative">
-          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-            <Search className="h-4 w-4" />
-          </span>
-          <Input
-            placeholder={t('searchPlaceholder') || "Search jobs, companies, skills, or categories..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 border-border/50"
-          />
-        </div>
-
-        {/* Collapsible Filters */}
         <Collapsible open={isFiltersOpen} onOpenChange={toggleFilters}>
           <CollapsibleTrigger asChild>
             <Button 
@@ -103,6 +90,20 @@ export function JobFilters({
           
           <CollapsibleContent className="mt-4">
             <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Bar */}
+              <div className="relative sm:flex-1">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                  <Search className="h-4 w-4" />
+                </span>
+                <Input
+                  placeholder={t('searchPlaceholder') || "Search jobs, companies, skills, or categories..."}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-border/50"
+                />
+              </div>
+              
+              {/* Other Filters */}
               <CitiesFilter
                 value={cityFilter}
                 onChange={setCityFilter}

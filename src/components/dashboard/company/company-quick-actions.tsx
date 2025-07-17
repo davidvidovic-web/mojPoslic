@@ -5,8 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Settings, Users, TrendingUp, BarChart, Building } from "lucide-react"
 import Link from "next/link"
+import { useTranslations } from 'next-intl'
 
 export function CompanyQuickActions() {
+  const t = useTranslations('dashboard.company.quickActions')
+  const tCommon = useTranslations('common')
+  
   return (
     <Card className="border-purple-200 dark:border-purple-800">
       <CardHeader className="pb-4">
@@ -14,7 +18,7 @@ export function CompanyQuickActions() {
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40">
             <BarChart className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </div>
-          Quick Actions
+          {t('title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -28,10 +32,10 @@ export function CompanyQuickActions() {
             <Plus className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-purple-900 dark:text-purple-100">Post New Job</div>
-            <div className="text-xs text-purple-600 dark:text-purple-400">Create job listing</div>
+            <div className="font-medium text-purple-900 dark:text-purple-100">{t('postNewJob')}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400">{t('postNewJobDesc')}</div>
           </div>
-          <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+          <Badge variant="secondary" className="ml-auto text-xs">{tCommon('status.comingSoon')}</Badge>
         </Button>
 
         {/* Manage Team */}
@@ -44,10 +48,10 @@ export function CompanyQuickActions() {
             <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-purple-900 dark:text-purple-100">Manage Team</div>
-            <div className="text-xs text-purple-600 dark:text-purple-400">Add team members</div>
+            <div className="font-medium text-purple-900 dark:text-purple-100">{t('manageTeam')}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400">{t('manageTeamDesc')}</div>
           </div>
-          <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+          <Badge variant="secondary" className="ml-auto text-xs">{tCommon('status.comingSoon')}</Badge>
         </Button>
 
         {/* Company Settings */}
@@ -60,8 +64,8 @@ export function CompanyQuickActions() {
               <Settings className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-left">
-              <div className="font-medium text-purple-900 dark:text-purple-100">Company Settings</div>
-              <div className="text-xs text-purple-600 dark:text-purple-400">Update company profile</div>
+              <div className="font-medium text-purple-900 dark:text-purple-100">{t('companySettings')}</div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">{t('companySettingsDesc')}</div>
             </div>
           </Button>
         </Link>
@@ -76,10 +80,10 @@ export function CompanyQuickActions() {
             <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-purple-900 dark:text-purple-100">Promote Jobs</div>
-            <div className="text-xs text-purple-600 dark:text-purple-400">Boost visibility</div>
+            <div className="font-medium text-purple-900 dark:text-purple-100">{t('promoteJobs')}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400">{t('promoteJobsDesc')}</div>
           </div>
-          <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+          <Badge variant="secondary" className="ml-auto text-xs">{tCommon('status.comingSoon')}</Badge>
         </Button>
 
         {/* Enterprise Hub */}
@@ -92,20 +96,20 @@ export function CompanyQuickActions() {
             <Building className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-purple-900 dark:text-purple-100">Enterprise Hub</div>
-            <div className="text-xs text-purple-600 dark:text-purple-400">Advanced tools</div>
+            <div className="font-medium text-purple-900 dark:text-purple-100">{t('enterpriseHub')}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400">{t('enterpriseHubDesc')}</div>
           </div>
-          <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+          <Badge variant="secondary" className="ml-auto text-xs">{tCommon('status.comingSoon')}</Badge>
         </Button>
 
         {/* Enterprise Tips Section */}
         <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
           <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
             <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-            Enterprise Tip
+            {t('enterpriseTip')}
           </h4>
           <p className="text-sm text-purple-700 dark:text-purple-300">
-            Featured job postings receive 3x more qualified applications and faster hiring results.
+            {t('enterpriseTipText')}
           </p>
         </div>
       </CardContent>

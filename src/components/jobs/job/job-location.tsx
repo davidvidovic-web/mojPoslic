@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin } from "lucide-react"
 import { Job } from "@/types/job"
 import { JobLocationMap } from "@/components/jobs/job-location-map"
+import { useTranslations } from 'next-intl'
 
 interface JobLocationProps {
   job: Job
@@ -11,6 +12,8 @@ interface JobLocationProps {
 }
 
 export function JobLocation({ job, showFullLocation = false }: JobLocationProps) {
+  const t = useTranslations('jobs.location')
+  
   // If no location data at all, don't render
   if (!job.city && !job.job_address && !job.job_latitude && !job.job_longitude) {
     return null
@@ -21,7 +24,7 @@ export function JobLocation({ job, showFullLocation = false }: JobLocationProps)
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="h-5 w-5" />
-          Job Location
+          {t('jobLocation')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -58,7 +61,7 @@ export function JobLocation({ job, showFullLocation = false }: JobLocationProps)
         {/* Show a message if location is hidden */}
         {!showFullLocation && (job.job_address || (job.job_latitude && job.job_longitude)) && (
           <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-            📍 Exact address and map will be revealed to the selected tasker for client safety.
+            {t('exactAddressMessage')}
           </div>
         )}
       </CardContent>

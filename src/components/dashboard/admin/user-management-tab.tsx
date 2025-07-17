@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { getRoleDisplayName } from '@/lib/role-utils'
 import { useUpdateUserRole, useDeleteUser, type AdminUser } from '@/hooks/use-admin'
+import { useTranslations } from 'next-intl'
 
 interface UserManagementTabProps {
   users: AdminUser[]
@@ -25,6 +26,7 @@ interface UserManagementTabProps {
 }
 
 export function UserManagementTab({ users, currentUserId }: UserManagementTabProps) {
+  const t = useTranslations('admin.userManagement')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all')
   const [userPage, setUserPage] = useState(1)
@@ -46,7 +48,7 @@ export function UserManagementTab({ users, currentUserId }: UserManagementTabPro
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return
+    if (!confirm(t('confirmDelete'))) return
     deleteUserMutation.mutate(userId)
   }
 
@@ -94,7 +96,7 @@ export function UserManagementTab({ users, currentUserId }: UserManagementTabPro
         <div className="space-y-4">
           <CardTitle className="flex items-center">
             <Users className="h-5 w-5 mr-2" />
-            User Management
+            {t('title')}
           </CardTitle>
           
           {/* Mobile-responsive filters */}
@@ -102,7 +104,7 @@ export function UserManagementTab({ users, currentUserId }: UserManagementTabPro
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search users..."
+                placeholder={t('searchUsers')}
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
                 className="pl-10"
@@ -113,14 +115,14 @@ export function UserManagementTab({ users, currentUserId }: UserManagementTabPro
               onValueChange={setUserRoleFilter}
             >
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filter by role" />
+                <SelectValue placeholder={t('filterByRole')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admins</SelectItem>
-                <SelectItem value="client">Clients</SelectItem>
-                <SelectItem value="tasker">Taskers</SelectItem>
-                <SelectItem value="company">Companies</SelectItem>
+                <SelectItem value="all">{t('allRoles')}</SelectItem>
+                <SelectItem value="admin">{t('admins')}</SelectItem>
+                <SelectItem value="client">{t('clients')}</SelectItem>
+                <SelectItem value="tasker">{t('taskers')}</SelectItem>
+                <SelectItem value="company">{t('companies')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -141,7 +143,7 @@ export function UserManagementTab({ users, currentUserId }: UserManagementTabPro
                     <h4 className="font-semibold truncate">{user.name}</h4>
                     <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                     <p className="text-xs text-muted-foreground">
-                      Joined {formatDate(user.createdAt)}
+                      {t('joined')} {formatDate(user.createdAt)}
                     </p>
                   </div>
                 </div>

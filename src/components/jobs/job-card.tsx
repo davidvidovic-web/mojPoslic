@@ -29,16 +29,13 @@ import {
 } from "lucide-react";
 import { Job } from "@/types/job";
 import {
-  formatJobType,
   getJobTypeBadgeVariant,
-  formatTransportation,
   formatTimeAgo,
-  formatDuration,
 } from "@/lib/job-utils";
 import { useAuth } from "@/contexts/auth-context";
 import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { toast } from "sonner";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface JobCardProps {
   job: Job;
@@ -51,6 +48,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
   const router = useRouter();
   const { user } = useAuth();
   const t = useTranslations('jobCard');
+  const locale = useLocale();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -59,6 +57,47 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
 
   // Check if the current user owns this job
   const isOwner = user && job.posted_by === user.id;
+
+  // Translation functions for job types, transportation, and duration
+  const getTranslatedJobType = (type: string): string => {
+    const typeKey = type.replace(/[-_]/g, '').toLowerCase();
+    switch (typeKey) {
+      case 'fulltime': return t('jobTypes.fullTime');
+      case 'parttime': return t('jobTypes.partTime');
+      case 'remote': return t('jobTypes.remote');
+      case 'quickjob': return t('jobTypes.quickJob');
+      case 'contract': return t('jobTypes.contract');
+      case 'internship': return t('jobTypes.internship');
+      case 'freelance': return t('jobTypes.freelance');
+      default: return type.charAt(0).toUpperCase() + type.slice(1).replace(/[-_]/g, ' ');
+    }
+  };
+
+  const getTranslatedTransportation = (transportation?: string, amount?: number): string | null => {
+    if (!transportation) return null;
+    
+    switch (transportation) {
+      case 'provided': return t('transportation.provided');
+      case 'not_provided': return t('transportation.notProvided');
+      case 'employee_responsible':
+      case 'tasker_responsible': return t('transportation.taskerResponsible');
+      case 'compensated': 
+        return amount ? t('transportation.compensated', { amount }) : t('transportation.compensatedGeneral');
+      default: return transportation.charAt(0).toUpperCase() + transportation.slice(1).replace(/_/g, ' ');
+    }
+  };
+
+  const getTranslatedDuration = (duration?: string): string => {
+    if (!duration) return '';
+    
+    // Check if we have a translation for this duration
+    try {
+      return t(`duration.${duration}`);
+    } catch {
+      // Fallback to replacing underscores with spaces
+      return duration.replace('_', ' ');
+    }
+  };
 
   // Update saved state when prop changes
   useEffect(() => {
@@ -111,22 +150,11 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
       }
     } catch (error) {
       console.error('Error toggling job save:', error);
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('jobPost.errors.somethingWentWrong'));
     } finally {
       setIsSaving(false);
     }
   };
-
-  // Mock data for reviews (in real app, this would come from API)
-  const mockUserData = {
-    rating: (Math.random() * 2 + 3).toFixed(1), // Rating between 3.0 and 5.0
-    reviewCount: Math.floor(Math.random() * 50) + 1, // 1 to 50 reviews
-  };
-
-  // Mock application count for demo (memoized to prevent dependency issues)
-  const getMockApplicationCount = useCallback(() => {
-    return Math.floor(Math.random() * 15); // 0 to 14 applications
-  }, []);
 
   // Check application count for owner's jobs
   const checkApplicationCount = useCallback(async () => {
@@ -147,11 +175,8 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
   useEffect(() => {
     if (isOwner) {
       checkApplicationCount();
-    } else {
-      // For non-owners, set mock application count for demo
-      setApplicationCount(getMockApplicationCount());
     }
-  }, [isOwner, checkApplicationCount, getMockApplicationCount]);
+  }, [isOwner, checkApplicationCount]);
 
   const canEdit =
     isOwner && (applicationCount === null || applicationCount === 0);
@@ -243,7 +268,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
         {/* 1. Posted time and save button */}
         <div className="flex justify-between items-start mb-3">
           <span className="text-xs text-muted-foreground">
-            {formatTimeAgo(job.posted_at)}
+            {job.posted_at ? formatTimeAgo(job.posted_at) : ''}
           </span>
           <div className="flex items-center gap-2">
             {/* Save button for non-owners and taskers only */}
@@ -282,7 +307,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
           {/* Location */}
           <div className="flex items-center text-muted-foreground">
             <MapPin className="h-4 w-4 mr-1" />
-            <span>{job.city?.name || "Remote"}</span>
+            <span>{job.city?.name || t('jobTypes.remote')}</span>
           </div>
           
           {/* Payment */}
@@ -297,7 +322,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
           {job.duration && (
             <div className="flex items-center text-muted-foreground">
               <Clock className="h-4 w-4 mr-1" />
-              {formatDuration(job.duration)}
+              {getTranslatedDuration(job.duration)}
             </div>
           )}
         </div>
@@ -306,9 +331,12 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
       <CardContent className="flex-1 p-4 pt-0 space-y-3">
         {/* 5. Description - normal font with read more button */}
         <div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {truncatedDescription}
-          </p>
+          <div 
+            className="text-sm text-muted-foreground leading-relaxed"
+            dangerouslySetInnerHTML={{ 
+              __html: truncatedDescription 
+            }}
+          />
           {shouldTruncate && (
             <button
               onClick={toggleDescription}
@@ -329,19 +357,19 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
           )}
           
           <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs">
-            {formatJobType(job.type)}
+            {getTranslatedJobType(job.type)}
           </Badge>
 
           {job.category && (
             <Badge variant="secondary" className="text-xs">
-              {job.category.name}
+              {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
             </Badge>
           )}
 
           {job.transportation && (
             <Badge variant="outline" className="text-xs">
               <Car className="h-3 w-3 mr-1" />
-              {formatTransportation(
+              {getTranslatedTransportation(
                 job.transportation,
                 job.transportation_amount
               )}
@@ -349,18 +377,7 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
           )}
         </div>
 
-        {/* 6. Verification and user reviews */}
-        <div className="space-y-2">
-          {/* Reviews only (verification hidden for now) */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-              <span>{mockUserData.rating} ({mockUserData.reviewCount} {t('reviews')})</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 7. Amount of people applied - for non-owners, show at bottom */}
+        {/* 6. Amount of people applied - for non-owners, show at bottom */}
         {!isOwner && applicationCount !== null && (
           <div className="text-xs text-muted-foreground">
             <Users className="h-3 w-3 mr-1 inline" />

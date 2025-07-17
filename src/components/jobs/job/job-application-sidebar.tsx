@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslations } from 'next-intl'
 import { 
   Building2,
   ExternalLink, 
@@ -21,18 +22,21 @@ interface JobApplicationSidebarProps {
 }
 
 export function JobApplicationSidebar({ job, user, handleApply, showAboutSection = true, hasApplied = false, isOwner = false }: JobApplicationSidebarProps) {
+  const t = useTranslations('jobApplication');
+  const tCommon = useTranslations('common');
+
   return (
     <div className="space-y-6">
       {/* Apply Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Apply for this position</CardTitle>
+          <CardTitle>{t('applyForPosition')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {isOwner ? (
             <div className="text-center py-4">
               <p className="text-sm text-muted-foreground">
-                This is your job posting. You can view applications in your dashboard.
+                {t('ownerMessage')}
               </p>
             </div>
           ) : (
@@ -47,11 +51,11 @@ export function JobApplicationSidebar({ job, user, handleApply, showAboutSection
                 {hasApplied ? (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    {job.application_url ? "View Application Portal" : "Applied"}
+                    {job.application_url ? t('viewApplicationPortal') : t('applied')}
                   </>
                 ) : (
                   <>
-                    Apply Now
+                    {t('applyNow')}
                     {job.application_url && <ExternalLink className="h-4 w-4 ml-2" />}
                   </>
                 )}
@@ -59,13 +63,13 @@ export function JobApplicationSidebar({ job, user, handleApply, showAboutSection
               
               {!user && (
                 <p className="text-xs text-muted-foreground text-center">
-                  You need to log in to apply for this job
+                  {t('loginToApply')}
                 </p>
               )}
               
               {hasApplied && !job.application_url && (
                 <p className="text-xs text-muted-foreground text-center">
-                  You have already applied for this job. Check your dashboard for application status.
+                  {t('applicationSubmitted')}
                 </p>
               )}
             </>
@@ -79,13 +83,13 @@ export function JobApplicationSidebar({ job, user, handleApply, showAboutSection
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              About {job.company}
+              {t('aboutCompany', { company: job.company })}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{job.city?.name || 'Remote'}</span>
+              <span>{job.city?.name || tCommon('jobTypes.remote')}</span>
             </div>
             
             {job.email && (
@@ -121,7 +125,7 @@ export function JobApplicationSidebar({ job, user, handleApply, showAboutSection
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Company Website
+                  {t('companyWebsite')}
                 </a>
               </div>
             )}
@@ -135,7 +139,7 @@ export function JobApplicationSidebar({ job, user, handleApply, showAboutSection
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Application Portal
+                  {t('applicationPortal')}
                 </a>
               </div>
             )}

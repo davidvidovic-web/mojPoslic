@@ -2,12 +2,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign, TrendingUp, CreditCard, PiggyBank } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export function CompanyFinancesSection() {
+  const t = useTranslations('dashboard.company')
+  
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-6">Finances</h2>
+        <h2 className="text-2xl font-bold mb-6">{t('finances.title')}</h2>
         
         {/* Coming Soon Overlay */}
         <div className="relative">
@@ -69,11 +72,11 @@ export function CompanyFinancesSection() {
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
             <Card className="w-96">
               <CardHeader>
-                <CardTitle className="text-center">Coming Soon</CardTitle>
+                <CardTitle className="text-center">{t('finances.comingSoon')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-center text-muted-foreground">
-                  Financial management features are currently under development and will be available soon.
+                  {t('finances.underDevelopment')}
                 </p>
               </CardContent>
             </Card>

@@ -8,12 +8,14 @@ import { Loader2, Check, CreditCard } from 'lucide-react'
 import { CONNECTION_PACKAGES, type ConnectionPackage } from '@/lib/stripe'
 import { getStripe } from '@/lib/stripe'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface PurchaseConnectionsProps {
   onClose?: () => void
 }
 
 export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
+  const t = useTranslations('purchase.connections')
   const [loading, setLoading] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
 
@@ -74,9 +76,9 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h3 className="text-lg font-semibold">Purchase Connections</h3>
+        <h3 className="text-lg font-semibold">{t('title')}</h3>
         <p className="text-sm text-muted-foreground">
-          Get more connections to apply for jobs and post opportunities
+          {t('description')}
         </p>
       </div>
 
@@ -103,11 +105,11 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Connections:</span>
+                  <span>{t('connections')}</span>
                   <span className="font-medium">{pkg.connections}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span>Price per connection:</span>
+                  <span>{t('pricePerConnection')}</span>
                   <span className="font-medium">
                     €{(pkg.price / pkg.connections).toFixed(3)}
                   </span>
@@ -121,12 +123,12 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
                   {loading && selectedPackage === pkg.id ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
+                      {t('processing')}
                     </>
                   ) : (
                     <>
                       <CreditCard className="mr-2 h-4 w-4" />
-                      Purchase Now
+                      {t('purchaseNow')}
                     </>
                   )}
                 </Button>
@@ -139,18 +141,18 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Check className="h-4 w-4 text-blue-500" />
-          <span>Secure payment powered by Stripe</span>
+          <span>{t('securePayment')}</span>
         </div>
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Check className="h-4 w-4 text-blue-500" />
-          <span>Connections are added instantly after payment</span>
+          <span>{t('instantAdd')}</span>
         </div>
       </div>
 
       {onClose && (
         <div className="text-center">
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t('cancel')}
           </Button>
         </div>
       )}

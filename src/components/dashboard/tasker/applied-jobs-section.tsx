@@ -20,6 +20,7 @@ import {
 import { Job } from '@/types/job'
 import { formatClientName } from '@/lib/job-utils'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 interface JobApplication {
   id: string
@@ -36,6 +37,8 @@ interface AppliedJobsSectionProps {
 }
 
 export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
+  const t = useTranslations('dashboard.tasker.applications')
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING': return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
@@ -58,6 +61,19 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
       case 'REJECTED': return <XCircle className="h-4 w-4" />
       case 'WITHDRAWN': return <XCircle className="h-4 w-4" />
       default: return <Briefcase className="h-4 w-4" />
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'PENDING': return t('status.pending')
+      case 'REVIEWED': return t('status.reviewed')
+      case 'SHORTLISTED': return t('status.shortlisted')
+      case 'INTERVIEW_SCHEDULED': return t('status.interviewScheduled')
+      case 'SELECTED': return t('status.selected')
+      case 'REJECTED': return t('status.rejected')
+      case 'WITHDRAWN': return t('status.withdrawn')
+      default: return status
     }
   }
 
@@ -102,7 +118,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
                 )}
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  Applied {formatDate(application.appliedAt)}
+                  {t('applied')} {formatDate(application.appliedAt)}
                 </div>
                 {application.job.salary && (
                   <div className="font-medium text-foreground">
@@ -114,7 +130,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
               {/* Application message preview */}
               {application.message && (
                 <div className="bg-muted/50 rounded-md p-3 mb-3">
-                  <p className="text-sm text-muted-foreground mb-1">Your application message:</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t('yourApplicationMessage')}:</p>
                   <p className="text-sm line-clamp-2">{application.message}</p>
                 </div>
               )}
@@ -122,7 +138,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
               {/* Client feedback */}
               {application.feedback && (
                 <div className="bg-blue-50 dark:bg-blue-950/20 rounded-md p-3 mb-3">
-                  <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">Client feedback:</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">{t('clientFeedback')}:</p>
                   <p className="text-sm text-blue-700 dark:text-blue-300">{application.feedback}</p>
                 </div>
               )}
@@ -133,7 +149,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
         <div className="flex flex-col items-end gap-2 ml-4">
           <Badge className={getStatusColor(application.status)}>
             {getStatusIcon(application.status)}
-            <span className="ml-1 capitalize">{application.status}</span>
+            <span className="ml-1">{getStatusText(application.status)}</span>
           </Badge>
           
           {/* Action buttons */}
@@ -141,14 +157,14 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/jobs/${application.job.id}`}>
                 <Eye className="h-3 w-3 mr-1" />
-                View Job
+                {t('viewJob')}
               </Link>
             </Button>
             
             {(application.status === 'SHORTLISTED' || application.status === 'SELECTED') && (
               <Button variant="outline" size="sm">
                 <MessageSquare className="h-3 w-3 mr-1" />
-                Message
+                {t('message')}
               </Button>
             )}
           </div>
@@ -161,19 +177,16 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
     <div className="text-center py-12">
       <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
       <h3 className="text-lg font-semibold mb-2">
-        {type === 'applied' ? 'No applications yet' : 'No active jobs'}
+        {t(`empty.${type}`)}
       </h3>
       <p className="text-sm text-muted-foreground mb-4">
-        {type === 'applied' 
-          ? 'Start applying to jobs to track your applications here.'
-          : 'Once clients accept your applications, those jobs will appear here.'
-        }
+        {t(`emptyDescription.${type}`)}
       </p>
       {type === 'applied' && (
         <Link href="/">
           <Button>
             <Search className="h-4 w-4 mr-2" />
-            Find Jobs
+            {t('findJobs')}
           </Button>
         </Link>
       )}
@@ -185,7 +198,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
-          My Job Applications
+          {t('title')}
           <Badge variant="secondary">{applications.length}</Badge>
         </CardTitle>
       </CardHeader>
@@ -194,11 +207,11 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="applied" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Applied Jobs ({appliedJobs.length})
+              {t('tabs.applied')} ({appliedJobs.length})
             </TabsTrigger>
             <TabsTrigger value="active" className="flex items-center gap-2">
               <Star className="h-4 w-4" />
-              Active Jobs ({activeJobs.length})
+              {t('tabs.active')} ({activeJobs.length})
             </TabsTrigger>
           </TabsList>
 
@@ -224,11 +237,10 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
                   <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4 mt-6">
                     <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                       <CheckCircle className="h-5 w-5" />
-                      <span className="font-medium">Congratulations!</span>
+                      <span className="font-medium">{t('congratulations')}</span>
                     </div>
                     <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                      You have {activeJobs.length} active job{activeJobs.length > 1 ? 's' : ''} where clients have accepted your application. 
-                      Keep checking for updates and respond promptly to messages.
+                      {t('successMessage', { count: activeJobs.length })}
                     </p>
                   </div>
                 )}

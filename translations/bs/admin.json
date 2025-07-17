@@ -1,0 +1,45 @@
+{
+  "title": "Admin kontrolna tabla",
+  "loading": "Učitavanje admin podataka...",
+  "systemManagement": {
+    "title": "Upravljanje sistemom",
+    "categories": {
+      "title": "Upravljanje kategorijama",
+      "addCategory": "Dodaj kategoriju",
+      "edit": "Uredi",
+      "delete": "Obriši",
+      "popular": "Popularno",
+      "inactive": "Neaktivno",
+      "key": "Ključ"
+    },
+    "cities": {
+      "title": "Upravljanje gradovima",
+      "addCity": "Dodaj grad",
+      "edit": "Uredi",
+      "delete": "Obriši",
+      "special": "Posebno",
+      "inactive": "Neaktivno",
+      "key": "Ključ"
+    }
+  },
+  "stats": {
+    "totalUsers": "Ukupno korisnika",
+    "totalJobs": "Ukupno poslova",
+    "totalApplications": "Ukupno prijava",
+    "activeJobs": "Aktivnih poslova"
+  },
+  "users": {
+    "title": "Upravljanje korisnicima",
+    "search": "Pretraži korisnike...",
+    "role": "Uloga",
+    "status": "Status",
+    "actions": "Akcije"
+  },
+  "jobs": {
+    "title": "Upravljanje poslovima",
+    "search": "Pretraži poslove...",
+    "status": "Status",
+    "type": "Tip",
+    "actions": "Akcije"
+  }
+} 

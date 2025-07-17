@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface PaymentStats {
   totalRevenue: number
@@ -58,6 +59,7 @@ interface BillingManagementTabProps {
 }
 
 export function BillingManagementTab({ className }: BillingManagementTabProps) {
+  const t = useTranslations('admin.billing')
   const [activeTab, setActiveTab] = useState('overview')
   const [stats, setStats] = useState<PaymentStats | null>(null)
   const [transactions, setTransactions] = useState<StripeTransaction[]>([])
@@ -67,11 +69,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  useEffect(() => {
-    fetchBillingData()
-  }, [])
-
-  const fetchBillingData = async () => {
+  const fetchBillingData = useCallback(async () => {
     setLoading(true)
     try {
       // Fetch payment statistics
@@ -89,11 +87,15 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
       }
     } catch (error) {
       console.error('Error fetching billing data:', error)
-      toast.error('Failed to load billing data')
+      toast.error(t('errors.failedToLoadData'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    fetchBillingData()
+  }, [fetchBillingData])
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -148,7 +150,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
     // Create CSV data
     const csvData = filteredTransactions.map(transaction => ({
       'Transaction ID': transaction.stripePaymentIntentId,
-      'User Name': transaction.user.name || 'Unknown',
+      'User Name': transaction.user.name || t('unknownUser'),
       'User Email': transaction.user.email,
       'Amount': formatCurrency(transaction.amount, transaction.currency),
       'Status': transaction.status,
@@ -179,14 +181,14 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center">
             <CreditCard className="h-5 w-5 mr-2" />
-            Billing Management
+            {t('title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading billing data...</p>
+              <p className="text-muted-foreground">{t('loadingData')}</p>
             </div>
           </div>
         </CardContent>
@@ -200,20 +202,20 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center">
             <CreditCard className="h-5 w-5 mr-2" />
-            Billing Management
+            {t('title')}
           </CardTitle>
           <Button onClick={fetchBillingData} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            {t('refresh')}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="customers">Top Customers</TabsTrigger>
+            <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="transactions">{t('tabs.transactions')}</TabsTrigger>
+            <TabsTrigger value="customers">{t('tabs.customers')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -223,34 +225,34 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('totalRevenue')}</CardTitle>
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-                      <p className="text-xs text-muted-foreground">All time</p>
+                      <p className="text-xs text-muted-foreground">{t('allTime')}</p>
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('monthlyRevenue')}</CardTitle>
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
-                      <p className="text-xs text-muted-foreground">Current month</p>
+                      <p className="text-xs text-muted-foreground">{t('currentMonth')}</p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Avg Transaction</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('avgTransaction')}</CardTitle>
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{formatCurrency(stats.averageTransactionValue)}</div>
-                      <p className="text-xs text-muted-foreground">Per transaction</p>
+                      <p className="text-xs text-muted-foreground">{t('perTransaction')}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -259,7 +261,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('totalTransactions')}</CardTitle>
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -269,26 +271,26 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Successful</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('successful')}</CardTitle>
                       <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.successfulTransactions}</div>
                       <p className="text-xs text-muted-foreground">
-                        {((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1)}% success rate
+                        {((stats.successfulTransactions / stats.totalTransactions) * 100).toFixed(1)}% {t('successRate')}
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Failed</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('failed')}</CardTitle>
                       <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.failedTransactions}</div>
                       <p className="text-xs text-muted-foreground">
-                        {((stats.failedTransactions / stats.totalTransactions) * 100).toFixed(1)}% failure rate
+                        {((stats.failedTransactions / stats.totalTransactions) * 100).toFixed(1)}% {t('failureRate')}
                       </p>
                     </CardContent>
                   </Card>
@@ -304,7 +306,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search transactions..."
+                    placeholder={t('searchTransactions')}
                     value={transactionSearchTerm}
                     onChange={(e) => setTransactionSearchTerm(e.target.value)}
                     className="pl-10"
@@ -312,20 +314,20 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filter by status" />
+                    <SelectValue placeholder={t('filterByStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="succeeded">Succeeded</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="canceled">Canceled</SelectItem>
-                    <SelectItem value="refunded">Refunded</SelectItem>
+                    <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                    <SelectItem value="succeeded">{t('succeeded')}</SelectItem>
+                    <SelectItem value="pending">{t('pending')}</SelectItem>
+                    <SelectItem value="failed">{t('failed')}</SelectItem>
+                    <SelectItem value="canceled">{t('canceled')}</SelectItem>
+                    <SelectItem value="refunded">{t('refunded')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button onClick={exportTransactions} variant="outline">
                   <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  {t('exportCsv')}
                 </Button>
               </div>
 
@@ -335,7 +337,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                   <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{transaction.user.name || 'Unknown User'}</h4>
+                        <h4 className="font-medium">{transaction.user.name || t('unknownUser')}</h4>
                         <Badge variant="outline" className="text-xs">
                           {transaction.user.role}
                         </Badge>
@@ -345,10 +347,10 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                       </div>
                       <p className="text-sm text-muted-foreground mb-1">{transaction.user.email}</p>
                       <p className="text-sm text-muted-foreground mb-1">
-                        {transaction.description || 'No description'}
+                        {transaction.description || t('noDescription')}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDate(transaction.createdAt)} • ID: {transaction.stripePaymentIntentId}
+                        {formatDate(transaction.createdAt)} • {t('transactionId')}: {transaction.stripePaymentIntentId}
                       </p>
                     </div>
                     <div className="text-right">
@@ -378,7 +380,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
           <TabsContent value="customers">
             {stats && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Top Paying Customers</h3>
+                <h3 className="text-lg font-semibold">{t('topPayingCustomers')}</h3>
                 <div className="space-y-2">
                   {stats.topPayingUsers.map((customer, index) => (
                     <div key={customer.userId} className="flex items-center justify-between p-4 border rounded-lg">
@@ -387,10 +389,10 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                           {index + 1}
                         </div>
                         <div>
-                          <h4 className="font-medium">{customer.userName || 'Unknown User'}</h4>
+                          <h4 className="font-medium">{customer.userName || t('unknownUser')}</h4>
                           <p className="text-sm text-muted-foreground">{customer.userEmail}</p>
                           <p className="text-xs text-muted-foreground">
-                            {customer.transactionCount} transactions
+                            {customer.transactionCount} {t('transactions')}
                           </p>
                         </div>
                       </div>
@@ -399,7 +401,7 @@ export function BillingManagementTab({ className }: BillingManagementTabProps) {
                           {formatCurrency(customer.totalSpent)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Total spent
+                          {t('totalSpent')}
                         </div>
                       </div>
                     </div>

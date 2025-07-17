@@ -1,7 +1,16 @@
 import createMiddleware from 'next-intl/middleware';
 import {routing} from './i18n/routing';
+import { cleanupTransferCookie } from './lib/cleanup-transfer';
+import { NextRequest } from 'next/server';
 
-export default createMiddleware(routing);
+const intlMiddleware = createMiddleware(routing);
+
+export default function middleware(request: NextRequest) {
+  const response = intlMiddleware(request);
+  
+  // Clean up transfer cookies if user is authenticated
+  return cleanupTransferCookie(request, response);
+}
 
 export const config = {
   // Match all pathnames except for

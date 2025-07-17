@@ -1,0 +1,52 @@
+{
+  "title": "Message Templates",
+  "description": "Create and manage email templates for communicating with candidates",
+  "createTemplate": "Create Template",
+  "categories": {
+    "application_received": "Application Received",
+    "application_reviewed": "Application Reviewed",
+    "shortlisted": "Shortlisted",
+    "selected": "Selected",
+    "rejected": "Rejected",
+    "interview_invite": "Interview Invite",
+    "follow_up": "Follow Up",
+    "custom": "Custom"
+  },
+  "success": {
+    "created": "Template created successfully",
+    "updated": "Template updated successfully",
+    "deleted": "Template deleted successfully",
+    "copied": "Template copied to clipboard"
+  },
+  "errors": {
+    "cannotDeleteDefault": "Cannot delete default templates"
+  },
+  "form": {
+    "name": "Template Name",
+    "subject": "Email Subject",
+    "content": "Email Content",
+    "category": "Category",
+    "variables": "Available Variables",
+    "preview": "Preview"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "copy": "Copy",
+    "send": "Send",
+    "preview": "Preview"
+  },
+  "variables": {
+    "applicantName": "Applicant's name",
+    "jobTitle": "Job title",
+    "companyName": "Company name",
+    "reviewTimeframe": "Review timeframe",
+    "highlightedSkills": "Highlighted skills",
+    "contactTimeframe": "Contact timeframe",
+    "recruiterName": "Recruiter's name",
+    "startDate": "Start date",
+    "salaryOffer": "Salary offer",
+    "jobLocation": "Job location",
+    "responseDeadline": "Response deadline"
+  }
+} 

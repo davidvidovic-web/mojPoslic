@@ -8,12 +8,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageAttachment, Conversation } from '@/types/messaging';
 import { extractMessagingParams } from '@/lib/messaging/messaging-utils';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { useTranslations } from 'next-intl';
 
 interface DashboardMessagesContentProps {
   locale?: 'bs' | 'en';
 }
 
 const DashboardMessagesContent: React.FC<DashboardMessagesContentProps> = ({ locale = 'bs' }) => {
+  const t = useTranslations('common');
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -78,7 +80,7 @@ const DashboardMessagesContent: React.FC<DashboardMessagesContentProps> = ({ loc
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">
-            {locale === 'bs' ? 'Učitavanje...' : 'Loading...'}
+            {t('loading')}
           </p>
         </div>
       </div>
@@ -165,17 +167,15 @@ const DashboardMessagesContent: React.FC<DashboardMessagesContentProps> = ({ loc
 
 export default function DashboardMessagesPage() {
   const { user } = useAuth();
+  const t = useTranslations('messaging');
   // In a real app, you'd get the locale from your i18n setup
   const locale = 'bs' as const;
 
   return (
     <DashboardLayout 
       activeTab="messages" 
-      title={locale === 'bs' ? 'Poruke' : 'Messages'} 
-      subtitle={locale === 'bs' 
-        ? 'Ostanite povezani sa svojim korisnicima'
-        : 'Stay connected with your clients'
-      }
+      title={t('title')} 
+      subtitle={t('subtitle')}
       userRole={user?.role}
     >
       <MessagingProvider>

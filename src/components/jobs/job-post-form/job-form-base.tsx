@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { CreateJobData } from '@/types/job'
 import { useJobFormState } from './use-job-form-state'
 import { useJobFormNavigation } from './use-job-form-navigation'
@@ -32,6 +33,7 @@ export function JobFormBase({
   submittingText = 'Submitting...',
   showCard = true
 }: JobFormBaseProps) {
+  const t = useTranslations('jobPost.validation')
   const { user } = useAuth()
   const {
     currentStep,
@@ -95,8 +97,8 @@ export function JobFormBase({
     if (missingFields.length > 0) {
       const fieldsList = missingFields.join(', ')
       const errorMessage = missingFields.length === 1 
-        ? `Please fill in the required field: ${fieldsList}`
-        : `Please fill in the following required fields: ${fieldsList}`
+        ? t('fillRequiredField', { field: fieldsList })
+        : t('fillRequiredFields', { fields: fieldsList })
       
       // You'll need to import toast from sonner
       const { toast } = await import('sonner')

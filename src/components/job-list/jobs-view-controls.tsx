@@ -5,12 +5,14 @@ import { Grid2X2, List, RefreshCcw, XCircle } from "lucide-react"
 import { useFilterStore } from "@/stores/filter-store"
 import { useQueryClient } from "@tanstack/react-query"
 import { jobKeys } from "@/hooks/use-jobs"
+import { useTranslations } from 'next-intl'
 
 interface JobsViewControlsProps {
   onRefresh?: () => void;
 }
 
 export function JobsViewControls({ onRefresh }: JobsViewControlsProps) {
+  const t = useTranslations('common')
   const queryClient = useQueryClient()
   const {
     viewMode,
@@ -41,7 +43,7 @@ export function JobsViewControls({ onRefresh }: JobsViewControlsProps) {
             className="h-8"
           >
             <XCircle className="h-3.5 w-3.5 mr-1" />
-            Clear Filters ({getJobFiltersCount()})
+            {t('actions.clearFilters')} ({getJobFiltersCount()})
           </Button>
         )}
         
@@ -52,7 +54,7 @@ export function JobsViewControls({ onRefresh }: JobsViewControlsProps) {
           className="h-8"
         >
           <RefreshCcw className="h-3.5 w-3.5 mr-1" />
-          Refresh
+          {t('actions.refresh')}
         </Button>
       </div>
       
