@@ -6,8 +6,9 @@ const prisma = new PrismaClient()
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { params } = context
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -23,7 +24,7 @@ export async function POST(
     // Verify that the user owns this job
     const job = await prisma.jobListing.findUnique({
       where: { id: jobId },
-      select: { postedBy: true, isFeatured: true }
+      select: { postedById: true, isFeatured: true }
     })
 
     if (!job) {
@@ -33,7 +34,7 @@ export async function POST(
       )
     }
 
-    if (job.postedBy !== session.user.id) {
+    if (job.postedById !== session.user.id) {
       return NextResponse.json(
         { error: 'You can only feature your own jobs' },
         { status: 403 }
