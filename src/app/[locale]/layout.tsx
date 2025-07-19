@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { Header } from "@/components/core/header";
+import { OptimizedHeader } from "@/components/core/optimized-header";
 
 type Props = {
   children: React.ReactNode;
@@ -31,7 +31,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <div className="relative flex min-h-screen flex-col">
-        <Header />
+        <OptimizedHeader />
         <main className="flex-1">
           {children}
         </main>

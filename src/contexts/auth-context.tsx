@@ -66,7 +66,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   const [dataFetched, setDataFetched] = useState(false)
   const fetchTimeout = useRef<NodeJS.Timeout | null>(null)
   
-  // Fetch fresh user data from database with debouncing
+  // Fetch fresh user data from database with debouncing and error handling
   const fetchUserData = useCallback(async () => {
     try {
       setLoading(true)
@@ -90,9 +90,16 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
           createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
         })
         setDataFetched(true)
+      } else if (response.status === 500) {
+        // If it's a server error (likely database timeout), silently fail and use session data
+        console.warn('Server error fetching user data, using session data only')
+        setDataFetched(true) // Mark as fetched to prevent retry loops
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+      // If there's a network error or timeout, use session data only
+      setDataFetched(true) // Mark as fetched to prevent retry loops
+      
       // If there's a JWT error, clear local state
       if (error instanceof Error && error.message.includes('JWT')) {
         setDbUser(null)
@@ -271,7 +278,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
 
   const contextValue: AuthContextType = useMemo(() => ({
     user,
-    loading: status === 'loading' || (!!session?.user && !dataFetched),
+    loading: status === 'loading', // Remove database loading from UI blocking
     hasRole,
     isAdmin,
     isClient,
@@ -282,9 +289,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     updateLanguagePreference,
   }), [
     user,
-    status,
-    session?.user,
-    dataFetched,
+    status, // Removed dataFetched dependency for better UX
     hasRole,
     isAdmin,
     isClient,

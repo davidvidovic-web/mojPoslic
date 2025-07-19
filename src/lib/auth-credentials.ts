@@ -21,6 +21,7 @@ export async function authorizeCredentials(email: string, password: string) {
         id: true,
         email: true,
         name: true,
+        phone: true,
         role: true,
         emailVerified: true,
         profileSetupCompleted: true,
@@ -36,6 +37,7 @@ export async function authorizeCredentials(email: string, password: string) {
       id: user.id,
       email: user.email,
       name: user.name,
+      phone: user.phone,
       role: user.role,
       profileSetupCompleted: user.profileSetupCompleted,
     }
@@ -52,6 +54,7 @@ export async function authorizeCredentials(email: string, password: string) {
       id: true,
       email: true,
       name: true,
+      phone: true,
       password: true,
       role: true,
       emailVerified: true,
@@ -78,6 +81,7 @@ export async function authorizeCredentials(email: string, password: string) {
     id: user.id,
     email: user.email,
     name: user.name,
+    phone: user.phone,
     role: user.role,
     profileSetupCompleted: user.profileSetupCompleted,
   }

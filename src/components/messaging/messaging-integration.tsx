@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ConversationView } from './conversation-view';
 import { useMessaging } from '@/contexts/messaging-context';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, X, Minimize2, Maximize2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -146,6 +146,9 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-full h-full max-w-none max-h-none p-0 rounded-none">
+          <DialogDescription className="sr-only">
+            Messaging interface for conversations and messages
+          </DialogDescription>
           <ConversationView
             conversations={state.conversations}
             selectedConversation={state.activeConversation}

@@ -1,6 +1,7 @@
 'use client'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTranslations } from 'next-intl'
 
 interface DurationPickerProps {
   value?: string
@@ -10,22 +11,21 @@ interface DurationPickerProps {
 }
 
 const DURATION_OPTIONS = [
-  { value: '1_hour', label: '1 hour' },
-  { value: '2_hours', label: '2 hours' },
-  { value: '3_hours', label: '3 hours' },
-  { value: '4_hours', label: '4 hours' },
-  { value: '6_hours', label: '6 hours' },
-  { value: '8_hours', label: '8 hours' },
-  { value: '1_day', label: '1 day' },
-  { value: '2_days', label: '2 days' },
-  { value: '3_days', label: '3 days' },
-  { value: '1_week', label: '1 week' },
-  { value: '2_weeks', label: '2 weeks' },
-  { value: '1_month', label: '1 month' },
-  { value: '2_months', label: '2 months' },
-  { value: '3_months', label: '3 months' },
-  { value: 'ongoing', label: 'Ongoing' },
-  { value: 'negotiable', label: 'Negotiable' }
+  { value: '1_hour', key: 'durationOptions.1_hour' },
+  { value: '2_hours', key: 'durationOptions.2_hours' },
+  { value: '3_hours', key: 'durationOptions.3_hours' },
+  { value: '4_hours', key: 'durationOptions.4_hours' },
+  { value: '6_hours', key: 'durationOptions.6_hours' },
+  { value: '8_hours', key: 'durationOptions.8_hours' },
+  { value: '1_day', key: 'durationOptions.1_day' },
+  { value: '2_days', key: 'durationOptions.2_days' },
+  { value: '3_days', key: 'durationOptions.3_days' },
+  { value: '1_week', key: 'durationOptions.1_week' },
+  { value: '2_weeks', key: 'durationOptions.2_weeks' },
+  { value: '1_month', key: 'durationOptions.1_month' },
+  { value: '2_months', key: 'durationOptions.2_months' },
+  { value: '3_months', key: 'durationOptions.3_months' },
+  { value: 'negotiable', key: 'durationOptions.negotiable' }
 ]
 
 export function DurationPicker({
@@ -34,15 +34,17 @@ export function DurationPicker({
   placeholder = "Select duration",
   className
 }: DurationPickerProps) {
+  const t = useTranslations('jobPost.types.schedule')
+  
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder || t('durationPlaceholder')} />
       </SelectTrigger>
       <SelectContent>
         {DURATION_OPTIONS.map((option) => (
           <SelectItem key={option.value} value={option.value}>
-            {option.label}
+            {t(option.key)}
           </SelectItem>
         ))}
       </SelectContent>

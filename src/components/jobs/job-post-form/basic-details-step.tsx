@@ -1,25 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CreateJobData } from '@/types/job'
-import { CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-
-interface Category {
-  id: string
-  nameEN: string
-  nameBS: string
-  children: Array<{
-    id: string
-    nameEN: string
-    nameBS: string
-  }>
-}
+import { useData } from '@/hooks/use-data'
 
 interface BasicDetailsStepProps {
   formData: CreateJobData
@@ -30,9 +19,19 @@ interface BasicDetailsStepProps {
 export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDetailsStepProps) {
   const { user } = useAuth()
   const t = useTranslations('jobPost.types')
-  const [categories, setCategories] = useState<Category[]>([])
+  const locale = useLocale()
+  const { categories } = useData()
   const [selectedParentCategory, setSelectedParentCategory] = useState('')
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+
+  // Helper function to get category name in current locale
+  const getCategoryName = (category: { name_en: string; name_bs: string }) => {
+    return locale === 'bs' ? category.name_bs : category.name_en
+  }
+
+  // Get subcategories for selected parent category
+  const availableSubcategories = selectedParentCategory 
+    ? categories.find(cat => cat.id === selectedParentCategory)?.children || []
+    : []
 
   // Check if user can post all job types (companies and admins)
   const canPostAllJobTypes = user?.role === 'company' || user?.role === 'admin'
@@ -60,40 +59,24 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canPostAllJobTypes, formData.requirements, formData.benefits, formData.type])
 
-  // Load categories
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setIsLoadingCategories(true)
-        const response = await fetch('/api/categories')
-        if (!response.ok) throw new Error('Failed to fetch categories')
-        
-        const data = await response.json()
-        setCategories(data.categories || [])
-      } catch (error) {
-        console.error('Error loading categories:', error)
-      } finally {
-        setIsLoadingCategories(false)
-      }
-    }
-
-    loadCategories()
-  }, [])
-
   // Set initial parent category when editing
   useEffect(() => {
     if (formData.category_id && categories.length > 0) {
+      // Check if category_id is a subcategory
       const parentCategory = categories.find(cat =>
-        cat.children.some(child => child.id === formData.category_id)
+        cat.children?.some(child => child.id === formData.category_id)
       )
       if (parentCategory) {
         setSelectedParentCategory(parentCategory.id)
+      } else {
+        // Check if category_id is a parent category itself
+        const isParentCategory = categories.find(cat => cat.id === formData.category_id)
+        if (isParentCategory) {
+          setSelectedParentCategory(formData.category_id)
+        }
       }
     }
   }, [formData.category_id, categories])
-
-  const selectedParent = categories.find(cat => cat.id === selectedParentCategory)
-  const availableChildCategories = selectedParent?.children || []
 
   // Validation
   // Track if we've already reset the job type to prevent infinite loops
@@ -103,12 +86,12 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
     const isValid = !!(
       formData.title?.trim() &&
       formData.description?.trim() &&
-      formData.category_id &&
+      (formData.category_id || selectedParentCategory) &&
       formData.type
     )
     
     onValidation(isValid)
-  }, [formData.title, formData.description, formData.category_id, formData.type, onValidation])
+  }, [formData.title, formData.description, formData.category_id, selectedParentCategory, formData.type, onValidation])
 
   // Separate effect to handle job type validation for non-company/non-admin users
   useEffect(() => {
@@ -124,7 +107,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
     <div className="space-y-6">
       {/* Basic Information */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{t('sections.basicInformation')}</h3>
+        {/* <h3 className="text-lg font-semibold">{t('sections.basicInformation')}</h3> */}
         
         <div className="space-y-2">
           <Label htmlFor="job-title">{t('labels.jobTitle')} *</Label>
@@ -162,19 +145,20 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           <Label htmlFor="parent-category">{t('labels.jobCategory')} *</Label>
           <Select 
             value={selectedParentCategory} 
-            onValueChange={setSelectedParentCategory}
-            disabled={isLoadingCategories}
+            onValueChange={(value) => {
+              setSelectedParentCategory(value)
+              // Auto-set category_id to parent category when selected
+              onChange({ category_id: value })
+            }}
+            disabled={categories.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder={isLoadingCategories ? t('placeholders.loadingCategories') : t('placeholders.selectCategory')} />
+              <SelectValue placeholder={categories.length === 0 ? t('placeholders.loadingCategories') : t('placeholders.selectCategory')} />
             </SelectTrigger>              <SelectContent>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     <span className="block truncate">
-                      {category.nameEN}
-                      {category.nameBS !== category.nameEN && (
-                        <span className="text-muted-foreground text-xs ml-1">({category.nameBS})</span>
-                      )}
+                      {getCategoryName(category)}
                     </span>
                   </SelectItem>
                 ))}
@@ -182,15 +166,16 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           </Select>
         </div>
 
-        {availableChildCategories.length > 0 && (
+        {selectedParentCategory && availableSubcategories.length > 0 && (
           <div className="space-y-2">
             <Label htmlFor="child-category">{t('labels.subcategory')}</Label>
             <Select 
               value={
-                availableChildCategories.find(child => child.id === formData.category_id) ? formData.category_id : '__none__'
+                availableSubcategories.find(child => child.id === formData.category_id) ? formData.category_id : '__none__'
               } 
               onValueChange={(value) => {
                 if (value === '__none__') {
+                  // Set to parent category when no subcategory is selected
                   onChange({ category_id: selectedParentCategory })
                 } else {
                   onChange({ category_id: value })
@@ -202,12 +187,9 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">{t('placeholders.noSpecificSubcategory')}</SelectItem>
-                {availableChildCategories.map((category) => (
+                {availableSubcategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    {category.nameEN}
-                    {category.nameBS !== category.nameEN && (
-                      <span className="text-muted-foreground ml-2">({category.nameBS})</span>
-                    )}
+                    {getCategoryName(category)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -215,10 +197,9 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           </div>
         )}
 
-        {selectedParentCategory && availableChildCategories.length === 0 && (
+        {selectedParentCategory && availableSubcategories.length === 0 && (
           <div className="p-3 bg-secondary/50 rounded-lg">
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <CheckCircle className="h-4 w-4" />
+            <p className="text-sm text-muted-foreground">
               {t('messages.categorySelectedNoSubcategories')}
             </p>
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { CreateJobData } from "@/types/job"
 import { useAuth } from "@/hooks/useAuth"
+import { useData } from "@/hooks/use-data"
 import { toast } from "sonner"
 import { useTranslations } from 'next-intl'
 import { BasicInformationSection } from "./job-post-form/basic-information-section"
@@ -12,6 +13,7 @@ import { SalarySection } from "./job-post-form/salary-section"
 import { DescriptionSection } from "./job-post-form/description-section"
 import { ContactSection } from "./job-post-form/contact-section"
 import { getCityCoordinates } from "@/lib/city-coordinates"
+import type { Category } from "@/lib/static-data-types"
 
 interface JobPostFormProps {
   onJobPosted?: () => void
@@ -20,32 +22,10 @@ interface JobPostFormProps {
 export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   const t = useTranslations('jobs.postForm')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [cities, setCities] = useState<Array<{ id: number; key: string; nameEN: string; nameBS: string }>>([])
-  const [categories, setCategories] = useState<Array<{
-    id: string
-    key: string
-    nameBS: string
-    nameEN: string
-    isPopular: boolean
-    sortOrder: number
-    children: Array<{
-      id: string
-      key: string
-      nameBS: string
-      nameEN: string
-      isPopular: boolean
-      sortOrder: number
-    }>
-  }>>([])
+  const { cities, categories } = useData()
+  
   const [selectedParentCategory, setSelectedParentCategory] = useState<string>('')
-  const [availableChildCategories, setAvailableChildCategories] = useState<Array<{
-    id: string
-    key: string
-    nameBS: string
-    nameEN: string
-    isPopular: boolean
-    sortOrder: number
-  }>>([])
+  const [availableChildCategories, setAvailableChildCategories] = useState<Category[]>([])
   const { user } = useAuth()
   const [includeStartTime, setIncludeStartTime] = useState(false)
   const [formData, setFormData] = useState<CreateJobData>({
@@ -70,34 +50,6 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     job_longitude: undefined
   })
 
-  // Load cities for coordinate mapping
-  useEffect(() => {
-    const loadCities = async () => {
-      try {
-        const response = await fetch('/api/cities')
-        const data = await response.json()
-        setCities(data.cities || [])
-      } catch (error) {
-        console.error('Error loading cities:', error)
-      }
-    }
-    loadCities()
-  }, [])
-
-  // Load categories
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const response = await fetch('/api/categories')
-        const data = await response.json()
-        setCategories(data || [])
-      } catch (error) {
-        console.error('Error loading categories:', error)
-      }
-    }
-    loadCategories()
-  }, [])
-
   // Update available child categories when parent category changes
   useEffect(() => {
     if (selectedParentCategory) {
@@ -116,7 +68,16 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     
     // First check if we have predefined coordinates
     const cityKey = formData.city_id
-    const predefinedCoords = getCityCoordinates(cityKey, cities)
+    
+    // Convert our new city format to the format expected by getCityCoordinates
+    const legacyCities = cities.map(city => ({
+      id: parseInt(city.id, 10),
+      key: city.key,
+      nameEN: city.name_en,
+      nameBS: city.name_bs
+    }))
+    
+    const predefinedCoords = getCityCoordinates(cityKey, legacyCities)
     if (predefinedCoords) {
       return predefinedCoords
     }
@@ -128,7 +89,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       return {
         lat: 43.8563, // Default to Sarajevo area
         lng: 18.4131,
-        name: selectedCity.nameEN
+        name: selectedCity.name_en
       }
     }
     
@@ -174,7 +135,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           type: formData.type,
           city_id: formData.city_id,
           category_id: formData.category_id || null,
-          salary: formData.salary || null,
+          salary: null, // Legacy field, no longer used
           salaryType: formData.salaryType || null,
           salaryMin: formData.salaryMin || null,
           salaryMax: formData.salaryMax || null,
@@ -185,7 +146,9 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           job_latitude: formData.job_latitude || null,
           job_longitude: formData.job_longitude || null,
           requirements: formData.requirements || null,
-          benefits: formData.benefits || null,
+          benefits: formData.performance_bonus ? 
+            (formData.benefits ? `${formData.benefits}\n• Performance bonus available` : '• Performance bonus available') : 
+            formData.benefits || null,
           contact_email: formData.contact_email || formData.email || user.email,
           application_url: formData.application_url || formData.website || null
         })
@@ -243,16 +206,44 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     setFormData(prev => ({ ...prev, ...newData }))
   }
 
+  // Convert categories to legacy format expected by components
+  const legacyCategories = categories.map(cat => ({
+    id: cat.id,
+    key: cat.key,
+    nameBS: cat.name_bs,
+    nameEN: cat.name_en,
+    isPopular: cat.is_popular,
+    sortOrder: cat.sort_order,
+    children: (cat.children || []).map(child => ({
+      id: child.id,
+      key: child.key,
+      nameBS: child.name_bs,
+      nameEN: child.name_en,
+      isPopular: child.is_popular,
+      sortOrder: child.sort_order
+    }))
+  }))
+
+  // Convert availableChildCategories to legacy format
+  const legacyChildCategories = availableChildCategories.map(cat => ({
+    id: cat.id,
+    key: cat.key,
+    nameBS: cat.name_bs,
+    nameEN: cat.name_en,
+    isPopular: cat.is_popular,
+    sortOrder: cat.sort_order
+  }))
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
         <BasicInformationSection
           formData={formData}
           onChange={handleFormDataChange}
-          categories={categories}
+          categories={legacyCategories}
           selectedParentCategory={selectedParentCategory}
           onParentCategoryChange={setSelectedParentCategory}
-          availableChildCategories={availableChildCategories}
+          availableChildCategories={legacyChildCategories}
         />
 
         <JobDetailsSection

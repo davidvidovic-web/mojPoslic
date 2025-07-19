@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Edit, Car } from "lucide-react"
 import { toast } from "sonner"
 import { Job } from "@/types/job"
@@ -228,6 +228,9 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Job Posting</DialogTitle>
+            <DialogDescription>
+              Update the details of your job posting
+            </DialogDescription>
           </DialogHeader>
           <MultiStepJobForm
             initialData={job}

@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   MapPin,
@@ -285,6 +286,9 @@ export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Job Posting</DialogTitle>
+            <DialogDescription>
+              Update the details of your job posting
+            </DialogDescription>
           </DialogHeader>
           <MultiStepJobForm
             initialData={job}

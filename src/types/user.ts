@@ -23,6 +23,7 @@ export interface AuthUser {
   username?: string
   role: UserRole
   profileSetupCompleted?: boolean
+  phone?: string
   profile?: UserProfile
   createdAt?: Date
 }

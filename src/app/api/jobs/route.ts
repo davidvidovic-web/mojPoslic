@@ -1,11 +1,14 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-// Create a simple Prisma client for this endpoint
-const simplePrisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { enrichJobsWithStaticData } from '@/lib/job-helpers'
+import type { JobListing } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
+
     const { searchParams } = new URL(request.url)
     
     // Extract filter parameters
@@ -62,78 +65,56 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Get filtered job data
-    const jobs = await simplePrisma.jobListing.findMany({
+    // Get filtered job data with timeout
+    const jobsPromise = prisma.jobListing.findMany({
       where,
       orderBy: {
         createdAt: 'desc'
       }
     })
 
-    // Get all cities and categories to join manually
-    const cities = await simplePrisma.city.findMany({
-      where: {
-        isActive: true
-      }
+    // Add timeout to prevent hanging requests
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database timeout')), 8000) // 8 second timeout
     })
 
-    const categories = await simplePrisma.category.findMany({
-      where: {
-        isActive: true
-      }
-    })
+    const jobs = await Promise.race([jobsPromise, timeoutPromise]) as JobListing[]
 
-    // Manually join the data
-    const transformedJobs = jobs.map(job => {
-      const city = cities.find(c => c.id === job.cityId)
-      const category = categories.find(c => c.id === job.categoryId)
-      
-      return {
-        ...job,
-        posted_at: job.createdAt.toISOString(),
-        start_date: job.startDate ? job.startDate.toISOString() : null,
-        job_address: job.jobAddress,
-        job_latitude: job.jobLatitude, 
-        job_longitude: job.jobLongitude,
-        application_url: job.applicationUrl,
-        contact_email: job.contactEmail,
-        expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
-        city_id: job.cityId,
-        category_id: job.categoryId,
-        is_featured: job.isFeatured, // Explicitly map isFeatured to is_featured
-        city: city ? {
-          id: city.id,
-          key: city.key,
-          name_bs: city.nameBS,
-          name_en: city.nameEN,
-          name: city.nameEN || city.nameBS,
-          country: 'BA',
-          state: '',
-          is_special: city.isSpecial,
-          sort_order: city.sortOrder,
-          is_active: city.isActive
-        } : undefined,
-        category: category ? {
-          id: category.id,
-          key: category.key,
-          name_bs: category.nameBS,
-          name_en: category.nameEN,
-          name: category.nameEN || category.nameBS,
-          is_popular: category.isPopular,
-          sort_order: category.sortOrder,
-          is_active: category.isActive
-        } : undefined
-      }
-    })
+    if (!jobs || !Array.isArray(jobs)) {
+      return NextResponse.json({ error: 'No jobs found' }, { status: 404 })
+    }
+
+    // Transform jobs with static data instead of manual DB joins
+    const baseJobs = jobs.map((job: JobListing) => ({
+      ...job,
+      posted_at: job.createdAt.toISOString(),
+      start_date: job.startDate ? job.startDate.toISOString() : null,
+      job_address: job.jobAddress,
+      job_latitude: job.jobLatitude, 
+      job_longitude: job.jobLongitude,
+      application_url: job.applicationUrl,
+      contact_email: job.contactEmail,
+      expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
+      city_id: job.cityId,
+      category_id: job.categoryId,
+      is_featured: job.isFeatured, // Explicitly map isFeatured to is_featured
+    }))
+
+    // Enrich with static city and category data
+    const transformedJobs = await enrichJobsWithStaticData(baseJobs)
 
     return NextResponse.json(transformedJobs)
   } catch (error) {
     console.error('Error fetching jobs:', error)
+    
+    // Return more specific error for timeouts
+    if (error instanceof Error && error.message === 'Database timeout') {
+      return NextResponse.json({ error: 'Database temporarily unavailable' }, { status: 503 })
+    }
+    
     return NextResponse.json(
       { error: 'Failed to fetch jobs', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
-  } finally {
-    await simplePrisma.$disconnect()
   }
 }

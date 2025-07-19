@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/types/job'
+import { useTranslations, useLocale } from 'next-intl'
 
 interface SkillsBubbleInputProps {
   value: string[]
@@ -16,6 +17,7 @@ interface SkillsBubbleInputProps {
   placeholder?: string
   maxSkills?: number
   className?: string
+  label?: string
 }
 
 export function SkillsBubbleInput({
@@ -23,7 +25,8 @@ export function SkillsBubbleInput({
   onChange,
   placeholder = "Add skills...",
   maxSkills = 20,
-  className
+  className,
+  label
 }: SkillsBubbleInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -31,6 +34,13 @@ export function SkillsBubbleInput({
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const t = useTranslations('skills.ui')
+  const locale = useLocale()
+
+  // Helper function to get category name in current locale
+  const getCategoryName = useCallback((category: Category) => {
+    return locale === 'bs' ? category.name_bs : category.name_en
+  }, [locale])
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -62,7 +72,9 @@ export function SkillsBubbleInput({
 
       // Find parent categories of selected skills
       value.forEach(skill => {
-        const category = categories.find(cat => cat.name_en === skill)
+        const category = categories.find(cat => 
+          getCategoryName(cat) === skill || cat.name_en === skill || cat.name_bs === skill
+        )
         if (category) {
           if (category.parent_id) {
             selectedCategoryIds.add(category.parent_id)
@@ -76,12 +88,13 @@ export function SkillsBubbleInput({
       selectedCategoryIds.forEach(parentId => {
         const subcategories = categories.filter(cat => 
           cat.parent_id === parentId && 
-          cat.name_en && 
-          !value.includes(cat.name_en)
+          getCategoryName(cat) && 
+          !value.includes(getCategoryName(cat))
         )
         subcategories.forEach(sub => {
-          if (sub.name_en && !relatedSuggestions.includes(sub.name_en)) {
-            relatedSuggestions.push(sub.name_en)
+          const categoryName = getCategoryName(sub)
+          if (categoryName && !relatedSuggestions.includes(categoryName)) {
+            relatedSuggestions.push(categoryName)
           }
         })
       })
@@ -89,8 +102,8 @@ export function SkillsBubbleInput({
       // If no related subcategories found, suggest popular categories
       if (relatedSuggestions.length === 0) {
         const popularUnselected = categories
-          .filter(cat => cat.is_popular && cat.name_en && !value.includes(cat.name_en))
-          .map(cat => cat.name_en!)
+          .filter(cat => cat.is_popular && getCategoryName(cat) && !value.includes(getCategoryName(cat)))
+          .map(cat => getCategoryName(cat)!)
           .slice(0, 6)
         relatedSuggestions.push(...popularUnselected)
       }
@@ -114,7 +127,7 @@ export function SkillsBubbleInput({
       if (categories && Array.isArray(categories)) {
         categories.forEach((category: Category) => {
           // Add category name if it matches search and isn't already selected
-          const categoryName = category.name_en
+          const categoryName = getCategoryName(category)
           if (categoryName && 
               categoryName.toLowerCase().includes(searchTerm) && 
               !value.includes(categoryName)) {
@@ -166,14 +179,15 @@ export function SkillsBubbleInput({
     } else {
       setFilteredSuggestions([])
     }
-  }, [inputValue, categories, value])
+  }, [inputValue, categories, value, getCategoryName, locale])
 
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories')
       if (response.ok) {
         const data = await response.json()
-        setCategories(data.categories)
+        // Use flatCategories for skills component
+        setCategories(data.flatCategories || [])
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error)
@@ -218,13 +232,13 @@ export function SkillsBubbleInput({
   // Popular categories for quick selection
   const popularCategories = (categories || [])
     .filter(cat => cat.is_popular)
-    .map(cat => cat.name_en)
+    .map(cat => getCategoryName(cat))
     .filter(name => name) // Filter out undefined names
     .slice(0, 8)
 
   return (
     <div className={cn("space-y-3 relative", className)} ref={containerRef}>
-      <Label>Skills & Expertise</Label>
+      <Label>{label || t('skillsAndExpertise')}</Label>
       
       {/* Selected Skills Display */}
       <div className="min-h-[60px] p-3 border rounded-md bg-background">
@@ -256,7 +270,7 @@ export function SkillsBubbleInput({
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleInputKeyDown}
               onFocus={() => setShowSuggestions(true)}
-              placeholder={value.length === 0 ? placeholder : "Add more..."}
+              placeholder={value.length === 0 ? placeholder : t('addMore')}
               className="border-0 shadow-none p-0 h-6 text-sm focus-visible:ring-0"
               disabled={value.length >= maxSkills}
             />
@@ -264,18 +278,35 @@ export function SkillsBubbleInput({
         </div>
       </div>
 
-      {/* Suggestions Dropdown - positioned relative to main container */}
-      {showSuggestions && (filteredSuggestions.length > 0 || inputValue.trim()) && (
+      {/* Related Skills Section - shows when skills are selected and no input */}
+      {!inputValue.trim() && value.length > 0 && filteredSuggestions.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">{t('relatedSkills')}</Label>
+          <div className="flex flex-wrap gap-2">
+            {filteredSuggestions.slice(0, 6).map((suggestion, index) => (
+              <Button
+                key={index}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => addSkill(suggestion)}
+                disabled={value.includes(suggestion)}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Suggestions Dropdown - only show when typing */}
+      {showSuggestions && inputValue.trim() && (
         <Card className="absolute top-full left-0 right-0 z-50 mt-1 shadow-lg">
           <CardContent className="p-2">
             <div className="max-h-48 overflow-y-auto">
-              {/* Show header for related suggestions when no input */}
-              {!inputValue.trim() && filteredSuggestions.length > 0 && value.length > 0 && (
-                <div className="px-2 py-1 text-xs text-muted-foreground border-b mb-1">
-                  Related skills:
-                </div>
-              )}
-              
+              {/* Show filtered suggestions when typing */}
               {filteredSuggestions.map((suggestion, index) => (
                 <Button
                   key={index}
@@ -290,7 +321,7 @@ export function SkillsBubbleInput({
               ))}
               
               {/* Add custom skill option */}
-              {inputValue.trim() && !filteredSuggestions.includes(inputValue.trim()) && (
+              {!filteredSuggestions.includes(inputValue.trim()) && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -298,7 +329,7 @@ export function SkillsBubbleInput({
                   onClick={() => addSkill(inputValue)}
                 >
                   <Plus className="h-3 w-3 mr-2" />
-                  Add &quot;{inputValue.trim()}&quot;
+                  {t('addCustom', { skill: inputValue.trim() })}
                 </Button>
               )}
             </div>
@@ -307,9 +338,9 @@ export function SkillsBubbleInput({
       )}
 
       {/* Popular Skills Quick Add */}
-      {popularCategories.length > 0 && value.length === 0 && (
+      {popularCategories.length > 0 && value.length < 5 && (
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Popular categories:</Label>
+          <Label className="text-xs text-muted-foreground">{t('popularCategories')}</Label>
           <div className="flex flex-wrap gap-2">
             {popularCategories.map((category, index) => (
               <Button
@@ -331,7 +362,7 @@ export function SkillsBubbleInput({
 
       {/* Helper text */}
       <p className="text-xs text-muted-foreground">
-        {value.length}/{maxSkills} skills • Click suggestions or type and press Enter to add
+        {t('skillsCounter', { count: value.length, max: maxSkills })}
       </p>
     </div>
   )

@@ -23,6 +23,7 @@ export default getRequestConfig(async ({requestLocale}) => {
   await loadTranslation('common');
   await loadTranslation('dashboard');
   await loadTranslation('jobs');
+  await loadTranslation('jobPost');
   await loadTranslation('navigation');
   await loadTranslation('auth');
   await loadTranslation('messaging');
@@ -36,6 +37,7 @@ export default getRequestConfig(async ({requestLocale}) => {
   await loadTranslation('greetings');
   await loadTranslation('jobApplication');
   await loadTranslation('settings');
+  await loadTranslation('skills');
 
   return {
     locale,

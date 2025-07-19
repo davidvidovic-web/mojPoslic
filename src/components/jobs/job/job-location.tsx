@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin } from "lucide-react"
 import { Job } from "@/types/job"
-import { JobLocationMap } from "@/components/jobs/job-location-map"
+import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useTranslations } from 'next-intl'
 
 interface JobLocationProps {
@@ -47,7 +47,7 @@ export function JobLocation({ job, showFullLocation = false }: JobLocationProps)
             )}
             
             {job.job_latitude && job.job_longitude && (
-              <JobLocationMap
+              <GoogleJobLocationMap
                 latitude={job.job_latitude}
                 longitude={job.job_longitude}
                 address={job.job_address}

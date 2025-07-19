@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { enrichJobsWithStaticData } from '@/lib/job-helpers'
 
 export async function GET() {
   try {
@@ -118,15 +119,6 @@ export async function GET() {
       take: 50 // Get more initially to filter and rank better
     })
 
-    // Get cities and categories separately
-    const cities = await prisma.city.findMany({
-      where: { isActive: true }
-    })
-
-    const categories = await prisma.category.findMany({
-      where: { isActive: true }
-    })
-
     const postedByUsers = await prisma.user.findMany({
       where: {
         id: { in: recommendedJobs.map(job => job.postedById) }
@@ -139,31 +131,32 @@ export async function GET() {
       }
     })
 
-    // Transform jobs with manual joins and score them
-    const scoredJobs = recommendedJobs.map(job => {
-      const city = cities.find(c => c.id === job.cityId)
-      const category = categories.find(c => c.id === job.categoryId)
-      const postedBy = postedByUsers.find(u => u.id === job.postedById)
+    // First enrich with static data, then add user info and scoring
+    const enrichedJobs = await enrichJobsWithStaticData(recommendedJobs)
+    
+    // Transform jobs with user info and score them
+    const scoredJobs = enrichedJobs.map(enrichedJob => {
+      const postedBy = postedByUsers.find(u => u.id === enrichedJob.postedById)
       
       const transformedJob = {
-        ...job,
-        city: city ? {
-          ...city,
-          name: city.nameEN || city.nameBS // Add name property for compatibility
-        } : null,
-        category: category ? {
-          ...category,
-          name: category.nameEN || category.nameBS // Add name property for compatibility
-        } : null,
+        ...enrichedJob,
         postedBy,
         _count: { applications: 0 } // We'll calculate this separately if needed
       }
       
+      const jobData = enrichedJob as unknown as { 
+        title: string
+        description: string
+        requirements?: string
+        type: string
+        createdAt: Date
+      } // Cast to access all job properties
+      
       let score = 0
       
       // PRIORITY 1: City/Location matching (highest priority - 200 points)
-      if (userLocation && city) {
-        const jobLocation = (city.nameEN || city.nameBS).toLowerCase().trim()
+      if (userLocation && transformedJob.city) {
+        const jobLocation = (transformedJob.city.name_en || transformedJob.city.name_bs).toLowerCase().trim()
         // Exact city match gets full points
         if (jobLocation === userLocation) {
           score += 200
@@ -175,8 +168,8 @@ export async function GET() {
       }
       
       // PRIORITY 2: Category matching based on skills (150 points max)
-      if (category && userSkills.length > 0) {
-        const categoryName = (category.nameEN || category.nameBS).toLowerCase()
+      if (transformedJob.category && userSkills.length > 0) {
+        const categoryName = (transformedJob.category.name_en || transformedJob.category.name_bs).toLowerCase()
         let categoryScore = 0
         
         userSkills.forEach(skill => {
@@ -187,7 +180,7 @@ export async function GET() {
         
         // Bonus for exact category matches in common categories
         const commonCategories = ['development', 'design', 'writing', 'marketing', 'sales', 'admin', 'customer service']
-        const categoryKey = category.key?.toLowerCase() || ''
+        const categoryKey = transformedJob.category.key?.toLowerCase() || ''
         
         commonCategories.forEach(commonCat => {
           if (categoryKey.includes(commonCat)) {
@@ -204,7 +197,7 @@ export async function GET() {
       
       // PRIORITY 3: Skills matching in job content (100 points max)
       if (userSkills.length > 0) {
-        const jobText = `${job.title} ${job.description} ${job.requirements || ''}`.toLowerCase()
+        const jobText = `${jobData.title} ${jobData.description} ${jobData.requirements || ''}`.toLowerCase()
         let skillScore = 0
         
         userSkills.forEach(skill => {
@@ -218,7 +211,7 @@ export async function GET() {
       
       // PRIORITY 4: Job type matching (50 points)
       if (userPreferredTypes.length > 0) {
-        const jobType = job.type?.toLowerCase() || ''
+        const jobType = jobData.type?.toLowerCase() || ''
         userPreferredTypes.forEach(preferredType => {
           if (preferredType && jobType.includes(preferredType.replace('_', ' ').replace('-', ' '))) {
             score += 50
@@ -227,7 +220,7 @@ export async function GET() {
       }
       
       // PRIORITY 5: Recency bonus (25 points max)
-      const daysSincePosted = Math.floor((Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+      const daysSincePosted = Math.floor((Date.now() - new Date(jobData.createdAt).getTime()) / (1000 * 60 * 60 * 24))
       if (daysSincePosted <= 7) {
         score += Math.max(0, 25 - (daysSincePosted * 3)) // Decreasing points for older jobs
       }
@@ -258,7 +251,7 @@ export async function GET() {
       
       // Prioritize jobs from user's city if we have location info
       if (userLocation && item.job.city) {
-        const jobLocation = (item.job.city.nameEN || item.job.city.nameBS).toLowerCase().trim()
+        const jobLocation = (item.job.city.name_en || item.job.city.name_bs).toLowerCase().trim()
         if (jobLocation === userLocation || jobLocation.includes(userLocation)) {
           topRecommendations.push(item.job)
           usedCities.add(cityKey)

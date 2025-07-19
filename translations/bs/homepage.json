@@ -1,21 +1,21 @@
 {
   "hero": {
-    "title": "Pronađite svoj savršen posao",
-    "subtitle": "Povežite se s prilikama koje odgovaraju vašim vještinama i aspiracijama",
+    "title": "Objavite ili pronađite",
+    "subtitle": "Povežite se s prilikama koje odgovaraju vašim vještinama i vremenu",
     "searchPlaceholder": "Pretraži poslove, kompanije ili vještine...",
     "browseJobs": "Pregledaj poslove",
-    "postJob": "Objavi posao",
-    "badge": "Brzo zapošljavanje",
-    "titleHighlight": "ili pronađite savršenog kandidata",
+    "postJob": "Objavi poslić",
+    "badge": "Brzo • Sigurno • Jednostavno",
+    "titleHighlight": "svoje posliće",
     "registerButton": "Registruj se besplatno"
   },
   "browseJobs": {
-    "title": "Pregledaj Dostupne Poslove",
-    "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i preferencijama"
+    "title": "Pregledaj dostupne posliće",
+    "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i vremenu"
   },
   "siteStats": {
     "title": "Statistika platforme",
-    "subtitle": "Povežite se s hiljadama korisnika koji već koriste našu platformu",
+    "subtitle": "Pridružite se sa korisnicima koji već koriste našu platformu",
     "jobsPosted": "Objavljenih poslova",
     "activeUsers": "Aktivnih korisnika",
     "successfulHires": "Uspješnih zapošljavanja",
@@ -59,7 +59,7 @@
     },
     "forClients": {
       "title": "Za klijente",
-      "postJobs": "Objavi posao",
+      "postJobs": "Objavi poslić",
       "findWorkers": "Pronađi radnike",
       "free": "Besplatno"
     },
@@ -90,4 +90,4 @@
     },
     "copyright": "© {year} mojPoslić. Sva prava zadržana."
   }
-} 
+}

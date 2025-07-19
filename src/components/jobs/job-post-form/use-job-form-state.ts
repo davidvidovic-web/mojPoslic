@@ -12,8 +12,9 @@ export interface UseJobFormStateProps {
   isEditMode?: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function useJobFormState({ initialData, isEditMode: _isEditMode = false }: UseJobFormStateProps) {
+const FORM_STORAGE_KEY = 'job-form-draft'
+
+export function useJobFormState({ initialData, isEditMode = false }: UseJobFormStateProps) {
   const { user } = useAuth()
   
   // Check if user can post all job types (companies and admins)
@@ -21,6 +22,39 @@ export function useJobFormState({ initialData, isEditMode: _isEditMode = false }
   
   // Set default job type based on user role
   const defaultJobType = canPostAllJobTypes ? (initialData?.type || 'quick_job') : 'quick_job'
+  
+  // Load saved form data from localStorage
+  const loadSavedFormData = useCallback(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const saved = localStorage.getItem(FORM_STORAGE_KEY)
+      return saved ? JSON.parse(saved) : null
+    } catch (error) {
+      console.error('Error loading saved form data:', error)
+      return null
+    }
+  }, [])
+
+  // Save form data to localStorage
+  const saveFormData = useCallback((data: CreateJobData) => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(data))
+    } catch (error) {
+      console.error('Error saving form data:', error)
+    }
+  }, [])
+
+  // Clear saved form data
+  const clearSavedFormData = useCallback(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.removeItem(FORM_STORAGE_KEY)
+    } catch (error) {
+      console.error('Error clearing saved form data:', error)
+    }
+  }, [])
+
   const [currentStep, setCurrentStep] = useState<JobFormStep>('basic-details')
   const [completedSteps, setCompletedSteps] = useState<Set<JobFormStep>>(new Set())
   const [stepValidations, setStepValidations] = useState<Record<JobFormStep, boolean>>({
@@ -30,36 +64,94 @@ export function useJobFormState({ initialData, isEditMode: _isEditMode = false }
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const [formData, setFormData] = useState<CreateJobData>({
-    title: initialData?.title || '',
-    city_id: initialData?.city_id || '',
-    category_id: initialData?.category_id || '',
-    type: defaultJobType,
-    description: initialData?.description || '',
-    requirements: initialData?.requirements || '',
-    benefits: initialData?.benefits || '',
-    salary: initialData?.salary || '',
-    salaryType: initialData?.salaryType || 'fixed',
-    salaryMin: initialData?.salaryMin || 0,
-    salaryMax: initialData?.salaryMax || 0,
-    website: initialData?.website || '',
-    email: initialData?.email || user?.email || '',
-    start_date: initialData?.start_date || '',
-    start_time: initialData?.start_time || '',
-    duration: initialData?.duration || '',
-    transportation: initialData?.transportation || 'not_provided',
-    transportation_amount: initialData?.transportation_amount || 0,
-    job_address: initialData?.job_address || '',
-    job_latitude: initialData?.job_latitude || undefined,
-    job_longitude: initialData?.job_longitude || undefined,
-    contact_email: initialData?.contact_email || user?.email || '',
-    application_url: initialData?.application_url || '',
-    tags: initialData?.tags || []
+  // Initialize form data with saved data or defaults
+  const [formData, setFormData] = useState<CreateJobData>(() => {
+    const savedData = loadSavedFormData()
+    
+    // Prefer initialData (for edit mode), then saved data, then defaults
+    const baseData = {
+      title: '',
+      city_id: '',
+      category_id: '',
+      type: defaultJobType,
+      description: '',
+      requirements: '',
+      benefits: '',
+      salary: '',
+      salaryType: 'fixed' as const,
+      salaryMin: 0,
+      salaryMax: 0,
+      website: '',
+      email: user?.email || '',
+      start_date: '',
+      start_time: '',
+      duration: '',
+      transportation: 'not_provided' as const,
+      transportation_amount: 0,
+      job_address: '',
+      job_latitude: undefined,
+      job_longitude: undefined,
+      contact_email: user?.email || '',
+      application_url: '',
+      tags: []
+    }
+
+    return {
+      ...baseData,
+      ...(savedData || {}),
+      ...(initialData || {}),
+    }
   })
 
   const updateFormData = useCallback((field: keyof CreateJobData, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }, [])
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value }
+      // Auto-save to localStorage (but not in edit mode)
+      if (!isEditMode) {
+        saveFormData(newData)
+      }
+      return newData
+    })
+  }, [saveFormData, isEditMode])
+
+  // Clear form and saved data
+  const clearForm = useCallback(() => {
+    const defaultData = {
+      title: '',
+      city_id: '',
+      category_id: '',
+      type: defaultJobType,
+      description: '',
+      requirements: '',
+      benefits: '',
+      salary: '',
+      salaryType: 'fixed' as const,
+      salaryMin: 0,
+      salaryMax: 0,
+      website: '',
+      email: user?.email || '',
+      start_date: '',
+      start_time: '',
+      duration: '',
+      transportation: 'not_provided' as const,
+      transportation_amount: 0,
+      job_address: '',
+      job_latitude: undefined,
+      job_longitude: undefined,
+      contact_email: user?.email || '',
+      application_url: '',
+      tags: []
+    }
+    setFormData(defaultData)
+    clearSavedFormData()
+    setCurrentStep('basic-details')
+    setCompletedSteps(new Set())
+  }, [defaultJobType, user?.email, clearSavedFormData])
+
+  // Clear saved data on successful submit
+  const clearSavedDataOnSubmit = useCallback(() => {
+    clearSavedFormData()
+  }, [clearSavedFormData])
 
   const handleStepValidation = useCallback((step: JobFormStep, isValid: boolean) => {
     setStepValidations(prev => ({ ...prev, [step]: isValid }))
@@ -92,6 +184,8 @@ export function useJobFormState({ initialData, isEditMode: _isEditMode = false }
     handleBasicDetailsValidation,
     handleLocationCompensationValidation,
     handleReviewValidation,
-    isCurrentStepValid
+    isCurrentStepValid,
+    clearForm,
+    clearSavedDataOnSubmit
   }
 }

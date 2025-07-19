@@ -45,13 +45,13 @@
     "backToJobs": "Nazad na poslove"
   },
   "emptyStates": {
-    "noJobs": "Nema pronađenih poslova",
+    "noJobs": "Nema pronađenih poslića",
     "noJobsDescription": "Pokušajte prilagoditi svoje filtere ili pojmove za pretragu",
     "noSavedJobs": "Nema sačuvanih poslova",
     "noSavedJobsDescription": "Sačuvajte poslove koji vas zanimaju da ih vidite ovdje"
   },
   "list": {
-    "noJobs": "Nema pronađenih poslova",
+    "noJobs": "Nema pronađenih poslića",
     "noJobsMessage": "Trenutno nema dostupnih oglasa za posao. Provjerite kasnije za nove prilike.",
     "noJobsWithFiltersMessage": "Nijedan posao ne odgovara vašim trenutnim filterima. Pokušajte prilagoditi kriterije pretrage.",
     "clearAllFilters": "Očisti sve filtere"
@@ -92,10 +92,14 @@
       "category": "Kategorija",
       "description": "Opis",
       "requirements": "Zahtjevi",
+      "salary": "Plata",
+      "paymentType": "Tip plaćanja",
       "salaryType": "Tip plate",
       "salaryMin": "Minimalna plata",
       "salaryMax": "Maksimalna plata",
       "location": "Lokacija",
+      "transportation": "Prijevoz",
+      "transportationNotProvided": "Prijevoz nije osiguran",
       "contactName": "Ime za kontakt",
       "contactEmail": "Email za kontakt",
       "contactPhone": "Telefon za kontakt"
@@ -171,5 +175,121 @@
   "hourly": "/sat",
   "daily": "/dan",
   "weekly": "/nedjelju",
-  "monthly": "/mjesec"
+  "monthly": "/mjesec",
+  "postForm": {
+    "title": "Objavi posao",
+    "submit": "Objavi posao",
+    "posting": "Objavljivanje...",
+    "basicInformation": {
+      "title": "Osnovne informacije",
+      "jobTitle": "Naziv posla",
+      "jobTitlePlaceholder": "npr., Web programer, Grafički dizajner",
+      "city": "Grad",
+      "selectCity": "Izaberite grad",
+      "category": "Kategorija",
+      "selectCategory": "Izaberite kategoriju",
+      "subcategory": "Potkategorija",
+      "selectSubcategory": "Izaberite potkategoriju"
+    },
+    "jobDetails": {
+      "title": "Detalji posla",
+      "description": "Opis posla",
+      "descriptionPlaceholder": "Opišite šta treba da bude urađeno, uključujući specifične zahtjeve i očekivanja...",
+      "requirements": "Zahtjevi",
+      "requirementsPlaceholder": "Navedite specifične vještine, iskustvo ili kvalifikacije koje su potrebne...",
+      "benefits": "Prednosti",
+      "benefitsPlaceholder": "Spomenite pogodnosti, beneficije ili šta čini ovu priliku privlačnom...",
+      "jobType": "Tip posla",
+      "startDate": "Datum početka",
+      "includeStartTime": "Uključi vrijeme početka",
+      "jobAddress": "Adresa posla",
+      "addressPlaceholder": "Unesite specifičnu adresu gdje će se rad obavljati"
+    },
+    "salary": {
+      "title": "Plata i plaćanje",
+      "amount": "Iznos plate",
+      "salaryPlaceholder": "Unesite iznos",
+      "salaryType": "Tip plaćanja",
+      "type": "Tip plaćanja",
+      "selectSalaryType": "Izaberite tip plaćanja",
+      "fixed": "Fiksna cijena",
+      "hourly": "Satnica",
+      "daily": "Dnevnica",
+      "weekly": "Nedeljnica",
+      "monthly": "Mjesečna plata",
+      "range": "Raspon plate",
+      "minSalary": "Minimum",
+      "maxSalary": "Maksimum",
+      "enterAmount": "Unesite iznos",
+      "minPlaceholder": "Minimalni iznos",
+      "maxPlaceholder": "Maksimalni iznos",
+      "hourlyPlaceholder": "Satnica",
+      "dailyPlaceholder": "Dnevnica",
+      "monthlyPlaceholder": "Mjesečna plata",
+      "enterMaxAmount": "Unesite maksimalni iznos",
+      "salaryTextExample": "npr., 2000-3000 BAM ili po dogovoru",
+      "types": {
+        "fixed": "Fiksna cijena",
+        "hourly": "Satnica",
+        "daily": "Dnevnica",
+        "weekly": "Nedeljnica",
+        "monthly": "Mjesečna plata"
+      }
+    },
+    "contact": {
+      "title": "Kontakt informacije",
+      "contactEmail": "Kontakt email",
+      "contactEmailPlaceholder": "vas@email.com",
+      "website": "Website (Opciono)",
+      "websitePlaceholder": "https://vaswebsite.com",
+      "applicationUrl": "URL za prijavu (Opciono)",
+      "applicationUrlPlaceholder": "https://prijava.vasafirma.com"
+    },
+    "errors": {
+      "mustBeLoggedIn": "Morate biti ulogirani da biste objavili posao",
+      "fillRequiredFields": "Molimo popunite sva obavezna polja",
+      "selectCategorySubcategory": "Molimo izaberite i kategoriju i potkategoriju",
+      "contactEmailRequired": "Kontakt email je obavezan",
+      "invalidEmail": "Molimo unesite valjan email",
+      "invalidUrl": "Molimo unesite valjan URL",
+      "titleTooShort": "Naziv posla mora imati najmanje 5 karaktera",
+      "titleTooLong": "Naziv posla mora imati manje od 100 karaktera",
+      "descriptionTooShort": "Opis posla mora imati najmanje 50 karaktera",
+      "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera"
+    },
+    "success": {
+      "jobPosted": "Posao uspješno objavljen!",
+      "jobUpdated": "Posao uspješno ažuriran!",
+      "redirecting": "Preusmjeravanje na vaš posao..."
+    }
+  },
+  "sections": {
+    "compensationTransportation": "Kompenzacija i transport"
+  },
+  "labels": {
+    "salary": "Plata"
+  },
+  "review": {
+    "title": "Pregledaj Svoj Oglas",
+    "description": "Pregledaj sve detalje ispod prije objavljivanja svog oglasa za posao",
+    "starts": "Počinje",
+    "duration": "Trajanje", 
+    "at": "u",
+    "sections": {
+      "basicInformation": "Osnovne informacije",
+      "jobDescription": "Opis posla", 
+      "locationSchedule": "Lokacija i raspored",
+      "contactInformation": "Kontakt informacije"
+    },
+    "featureYourJob": "Istaknite Vaš Oglas",
+    "makeJobFeatured": "Učinite ovaj oglas istaknutim",
+    "featuredJobsAppear": "Istaknuti oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
+    "willCostConnections": "Ovo će koštati {connections} konekcija",
+    "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
+    "readyToPost": "Spremno za Objavu",
+    "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave.",
+    "submitJobPosting": "Objavi Oglas",
+    "updateJobPosting": "Ažuriraj Oglas", 
+    "submitting": "Objavljivanje..."
+  }
 } 

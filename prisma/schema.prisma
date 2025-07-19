@@ -8,55 +8,43 @@ datasource db {
 }
 
 model User {
-  id                     String              @id @default(cuid())
-  email                  String              @unique
-  username               String?             @unique
-  name                   String
-  password               String?
-  role                   UserRole            @default(client)
-  emailVerified          Boolean             @default(false) @map("email_verified")
-  profileSetupCompleted  Boolean             @default(false) @map("profile_setup_completed")
-  avatarUrl              String?             @map("avatar_url")
-  companyName            String?             @map("company_name")
-  position               String?
-  bio                    String?
-  skills                 String?
-  experience             String?
-  preferredJobTypes      String              @default("") @map("preferred_job_types")
-  phone                  String?
-  website                String?
-  location               String?
-  preferredLanguage      String?             @default("bs") @map("preferred_language")
-  connections            Int                 @default(10)
-  connectionsLastRefresh DateTime?           @map("connections_last_refresh")
-  createdAt              DateTime            @default(now()) @map("created_at")
-  updatedAt              DateTime            @updatedAt @map("updated_at")
-  
-  // Relations
-  accounts               Account[]
-  applications           Application[]
-  connectionHistory      ConnectionHistory[]
-  postedJobs             JobListing[]        @relation("JobPoster")
-  sessions               Session[]
-  stripeTransactions     StripeTransaction[]
-  
-  // Reviews
-  reviewsGiven           Review[]            @relation("ReviewsGiven")
-  reviewsReceived        Review[]            @relation("ReviewsReceived")
-  
-  // Messaging
-  conversationsAsParticipant1 Conversation[] @relation("ConversationsAsParticipant1")
-  conversationsAsParticipant2 Conversation[] @relation("ConversationsAsParticipant2")
-  messagesSent           Message[]           @relation("MessagesSent")
-  
-  // Notifications
-  notifications          Notification[]
-  
-  // Saved Jobs
-  savedJobs              SavedJob[]
-  
-  // Job Views
-  jobViews               JobView[]
+  id                          String              @id @default(cuid())
+  email                       String              @unique
+  username                    String?             @unique
+  name                        String
+  password                    String?
+  role                        UserRole            @default(client)
+  emailVerified               Boolean             @default(false) @map("email_verified")
+  profileSetupCompleted       Boolean             @default(false) @map("profile_setup_completed")
+  avatarUrl                   String?             @map("avatar_url")
+  companyName                 String?             @map("company_name")
+  position                    String?
+  bio                         String?
+  skills                      String?
+  experience                  String?
+  preferredJobTypes           String              @default("") @map("preferred_job_types")
+  phone                       String?
+  website                     String?
+  location                    String?
+  connections                 Int                 @default(10)
+  connectionsLastRefresh      DateTime?           @map("connections_last_refresh")
+  createdAt                   DateTime            @default(now()) @map("created_at")
+  updatedAt                   DateTime            @updatedAt @map("updated_at")
+  preferredLanguage           String?             @default("bs") @map("preferred_language")
+  accounts                    Account[]
+  applications                Application[]
+  connectionHistory           ConnectionHistory[]
+  conversationsAsParticipant1 Conversation[]      @relation("ConversationsAsParticipant1")
+  conversationsAsParticipant2 Conversation[]      @relation("ConversationsAsParticipant2")
+  postedJobs                  JobListing[]        @relation("JobPoster")
+  jobViews                    JobView[]
+  messagesSent                Message[]           @relation("MessagesSent")
+  notifications               Notification[]
+  reviewsReceived             Review[]            @relation("ReviewsReceived")
+  reviewsGiven                Review[]            @relation("ReviewsGiven")
+  savedJobs                   SavedJob[]
+  sessions                    Session[]
+  stripeTransactions          StripeTransaction[]
 
   @@map("users")
 }
@@ -111,56 +99,51 @@ model City {
   isActive    Boolean      @default(true) @map("is_active")
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
-  jobListings JobListing[]
 
   @@map("cities")
 }
 
 model JobListing {
-  id                   String        @id @default(cuid())
+  id                   String         @id @default(cuid())
   title                String
   company              String
-  cityId               String        @map("city_id")
-  categoryId           String?       @map("category_id")
+  cityId               String         @map("city_id")
+  categoryId           String?        @map("category_id")
   type                 JobType
   description          String
   requirements         String?
   benefits             String?
   salary               String?
-  salaryType           SalaryType?   @map("salary_type")
-  salaryMin            Int?          @map("salary_min")
-  salaryMax            Int?          @map("salary_max")
+  salaryType           SalaryType?    @map("salary_type")
+  salaryMin            Int?           @map("salary_min")
+  salaryMax            Int?           @map("salary_max")
   email                String
   website              String?
-  applicationUrl       String?       @map("application_url")
-  contactEmail         String?       @map("contact_email")
-  isFeatured           Boolean       @default(false) @map("is_featured")
+  applicationUrl       String?        @map("application_url")
+  contactEmail         String?        @map("contact_email")
+  isFeatured           Boolean        @default(false) @map("is_featured")
   tags                 String?
-  startDate            DateTime?     @map("start_date")
-  startTime            String?       @map("start_time")
-  duration             String?       @map("duration")
-  transportation       String        @default("not_provided") @map("transportation")
-  transportationAmount Int?          @map("transportation_amount")
-  expiresAt            DateTime?     @map("expires_at")
-  status               JobStatus     @default(active)
-  jobAddress           String?       @map("job_address")
-  jobLatitude          Float?        @map("job_latitude")
-  jobLongitude         Float?        @map("job_longitude")
-  isActive             Boolean       @default(true) @map("is_active")
-  postedById           String        @map("posted_by_id")
-  createdAt            DateTime      @default(now()) @map("created_at")
-  updatedAt            DateTime      @updatedAt @map("updated_at")
-  
-  // Relations
+  startDate            DateTime?      @map("start_date")
+  startTime            String?        @map("start_time")
+  duration             String?        @map("duration")
+  transportation       String         @default("not_provided") @map("transportation")
+  transportationAmount Int?           @map("transportation_amount")
+  expiresAt            DateTime?      @map("expires_at")
+  status               JobStatus      @default(active)
+  jobAddress           String?        @map("job_address")
+  jobLatitude          Float?         @map("job_latitude")
+  jobLongitude         Float?         @map("job_longitude")
+  isActive             Boolean        @default(true) @map("is_active")
+  postedById           String         @map("posted_by_id")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
   applications         Application[]
-  reviews              Review[]
   conversations        Conversation[]
-  savedBy              SavedJob[]
-  views                JobView[]
   assignment           JobAssignment?
-  category             Category?     @relation(fields: [categoryId], references: [id])
-  city                 City          @relation(fields: [cityId], references: [id])
-  postedBy             User          @relation("JobPoster", fields: [postedById], references: [id])
+  postedBy             User           @relation("JobPoster", fields: [postedById], references: [id])
+  views                JobView[]
+  reviews              Review[]
+  savedBy              SavedJob[]
 
   @@map("job_listings")
 }
@@ -169,20 +152,19 @@ model Application {
   id            String            @id @default(cuid())
   jobId         String            @map("job_id")
   userId        String            @map("user_id")
-  status        ApplicationStatus @default(PENDING)
-  message       String?           // Cover letter/application message
-  resume        String?           // Resume file path/URL
-  clientNotes   String?           @map("client_notes")
-  feedback      String?           // Client feedback to applicant
-  appliedAt     DateTime          @default(now()) @map("applied_at")
-  reviewedAt    DateTime?         @map("reviewed_at")
-  shortlistedAt DateTime?         @map("shortlisted_at")
-  selectedAt    DateTime?         @map("selected_at")
-  rejectedAt    DateTime?         @map("rejected_at")
-  withdrawnAt   DateTime?         @map("withdrawn_at")
+  message       String?
+  resume        String?
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
-  
+  appliedAt     DateTime          @default(now()) @map("applied_at")
+  clientNotes   String?           @map("client_notes")
+  feedback      String?
+  rejectedAt    DateTime?         @map("rejected_at")
+  reviewedAt    DateTime?         @map("reviewed_at")
+  selectedAt    DateTime?         @map("selected_at")
+  shortlistedAt DateTime?         @map("shortlisted_at")
+  withdrawnAt   DateTime?         @map("withdrawn_at")
+  status        ApplicationStatus @default(PENDING)
   job           JobListing        @relation(fields: [jobId], references: [id], onDelete: Cascade)
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignment    JobAssignment?    @relation("SelectedApplication")
@@ -192,20 +174,19 @@ model Application {
 }
 
 model JobAssignment {
-  id                   String        @id @default(cuid())
-  jobId                String        @unique @map("job_id")
-  selectedApplicationId String       @unique @map("selected_application_id")
-  contractStatus       ContractStatus @default(PENDING)
-  assignedAt           DateTime      @default(now()) @map("assigned_at")
-  startDate            DateTime?     @map("start_date")
-  agreedSalary         Int?          @map("agreed_salary")
-  notes                String?
-  createdAt            DateTime      @default(now()) @map("created_at")
-  updatedAt            DateTime      @updatedAt @map("updated_at")
-  
-  job                  JobListing    @relation(fields: [jobId], references: [id])
-  selectedApplication  Application   @relation("SelectedApplication", fields: [selectedApplicationId], references: [id])
-  
+  id                    String         @id @default(cuid())
+  jobId                 String         @unique @map("job_id")
+  selectedApplicationId String         @unique @map("selected_application_id")
+  contractStatus        ContractStatus @default(PENDING)
+  assignedAt            DateTime       @default(now()) @map("assigned_at")
+  startDate             DateTime?      @map("start_date")
+  agreedSalary          Int?           @map("agreed_salary")
+  notes                 String?
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  job                   JobListing     @relation(fields: [jobId], references: [id])
+  selectedApplication   Application    @relation("SelectedApplication", fields: [selectedApplicationId], references: [id])
+
   @@map("job_assignments")
 }
 
@@ -237,7 +218,6 @@ model Category {
   updatedAt   DateTime     @updatedAt @map("updated_at")
   parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[]   @relation("CategoryHierarchy")
-  jobListings JobListing[]
 
   @@map("categories")
 }
@@ -259,16 +239,94 @@ model StripeTransaction {
   id                    String   @id @default(cuid())
   stripePaymentIntentId String   @unique @map("stripe_payment_intent_id")
   userId                String   @map("user_id")
-  amount                Int      // Amount in cents (Stripe format)
+  amount                Int
   currency              String   @default("usd")
-  status                String   // succeeded, pending, failed, canceled, refunded
+  status                String
   description           String?
-  metadata              Json?    // Additional Stripe metadata
+  metadata              Json?
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("stripe_transactions")
+}
+
+model Review {
+  id         String      @id @default(cuid())
+  rating     Int
+  comment    String?
+  reviewerId String      @map("reviewer_id")
+  revieweeId String      @map("reviewee_id")
+  jobId      String?     @map("job_id")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  job        JobListing? @relation(fields: [jobId], references: [id])
+  reviewee   User        @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  reviewer   User        @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, revieweeId, jobId])
+  @@map("reviews")
+}
+
+model Conversation {
+  id            String      @id @default(cuid())
+  participant1  String      @map("participant1_id")
+  participant2  String      @map("participant2_id")
+  jobId         String?     @map("job_id")
+  lastMessageAt DateTime?   @map("last_message_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  job           JobListing? @relation(fields: [jobId], references: [id])
+  user1         User        @relation("ConversationsAsParticipant1", fields: [participant1], references: [id], onDelete: Cascade)
+  user2         User        @relation("ConversationsAsParticipant2", fields: [participant2], references: [id], onDelete: Cascade)
+  messages      Message[]
+
+  @@unique([participant1, participant2, jobId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String       @map("conversation_id")
+  senderId       String       @map("sender_id")
+  content        String
+  isRead         Boolean      @default(false) @map("is_read")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  content   String
+  isRead    Boolean          @default(false) @map("is_read")
+  data      Json?
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model JobView {
+  id        String     @id @default(cuid())
+  jobId     String     @map("job_id")
+  userId    String?    @map("user_id")
+  ipAddress String?    @map("ip_address")
+  userAgent String?    @map("user_agent")
+  createdAt DateTime   @default(now()) @map("created_at")
+  job       JobListing @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+  @@unique([jobId, ipAddress])
+  @@map("job_views")
 }
 
 enum UserRole {
@@ -291,6 +349,7 @@ enum SalaryType {
   daily
   weekly
   monthly
+  negotiable
 }
 
 enum JobStatus {
@@ -322,85 +381,9 @@ enum ConnectionAction {
   JOB_APPLICATION
   JOB_POST_CLIENT
   JOB_POST_COMPANY
-  JOB_POST_FREE
   ADMIN_ADJUSTMENT
   PURCHASE
-}
-
-// User Reviews System
-model Review {
-  id          String   @id @default(cuid())
-  rating      Int      // 1-5 star rating
-  comment     String?  // Optional review comment
-  reviewerId  String   @map("reviewer_id")
-  revieweeId  String   @map("reviewee_id")
-  jobId       String?  @map("job_id") // Optional: link to specific job
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  reviewer User       @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
-  reviewee User       @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
-  job      JobListing? @relation(fields: [jobId], references: [id], onDelete: SetNull)
-
-  // Constraints
-  @@unique([reviewerId, revieweeId, jobId]) // Prevent duplicate reviews for same job
-  @@map("reviews")
-}
-
-// Chat/Messaging System
-model Conversation {
-  id           String   @id @default(cuid())
-  participant1 String   @map("participant1_id")
-  participant2 String   @map("participant2_id")
-  jobId        String?  @map("job_id") // Optional: conversation about specific job
-  lastMessageAt DateTime? @map("last_message_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user1    User        @relation("ConversationsAsParticipant1", fields: [participant1], references: [id], onDelete: Cascade)
-  user2    User        @relation("ConversationsAsParticipant2", fields: [participant2], references: [id], onDelete: Cascade)
-  job      JobListing? @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  messages Message[]
-
-  // Constraints
-  @@unique([participant1, participant2, jobId]) // Prevent duplicate conversations
-  @@map("conversations")
-}
-
-model Message {
-  id             String   @id @default(cuid())
-  conversationId String   @map("conversation_id")
-  senderId       String   @map("sender_id")
-  content        String
-  isRead         Boolean  @default(false) @map("is_read")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
-
-  @@map("messages")
-}
-
-// Notification System (for reviews, messages, job updates, etc.)
-model Notification {
-  id        String            @id @default(cuid())
-  userId    String            @map("user_id")
-  type      NotificationType
-  title     String
-  content   String
-  isRead    Boolean           @default(false) @map("is_read")
-  data      Json?             // Additional data (job_id, review_id, etc.)
-  createdAt DateTime          @default(now()) @map("created_at")
-  updatedAt DateTime          @updatedAt @map("updated_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("notifications")
+  JOB_POST_FREE
 }
 
 enum NotificationType {
@@ -409,23 +392,4 @@ enum NotificationType {
   JOB_APPLICATION
   JOB_UPDATE
   SYSTEM
-}
-
-model JobView {
-  id        String   @id @default(cuid())
-  jobId     String   @map("job_id")
-  userId    String?  @map("user_id") // nullable for anonymous views
-  ipAddress String?  @map("ip_address") // for anonymous tracking
-  userAgent String?  @map("user_agent") // for bot detection
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  // Relations
-  job  JobListing @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  user User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Ensure one view per user per job (if user is logged in)
-  @@unique([jobId, userId])
-  // For anonymous users, track by IP and job to prevent spam
-  @@unique([jobId, ipAddress])
-  @@map("job_views")
 }

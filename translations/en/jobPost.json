@@ -1,0 +1,317 @@
+{
+  "title": "Post a Job",
+  "dialogDescription": "Create a new job posting to find qualified candidates",
+  "steps": {
+    "basic": "Basic Info",
+    "details": "Job Details", 
+    "salary": "Salary",
+    "contact": "Contact",
+    "review": "Review"
+  },
+  "types": {
+    "quick_job": "Quick Job",
+    "part_time": "Part Time",
+    "full_time": "Full Time",
+    "remote": "Remote",
+    "quickJob": "Quick Job",
+    "partTime": "Part Time",
+    "fullTime": "Full Time",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "category": "Category Selection",
+      "jobDescription": "Job Description",
+      "locationSchedule": "Location & Schedule"
+    },
+    "labels": {
+      "jobTitle": "Job Title",
+      "jobType": "Job Type",
+      "jobCategory": "Job Category",
+      "subcategory": "Subcategory",
+      "description": "Job Description",
+      "requirements": "Requirements",
+      "benefits": "Benefits"
+    },
+    "placeholders": {
+      "jobTitleExample": "e.g., Web Developer, Graphic Designer",
+      "selectJobType": "Select job type",
+      "selectCategory": "Select category",
+      "loadingCategories": "Loading categories...",
+      "selectSubcategory": "Select subcategory",
+      "noSpecificSubcategory": "No specific subcategory",
+      "describeJob": "Describe what needs to be done, including specific requirements and expectations...",
+      "requirementsExample": "List specific skills, experience, or qualifications required...",
+      "benefitsExample": "Mention benefits, perks, or what makes this opportunity attractive...",
+      "selectTransportation": "Select transportation arrangement (optional)"
+    },
+    "transportation": {
+      "title": "Transportation Tips",
+      "whoHandles": "Who handles transportation to the job location?",
+      "options": {
+        "provided": "Client provides transportation",
+        "notProvided": "Transportation not provided",
+        "taskerResponsible": "Tasker responsible for transportation",
+        "compensated": "Client will compensate for transportation"
+      },
+      "compensationAmount": "Transportation compensation amount (BAM)",
+      "tips": {
+        "clearArrangements": "Clear transportation arrangements increase application rates",
+        "considerOffering": "Consider offering transportation or compensation for remote job locations",
+        "compensationAttracts": "Transportation compensation can help attract more candidates",
+        "specifyParking": "Specify parking availability for taskers who drive",
+        "includePublicTransport": "Include public transport information to help with planning"
+      },
+      "selectDescription": "Clarify who is responsible for getting to and from the job location.",
+      "compensationAmountPlaceholder": "e.g., 50",
+      "compensationHelp": "Amount in BAM that you will compensate for transportation costs.",
+      "parkingAvailable": "Parking is available",
+      "parkingHelp": "Check if there is parking available for taskers who drive to the location.",
+      "publicTransportInfo": "Public transport accessibility (Optional)",
+      "publicTransportPlaceholder": "e.g., 5 minutes walk from bus stop, Near tram line 3, Accessible by metro...",
+      "publicTransportHelp": "Provide information about nearby public transportation options to help taskers plan their commute."
+    },
+    "location": {
+      "title": "Location",
+      "cityRequired": "City *",
+      "selectCity": "Select a city",
+      "hasSpecificLocation": "Job has a specific address location",
+      "specificAddress": "Specific Job Address (Optional)",
+      "addressPlaceholder": "Enter the exact address where work will be performed...",
+      "mapNote": "Click on the map to set the exact location",
+      "addressHelp": "Provide the specific address where the work will be performed. This helps candidates plan their commute and makes your job more discoverable."
+    },
+    "schedule": {
+      "title": "Schedule",
+      "whenStart": "When do you want to start this job?",
+      "dontKnowExactTime": "I don't know the exact time",
+      "startDate": "Start Date *",
+      "startTime": "Start Time (Optional)",
+      "duration": "Expected Duration",
+      "durationOptions": {
+        "1_hour": "1 hour",
+        "2_hours": "2 hours",
+        "3_hours": "3 hours",
+        "4_hours": "4 hours",
+        "6_hours": "6 hours",
+        "8_hours": "8 hours",
+        "1_day": "1 day",
+        "2_days": "2 days",
+        "3_days": "3 days",
+        "1_week": "1 week",
+        "2_weeks": "2 weeks",
+        "1_month": "1 month",
+        "2_months": "2 months",
+        "3_months": "3 months",
+        "negotiable": "Negotiable"
+      },
+      "selectStartDate": "Select start date",
+      "selectStartTime": "Select start time",
+      "durationPlaceholder": "How long will this job take?",
+      "durationHelp": "Helps candidates understand the time commitment and plan accordingly.",
+      "optional": "(Optional)",
+      "notEnoughTime": "Not enough time",
+      "dontKnowExactDate": "I don't know the exact date",
+      "byAgreement": "By agreement",
+      "tips": {
+        "title": "Scheduling Tips",
+        "clear": "Clear scheduling helps candidates plan and increases application rates",
+        "flexible": "If flexible, mention \"Negotiable\" in the duration field",
+        "ongoing": "For ongoing work, select \"Ongoing\" duration option",
+        "buffer": "Include buffer time for setup and cleanup"
+      }
+    },
+    "compensation": {
+      "title": "Pay & Compensation",
+      "salaryType": "How would you like to structure the pay?",
+      "salaryTypes": {
+        "hourly": "Hourly Rate",
+        "fixed": "Fixed Price",
+        "daily": "Daily Rate",
+        "negotiable": "Negotiable"
+      },
+      "salaryRange": "Salary Range",
+      "minSalary": "Minimum (BAM)",
+      "maxSalary": "Maximum (BAM)",
+      "hourlyRate": "Hourly Rate (BAM)",
+      "dailyRate": "Daily Rate (BAM)",
+      "dailyRateHelp": "Enter your daily rate amount",
+      "notes": "Compensation Notes",
+      "notesOptional": "(Optional)",
+      "notesPlaceholder": "Add any additional context about compensation, benefits, or negotiability...",
+      "notesHelp": "Add any additional context about compensation, benefits, or negotiability.",
+      "fixedAmount": "Total Project Price (BAM)",
+      "minimumRate": "Minimum Rate (BAM)",
+      "maximumRate": "Maximum Rate (BAM, Optional)",
+      "fixedAmountHelp": "Enter the total amount you're willing to pay for the complete project.",
+      "smartPaymentSuggestion": "Smart Payment Suggestion",
+      "smartPaymentCalculation": "Smart Payment Calculation",
+      "autoCalculationNote": "This calculation automatically adjusts based on your selected duration and payment type",
+      "salaryTip": "Tip: Including salary information can increase application rates by up to 30%.",
+      "performanceBonus": "Possibility of a performance bonus?",
+      "performanceBonusHelp": "Check this if you offer performance-based bonuses or incentives.",
+      "validation": {
+        "maxLessThanMin": "Maximum rate cannot be less than minimum rate"
+      },
+      "bestPractices": {
+        "title": "Salary Best Practices",
+        "transparency": "Be transparent about compensation to attract serious candidates",
+        "ranges": "Use ranges for flexibility in negotiations",
+        "benefits": "Include information about benefits or perks",
+        "marketRates": "Consider local market rates for the position",
+        "salaryTip": "Including salary information can increase application rates by up to 30%"
+      },
+      "paymentSuggestions": {
+        "1_hour": "Perfect for \"Per Hour\" payment - ideal for short tasks",
+        "2_hours": "Perfect for \"Per Hour\" payment - great for quick jobs",
+        "3_hours": "Perfect for \"Per Hour\" payment - best for hourly work",
+        "4_hours": "Perfect for \"Per Hour\" payment - standard hourly rate",
+        "6_hours": "Consider \"Per Hour\" payment for precise time tracking",
+        "8_hours": "Perfect for \"Per Day\" payment - matches a full work day",
+        "1_day": "Perfect for \"Per Day\" payment - ideal for day-based work",
+        "2_days": "Perfect for \"Per Day\" payment - great for multi-day projects",
+        "3_days": "Perfect for \"Per Day\" payment - excellent for short-term work",
+        "1_week": "Consider \"Fixed Price\" for week-long projects",
+        "2_weeks": "Consider \"Fixed Price\" for bi-weekly projects",
+        "1_month": "Consider \"Fixed Price\" for monthly projects",
+        "2_months": "Consider \"Fixed Price\" for extended projects",
+        "3_months": "Consider \"Fixed Price\" for long-term work",
+        "negotiable": "Consider \"Fixed Price\" for flexible project scope",
+        "default": "Choose the payment structure that works best for your specific job requirements"
+      },
+      "paymentCalculation": {
+        "total": "Total",
+        "dependsOnAgreement": "Total payment depends on final agreement",
+        "estimatedTotal": "Estimated total",
+        "considerSwitching": "Consider switching to",
+        "forBetterAccuracy": "payment for better accuracy",
+        "estimated": "estimated",
+        "convertedFor": "converted for",
+        "baseRate": "base rate",
+        "fixedProjectPrice": "Fixed project price",
+        "negotiablePrice": "Negotiable price",
+        "units": {
+          "hour": "hour",
+          "day": "day", 
+          "hours": "hours",
+          "days": "days",
+          "bamPerHour": "BAM/hour",
+          "bamPerDay": "BAM/day",
+          "hrsPerDay": "hrs/day"
+        }
+      },
+      "tips": {
+        "transparent": "Be transparent about compensation to attract serious candidates",
+        "competitive": "Research market rates to ensure competitive compensation",
+        "includeAll": "Include all costs - base pay, bonuses, benefits if applicable",
+        "clearStructure": "Clear compensation structure reduces negotiation time"
+      }
+    },
+    "messages": {
+      "categorySelectedNoSubcategories": "Selected category has no subcategories available.",
+      "descriptionTimeline": "Your job description will be reviewed and published within 24 hours."
+    }
+  },
+  "costs": {
+    "title": "Pricing Information",
+    "quickJobCost": "Quick Job Posting",
+    "partTimeCost": "Part-time Job Posting",
+    "fullTimeCost": "Full-time Job Posting",
+    "remoteCost": "Remote Job Posting",
+    "freeForLimitedTime": "Free for limited time",
+    "currency": "BAM"
+  },
+  "validation": {
+    "titleRequired": "Job title is required",
+    "titleTooShort": "Job title must be at least 5 characters",
+    "titleTooLong": "Job title must be less than 100 characters",
+    "cityRequired": "City selection is required",
+    "categoryRequired": "Category selection is required",
+    "subcategoryRequired": "Subcategory selection is required",
+    "descriptionRequired": "Job description is required",
+    "descriptionTooShort": "Job description must be at least 50 characters",
+    "descriptionTooLong": "Job description must be less than 5000 characters",
+    "contactEmailRequired": "Contact email is required",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidUrl": "Please enter a valid URL",
+    "salaryRequired": "Salary information is required",
+    "invalidSalary": "Please enter a valid salary amount",
+    "fillRequiredField": "Please fill in the required field: {field}",
+    "fillRequiredFields": "Please fill in the required fields: {fields}"
+  },
+  "form": {
+    "title": "Post a Job",
+    "subtitle": "Find the perfect candidate for your position",
+    "requirements": "Requirements",
+    "benefits": "Benefits",
+    "steps": {
+      "basicDetails": {
+        "title": "Job Details",
+        "description": "Basic job information and requirements"
+      },
+      "locationCompensation": {
+        "title": "Location & Pay",
+        "description": "Location details and compensation"
+      },
+      "review": {
+        "title": "Review & Submit",
+        "description": "Review your job posting before publishing"
+      }
+    },
+    "navigation": {
+      "next": "Next",
+      "previous": "Previous",
+      "submit": "Submit Job Posting",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "clearForm": "Clear Form",
+      "stepOf": "Step {current} of {total}",
+      "percentComplete": "{percent}% complete"
+    }
+  },
+  "sections": {
+    "basicInformation": "Basic Information",
+    "category": "Category Selection",
+    "jobDescription": "Job Description",
+    "locationSchedule": "Location & Schedule",
+    "transportation": "Transportation & Access",
+    "compensationTransportation": "Compensation & Transportation"
+  },
+  "labels": {
+    "jobTitle": "Job Title",
+    "jobType": "Job Type",
+    "jobCategory": "Job Category", 
+    "subcategory": "Subcategory",
+    "description": "Job Description",
+    "requirements": "Requirements",
+    "benefits": "Benefits",
+    "transportation": "Transportation",
+    "salary": "Salary"
+  },
+  "review": {
+    "title": "Review Your Job Posting",
+    "description": "Review all the details below before submitting your job posting",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "jobDescription": "Job Description", 
+      "locationSchedule": "Location & Schedule",
+      "contactInformation": "Contact Information"
+    },
+    "featureYourJob": "Feature Your Job",
+    "makeJobFeatured": "Make this job featured",
+    "featuredJobsAppear": "Featured jobs appear at the top of search results and get more visibility",
+    "willCostConnections": "This will cost {connections} connections",
+    "willBeFeatured": "This job will be featured for 7 days",
+    "readyToPost": "Ready to Post",
+    "jobLooksGreat": "Your job posting looks great! Click submit to publish it and start receiving applications."
+  },
+  "placeholders": {
+    "jobTitleExample": "e.g., Web Developer, Graphic Designer",
+    "selectJobType": "Select job type",
+    "selectCategory": "Select a category",
+    "loadingCategories": "Loading categories...",
+    "selectSubcategory": "Select a subcategory",
+    "noSpecificSubcategory": "No specific subcategory",
+    "describeJob": "Describe what you need done, including specific requirements and expectations...",
+    "requirementsExample": "List any specific skills, experience, or qualifications needed...",
+    "benefitsExample": "Mention any perks, benefits, or what makes this opportunity attractive..."
+  }
+}

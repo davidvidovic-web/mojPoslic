@@ -26,12 +26,28 @@ export function useJobFormNavigation({
   const canGoPrevious = getPreviousStep(currentStep) !== null
   const canGoNext = isEditMode || isCurrentStepValid
 
+  const scrollToTop = () => {
+    // Try multiple approaches to ensure scrolling works
+    // 1. Scroll window to top
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    
+    // 2. Also try scrolling the document element
+    setTimeout(() => {
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
+      // 3. Fallback: immediate scroll without smooth behavior
+      if (window.pageYOffset > 0) {
+        window.scrollTo(0, 0)
+      }
+    }, 50)
+  }
+
   const handleNext = () => {
     // In edit mode, allow navigation without validation
     if (isEditMode) {
       const nextStep = getNextStep(currentStep)
       if (nextStep) {
         setCurrentStep(nextStep)
+        scrollToTop()
       }
       return
     }
@@ -43,6 +59,7 @@ export function useJobFormNavigation({
     if (nextStep) {
       setCompletedSteps(new Set([...completedSteps, currentStep]))
       setCurrentStep(nextStep)
+      scrollToTop()
     }
   }
 
@@ -50,6 +67,7 @@ export function useJobFormNavigation({
     const previousStep = getPreviousStep(currentStep)
     if (previousStep) {
       setCurrentStep(previousStep)
+      scrollToTop()
     }
   }
 
@@ -57,6 +75,7 @@ export function useJobFormNavigation({
     // In edit mode, allow unrestricted navigation between steps
     if (isEditMode) {
       setCurrentStep(step)
+      scrollToTop()
       return
     }
     
@@ -66,6 +85,7 @@ export function useJobFormNavigation({
     
     if (completedSteps.has(step) || stepIndex <= currentIndex) {
       setCurrentStep(step)
+      scrollToTop()
     }
   }
 

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { NextResponse } from 'next/server'
+import { getCityById as getStaticCityById, getCategoryById as getStaticCategoryById } from '@/lib/job-helpers'
 
 const prisma = new PrismaClient()
 
@@ -16,25 +17,21 @@ export async function getJobById(jobId: string) {
 }
 
 /**
- * Fetches a city by ID
+ * Fetches a city by ID using static data
  */
 export async function getCityById(cityId: string | null) {
   if (!cityId) return null
   
-  return await prisma.city.findUnique({
-    where: { id: cityId }
-  })
+  return getStaticCityById(cityId)
 }
 
 /**
- * Fetches a category by ID
+ * Fetches a category by ID using static data
  */
 export async function getCategoryById(categoryId: string | null) {
   if (!categoryId) return null
   
-  return await prisma.category.findUnique({
-    where: { id: categoryId }
-  })
+  return getStaticCategoryById(categoryId)
 }
 
 /**

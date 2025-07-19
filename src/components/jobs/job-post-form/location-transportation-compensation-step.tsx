@@ -23,10 +23,14 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
 
   const isCompany = user?.role === 'company'
 
-  // Validation - email is required for companies, only block on high-confidence location errors
+  // Validation - check required fields for this step
   useEffect(() => {
     const hasBlockingLocationError = locationValidationError && 
       locationValidationError.includes('Location Mismatch:')
+    
+    // Check required fields for this step
+    const cityValid = !!(formData.city_id?.trim())
+    const startDateValid = !!(formData.start_date?.trim())
     
     // For companies, email is required; for clients, auto-set email
     let emailValid = true
@@ -37,9 +41,9 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
       onChange({ email: user.email })
     }
     
-    const isValid = emailValid && !hasBlockingLocationError
+    const isValid = cityValid && startDateValid && emailValid && !hasBlockingLocationError
     onValidation(isValid)
-  }, [formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange])
+  }, [formData.city_id, formData.start_date, formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange])
 
   const handleLocationValidationChange = (error: string | null) => {
     setLocationValidationError(error)

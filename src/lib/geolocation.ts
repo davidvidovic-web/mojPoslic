@@ -1,3 +1,5 @@
+import { geocodeCache } from './geocode-cache';
+
 export interface GeolocationPosition {
   coords: {
     latitude: number
@@ -67,38 +69,68 @@ export class GeolocationService {
   }
 
   static async reverseGeocode(lat: number, lng: number): Promise<string> {
+    // Round coordinates to 6 decimal places for consistent cache keys
+    const roundedLat = parseFloat(lat.toFixed(6));
+    const roundedLng = parseFloat(lng.toFixed(6));
+    
+    // Check cache first
+    const cached = geocodeCache.get(roundedLat, roundedLng);
+    if (cached) {
+      return cached;
+    }
+    
+    // First check if these are city coordinates (avoid API call)
     try {
-      // Add headers to potentially reduce rate limiting
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'mojPoslic/1.0'
+      const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+      
+      // Check if within ~100 meters of a city center
+      for (const [, city] of Object.entries(CITY_COORDINATES)) {
+        if (Math.abs(city.lat - roundedLat) <= 0.001 && 
+            Math.abs(city.lng - roundedLng) <= 0.001) {
+          
+          // Cache and return the city name
+          geocodeCache.set(roundedLat, roundedLng, city.name, 'city');
+          return city.name;
+        }
+      }
+    } catch (cityError) {
+      console.warn('City lookup error:', cityError);
+      // Continue to API lookup
+    }
+    
+    // Try to get address via our proxy API
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      try {
+        const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data && data.display_name) {
+            // Cache and return the address
+            geocodeCache.set(roundedLat, roundedLng, data.display_name, 'google');
+            return data.display_name;
           }
         }
-      )
-      
-      if (!response.ok) {
-        // Handle rate limiting (429) and other HTTP errors
-        if (response.status === 429) {
-          console.warn('Reverse geocoding rate limited, falling back to coordinates')
-        } else {
-          console.warn(`Reverse geocoding failed with status ${response.status}`)
-        }
-        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+      } catch (error) {
+        console.warn('Geocoding API error:', error);
+      } finally {
+        clearTimeout(timeoutId);
       }
-      
-      const data = await response.json()
-      
-      if (data && data.display_name) {
-        return data.display_name
-      }
-      
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`
     } catch (error) {
-      console.error('Reverse geocoding error:', error)
-      // Gracefully fall back to coordinates when CORS or network errors occur
-      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+      console.error('Geocoding error:', error);
     }
+    
+    // Fallback to coordinate string if everything else fails
+    const fallbackAddress = `${roundedLat}, ${roundedLng}`;
+    geocodeCache.set(roundedLat, roundedLng, fallbackAddress, 'fallback');
+    return fallbackAddress;
   }
 }

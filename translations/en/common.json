@@ -30,7 +30,8 @@
     "rejected": "Rejected",
     "draft": "Draft",
     "published": "Published",
-    "comingSoon": "Coming Soon"
+    "comingSoon": "Coming Soon",
+    "loading": "Loading..."
   },
   "forms": {
     "required": "Required",
@@ -41,6 +42,14 @@
     "saving": "Saving...",
     "submitting": "Submitting..."
   },
+  "locationPicker": {
+    "helpText": "Search for a specific address or click on the map to select a precise location within the selected city",
+    "findMyLocation": "Find My Location",
+    "findingLocation": "Finding...",
+    "locationError": "Unable to get your location",
+    "locationPermissionDenied": "Location access denied",
+    "outsideBosniaWarning": "We currently only operate in Bosnia & Herzegovina"
+  },
   "messages": {
     "notSpecified": "Not specified",
     "noData": "No data available",
@@ -48,7 +57,9 @@
     "error": "An error occurred",
     "success": "Success",
     "warning": "Warning",
-    "info": "Information"
+    "info": "Information",
+    "somethingWentWrong": "Something went wrong",
+    "tryAgainLater": "Please try again later"
   },
   "time": {
     "today": "Today",

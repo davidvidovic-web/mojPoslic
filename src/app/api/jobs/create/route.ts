@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { createSimplePrismaClient } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { formatClientName } from '@/lib/job-utils'
-
-// Use a simple Prisma client for this endpoint
-const simplePrisma = new PrismaClient()
+import { getCityByKey, getCategoryById, getCategoryByKey } from '@/lib/job-helpers'
+import { staticDataManager } from '@/lib/static-data'
 
 export async function POST(request: NextRequest) {
+  const prisma = createSimplePrismaClient()
+  
   try {
     const session = await auth()
     
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     // Get the user's info including role for connection cost calculation
-    const user = await simplePrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, role: true }
     })
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check user's connections using raw SQL (since TypeScript types might not be updated)
-    const connectionResult = await simplePrisma.$queryRaw`
+    const connectionResult = await prisma.$queryRaw`
       SELECT connections 
       FROM users 
       WHERE id = ${userId}
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000) // Add 24 hours
 
     // Count jobs posted today by this user
-    const todayJobCount = await simplePrisma.jobListing.count({
+    const todayJobCount = await prisma.jobListing.count({
       where: {
         postedById: userId,
         createdAt: {
@@ -125,11 +126,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Resolve city key to city ID
-    const city = await simplePrisma.city.findUnique({
-      where: { key: city_id },
-      select: { id: true, key: true }
-    })
+    // Resolve city key to city ID using static data
+    await staticDataManager.loadData() // Ensure data is loaded
+    const city = getCityByKey(city_id)
 
     if (!city) {
       return NextResponse.json(
@@ -138,21 +137,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Resolve category key/ID to category ID if provided
+    // Resolve category key/ID to category ID if provided using static data
+    // Data is already loaded from the city lookup above
     let resolvedCategoryId = null
     if (category_id) {
       // Try to find by ID first (for new format), then by key (for backward compatibility)
-      let category = await simplePrisma.category.findUnique({
-        where: { id: category_id },
-        select: { id: true, key: true }
-      })
+      let category = getCategoryById(category_id)
 
       // If not found by ID, try to find by key
       if (!category) {
-        category = await simplePrisma.category.findUnique({
-          where: { key: category_id },
-          select: { id: true, key: true }
-        })
+        category = getCategoryByKey(category_id)
       }
 
       if (!category) {
@@ -168,6 +162,11 @@ export async function POST(request: NextRequest) {
     if (start_date) {
       const startDate = new Date(start_date)
       const now = new Date()
+      
+      // Reset time to midnight for date-only comparison
+      startDate.setHours(0, 0, 0, 0)
+      now.setHours(0, 0, 0, 0)
+      
       if (startDate < now) {
         return NextResponse.json(
           { error: 'Start date cannot be in the past' },
@@ -236,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create job and spend connections in a transaction
-    const job = await simplePrisma.$transaction(async (tx) => {
+    const job = await prisma.$transaction(async (tx) => {
       // Create the job
       const createdJob = await tx.jobListing.create({
         data: jobData
@@ -310,6 +309,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await simplePrisma.$disconnect()
+    await prisma.$disconnect()
   }
 }

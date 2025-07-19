@@ -1,0 +1,321 @@
+{
+  "title": "Objavi posao",
+  "dialogDescription": "Kreiraj novi oglas za posao da pronađeš kvalificirane kandidate",
+  "steps": {
+    "basic": "Osnovne info",
+    "details": "Detalji posla",
+    "salary": "Plata",
+    "contact": "Kontakt",
+    "review": "Pregled"
+  },
+  "types": {
+    "quick_job": "Brzi posao",
+    "part_time": "Djelomično vrijeme",
+    "full_time": "Puno vrijeme",
+    "remote": "Udaljeni rad",
+    "quickJob": "Brzi posao",
+    "partTime": "Djelomično vrijeme",
+    "fullTime": "Puno vrijeme",
+    "sections": {
+      "basicInformation": "Osnovne informacije",
+      "category": "Izbor kategorije",
+      "jobDescription": "Opis posla",
+      "locationSchedule": "Lokacija i raspored"
+    },
+    "labels": {
+      "jobTitle": "Naziv posla",
+      "jobType": "Tip posla",
+      "jobCategory": "Kategorija posla",
+      "subcategory": "Potkategorija",
+      "description": "Opis posla",
+      "requirements": "Zahtjevi",
+      "benefits": "Prednosti"
+    },
+    "placeholders": {
+      "jobTitleExample": "npr., Web programer, Grafički dizajner",
+      "selectJobType": "Izaberite tip posla",
+      "selectCategory": "Izaberite kategoriju",
+      "loadingCategories": "Učitavanje kategorija...",
+      "selectSubcategory": "Izaberite potkategoriju",
+      "noSpecificSubcategory": "Bez specifične potkategorije",
+      "describeJob": "Opišite šta treba da bude urađeno, uključujući specifične zahtjeve i očekivanja...",
+      "requirementsExample": "Navedite specifične vještine, iskustvo ili kvalifikacije koje su potrebne...",
+      "benefitsExample": "Spomenite pogodnosti, beneficije ili šta čini ovu priliku privlačnom...",
+      "selectTransportation": "Odaberite transportni aranžman (opcionalno)"
+    },
+    "transportation": {
+      "title": "Savjeti za transport",
+      "whoHandles": "Ko se brine za transport do lokacije posla?",
+      "options": {
+        "provided": "Klijent osigurava transport",
+        "notProvided": "Transport nije osiguran",
+        "taskerResponsible": "Radnik je odgovoran za transport",
+        "compensated": "Klijent će kompenzirati transport"
+      },
+      "compensationAmount": "Iznos kompenzacije za transport (BAM)",
+      "tips": {
+        "clearArrangements": "Jasni transportni aranžmani povećavaju stopu prijava",
+        "considerOffering": "Razmislite o ponudi transporta ili kompenzacije za udaljena radna mjesta",
+        "compensationAttracts": "Kompenzacija za transport može privući više kandidata",
+        "specifyParking": "Navedite dostupnost parkinga za one koji voze",
+        "includePublicTransport": "Uključite informacije o javnom transportu za lakše planiranje"
+      },
+      "selectDescription": "Objasnite ko je odgovoran za dolazak na lokaciju posla i povratak s nje.",
+      "compensationAmountPlaceholder": "npr., 50",
+      "compensationHelp": "Iznos u BAM koji ćete kompenzirati za troškove transporta.",
+      "parkingAvailable": "Parking je dostupan",
+      "parkingHelp": "Označite ako je parking dostupan za one koji se voze na lokaciju.",
+      "publicTransportInfo": "Pristupačnost javnog transporta (Opcionalno)",
+      "publicTransportPlaceholder": "npr., 5 minuta hoda od autobuske stanice, Blizu tramvajske linije 3, Dostupno metroom...",
+      "publicTransportHelp": "Pružite informacije o obližnjim opcijama javnog transporta da pomognete kandidatima u planiranju puta."
+    },
+    "location": {
+      "title": "Lokacija",
+      "cityRequired": "Grad *",
+      "selectCity": "Odaberite grad",
+      "hasSpecificLocation": "Posao ima specifičnu adresu",
+      "specificAddress": "Specifična adresa posla (Opcionalno)",
+      "addressPlaceholder": "Unesite tačnu adresu gdje će se obavljati posao...",
+      "mapNote": "Kliknite na mapu da postavite tačnu lokaciju",
+      "addressHelp": "Navedite specifičnu adresu gdje će se obavljati posao. Ovo pomaže kandidatima da planiraju dolazak i čini vaš oglas lakšim za pronalaženje."
+    },
+    "schedule": {
+      "title": "Raspored",
+      "whenStart": "Kada želite početi ovaj posao?",
+      "dontKnowExactTime": "Ne znam tačno vrijeme",
+      "startDate": "Datum početka *",
+      "startTime": "Vrijeme početka (Opcionalno)",
+      "duration": "Očekivano trajanje",
+      "durationOptions": {
+        "1_hour": "1 sat",
+        "2_hours": "2 sata",
+        "3_hours": "3 sata",
+        "4_hours": "4 sata",
+        "6_hours": "6 sati",
+        "8_hours": "8 sati",
+        "1_day": "1 dan",
+        "2_days": "2 dana",
+        "3_days": "3 dana",
+        "1_week": "1 sedmica",
+        "2_weeks": "2 sedmice",
+        "1_month": "1 mjesec",
+        "2_months": "2 mjeseca",
+        "3_months": "3 mjeseca",
+        "ongoing": "Stalni rad",
+        "negotiable": "Dogovorom"
+      },
+      "selectStartDate": "Odaberite datum početka",
+      "selectStartTime": "Odaberite vrijeme početka",
+      "durationPlaceholder": "Koliko će dugo trajati ovaj posao?",
+      "durationHelp": "Pomaže kandidatima razumjeti vremensko obvezanje i planirati u skladu s tim.",
+      "optional": "(Opcionalno)",
+      "notEnoughTime": "Nedovoljno vremena",
+      "dontKnowExactDate": "Ne znam tačan datum",
+      "byAgreement": "Po dogovoru",
+      "tips": {
+        "title": "Savjeti za raspored",
+        "clear": "Jasno raspoređivanje pomaže kandidatima planirati i povećava stope prijava",
+        "flexible": "Ako ste fleksibilni, spomenite \"Pregovaračko\" u polju trajanja",
+        "ongoing": "Za stalni rad, odaberite opciju \"Stalno\" trajanje",
+        "buffer": "Uključite vrijeme rezerve za pripremu i čišćenje"
+      }
+    },
+    "compensation": {
+      "title": "Plata i kompenzacija",
+      "salaryType": "Kako želite strukturirati platu?",
+      "salaryTypes": {
+        "hourly": "Satnica",
+        "fixed": "Fiksna cijena",
+        "daily": "Dnevnica",
+        "negotiable": "Po dogovoru"
+      },
+      "salaryRange": "Raspon plate",
+      "minSalary": "Minimum (BAM)",
+      "maxSalary": "Maksimum (BAM)",
+      "hourlyRate": "Satnica (BAM)",
+      "dailyRate": "Dnevnica (BAM)",
+      "dailyRateHelp": "Unesite iznos vaše dnevnice",
+      "notes": "Napomene o kompenzaciji",
+      "notesOptional": "(Opcionalno)",
+      "notesPlaceholder": "Dodajte bilo koji dodatni kontekst o kompenzaciji, beneficijama ili mogućnosti pregovaranja...",
+      "notesHelp": "Dodajte bilo koji dodatni kontekst o kompenzaciji, beneficijama ili mogućnosti pregovaranja.",
+      "fixedAmount": "Ukupna cijena projekta (BAM)",
+      "minimumRate": "Minimalna stopa (BAM)",
+      "maximumRate": "Maksimalna stopa (BAM, Opcionalno)",
+      "fixedAmountHelp": "Unesite ukupan iznos koji ste spremni platiti za cijeli projekt.",
+      "smartPaymentSuggestion": "Pametni prijedlog plaćanja",
+      "smartPaymentCalculation": "Pametni kalkulator plaćanja",
+      "autoCalculationNote": "Ovaj kalkulator se automatski prilagođava na osnovu vašeg odabranog trajanja i tipa plaćanja",
+      "salaryTip": "Savjet: Uključivanje informacija o plati može povećati stope prijava do 30%.",
+      "performanceBonus": "Mogućnost bonusa za performanse?",
+      "performanceBonusHelp": "Označite ovo ako nudite bonuse ili podsticaje na osnovu performansi.",
+      "validation": {
+        "maxLessThanMin": "Maksimalna stopa ne može biti manja od minimalne stope"
+      },
+      "bestPractices": {
+        "title": "Najbolje prakse za platu",
+        "transparency": "Budite transparentni o kompenzaciji da privučete ozbiljne kandidate",
+        "ranges": "Koristite raspone za fleksibilnost u pregovorima",
+        "benefits": "Uključite informacije o beneficijama ili pogodnostima",
+        "marketRates": "Razmovorite lokalne tržišne cijene za poziciju",
+        "salaryTip": "Uključivanje informacija o plati može povećati stope prijava do 30%"
+      },
+      "paymentSuggestions": {
+        "1_hour": "Savršeno za \"Satnicu\" - idealno za kratke zadatke",
+        "2_hours": "Savršeno za \"Satnicu\" - odlično za brze poslove",
+        "3_hours": "Savršeno za \"Satnicu\" - najbolje za rad po satu",
+        "4_hours": "Savršeno za \"Satnicu\" - standardna satnica",
+        "6_hours": "Razmislite o \"Satnici\" za precizno praćenje vremena",
+        "8_hours": "Savršeno za \"Dnevnicu\" - odgovara punom radnom danu",
+        "1_day": "Savršeno za \"Dnevnicu\" - idealno za jednodnevni rad",
+        "2_days": "Savršeno za \"Dnevnicu\" - odlično za projekte od nekoliko dana",
+        "3_days": "Savršeno za \"Dnevnicu\" - izvrsno za kratkoročni rad",
+        "1_week": "Razmislite o \"Fiksnoj cijeni\" za sedmične projekte",
+        "2_weeks": "Razmislite o \"Fiksnoj cijeni\" za dvosedmične projekte",
+        "1_month": "Razmislite o \"Fiksnoj cijeni\" za mjesečne projekte",
+        "2_months": "Razmislite o \"Fiksnoj cijeni\" za proširene projekte",
+        "3_months": "Razmislite o \"Fiksnoj cijeni\" za dugoročni rad",
+        "ongoing": "Razmislite o \"Fiksnoj cijeni\" za kontinuirani rad",
+        "negotiable": "Razmislite o \"Fiksnoj cijeni\" za fleksibilni opseg projekta",
+        "default": "Odaberite strukturu plaćanja koja najbolje odgovara vašim specifičnim zahtjevima posla"
+      },
+      "paymentCalculation": {
+        "total": "Ukupno",
+        "dependsOnAgreement": "Ukupno plaćanje ovisi o konačnom dogovoru",
+        "estimatedTotal": "Procijenjeni ukupni iznos",
+        "considerSwitching": "Razmislite o prebacivanju na",
+        "forBetterAccuracy": "plaćanje za bolju preciznost",
+        "estimated": "procijenjeno",
+        "convertedFor": "konvertovano za",
+        "baseRate": "osnovna stopa",
+        "fixedProjectPrice": "Fiksna cijena projekta",
+        "negotiablePrice": "Dogovorena cijena",
+        "units": {
+          "hour": "sat",
+          "day": "dan",
+          "hours": "sati",
+          "days": "dana",
+          "bamPerHour": "BAM/sat",
+          "bamPerDay": "BAM/dan",
+          "hrsPerDay": "sati/dan"
+        }
+      },
+      "tips": {
+        "transparent": "Budite transparentni o kompenzaciji da privučete ozbiljne kandidate",
+        "competitive": "Istražite tržišne cijene da osigurate konkurentnu kompenzaciju",
+        "includeAll": "Uključite sve troškove - osnovnu platu, bonuse, beneficije ako su primjenjivi",
+        "clearStructure": "Jasna struktura kompenzacije skraćuje vrijeme pregovaranja"
+      }
+    },
+    "messages": {
+      "categorySelectedNoSubcategories": "Izabrana kategorija nema dostupne potkategorije.",
+      "descriptionTimeline": "Vaš opis posla će biti pregledan i objavljen u roku od 24 sata."
+    }
+  },
+  "costs": {
+    "title": "Informacije o cijeni",
+    "quickJobCost": "Objavljivanje brzog posla",
+    "partTimeCost": "Objavljivanje posla sa skraćenim radnim vremenom",
+    "fullTimeCost": "Objavljivanje posla sa punim radnim vremenom",
+    "remoteCost": "Objavljivanje remote posla",
+    "freeForLimitedTime": "Besplatno ograničeno vrijeme",
+    "currency": "BAM"
+  },
+  "validation": {
+    "titleRequired": "Naziv posla je obavezan",
+    "titleTooShort": "Naziv posla mora imati najmanje 5 karaktera",
+    "titleTooLong": "Naziv posla mora imati manje od 100 karaktera",
+    "cityRequired": "Odabir grada je obavezan",
+    "categoryRequired": "Odabir kategorije je obavezan",
+    "subcategoryRequired": "Odabir potkategorije je obavezan",
+    "descriptionRequired": "Opis posla je obavezan",
+    "descriptionTooShort": "Opis posla mora imati najmanje 50 karaktera",
+    "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera",
+    "contactEmailRequired": "Kontakt email je obavezan",
+    "invalidEmail": "Molimo unesite valjan email",
+    "invalidUrl": "Molimo unesite valjan URL",
+    "salaryRequired": "Informacije o plati su obavezne",
+    "invalidSalary": "Molimo unesite valjan iznos plate",
+    "fillRequiredField": "Molimo popunite obavezno polje: {field}",
+    "fillRequiredFields": "Molimo popunite obavezna polja: {fields}"
+  },
+  "form": {
+    "title": "Objavi Oglas",
+    "subtitle": "Pronađi savršenog kandidata za svoju poziciju",
+    "requirements": "Zahtjevi",
+    "benefits": "Prednosti",
+    "steps": {
+      "basicDetails": {
+        "title": "Detalji Posla",
+        "description": "Osnovne informacije o poslu i zahtjevi"
+      },
+      "locationCompensation": {
+        "title": "Lokacija i Plata",
+        "description": "Detalji lokacije i kompenzacije"
+      },
+      "review": {
+        "title": "Pregled i Slanje",
+        "description": "Pregledaj svoj oglas prije objavljivanja"
+      }
+    },
+    "navigation": {
+      "next": "Sljedeće",
+      "previous": "Prethodno",
+      "submit": "Objavi Posao",
+      "saving": "Čuva se...",
+      "cancel": "Otkaži",
+      "clearForm": "Očisti Formu",
+      "stepOf": "Korak {current} od {total}",
+      "percentComplete": "{percent}% završeno"
+    },
+    "createJobPosting": "Kreiraj novi oglas za posao",
+    "editJobPosting": "Uredi oglas za posao"
+  },
+  "sections": {
+    "basicInformation": "Osnovne informacije",
+    "category": "Izbor kategorije",
+    "jobDescription": "Opis posla",
+    "locationSchedule": "Lokacija i raspored",
+    "transportation": "Transport i pristup",
+    "compensationTransportation": "Kompenzacija i transport"
+  },
+  "labels": {
+    "jobTitle": "Naziv posla",
+    "jobType": "Tip posla",
+    "jobCategory": "Kategorija posla", 
+    "subcategory": "Potkategorija",
+    "description": "Opis posla",
+    "requirements": "Zahtjevi",
+    "benefits": "Prednosti",
+    "transportation": "Transport",
+    "salary": "Plata"
+  },
+  "review": {
+    "title": "Pregledaj Svoj Oglas",
+    "description": "Pregledaj sve detalje ispod prije objavljivanja svog oglasa za posao",
+    "sections": {
+      "basicInformation": "Osnovne informacije",
+      "jobDescription": "Opis posla", 
+      "locationSchedule": "Lokacija i raspored",
+      "contactInformation": "Kontakt informacije"
+    },
+    "featureYourJob": "Istaknite Vaš Oglas",
+    "makeJobFeatured": "Učinite ovaj oglas istaknutim",
+    "featuredJobsAppear": "Istaknuti oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
+    "willCostConnections": "Ovo će koštati {connections} konekcija",
+    "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
+    "readyToPost": "Spremno za Objavu",
+    "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave."
+  },
+  "placeholders": {
+    "jobTitleExample": "npr., Web programer, Grafički dizajner",
+    "selectJobType": "Izaberite tip posla",
+    "selectCategory": "Izaberite kategoriju",
+    "loadingCategories": "Učitavanje kategorija...",
+    "selectSubcategory": "Izaberite potkategoriju",
+    "noSpecificSubcategory": "Bez specifične potkategorije",
+    "describeJob": "Opišite šta treba da bude urađeno, uključujući specifične zahtjeve i očekivanja...",
+    "requirementsExample": "Navedite specifične vještine, iskustvo ili kvalifikacije koje su potrebne...",
+    "benefitsExample": "Spomenite pogodnosti, beneficije ili šta čini ovu priliku privlačnom..."
+  }
+}

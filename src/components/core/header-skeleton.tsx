@@ -3,10 +3,21 @@ import React from 'react';
 export function HeaderLoadingSkeleton() {
   return (
     <div className="flex items-center space-x-2">
-      {/* Sign In button skeleton */}
-      <div className="h-9 w-20 bg-muted animate-pulse rounded-md" />
-      {/* Sign Up button skeleton */}
-      <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
+      {/* Desktop: Full button skeletons */}
+      <div className="hidden sm:flex items-center space-x-2">
+        {/* Sign In button skeleton */}
+        <div className="h-9 w-20 bg-muted animate-pulse rounded-md" />
+        {/* Register button skeleton */}
+        <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
+      </div>
+      
+      {/* Mobile: Icon + Button skeletons */}
+      <div className="flex sm:hidden items-center space-x-2">
+        {/* Login icon skeleton */}
+        <div className="h-9 w-9 bg-muted animate-pulse rounded-md" />
+        {/* Register button skeleton */}
+        <div className="h-8 w-20 bg-muted animate-pulse rounded-md" />
+      </div>
     </div>
   );
 }

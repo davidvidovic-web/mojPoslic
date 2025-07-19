@@ -1,0 +1,10 @@
+{
+  "ui": {
+    "popularCategories": "Popularne kategorije:",
+    "relatedSkills": "Povezane vještine:",
+    "addMore": "Dodaj još...",
+    "addCustom": "Dodaj \"{skill}\"",
+    "skillsCounter": "{count}/{max} vještina • Kliknite prijedloge ili ukucajte i pritisnite Enter da dodate",
+    "skillsAndExpertise": "Vještine i stručnost"
+  }
+}

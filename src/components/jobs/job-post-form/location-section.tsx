@@ -10,6 +10,8 @@ import { validateLocationInCity, cleanMapAddress } from '@/lib/location-utils'
 import { CITY_COORDINATES } from '@/lib/city-coordinates'
 import { MapPin as MapPinIcon } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { useData } from '@/hooks/use-data'
+import { useTranslations } from 'next-intl'
 
 interface LocationSectionProps {
   formData: CreateJobData
@@ -19,6 +21,8 @@ interface LocationSectionProps {
 
 export function LocationSection({ formData, onChange, onLocationValidationChange }: LocationSectionProps) {
   const { user } = useAuth()
+  const { cities } = useData()
+  const t = useTranslations('jobPost.types.location')
   const [hasSpecificLocation, setHasSpecificLocation] = useState(!!formData.job_address)
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
   
@@ -28,48 +32,59 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
 
   // Auto-load user's city if not already set (based on location if available)
   useEffect(() => {
-    if (!formData.city_id && user?.location) {
-      // We could try to match user's location to a city in the future
-      // For now, we'll skip auto-loading since the user location is a free text field
+    if (!formData.city_id && user?.location && cities.length > 0) {
+      // Try to match user's location to a city
+      const userLocation = user.location.toLowerCase();
+      // First try exact match with city key
+      const cityByKey = cities.find(city => 
+        city.key.toLowerCase() === userLocation
+      );
+      
+      if (cityByKey) {
+        onChange({ city_id: cityByKey.id });
+        return;
+      }
+      
+      // Then try to match by name
+      const cityByName = cities.find(city => 
+        userLocation.includes(city.name_en.toLowerCase()) || 
+        userLocation.includes(city.name_bs.toLowerCase()) ||
+        (city.name && userLocation.includes(city.name.toLowerCase()))
+      );
+      
+      if (cityByName) {
+        onChange({ city_id: cityByName.id });
+        return;
+      }
     }
-  }, [user?.location, formData.city_id, onChange])
+  }, [user?.location, formData.city_id, onChange, cities])
 
   // Fetch city name and coordinates when city_id changes
   useEffect(() => {
     if (formData.city_id) {
-      const fetchCityData = async () => {
-        try {
-          const response = await fetch('/api/cities')
-          const data = await response.json()
-          const city = data.cities?.find((c: { 
-            id: string; 
-            nameEN?: string; 
-            name_en?: string; 
-            name?: string;
-            latitude?: number;
-            longitude?: number;
-          }) => c.id === formData.city_id)
+      const city = cities.find(c => c.id === formData.city_id)
+      
+      if (city) {
+        const cityName = city.name_en
+        setSelectedCityName(cityName)
+        
+        // Look up coordinates from predefined mapping
+        const coordinates = CITY_COORDINATES[city.key]
+        if (coordinates) {
+          setSelectedCityCoordinates({
+            lat: coordinates.lat,
+            lng: coordinates.lng,
+            name: cityName
+          })
           
-          if (city) {
-            const cityName = city.nameEN || city.name_en || city.name || ''
-            setSelectedCityName(cityName)
-            
-            // Update city coordinates for map centering if available
-            if (city.latitude && city.longitude) {
-              setSelectedCityCoordinates({
-                lat: city.latitude,
-                lng: city.longitude,
-                name: cityName
-              })
-            }
+          // If no specific address is set, automatically center map on the city
+          if (!formData.job_address) {
+            setHasSpecificLocation(true)
           }
-        } catch (error) {
-          console.error('Error fetching city:', error)
         }
       }
-      fetchCityData()
     }
-  }, [formData.city_id])
+  }, [formData.city_id, cities, formData.job_address])
 
   // Enhanced location validation against selected city with script handling
   const validateLocation = (address: string) => {
@@ -122,18 +137,19 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
     <div className="space-y-4">
       <h3 className="text-lg font-semibold flex items-center gap-2">
         <MapPinIcon className="h-5 w-5" />
-        Location
+        {t('title')}
       </h3>
       
       <div className="space-y-2">
-        <Label htmlFor="city">City *</Label>
+        <Label htmlFor="city">{t('cityRequired')}</Label>
         <CitiesFilter
           value={formData.city_id || ''}
           onChange={(cityId: string) => {
             onChange({ city_id: cityId })
           }}
-          placeholder="Select a city"
+          placeholder={t('selectCity')}
           includeAllOption={false}
+          className="w-full"
         />
       </div>
 
@@ -163,7 +179,7 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
               }
             }}
           />
-          <Label htmlFor="has-specific-location">This job has a specific address</Label>
+          <Label htmlFor="has-specific-location">{t('hasSpecificLocation')}</Label>
         </div>
         
         {hasSpecificLocation && (
@@ -178,18 +194,20 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
                 // Clean the address to handle mixed scripts and redundant info
                 const cleanedAddress = cleanMapAddress(location.address)
                 
+                // Update form data first
                 onChange({
                   job_address: cleanedAddress,
                   job_latitude: location.latitude,
                   job_longitude: location.longitude
                 })
                 
-                // Validate the cleaned location against selected city
-                validateLocation(cleanedAddress)
+                // Defer validation to avoid immediate re-renders during map interaction
+                setTimeout(() => {
+                  validateLocation(cleanedAddress)
+                }, 0)
               }}
-              placeholder="Enter the specific job address"
+              placeholder={t('addressPlaceholder')}
               selectedCityCoordinates={selectedCityCoordinates}
-              autoDetectLocation={true}
             />
             {locationValidationError && (
               <div className={`text-sm p-4 rounded-lg border ${
@@ -228,7 +246,7 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Provide the specific address where the work will be performed. This helps candidates plan their commute and makes your job more discoverable.
+              {t('addressHelp')}
             </p>
           </div>
         )}

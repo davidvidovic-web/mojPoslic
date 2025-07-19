@@ -7,7 +7,7 @@ import {
   AlertCircle
 } from "lucide-react"
 import { Job } from "@/types/job"
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 interface JobTimelineProps {
   job: Job
@@ -16,6 +16,7 @@ interface JobTimelineProps {
 
 export function JobTimeline({ job, formatDate }: JobTimelineProps) {
   const t = useTranslations('jobs.timeline')
+  const locale = useLocale()
   
   if (!job.start_date && !job.start_time && !job.duration && !job.expires_at) {
     return null
@@ -37,7 +38,11 @@ export function JobTimeline({ job, formatDate }: JobTimelineProps) {
               <p className="text-sm font-medium">{t('startDate')}</p>
               <p className="text-sm text-muted-foreground">
                 {new Date(job.start_date).toLocaleDateString()}
-                {job.start_time && ` ${t('at')} ${new Date(`2000-01-01T${job.start_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+                {job.start_time && ` ${t('at')} ${new Date(`2000-01-01T${job.start_time}`).toLocaleTimeString(locale === 'bs' ? 'bs-BA' : 'en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit', 
+                  hour12: locale !== 'bs'
+                })}`}
               </p>
             </div>
           </div>

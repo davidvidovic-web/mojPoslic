@@ -8,6 +8,7 @@ interface AuthUser {
   id: string
   name?: string | null
   email?: string | null
+  phone?: string | null
   role: UserRole
   profileSetupCompleted?: boolean
 }
@@ -19,6 +20,7 @@ export function useAuth() {
     id: session.user.id,
     name: session.user.name,
     email: session.user.email,
+    phone: session.user.phone,
     role: (session.user.role as UserRole) || 'client',
     profileSetupCompleted: session.user.profileSetupCompleted ?? false,
   } : null

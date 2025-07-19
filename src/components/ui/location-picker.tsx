@@ -1,25 +1,13 @@
 'use client'
 
-import { useState, useEffect } from "react"
-import dynamic from 'next/dynamic'
+import { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Search, Navigation } from "lucide-react"
-import { useGeolocation } from "@/hooks/use-geolocation"
+import { Search } from "lucide-react"
 import { GeolocationService } from "@/lib/geolocation"
-
-// Import leaflet types
-import type { LatLngExpression } from "leaflet"
-
-// Dynamically import the map component to avoid SSR issues
-const MapComponent = dynamic(
-  () => import('./map-component').then((mod) => ({ default: mod.MapComponent })),
-  { 
-    ssr: false,
-    loading: () => <div className="h-[300px] w-full bg-muted rounded-lg flex items-center justify-center">Loading map...</div>
-  }
-)
+import { useTranslations } from 'next-intl'
+import { GoogleMapsWrapper } from '@/components/ui/google-maps-wrapper'
 
 interface LocationData {
   address: string
@@ -35,7 +23,6 @@ interface LocationPickerProps {
   placeholder?: string
   className?: string
   selectedCityCoordinates?: { lat: number; lng: number; name: string } | null
-  autoDetectLocation?: boolean
 }
 
 export function LocationPicker({
@@ -43,234 +30,287 @@ export function LocationPicker({
   onChange,
   placeholder = "Enter job location address",
   className = "",
-  selectedCityCoordinates,
-  autoDetectLocation = false
+  selectedCityCoordinates
 }: LocationPickerProps) {
+  const t = useTranslations('common')
   const [searchQuery, setSearchQuery] = useState(value?.address || "")
   const [isSearching, setIsSearching] = useState(false)
-  const { position, error, loading, getCurrentLocation, clearError } = useGeolocation()
-  const [mapCenter, setMapCenter] = useState<LatLngExpression>(() => {
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
+  const [locationWarning, setLocationWarning] = useState<string | null>(null)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(() => {
     // Set initial map center based on selected city or default to Sarajevo
     if (selectedCityCoordinates) {
-      return [selectedCityCoordinates.lat, selectedCityCoordinates.lng]
+      return { lat: selectedCityCoordinates.lat, lng: selectedCityCoordinates.lng }
     }
-    return value ? [value.latitude, value.longitude] : [43.8563, 18.4131] // Sarajevo default
+    return value ? { lat: value.latitude, lng: value.longitude } : { lat: 43.8563, lng: 18.4131 } // Sarajevo default
   })
-  const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(
-    value ? [value.latitude, value.longitude] : null
+  const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(
+    value ? { lat: value.latitude, lng: value.longitude } : null
   )
+  const [isInternalUpdate, setIsInternalUpdate] = useState(false)
 
   // Update map center when selectedCityCoordinates changes
   useEffect(() => {
-    if (selectedCityCoordinates) {
-      setMapCenter([selectedCityCoordinates.lat, selectedCityCoordinates.lng])
-      // Clear any existing marker when switching cities (unless there's a specific location set)
-      if (!value) {
-        setMarkerPosition(null)
-      }
+    if (selectedCityCoordinates && !value) {
+      setMapCenter({ lat: selectedCityCoordinates.lat, lng: selectedCityCoordinates.lng })
     }
   }, [selectedCityCoordinates, value])
 
-  // Handle geolocation position updates
+  // Update states when value prop changes from external source (not from map clicks)
   useEffect(() => {
-    if (position) {
-      const handleGeolocationSuccess = async () => {
-        const { latitude, longitude } = position.coords
-        setMapCenter([latitude, longitude])
-        setMarkerPosition([latitude, longitude])
-        
-        // Get address from coordinates
-        try {
-          const address = await GeolocationService.reverseGeocode(latitude, longitude)
-          setSearchQuery(address)
-          onChange?.({
-            address,
-            latitude,
-            longitude
-          })
-        } catch (error) {
-          console.error('Failed to get address from coordinates:', error)
-          // Still set the coordinates even if we can't get the address
-          onChange?.({
-            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-            latitude,
-            longitude
-          })
-        }
-      }
+    if (isInternalUpdate) {
+      // For internal updates (map clicks, current location), don't do anything 
+      // except reset the flag - we already have the correct state
+      setIsInternalUpdate(false)
+      return
+    }
+    
+    if (value) {
+      // Always update search query for external updates
+      setSearchQuery(value.address)
       
-      handleGeolocationSuccess()
+      // Only update map center and marker if we don't have a marker or if this is truly a new external location
+      const currentLat = markerPosition?.lat
+      const currentLng = markerPosition?.lng
+      
+      // If we don't have a marker, or the new position is significantly different, update it
+      if (!markerPosition || 
+          Math.abs(value.latitude - currentLat!) > 0.01 || 
+          Math.abs(value.longitude - currentLng!) > 0.01) {
+        setMapCenter({ lat: value.latitude, lng: value.longitude })
+        setMarkerPosition({ lat: value.latitude, lng: value.longitude })
+      }
     }
-  }, [position, onChange])
+  }, [value, isInternalUpdate, markerPosition])
 
-  // Auto-detect location on mount if enabled
-  useEffect(() => {
-    if (autoDetectLocation && !value && GeolocationService.isSupported()) {
-      getCurrentLocation()
-    }
-  }, [autoDetectLocation, value, getCurrentLocation])
-
-  // Geocoding function using Nominatim (OpenStreetMap)
-  const searchLocation = async (query: string) => {
+  // Search for address (only called on submit/enter)
+  const handleSearch = async (query: string) => {
     if (!query.trim()) return
 
     setIsSearching(true)
+    setLocationWarning(null)
+    
     try {
+      // Use our server-side proxy to avoid exposing API keys and prevent CORS issues
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=ba&addressdetails=1`,
+        `/api/search?q=${encodeURIComponent(query)}&limit=1`,
         {
-          headers: {
-            'User-Agent': 'mojPoslic/1.0'
-          }
+          cache: 'no-cache' // Don't cache for better real-time results
         }
-      )
+      );
       
       if (!response.ok) {
-        if (response.status === 429) {
-          console.warn('Geocoding rate limited')
-        }
-        throw new Error(`HTTP ${response.status}`)
+        throw new Error(`HTTP ${response.status}`);
       }
       
-      const data = await response.json()
+      const data = await response.json();
       
       if (data && data.length > 0) {
-        const result = data[0]
+        const result = data[0];
         const location: LocationData = {
           address: result.display_name,
           latitude: parseFloat(result.lat),
           longitude: parseFloat(result.lon),
           city: result.address?.city || result.address?.town || result.address?.village,
           country: result.address?.country
+        };
+        
+        // Check if location is outside Bosnia & Herzegovina
+        if (!isInBosniaHerzegovina(location.latitude, location.longitude)) {
+          setLocationWarning(t('locationPicker.outsideBosniaWarning'))
         }
         
-        setMapCenter([location.latitude, location.longitude])
-        setMarkerPosition([location.latitude, location.longitude])
-        setSearchQuery(location.address)
-        onChange?.(location)
+        setMapCenter({ lat: location.latitude, lng: location.longitude });
+        setMarkerPosition({ lat: location.latitude, lng: location.longitude });
+        setSearchQuery(location.address);
+        onChange?.(location);
+      } else {
+        console.log('No location found for query:', query);
       }
     } catch (error) {
-      console.error('Geocoding error:', error)
-      // For network/CORS errors, we still allow manual map clicking
+      console.error('Address search error:', error);
+      // For network errors, we still allow manual map clicking
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
   }
 
-  // Reverse geocoding function
-  const reverseGeocode = async (lat: number, lng: number) => {
+  // Function to check if coordinates are approximately in Bosnia & Herzegovina
+  const isInBosniaHerzegovina = useCallback((lat: number, lng: number): boolean => {
+    // Approximate bounding box for Bosnia & Herzegovina
+    const minLat = 42.5;
+    const maxLat = 45.3;
+    const minLng = 15.7;
+    const maxLng = 19.7;
+    
+    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+  }, [])
+
+  // Reverse geocoding function to get address from coordinates
+  const reverseGeocode = useCallback(async (lat: number, lng: number) => {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'mojPoslic/1.0'
-          }
-        }
-      )
-      
-      if (!response.ok) {
-        if (response.status === 429) {
-          console.warn('Reverse geocoding rate limited')
-        }
-        throw new Error(`HTTP ${response.status}`)
-      }
-      
-      const data = await response.json()
-      
-      if (data) {
-        const location: LocationData = {
-          address: data.display_name,
+      // Check if location is in Bosnia & Herzegovina
+      if (!isInBosniaHerzegovina(lat, lng)) {
+        setLocationWarning(t('locationPicker.outsideBosniaWarning'))
+        // Still allow the selection but show a warning
+        const fallbackLocation: LocationData = {
+          address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
           latitude: lat,
-          longitude: lng,
-          city: data.address?.city || data.address?.town || data.address?.village,
-          country: data.address?.country
-        }
-        
-        setSearchQuery(location.address)
-        onChange?.(location)
+          longitude: lng
+        };
+        // Update search query immediately for internal updates
+        setSearchQuery(fallbackLocation.address)
+        onChange?.(fallbackLocation);
+        return;
+      } else {
+        setLocationWarning(null)
       }
+
+      // Use our geocoding service which now supports Google Maps
+      const address = await GeolocationService.reverseGeocode(lat, lng);
+      
+      // Create location data object
+      const location: LocationData = {
+        address,
+        latitude: lat,
+        longitude: lng
+      };
+      
+      // Update search query immediately for internal updates
+      setSearchQuery(location.address)
+      onChange?.(location);
     } catch (error) {
-      console.error('Reverse geocoding error:', error)
+      console.error('Reverse geocoding error:', error);
       // Fallback to coordinates when reverse geocoding fails
       const fallbackLocation: LocationData = {
         address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
         latitude: lat,
         longitude: lng
-      }
+      };
+      // Update search query immediately for internal updates
       setSearchQuery(fallbackLocation.address)
-      onChange?.(fallbackLocation)
+      onChange?.(fallbackLocation);
     }
-  }
+  }, [onChange, t, isInBosniaHerzegovina]) // Dependencies: onChange callback, translations, and boundary check
 
-  const handleMapClick = (lat: number, lng: number) => {
-    setMarkerPosition([lat, lng])
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    // Update marker position immediately for visual feedback
+    setMarkerPosition({ lat, lng })
+    setIsInternalUpdate(true) // Mark this as an internal update
+    // Don't update map center - user clicked on visible area
     reverseGeocode(lat, lng)
-  }
+  }, [reverseGeocode])
 
-  const handleSearch = (e?: React.FormEvent | React.MouseEvent) => {
-    e?.preventDefault()
-    searchLocation(searchQuery)
-  }
+  // Function to get user's current location
+  const getCurrentLocation = async () => {
+    if (!GeolocationService.isSupported()) {
+      console.error('Geolocation is not supported');
+      return;
+    }
+
+    setIsGettingLocation(true);
+    setLocationWarning(null)
+    
+    try {
+      const position = await GeolocationService.getCurrentPosition();
+      const { latitude, longitude } = position.coords;
+      
+      // Check if current location is in Bosnia & Herzegovina
+      if (!isInBosniaHerzegovina(latitude, longitude)) {
+        setLocationWarning(t('locationPicker.outsideBosniaWarning'))
+      }
+      
+      // Update map center and marker position
+      setMapCenter({ lat: latitude, lng: longitude });
+      setMarkerPosition({ lat: latitude, lng: longitude });
+      setIsInternalUpdate(true); // Mark this as an internal update
+      
+      // Get address for these coordinates
+      await reverseGeocode(latitude, longitude);
+    } catch (error) {
+      console.error('Error getting current location:', error);
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Address Search */}
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          <Input
-            id="address-search"
-            type="text"
-            placeholder={placeholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleSearch()
-              }
-            }}
-          />
-          <Button 
-            type="button" 
-            onClick={handleSearch} 
-            disabled={isSearching} 
-            className="px-3"
-          >
-            {isSearching ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-            ) : (
-              <Search className="h-4 w-4" />
-            )}
-          </Button>
-          {GeolocationService.isSupported() && (
+      {/* Search Input */}
+      <div className="space-y-2 relative">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 relative">
+            <Input
+              type="text"
+              placeholder={placeholder}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleSearch(searchQuery)
+                }
+              }}
+              className="w-full"
+            />
+          </div>
+          <div className="flex gap-2">
             <Button 
               type="button" 
+              onClick={() => handleSearch(searchQuery)} 
+              disabled={isSearching}
               variant="outline"
-              onClick={() => {
-                clearError()
-                getCurrentLocation()
-              }}
-              disabled={loading}
-              className="px-3"
-              title="Use my current location"
+              className="flex-1 sm:flex-none px-3"
             >
-              {loading ? (
+              {isSearching ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
               ) : (
-                <Navigation className="h-4 w-4" />
+                <>
+                  <Search className="h-4 w-4 sm:mr-0 mr-2" />
+                  <span className="sm:hidden">Search</span>
+                </>
               )}
             </Button>
-          )}
+            <Button 
+              type="button" 
+              onClick={getCurrentLocation} 
+              disabled={isGettingLocation || !GeolocationService.isSupported()}
+              variant="outline"
+              className="flex-1 sm:flex-none px-3 whitespace-nowrap"
+              title={t('locationPicker.findMyLocation')}
+            >
+              {isGettingLocation ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                  {t('locationPicker.findingLocation')}
+                </>
+              ) : (
+                t('locationPicker.findMyLocation')
+              )}
+            </Button>
+          </div>
         </div>
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded p-2">
-            {error.message}
+        
+        {/* Location Warning */}
+        {locationWarning && (
+          <div className="text-sm p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-200">
+            <div className="flex items-start gap-2">
+              <div className="flex-shrink-0">
+                <svg className="h-4 w-4 mt-0.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium">{locationWarning}</p>
+              </div>
+            </div>
           </div>
         )}
+        
         <p className="text-xs text-muted-foreground">
-          Search for a specific address, use your current location, or click on the map to select a precise location within the selected city
+          {t('locationPicker.helpText')}
         </p>
       </div>
 
@@ -278,31 +318,17 @@ export function LocationPicker({
       <Card>
         <CardContent className="p-0">
           <div className="h-80 w-full relative rounded-lg overflow-hidden">
-            <MapComponent
+            <GoogleMapsWrapper
               center={mapCenter}
-              zoom={13}
+              zoom={15}
               markerPosition={markerPosition}
               onMapClick={handleMapClick}
+              enableScrollWheel={true}
+              className="h-full w-full"
             />
           </div>
         </CardContent>
       </Card>
-
-      {/* Selected Location Info */}
-      {value && (
-        <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium">Selected Location:</p>
-              <p className="text-xs">{value.address}</p>
-              <p className="text-xs opacity-75">
-                Coordinates: {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

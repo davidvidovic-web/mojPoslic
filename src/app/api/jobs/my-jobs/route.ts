@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
+import { enrichJobsWithStaticData } from '@/lib/job-helpers'
 
 const prisma = new PrismaClient()
 
@@ -26,74 +27,39 @@ export async function GET() {
       }
     })
 
-    // Get all cities and categories to join manually
-    const cities = await prisma.city.findMany({
-      where: {
-        isActive: true
-      }
-    })
-
-    const categories = await prisma.category.findMany({
-      where: {
-        isActive: true
-      }
-    })
-
     // Transform the jobs to match the expected format
-    const transformedJobs = jobs.map(job => {
-      const city = cities.find(c => c.id === job.cityId)
-      const category = categories.find(c => c.id === job.categoryId)
-      
-      return {
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        type: job.type,
-        description: job.description,
-        salary: job.salary,
-        salaryType: job.salaryType,
-        salaryMin: job.salaryMin,
-        salaryMax: job.salaryMax,
-        email: job.contactEmail,
-        website: job.applicationUrl,
-        is_featured: job.isFeatured,
-        is_active: job.isActive,
-        tags: job.tags,
-        posted_at: job.createdAt.toISOString(),
-        created_at: job.createdAt.toISOString(),
-        updated_at: job.updatedAt.toISOString(),
-        start_date: job.startDate ? job.startDate.toISOString() : null,
-        expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
-        job_address: job.jobAddress,
-        job_latitude: job.jobLatitude,
-        job_longitude: job.jobLongitude,
-        city_id: job.cityId,
-        category_id: job.categoryId,
-        posted_by: job.postedById,
-        city: city ? {
-          id: city.id,
-          key: city.key,
-          name_bs: city.nameBS,
-          name_en: city.nameEN,
-          name: city.nameEN || city.nameBS,
-          country: 'BA',
-          state: '',
-          is_special: city.isSpecial,
-          sort_order: city.sortOrder,
-          is_active: city.isActive
-        } : undefined,
-        category: category ? {
-          id: category.id,
-          key: category.key,
-          name_bs: category.nameBS,
-          name_en: category.nameEN,
-          name: category.nameEN || category.nameBS,
-          is_popular: category.isPopular,
-          sort_order: category.sortOrder,
-          is_active: category.isActive
-        } : undefined
-      }
-    })
+    const baseJobs = jobs.map(job => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      type: job.type,
+      description: job.description,
+      salary: job.salary,
+      salaryType: job.salaryType,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      email: job.contactEmail,
+      website: job.applicationUrl,
+      is_featured: job.isFeatured,
+      is_active: job.isActive,
+      tags: job.tags,
+      posted_at: job.createdAt.toISOString(),
+      created_at: job.createdAt.toISOString(),
+      updated_at: job.updatedAt.toISOString(),
+      start_date: job.startDate ? job.startDate.toISOString() : null,
+      expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
+      job_address: job.jobAddress,
+      job_latitude: job.jobLatitude,
+      job_longitude: job.jobLongitude,
+      city_id: job.cityId,
+      category_id: job.categoryId,
+      posted_by: job.postedById,
+      cityId: job.cityId,
+      categoryId: job.categoryId,
+    }))
+
+    // Enrich with static city and category data
+    const transformedJobs = await enrichJobsWithStaticData(baseJobs)
 
     return NextResponse.json(transformedJobs)
   } catch (error) {

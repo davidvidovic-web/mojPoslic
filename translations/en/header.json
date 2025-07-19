@@ -35,6 +35,10 @@
   "compliance": "Compliance",
   "accessibility": "Accessibility",
   "sitemap": "Sitemap",
+  "auth": {
+    "signIn": "Sign In",
+    "register": "Register"
+  },
   "languageSwitcher": {
     "en": "EN",
     "bs": "BS",

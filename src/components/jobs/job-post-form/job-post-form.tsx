@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
 import { JobCostInfo } from './job-cost-info'
+import { useTranslations } from 'next-intl'
 
 interface JobPostFormProps {
   onJobPosted?: () => void
@@ -14,6 +15,7 @@ interface JobPostFormProps {
 
 export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPostFormProps) {
   const { user } = useAuth()
+  const t = useTranslations('jobs.review')
 
   const handleSubmit = async (formData: CreateJobData) => {
     const response = await fetch('/api/jobs/create', {
@@ -55,12 +57,8 @@ export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPo
 
     const data = await response.json()
     
-    // Show appropriate success message based on whether connections were spent
-    if (data.wasFree) {
-      toast.success(`Job posted successfully! (Free - first job today, total jobs today: ${data.todayJobCount})`)
-    } else {
-      toast.success(`Job posted successfully! (${data.connectionsSpent} connections spent, total jobs today: ${data.todayJobCount})`)
-    }
+    // Show success message
+    toast.success('Job posted successfully!')
     
     // Dispatch events to refresh connection count and job cost info
     // Add a small delay to ensure backend transaction is complete
@@ -85,8 +83,8 @@ export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPo
         initialData={initialData}
         isEditMode={false}
         onSubmit={handleSubmit}
-        submitButtonText="Submit Job Posting"
-        submittingText="Submitting..."
+        submitButtonText={t('submitJobPosting')}
+        submittingText={t('submitting')}
         showCard={showCard}
       />
     </div>

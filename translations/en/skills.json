@@ -1,0 +1,10 @@
+{
+  "ui": {
+    "popularCategories": "Popular categories:",
+    "relatedSkills": "Related skills:",
+    "addMore": "Add more...",
+    "addCustom": "Add \"{skill}\"",
+    "skillsCounter": "{count}/{max} skills • Click suggestions or type and press Enter to add",
+    "skillsAndExpertise": "Skills & Expertise"
+  }
+}

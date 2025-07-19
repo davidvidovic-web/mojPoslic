@@ -5,7 +5,7 @@ import { useUserJobs, useDeleteJob } from '@/hooks/use-jobs'
 import { useMultipleJobApplicantCounts } from '@/hooks/use-applications'
 import { useDialogStore } from '@/stores/dialog-store'
 import { Job } from '@/types/job'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog'
 import { MultiStepJobForm } from '@/components/jobs/job-post-form/multi-step-job-form'
 import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { JobsListSection } from './client/jobs-list-section'
@@ -127,6 +127,9 @@ export function ClientDashboard() {
         <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
           <DialogHeader>
             <DialogTitle>{t('jobs.dialogs.postJobDialog')}</DialogTitle>
+            <DialogDescription>
+              {t('jobs.dialogs.postJobDescription')}
+            </DialogDescription>
           </DialogHeader>
           <MultiStepJobForm
             onJobPosted={handleJobPosted}
@@ -145,6 +148,9 @@ export function ClientDashboard() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('jobs.dialogs.editJobDialog')}</DialogTitle>
+            <DialogDescription>
+              {t('jobs.dialogs.editJobDescription')}
+            </DialogDescription>
           </DialogHeader>
           {editingJob && (
             <MultiStepJobForm 

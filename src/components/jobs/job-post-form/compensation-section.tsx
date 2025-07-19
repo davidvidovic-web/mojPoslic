@@ -1,12 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CreateJobData } from '@/types/job'
 import { getPaymentSuggestion, calculateTotalPayment } from './payment-utils'
-import { Lightbulb, Target, DollarSign } from 'lucide-react'
+import { Lightbulb, Target, Wallet, ChevronDown, ChevronUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface CompensationSectionProps {
   formData: CreateJobData
@@ -14,18 +16,53 @@ interface CompensationSectionProps {
 }
 
 export function CompensationSection({ formData, onChange }: CompensationSectionProps) {
+  const [showTips, setShowTips] = useState(false)
+  const t = useTranslations('jobPost.types.compensation')
+  
+  // Validation: Check if max is less than min for hourly rates
+  const hasInvalidRange = formData.salaryType === 'hourly' && 
+    formData.salaryMin && 
+    formData.salaryMax && 
+    formData.salaryMax < formData.salaryMin
+  
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Payment Options</h3>
+      <h3 className="text-lg font-semibold">{t('title')}</h3>
+      
+      <div 
+        className="p-4 bg-secondary/50 rounded-lg cursor-pointer hover:bg-secondary/70 transition-colors"
+        onClick={() => setShowTips(!showTips)}
+      >
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium flex items-center gap-1">
+            <Target className="h-4 w-4" />
+            {t('bestPractices.title')}
+          </h4>
+          {showTips ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </div>
+        {showTips && (
+          <ul className="text-xs text-muted-foreground space-y-1 mt-2">
+            <li>• {t('bestPractices.transparency')}</li>
+            <li>• {t('bestPractices.ranges')}</li>
+            <li>• {t('bestPractices.benefits')}</li>
+            <li>• {t('bestPractices.marketRates')}</li>
+            <li>• {t('bestPractices.salaryTip')}</li>
+          </ul>
+        )}
+      </div>
       
       <div className="space-y-2">
-        <Label htmlFor="salary-type">Payment Structure</Label>
+        <Label htmlFor="salary-type">{t('salaryType')}</Label>
         <Select 
           value={formData.salaryType || ''} 
           onValueChange={(value) => {
-            onChange({ salaryType: value as 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' })
-            // Clear min/max when switching to fixed
-            if (value === 'fixed') {
+            onChange({ salaryType: value as 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'negotiable' })
+            // Clear min/max when switching to fixed or negotiable
+            if (value === 'fixed' || value === 'negotiable') {
               onChange({ salaryMax: undefined })
             }
           }}
@@ -34,11 +71,10 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
             <SelectValue placeholder="Select payment structure (optional)" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="fixed">Fixed Price</SelectItem>
-            <SelectItem value="hourly">Per Hour</SelectItem>
-            <SelectItem value="daily">Per Day</SelectItem>
-            <SelectItem value="weekly">Per Week</SelectItem>
-            <SelectItem value="monthly">Per Month</SelectItem>
+            <SelectItem value="fixed">{t('salaryTypes.fixed')}</SelectItem>
+            <SelectItem value="hourly">{t('salaryTypes.hourly')}</SelectItem>
+            <SelectItem value="daily">{t('salaryTypes.daily')}</SelectItem>
+            <SelectItem value="negotiable">{t('salaryTypes.negotiable')}</SelectItem>
           </SelectContent>
         </Select>
         
@@ -48,9 +84,9 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
             <div className="flex items-start gap-2">
               <Lightbulb className="h-4 w-4 mt-0.5 text-blue-600" />
               <div>
-                <p className="font-medium text-blue-800">Smart Payment Suggestion</p>
+                <p className="font-medium text-blue-800">{t('smartPaymentSuggestion')}</p>
                 <p className="text-blue-700">
-                  {getPaymentSuggestion(formData.duration)}
+                  {getPaymentSuggestion(formData.duration, t)}
                 </p>
               </div>
             </div>
@@ -58,32 +94,51 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
         )}
       </div>
 
-      {formData.salaryType && (
-        <div className={formData.salaryType === 'fixed' ? "space-y-2" : "grid grid-cols-2 gap-4"}>
+      {formData.salaryType && formData.salaryType !== 'negotiable' && (
+        <div className="space-y-4">
           {formData.salaryType === 'fixed' ? (
-          <div className="space-y-2">
-            <Label htmlFor="salary-fixed">
-              Total Project Price <span className="text-muted-foreground">(BAM)</span>
-            </Label>
-            <Input
-              id="salary-fixed"
-              type="number"
-              placeholder="e.g. 500"
-              value={formData.salaryMin || ''}
-              onChange={(e) => onChange({ 
-                salaryMin: e.target.value ? Number(e.target.value) : undefined,
-                salaryMax: undefined // Clear max for fixed price
-              })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the total amount you&apos;re willing to pay for the complete project.
-            </p>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="salary-fixed">
+                {t('fixedAmount')}
+              </Label>
+              <Input
+                id="salary-fixed"
+                type="number"
+                placeholder="e.g. 500"
+                value={formData.salaryMin || ''}
+                onChange={(e) => onChange({ 
+                  salaryMin: e.target.value ? Number(e.target.value) : undefined,
+                  salaryMax: undefined // Clear max for fixed price
+                })}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('fixedAmountHelp')}
+              </p>
+            </div>
+          ) : formData.salaryType === 'daily' ? (
+            <div className="space-y-2">
+              <Label htmlFor="salary-daily">
+                {t('dailyRate')}
+              </Label>
+              <Input
+                id="salary-daily"
+                type="number"
+                placeholder="e.g. 100"
+                value={formData.salaryMin || ''}
+                onChange={(e) => onChange({ 
+                  salaryMin: e.target.value ? Number(e.target.value) : undefined,
+                  salaryMax: undefined // Clear max for daily rate
+                })}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('dailyRateHelp')}
+              </p>
+            </div>
           ) : (
-            <>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="salary-min">
-                  Minimum Rate <span className="text-muted-foreground">(BAM)</span>
+                  {t('minimumRate')}
                 </Label>
                 <Input
                   id="salary-min"
@@ -93,11 +148,12 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
                   onChange={(e) => onChange({ 
                     salaryMin: e.target.value ? Number(e.target.value) : undefined 
                   })}
+                  className={hasInvalidRange ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="salary-max">
-                  Maximum Rate <span className="text-muted-foreground">(BAM, Optional)</span>
+                  {t('maximumRate')}
                 </Label>
                 <Input
                   id="salary-max"
@@ -107,68 +163,85 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
                   onChange={(e) => onChange({ 
                     salaryMax: e.target.value ? Number(e.target.value) : undefined 
                   })}
+                  className={hasInvalidRange ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
                 />
+                {/* Validation error message */}
+                {hasInvalidRange && (
+                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {t('validation.maxLessThanMin')}
+                  </p>
+                )}
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
 
       {/* Payment calculation display */}
-      {formData.salaryType && formData.salaryMin && formData.duration && (
+      {formData.salaryType && formData.salaryType !== 'negotiable' && (formData.salaryType === 'hourly' || formData.salaryType === 'daily') && formData.salaryMin && formData.duration && !hasInvalidRange && (
         <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
           <h4 className="text-sm font-medium text-green-800 mb-3 flex items-center gap-1">
-            <DollarSign className="h-5 w-5" />
-            Smart Payment Calculation
+            <Wallet className="h-5 w-5" />
+            {t('smartPaymentCalculation')}
           </h4>
           <div className="space-y-2">
-            <div className="text-sm text-green-700 whitespace-pre-line font-mono bg-card/60 p-3 rounded border">
-              {calculateTotalPayment(formData.salaryType, formData.salaryMin, formData.salaryMax, formData.duration)}
+            <div className="text-sm text-green-700 leading-relaxed bg-card/60 p-3 rounded border whitespace-pre-line">
+              <div className="flex-1">
+                {calculateTotalPayment(formData.salaryType, formData.salaryMin, formData.salaryMax, formData.duration, t)
+                  .split('\n')
+                  .map((line, index) => {
+                    // Check if line is a separator
+                    if (line.startsWith('─')) {
+                      return (
+                        <div key={index} className="border-t border-green-300 my-2"></div>
+                      )
+                    }
+                    
+                    // Parse line for selective bold formatting
+                    const renderLineWithBold = (text: string) => {
+                      // Split by spaces to process each word
+                      const words = text.split(' ')
+                      return words.map((word, wordIndex) => {
+                        // Bold price amounts (numbers followed by BAM or containing BAM)
+                        if (word.includes('BAM') || (word.match(/^\d+/) && words[wordIndex + 1] === 'BAM')) {
+                          return <span key={wordIndex} className="font-bold">{word} </span>
+                        }
+                        // Bold payment method keywords
+                        if (word === formData.salaryType || word.includes('hourly') || word.includes('daily')) {
+                          return <span key={wordIndex} className="font-bold">{word} </span>
+                        }
+                        return <span key={wordIndex}>{word} </span>
+                      })
+                    }
+                    
+                    return (
+                      <div key={index}>
+                        {renderLineWithBold(line)}
+                      </div>
+                    )
+                  })}
+              </div>
             </div>
-            {formData.salaryType !== 'fixed' && (
-              <p className="text-xs text-blue-600">
-                💡 This calculation automatically adjusts based on your selected duration and payment type
-              </p>
-            )}
           </div>
         </div>
       )}
 
-      {formData.salaryType && (
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <DollarSign className="h-4 w-4" />
-          Tip: Including salary information can increase application rates by up to 30%.
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="performance-bonus"
+          checked={formData.performance_bonus || false}
+          onCheckedChange={(checked) => onChange({ performance_bonus: checked as boolean })}
+        />
+        <Label htmlFor="performance-bonus" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          {t('performanceBonus')}
+        </Label>
+      </div>
+      {formData.performance_bonus && (
+        <p className="text-xs text-muted-foreground ml-6">
+          {t('performanceBonusHelp')}
         </p>
       )}
-
-      <div className="space-y-2">
-        <Label htmlFor="legacy-salary">
-          Compensation Notes <span className="text-muted-foreground">(Optional)</span>
-        </Label>
-        <Textarea
-          id="legacy-salary"
-          placeholder="e.g. Negotiable based on experience, Performance bonuses available..."
-          value={formData.salary || ''}
-          onChange={(e) => onChange({ salary: e.target.value })}
-          className="min-h-[60px] resize-none text-xs"
-        />
-        <p className="text-xs text-muted-foreground">
-          Add any additional context about compensation, benefits, or negotiability.
-        </p>
-      </div>
-
-      <div className="p-4 bg-secondary/50 rounded-lg">
-        <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
-          <Target className="h-4 w-4" />
-          Salary Best Practices
-        </h4>
-        <ul className="text-xs text-muted-foreground space-y-1">
-          <li>• Be transparent about compensation to attract serious candidates</li>
-          <li>• Use ranges for flexibility in negotiations</li>
-          <li>• Include information about benefits or perks</li>
-          <li>• Consider local market rates for the position</li>
-        </ul>
-      </div>
     </div>
   )
 }

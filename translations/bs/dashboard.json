@@ -5,7 +5,7 @@
     "title": "Brze akcije"
   },
   "actions": {
-    "postJob": "Objavi posao"
+    "postJob": "Objavi poslić"
   },
   "stats": {
     "totalJobs": "Ukupno poslova",

@@ -83,6 +83,7 @@ export function JobFilters({
             showSubcategories={true}
             subcategoryValue={subcategoryFilter}
             onSubcategoryChange={setSubcategoryFilter}
+            stackOnMobile={true}
           />
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-44 flex-shrink-0 border-border/50">
@@ -158,6 +159,7 @@ export function JobFilters({
                   showSubcategories={true}
                   subcategoryValue={subcategoryFilter}
                   onSubcategoryChange={setSubcategoryFilter}
+                  stackOnMobile={true}
                 />
                 
                 <Select value={typeFilter} onValueChange={setTypeFilter}>

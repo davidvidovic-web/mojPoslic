@@ -16,9 +16,27 @@ function createPrismaClient() {
     throw new Error('PrismaClient cannot be instantiated in Edge Runtime')
   }
   
-  return new PrismaClient({
-    log: ['query'],
-  }).$extends(withAccelerate())
+  // Try to use Accelerate if available, fall back to regular Prisma
+  try {
+    return new PrismaClient({
+      log: ['error', 'warn'],
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+    }).$extends(withAccelerate())
+  } catch (error) {
+    console.warn('Accelerate not available, using regular Prisma client:', error)
+    return new PrismaClient({
+      log: ['error', 'warn'],
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+    })
+  }
 }
 
 // Only create Prisma client if not in edge runtime
@@ -38,4 +56,16 @@ if (process.env.NODE_ENV !== 'production') {
   if (prisma) {
     globalForPrisma.prisma = prisma
   }
+}
+
+// Export a simple Prisma client for cases where the shared client fails
+export const createSimplePrismaClient = () => {
+  return new PrismaClient({
+    log: ['error'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+  })
 }

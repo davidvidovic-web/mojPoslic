@@ -6,8 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // Lazy load the job form to improve initial load time
 const LazyMultiStepJobForm = lazy(() => 
@@ -47,6 +49,8 @@ export function OptimizedJobPostDialog({
   dialogTitle,
   onTriggerClick
 }: OptimizedJobPostDialogProps) {
+  const t = useTranslations('jobPost')
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -61,6 +65,9 @@ export function OptimizedJobPostDialog({
       <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>
+            {t('dialogDescription')}
+          </DialogDescription>
         </DialogHeader>
         {isOpen && (
           <Suspense fallback={<JobFormSkeleton />}>

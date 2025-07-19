@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   MapPin,
@@ -407,6 +408,9 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('editJobPosting')}</DialogTitle>
+            <DialogDescription>
+              {t('updateJobDetails')}
+            </DialogDescription>
           </DialogHeader>
           <MultiStepJobForm
             initialData={job}

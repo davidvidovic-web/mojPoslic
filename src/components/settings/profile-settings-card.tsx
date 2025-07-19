@@ -11,7 +11,7 @@ import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 import { User } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
-import { parseSkillsArray, parseExperienceLevels, formatExperienceLevel } from '@/lib/profile-format'
+import { parseSkillsArray, parseExperienceLevels } from '@/lib/profile-format'
 import { formatLocation } from '@/lib/location-format'
 import { useTranslations } from 'next-intl'
 
@@ -34,6 +34,7 @@ interface UserProfile {
 export function ProfileSettingsCard() {
   const { user: authProfile, loading: authLoading, refreshUser } = useAuth()
   const t = useTranslations('settings.profileSettings')
+  const tProfile = useTranslations('profile.setup.experienceLevels')
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
@@ -262,11 +263,11 @@ export function ProfileSettingsCard() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="skills">{t('skills')}</Label>
                   <SkillsBubbleInput
                     value={profile.skills || []}
                     onChange={(skills) => setProfile({ ...profile, skills })}
                     placeholder={t('skillsPlaceholder')}
+                    label={t('skills')}
                   />
                 </div>
 
@@ -298,18 +299,13 @@ export function ProfileSettingsCard() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="not-specified">Not Specified</SelectItem>
-                                  <SelectItem value="beginner">Beginner (&lt; 1 year)</SelectItem>
-                                  <SelectItem value="1-2-years">1-2 Years</SelectItem>
-                                  <SelectItem value="3-5-years">3-5 Years</SelectItem>
-                                  <SelectItem value="5plus-years">5+ Years</SelectItem>
+                                  <SelectItem value="not-specified">{tProfile('notSpecified')}</SelectItem>
+                                  <SelectItem value="beginner">{tProfile('beginner')}</SelectItem>
+                                  <SelectItem value="1-2-years">{tProfile('oneToTwoYears')}</SelectItem>
+                                  <SelectItem value="3-5-years">{tProfile('threeToFiveYears')}</SelectItem>
+                                  <SelectItem value="5plus-years">{tProfile('fivePlusYears')}</SelectItem>
                                 </SelectContent>
                               </Select>
-                              {currentLevel !== 'not-specified' && (
-                                <span className="text-xs text-muted-foreground">
-                                  {t('currentExperience', { level: formatExperienceLevel(currentLevel) })}
-                                </span>
-                              )}
                             </div>
                           </div>
                         )

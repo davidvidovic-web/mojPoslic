@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CitiesFilter } from "@/components/filters/cities-filter"
 import { CreateJobData } from "@/types/job"
+import { useTranslations } from "next-intl"
 
 interface BasicInformationSectionProps {
   formData: CreateJobData
@@ -45,13 +46,15 @@ export function BasicInformationSection({
   onParentCategoryChange,
   availableChildCategories
 }: BasicInformationSectionProps) {
+  const t = useTranslations('jobs.postForm.basicInformation')
+
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="job-title">Job Title *</Label>
+        <Label htmlFor="job-title">{t('jobTitle')} *</Label>
         <Input
           id="job-title"
-          placeholder="Enter job title"
+          placeholder={t('jobTitlePlaceholder')}
           required
           value={formData.title}
           onChange={(e) => onChange({ title: e.target.value })}
@@ -60,23 +63,23 @@ export function BasicInformationSection({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="city">City *</Label>
+          <Label htmlFor="city">{t('city')} *</Label>
           <CitiesFilter
             value={formData.city_id || ""}
             onChange={(value) => onChange({ city_id: value })}
-            placeholder="Select a city"
+            placeholder={t('selectCity')}
             className="w-full"
             includeAllOption={false}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="parent-category">Category *</Label>
+          <Label htmlFor="parent-category">{t('category')} *</Label>
           <Select 
             value={selectedParentCategory} 
             onValueChange={onParentCategoryChange}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a category" />
+                        <SelectTrigger>
+              <SelectValue placeholder={t('selectCategory')} />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
@@ -98,13 +101,13 @@ export function BasicInformationSection({
         
         {selectedParentCategory && availableChildCategories.length > 0 && (
           <div className="space-y-2">
-            <Label htmlFor="child-category">Subcategory *</Label>
+            <Label htmlFor="child-category">{t('subcategory')} *</Label>
             <Select 
               value={formData.category_id} 
               onValueChange={(value) => onChange({ category_id: value })}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a subcategory" />
+                <SelectValue placeholder={t('selectSubcategory')} />
               </SelectTrigger>
               <SelectContent>
                 {availableChildCategories.map((category) => (

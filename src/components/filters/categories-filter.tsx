@@ -13,6 +13,7 @@ interface CategoriesFilterProps {
   subcategoryValue?: string
   onSubcategoryChange?: (value: string) => void
   showSubcategories?: boolean
+  stackOnMobile?: boolean
 }
 
 export function CategoriesFilter({ 
@@ -23,7 +24,8 @@ export function CategoriesFilter({
   includeAllOption = true,
   subcategoryValue,
   onSubcategoryChange,
-  showSubcategories = false
+  showSubcategories = false,
+  stackOnMobile = false
 }: CategoriesFilterProps) {
   const { categories, isLoading, getCategoriesByParent } = useCategories()
   const t = useTranslations('filters')
@@ -55,7 +57,7 @@ export function CategoriesFilter({
   }
 
   return (
-    <div className="flex gap-4">
+    <div className={stackOnMobile ? "flex flex-col gap-4 sm:flex-row" : "flex gap-4"}>
       {/* Main Categories Dropdown */}
       <Select value={value} onValueChange={onChange} disabled={isLoading}>
         <SelectTrigger className={className}>

@@ -40,7 +40,21 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
 
         {formData.salaryType && (
           <div className="space-y-4">
-            {formData.salaryType === 'fixed' ? (
+            {formData.salaryType === 'daily' ? (
+              <div className="space-y-2">
+                <Label htmlFor="salary-daily">Daily Rate (BAM)</Label>
+                <Input
+                  id="salary-daily"
+                  type="number"
+                  placeholder={t('dailyPlaceholder')}
+                  value={formData.salaryMin || ''}
+                  onChange={(e) => onChange({ 
+                    salaryMin: e.target.value ? parseInt(e.target.value) : undefined,
+                    salaryMax: undefined // Clear max for daily rate
+                  })}
+                />
+              </div>
+            ) : formData.salaryType === 'fixed' ? (
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="salary-fixed">Fixed Price (BAM)</Label>
@@ -82,14 +96,13 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="salary-min">
-                    Minimum {formData.salaryType === 'hourly' ? 'Rate' : formData.salaryType === 'daily' ? 'Daily Rate' : 'Salary'} (BAM)
+                    Minimum {formData.salaryType === 'hourly' ? 'Rate' : 'Salary'} (BAM)
                   </Label>
                   <Input
                     id="salary-min"
                     type="number"
                     placeholder={
                       formData.salaryType === 'hourly' ? t('hourlyPlaceholder') : 
-                      formData.salaryType === 'daily' ? t('dailyPlaceholder') : 
                       t('monthlyPlaceholder')
                     }
                     value={formData.salaryMin || ''}
@@ -100,14 +113,13 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="salary-max">
-                    Maximum {formData.salaryType === 'hourly' ? 'Rate' : formData.salaryType === 'daily' ? 'Daily Rate' : 'Salary'} (BAM)
+                    Maximum {formData.salaryType === 'hourly' ? 'Rate' : 'Salary'} (BAM)
                   </Label>
                   <Input
                     id="salary-max"
                     type="number"
                     placeholder={
                       formData.salaryType === 'hourly' ? t('enterMaxAmount') : 
-                      formData.salaryType === 'daily' ? '200' : 
                       '3000'
                     }
                     value={formData.salaryMax || ''}

@@ -57,6 +57,7 @@ export function SimpleRichTextEditor({
   
   // Initialize the editor
   const editor = useEditor({
+    immediatelyRender: false, // Fix SSR hydration mismatch
     extensions: [
       StarterKit.configure({
         bulletList: {

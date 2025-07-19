@@ -39,7 +39,7 @@ export interface Job {
   type: 'quick_job' | 'full_time' | 'part_time' | 'remote'
   description: string
   salary?: string // Text field for flexible salary info (legacy)
-  salaryType?: 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' // New salary type field
+  salaryType?: 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'negotiable' // New salary type field
   salaryMin?: number // Minimum salary amount
   salaryMax?: number // Maximum salary amount
   email: string // Required contact email
@@ -88,7 +88,7 @@ export interface CreateJobData {
   requirements?: string
   benefits?: string
   salary?: string // Legacy text field
-  salaryType?: 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' // New salary type field
+  salaryType?: 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'negotiable' // New salary type field
   salaryMin?: number // Minimum salary amount
   salaryMax?: number // Maximum salary amount
   website?: string
@@ -105,6 +105,7 @@ export interface CreateJobData {
   job_longitude?: number // Longitude coordinate
   contact_email?: string
   application_url?: string
+  performance_bonus?: boolean // Whether performance bonus is offered
   tags?: string[] // Keep for backward compatibility but deprecated
   is_featured?: boolean // Whether the job should be featured
 }

@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { UserCircle, Crown, Building2, User } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 export function AccountInfoCard() {
   const { user: profile, loading } = useAuth()
   const t = useTranslations('settings.accountInfo')
+  const locale = useLocale()
 
   const formatMemberSince = (date?: string | Date) => {
     if (!date) {
@@ -25,7 +26,8 @@ export function AccountInfoCard() {
         return t('recentMember')
       }
       
-      return dateObj.toLocaleDateString('en-US', {
+      // Use current locale for date formatting
+      return dateObj.toLocaleDateString(locale === 'bs' ? 'bs-BA' : 'en-US', {
         year: 'numeric',
         month: 'long'
       })

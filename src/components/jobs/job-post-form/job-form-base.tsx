@@ -10,7 +10,7 @@ import { LocationTransportationCompensationStep } from './location-transportatio
 import { ReviewStep } from './review-step'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useCallback } from 'react'
 
@@ -29,11 +29,12 @@ export function JobFormBase({
   isEditMode = false,
   onSubmit,
   onCancel,
-  submitButtonText = 'Submit',
-  submittingText = 'Submitting...',
+  submitButtonText,
+  submittingText,
   showCard = true
 }: JobFormBaseProps) {
   const t = useTranslations('jobPost.validation')
+  const tNav = useTranslations('jobPost.form.navigation')
   const { user } = useAuth()
   const {
     currentStep,
@@ -48,7 +49,9 @@ export function JobFormBase({
     handleBasicDetailsValidation,
     handleLocationCompensationValidation,
     handleReviewValidation,
-    isCurrentStepValid
+    isCurrentStepValid,
+    clearForm,
+    clearSavedDataOnSubmit
   } = useJobFormState({ initialData, isEditMode })
 
   const {
@@ -87,6 +90,12 @@ export function JobFormBase({
     if (!formData.city_id) {
       missingFields.push('City')
     }
+    if (!formData.start_date?.trim()) {
+      missingFields.push('Start Date')
+    }
+    if (!formData.start_time?.trim()) {
+      missingFields.push('Start Time')
+    }
     
     // For companies, email is required
     const isCompany = user?.role === 'company'
@@ -109,6 +118,8 @@ export function JobFormBase({
     setIsSubmitting(true)
     try {
       await onSubmit(formData)
+      // Clear saved form data on successful submit
+      clearSavedDataOnSubmit()
     } catch (error) {
       console.error('Form submission error:', error)
     } finally {
@@ -163,45 +174,64 @@ export function JobFormBase({
         stepValidations={stepValidations}
         isEditMode={isEditMode}
         onStepClick={handleStepClick}
+        formData={formData}
       />
 
       <div className="mt-8">
         {renderCurrentStep()}
       </div>
 
-      <div className="flex justify-between items-center mt-8 pt-6 border-t">
-        <div className="flex gap-2">
-          {canGoPrevious && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={isSubmitting}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-          )}
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
+      <div className="relative flex items-center mt-8 pt-6 border-t gap-4">
+        {/* Left buttons - only render if there are buttons to show */}
+        {(canGoPrevious || onCancel) && (
+          <div className="flex gap-2 justify-start">
+            {canGoPrevious && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={isSubmitting}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                {tNav('previous')}
+              </Button>
+            )}
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
+                {tNav('cancel')}
+              </Button>
+            )}
+          </div>
+        )}
 
-        <div className="flex gap-2">
+        {/* Clear form button */}
+        {!isEditMode && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={clearForm}
+            disabled={isSubmitting}
+            className={(canGoPrevious || onCancel) ? "mx-auto" : "mr-auto"}
+          >
+            <Trash2 className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">{tNav('clearForm')}</span>
+          </Button>
+        )}
+
+        {/* Right buttons */}
+        <div className="flex gap-2 ml-auto">
           {!isLastStep ? (
             <Button
               type="button"
               onClick={handleNext}
               disabled={!canGoNext || isSubmitting}
             >
-              Next
+              {tNav('next')}
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
@@ -210,7 +240,7 @@ export function JobFormBase({
               onClick={handleFormSubmit}
               disabled={isSubmitting || (!isEditMode && !isCurrentStepValid)}
             >
-              {isSubmitting ? submittingText : submitButtonText}
+              {isSubmitting ? (submittingText || tNav('saving')) : (submitButtonText || tNav('submit'))}
             </Button>
           )}
         </div>
@@ -227,11 +257,11 @@ export function JobFormBase({
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-4 md:p-6">
       <Card>
         <CardHeader>
           <CardTitle>
-            {isEditMode ? 'Edit Job Posting' : 'Create New Job Posting'}
+            {isEditMode ? t('form.editJobPosting') : t('form.createJobPosting')}
           </CardTitle>
         </CardHeader>
         <CardContent>

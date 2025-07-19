@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
@@ -10,6 +10,8 @@ import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
 import { Button } from "@/components/ui/button";
+import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
+import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
 import {
   LogIn,
   LogOut,
@@ -19,8 +21,6 @@ import {
   Briefcase,
   MessageSquare,
   Zap,
-  Menu,
-  X,
   UserPlus,
 } from "lucide-react";
 import {
@@ -45,6 +45,22 @@ export const Header = React.memo(function Header() {
   
   // Scroll detection state
   const [isScrolled, setIsScrolled] = useState(false);
+  // Mobile menu animation state
+  const [isClosing, setIsClosing] = useState(false);
+  
+  // Refs for GSAP animations
+  const hamburgerRef = useRef<HTMLDivElement>(null);
+  const menuHamburgerRef = useRef<HTMLDivElement>(null);
+  
+  // Hamburger animation hook
+  const { useHamburgerSync, cleanup } = useHamburgerAnimation();
+
+  // Cleanup GSAP timelines on unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
 
   // Translation hooks
   const tAuth = useTranslations('auth');
@@ -74,6 +90,20 @@ export const Header = React.memo(function Header() {
     window.addEventListener('scroll', throttledScroll, { passive: true });
     return () => window.removeEventListener('scroll', throttledScroll);
   }, [handleScroll]);
+
+  // Lock scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   // Memoized helper functions
   const isActiveMenuItem = useCallback((href: string) => {
@@ -109,7 +139,18 @@ export const Header = React.memo(function Header() {
     await signOut();
   }, [signOut]);
 
-  // Memoized user checks
+  // Handle mobile menu close with animation
+  const handleCloseMobileMenu = useCallback(() => {
+    setIsClosing(true);
+    // Wait for animation to complete before actually closing
+    setTimeout(() => {
+      closeMobileMenu();
+      setIsClosing(false);
+    }, 300); // Match animation duration
+  }, [closeMobileMenu]);
+
+  // Sync hamburger animations with menu state
+  useHamburgerSync(isMobileMenuOpen, [hamburgerRef, menuHamburgerRef]);
   const canPostJob = useMemo(() => {
     return user && (user.role === "client" || user.role === "company" || user.role === "admin");
   }, [user]);
@@ -167,23 +208,51 @@ export const Header = React.memo(function Header() {
                 {/* Auth.js Authentication Components */}
                 {!user ? (
                   <div className="flex items-center gap-2">
-                    <Link href="/auth/signin">
-                      <Button
-                        variant="outline"
-                        className="border-foreground text-foreground hover:bg-foreground hover:text-background font-bold transition-all duration-200"
-                      >
-                        <LogIn className="h-4 w-4 mr-2" />
-                        {tAuth('signIn')}
-                      </Button>
-                    </Link>
-                    <Link href="/auth/register">
-                      <Button
-                        className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        {tAuth('register')}
-                      </Button>
-                    </Link>
+                    {/* Desktop: Full buttons with text and icons */}
+                    <div className="hidden sm:flex items-center gap-2">
+                      <Link href="/auth/signin">
+                        <Button
+                          variant="outline"
+                          className="border-foreground text-foreground hover:bg-foreground hover:text-background font-bold transition-all duration-200 text-sm"
+                        >
+                          <LogIn className="h-4 w-4 mr-2" />
+                          {tHeader('auth.signIn')}
+                        </Button>
+                      </Link>
+                      <Link href="/auth/register">
+                        <Button
+                          className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200 text-sm"
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          {tHeader('auth.register')}
+                        </Button>
+                      </Link>
+                    </div>
+                    
+                    {/* Mobile: Both buttons with icons and text */}
+                    <div className="flex sm:hidden items-center gap-2">
+                      {/* Login - Icon + Text */}
+                      <Link href="/auth/signin">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-foreground text-foreground hover:bg-foreground hover:text-background font-bold transition-all duration-200 h-9 px-2 text-sm"
+                        >
+                          <LogIn className="h-4 w-4 mr-1.5" />
+                          {tHeader('auth.signIn')}
+                        </Button>
+                      </Link>
+                      {/* Register - Icon + Text */}
+                      <Link href="/auth/register">
+                        <Button
+                          size="sm"
+                          className="bg-foreground hover:bg-foreground/80 text-background font-bold transition-all duration-200 h-9 px-2 text-sm"
+                        >
+                          <UserPlus className="h-4 w-4 mr-1.5" />
+                          {tHeader('auth.register')}
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -251,10 +320,6 @@ export const Header = React.memo(function Header() {
                               {tNavigation('settings')}
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={handleSignOut}>
                             <LogOut className="mr-2 h-6 w-6" />
                             {tAuth('signOut')}
@@ -269,36 +334,49 @@ export const Header = React.memo(function Header() {
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleMobileMenu()}
-                        className="relative h-9 w-9 rounded-full"
+                        className="relative h-9 w-9 rounded-full hover:bg-accent/10 transition-colors"
                       >
-                        <Menu className="h-7 w-7" />
+                        {/* Animated Hamburger Icon - only show when menu is closed */}
+                        {!isMobileMenuOpen && (
+                          <AnimatedHamburger ref={hamburgerRef} />
+                        )}
                       </Button>
                     </div>
 
                     {/* Mobile Full-Screen Menu */}
                     {isMobileMenuOpen && (
-                      <div className="fixed inset-0 z-[60] bg-background md:hidden">
-                        <div className="flex h-full flex-col bg-background">
+                      <div className={`fixed inset-0 z-[60] bg-background md:hidden h-screen w-screen ${
+                        isClosing 
+                          ? 'animate-out fade-out-0 duration-300' 
+                          : 'animate-in fade-in-0 duration-300'
+                      }`}>
+                        <div className={`flex h-full w-full flex-col bg-background ${
+                          isClosing 
+                            ? 'animate-out slide-out-to-right-full duration-300 ease-in' 
+                            : 'animate-in slide-in-from-right-full duration-300 ease-out'
+                        }`}>
                           {/* Header */}
-                          <div className="flex items-center justify-between p-4 border-b">
+                          <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
                             <h2 className="text-lg font-semibold">{tAuth('menu')}</h2>
+                            {/* Animated hamburger/close icon */}
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => closeMobileMenu()}
-                              className="h-9 w-9 rounded-full"
+                              onClick={() => toggleMobileMenu()}
+                              className="relative h-9 w-9 rounded-full hover:bg-accent/10 transition-colors"
                             >
-                              <X className="h-7 w-7" />
+                              <AnimatedHamburger ref={menuHamburgerRef} />
                             </Button>
                           </div>
 
-                          {/* Menu Items */}
-                          <div className="flex-1 px-6 py-8 bg-background">
-                            <nav className="space-y-6">
+                          {/* Menu Items - Flex container for proper spacing */}
+                          <div className="flex-1 flex flex-col px-6 py-8 bg-background min-h-0">
+                            {/* Main Navigation */}
+                            <nav className="space-y-6 border-b border-border pb-8 flex-shrink-0">
                               <Link
                                 href="/dashboard"
                                 className={getMobileMenuItemClass('/dashboard')}
-                                onClick={() => closeMobileMenu()}
+                                onClick={handleCloseMobileMenu}
                               >
                                 <LayoutDashboard className="mr-4 h-6 w-6" />
                                 {tNavigation('dashboard')}
@@ -307,7 +385,7 @@ export const Header = React.memo(function Header() {
                               <Link
                                 href="/dashboard/jobs"
                                 className={getMobileMenuItemClass('/dashboard/jobs')}
-                                onClick={() => closeMobileMenu()}
+                                onClick={handleCloseMobileMenu}
                               >
                                 <Briefcase className="mr-4 h-6 w-6" />
                                 {tNavigation('jobs')}
@@ -316,7 +394,7 @@ export const Header = React.memo(function Header() {
                               <Link
                                 href="/dashboard/messages"
                                 className={getMobileMenuItemClass('/dashboard/messages')}
-                                onClick={() => closeMobileMenu()}
+                                onClick={handleCloseMobileMenu}
                               >
                                 <MessageSquare className="mr-4 h-6 w-6" />
                                 {tNavigation('messages')}
@@ -325,40 +403,35 @@ export const Header = React.memo(function Header() {
                               <Link
                                 href="/connections"
                                 className={getMobileMenuItemClass('/connections')}
-                                onClick={() => closeMobileMenu()}
+                                onClick={handleCloseMobileMenu}
                               >
                                 <Zap className="mr-4 h-6 w-6" />
                                 {tNavigation('connections')}
                               </Link>
 
-                              <div className="border-t pt-6">
-                                <Link
-                                  href="/settings"
-                                  className={getMobileMenuItemClass('/settings')}
-                                  onClick={() => closeMobileMenu()}
-                                >
-                                  <Settings className="mr-4 h-6 w-6" />
-                                  {tNavigation('settings')}
-                                </Link>
-
-                                <div className="py-4">
-                                </div>
-
-                                <div className="py-4">
-                                </div>
-
-                                <button
-                                  onClick={() => {
-                                    closeMobileMenu();
-                                    handleSignOut();
-                                  }}
-                                  className="flex items-center py-4 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors w-full text-left"
-                                >
-                                  <LogOut className="mr-4 h-6 w-6" />
-                                  {tAuth('signOut')}
-                                </button>
-                              </div>
+                              <Link
+                                href="/settings"
+                                className={getMobileMenuItemClass('/settings')}
+                                onClick={handleCloseMobileMenu}
+                              >
+                                <Settings className="mr-4 h-6 w-6" />
+                                {tNavigation('settings')}
+                              </Link>
                             </nav>
+                            
+                            {/* Logout at bottom */}
+                            <div className="mt-auto pt-8">
+                              <button
+                                onClick={() => {
+                                  handleCloseMobileMenu();
+                                  handleSignOut();
+                                }}
+                                className="flex items-center py-4 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors w-full text-left"
+                              >
+                                <LogOut className="mr-4 h-6 w-6" />
+                                {tAuth('signOut')}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
 import { formatClientName } from '@/lib/job-utils'
+import { useTranslations } from 'next-intl'
 
 interface JobEditFormProps {
   jobId: string
@@ -15,6 +16,7 @@ interface JobEditFormProps {
 
 export function JobEditForm({ jobId, initialData, onJobUpdated, onCancel }: JobEditFormProps) {
   const { user } = useAuth()
+  const t = useTranslations('jobs.review')
 
   const handleSubmit = async (formData: CreateJobData) => {
     // Use formatted client name, same as job creation
@@ -71,8 +73,8 @@ export function JobEditForm({ jobId, initialData, onJobUpdated, onCancel }: JobE
       isEditMode={true}
       onSubmit={handleSubmit}
       onCancel={onCancel}
-      submitButtonText="Update Job Posting"
-      submittingText="Updating..."
+      submitButtonText={t('updateJobPosting')}
+      submittingText={t('submitting')}
     />
   )
 }

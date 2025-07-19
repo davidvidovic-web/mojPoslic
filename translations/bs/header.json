@@ -1,5 +1,5 @@
 {
-  "postJob": "Objavi Posao",
+  "postJob": "Objavi poslić",
   "postJobDialog": "Objavi Novi Posao",
   "logo": "mojPoslić",
   "menu": "Meni",
@@ -35,6 +35,10 @@
   "compliance": "Saglasnost",
   "accessibility": "Pristupačnost",
   "sitemap": "Mapa sajta",
+  "auth": {
+    "signIn": "Prijava",
+    "register": "Registracija"
+  },
   "languageSwitcher": {
     "en": "EN",
     "bs": "BS",

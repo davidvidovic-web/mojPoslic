@@ -1,27 +1,46 @@
 // Helper functions for payment calculations and suggestions
 
-// Helper function to get payment suggestions based on duration
-export function getPaymentSuggestion(duration: string): string {
-  const suggestions: Record<string, string> = {
-    '1_hour': '💡 Perfect for "Per Hour" payment - ideal for short tasks',
-    '2_hours': '💡 Perfect for "Per Hour" payment - great for quick jobs',
-    '3_hours': '💡 Perfect for "Per Hour" payment - best for hourly work',
-    '4_hours': '💡 Perfect for "Per Hour" payment - standard hourly rate',
-    '6_hours': '💡 Consider "Per Hour" payment for precise time tracking',
-    '8_hours': '💡 Perfect for "Per Day" payment - matches a full work day',
-    '1_day': '💡 Perfect for "Per Day" payment - ideal for day-based work',
-    '2_days': '💡 Perfect for "Per Day" payment - great for multi-day projects',
-    '3_days': '💡 Perfect for "Per Day" payment - excellent for short-term work',
-    '1_week': '💡 Perfect for "Per Week" payment - ideal for weekly projects',
-    '2_weeks': '💡 Perfect for "Per Week" payment - great for bi-weekly work',
-    '1_month': '💡 Perfect for "Per Month" payment - ideal for monthly projects',
-    '2_months': '💡 Perfect for "Per Month" payment - great for extended projects',
-    '3_months': '💡 Perfect for "Per Month" payment - excellent for long-term work',
-    'ongoing': '💡 Consider "Per Month" payment for ongoing relationships',
-    'negotiable': '💡 Consider "Fixed Price" for flexible project scope'
+// Helper function to translate salary types
+function getSalaryTypeName(salaryType: string, t?: (key: string) => string): string {
+  if (!t) return salaryType
+  
+  const salaryTypeMap: Record<string, string> = {
+    'hourly': t('salaryTypes.hourly'),
+    'daily': t('salaryTypes.daily'),
+    'fixed': t('salaryTypes.fixed'),
+    'negotiable': t('salaryTypes.negotiable')
   }
   
-  return suggestions[duration] || '💡 Choose the payment structure that works best for your specific job requirements'
+  return salaryTypeMap[salaryType] || salaryType
+}
+
+// Helper function to get payment suggestions based on duration
+export function getPaymentSuggestion(duration: string, t?: (key: string) => string): string {
+  // If no translation function provided, return the duration key for translation
+  if (!t) {
+    return `paymentSuggestions.${duration}`
+  }
+
+  const suggestions: Record<string, string> = {
+    '1_hour': t('paymentSuggestions.1_hour'),
+    '2_hours': t('paymentSuggestions.2_hours'),
+    '3_hours': t('paymentSuggestions.3_hours'),
+    '4_hours': t('paymentSuggestions.4_hours'),
+    '6_hours': t('paymentSuggestions.6_hours'),
+    '8_hours': t('paymentSuggestions.8_hours'),
+    '1_day': t('paymentSuggestions.1_day'),
+    '2_days': t('paymentSuggestions.2_days'),
+    '3_days': t('paymentSuggestions.3_days'),
+    '1_week': t('paymentSuggestions.1_week'),
+    '2_weeks': t('paymentSuggestions.2_weeks'),
+    '1_month': t('paymentSuggestions.1_month'),
+    '2_months': t('paymentSuggestions.2_months'),
+    '3_months': t('paymentSuggestions.3_months'),
+    'ongoing': t('paymentSuggestions.ongoing'),
+    'negotiable': t('paymentSuggestions.negotiable')
+  }
+  
+  return suggestions[duration] || t('paymentSuggestions.default')
 }
 
 // Helper function to calculate total payment based on duration
@@ -29,21 +48,26 @@ export function calculateTotalPayment(
   salaryType: string, 
   salaryMin: number, 
   salaryMax?: number, 
-  duration?: string
+  duration?: string,
+  t?: (key: string) => string
 ): string {
   if (!duration || salaryType === 'fixed') {
     const amount = salaryMax && salaryMax !== salaryMin ? 
       `${salaryMin} - ${salaryMax} BAM` : 
       `${salaryMin} BAM`
-    return salaryType === 'fixed' ? `Total: ${amount}` : amount
+    return salaryType === 'fixed' ? 
+      (t ? `${t('paymentCalculation.total')}: ${amount}` : `Total: ${amount}`) : 
+      amount
+  }
+
+  if (!t) {
+    return 'Total payment depends on final agreement'
   }
 
   // Duration mappings with smart payment type suggestions
   const durationMap: Record<string, { 
     hours?: number; 
     days?: number; 
-    weeks?: number; 
-    months?: number;
     suggestedType: string;
     description: string;
   }> = {
@@ -56,110 +80,81 @@ export function calculateTotalPayment(
     '1_day': { days: 1, suggestedType: 'daily', description: '1 day' },
     '2_days': { days: 2, suggestedType: 'daily', description: '2 days' },
     '3_days': { days: 3, suggestedType: 'daily', description: '3 days' },
-    '1_week': { weeks: 1, suggestedType: 'weekly', description: '1 week' },
-    '2_weeks': { weeks: 2, suggestedType: 'weekly', description: '2 weeks' },
-    '1_month': { months: 1, suggestedType: 'monthly', description: '1 month' },
-    '2_months': { months: 2, suggestedType: 'monthly', description: '2 months' },
-    '3_months': { months: 3, suggestedType: 'monthly', description: '3 months' }
+    '1_week': { days: 5, suggestedType: 'fixed', description: '1 week (5 days)' },
+    '2_weeks': { days: 10, suggestedType: 'fixed', description: '2 weeks (10 days)' },
+    '1_month': { days: 22, suggestedType: 'fixed', description: '1 month (22 days)' },
+    '2_months': { days: 44, suggestedType: 'fixed', description: '2 months (44 days)' },
+    '3_months': { days: 66, suggestedType: 'fixed', description: '3 months (66 days)' },
+    'negotiable': { suggestedType: 'negotiable', description: 'Negotiable' }
   }
 
   const durationInfo = durationMap[duration]
   if (!durationInfo) {
-    return 'Total payment depends on final agreement'
+    return t('paymentCalculation.dependsOnAgreement')
   }
 
   let totalMin = salaryMin
   let totalMax = salaryMax || salaryMin
-  let calculationDetails = ''
+
+  let durationLine = ''
+  let calculationLine = ''
 
   // Calculate based on the selected payment type
   if (salaryType === 'hourly' && durationInfo.hours) {
+    // Direct hourly calculation
     totalMin = salaryMin * durationInfo.hours
     totalMax = (salaryMax || salaryMin) * durationInfo.hours
-    calculationDetails = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM/hour × ${durationInfo.hours} hours`
+    durationLine = `${durationInfo.hours} ${t('paymentCalculation.units.hours')}`
+    calculationLine = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM / ${t('paymentCalculation.units.hour')} × ${durationInfo.hours} ${t('paymentCalculation.units.hours')}`
   } else if (salaryType === 'daily' && durationInfo.days) {
+    // Direct daily calculation
     totalMin = salaryMin * durationInfo.days
     totalMax = (salaryMax || salaryMin) * durationInfo.days
-    calculationDetails = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM/day × ${durationInfo.days} days`
-  } else if (salaryType === 'weekly' && durationInfo.weeks) {
-    totalMin = salaryMin * durationInfo.weeks
-    totalMax = (salaryMax || salaryMin) * durationInfo.weeks
-    calculationDetails = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM/week × ${durationInfo.weeks} weeks`
-  } else if (salaryType === 'monthly' && durationInfo.months) {
-    totalMin = salaryMin * durationInfo.months
-    totalMax = (salaryMax || salaryMin) * durationInfo.months
-    calculationDetails = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM/month × ${durationInfo.months} months`
+    durationLine = `${durationInfo.days} ${t('paymentCalculation.units.days')}`
+    calculationLine = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM / ${t('paymentCalculation.units.day')} × ${durationInfo.days} ${t('paymentCalculation.units.days')}`
+  } else if (salaryType === 'fixed' || salaryType === 'negotiable') {
+    // Fixed price or negotiable - no multiplication needed
+    return salaryType === 'fixed' ? 
+      `${t('paymentCalculation.fixedProjectPrice')}: ${totalMin.toFixed(0)} BAM` : 
+      `${t('paymentCalculation.negotiablePrice')}`
   } else {
-    // Conversion needed - show warning and estimate
+    // Conversion needed - show detailed breakdown
     let conversionFactor = 1
-    let fromUnit = ''
-    let toUnit = ''
     
-    if (salaryType === 'hourly') {
-      fromUnit = 'hour'
-      if (durationInfo.days) {
-        conversionFactor = durationInfo.days * 8 // 8 hours per day
-        toUnit = `${durationInfo.days} days (estimated 8 hrs/day)`
-      } else if (durationInfo.weeks) {
-        conversionFactor = durationInfo.weeks * 40 // 40 hours per week
-        toUnit = `${durationInfo.weeks} weeks (estimated 40 hrs/week)`
-      } else if (durationInfo.months) {
-        conversionFactor = durationInfo.months * 160 // 160 hours per month
-        toUnit = `${durationInfo.months} months (estimated 160 hrs/month)`
-      }
-    } else if (salaryType === 'daily') {
-      fromUnit = 'day'
-      if (durationInfo.hours) {
-        conversionFactor = Math.ceil(durationInfo.hours / 8)
-        toUnit = `${durationInfo.hours} hours (≈${conversionFactor} days)`
-      } else if (durationInfo.weeks) {
-        conversionFactor = durationInfo.weeks * 5 // 5 days per week
-        toUnit = `${durationInfo.weeks} weeks (estimated 5 days/week)`
-      } else if (durationInfo.months) {
-        conversionFactor = durationInfo.months * 22 // 22 working days per month
-        toUnit = `${durationInfo.months} months (estimated 22 days/month)`
-      }
-    } else if (salaryType === 'weekly') {
-      fromUnit = 'week'
-      if (durationInfo.hours) {
-        conversionFactor = Math.ceil(durationInfo.hours / 40)
-        toUnit = `${durationInfo.hours} hours (≈${conversionFactor} weeks)`
-      } else if (durationInfo.days) {
-        conversionFactor = Math.ceil(durationInfo.days / 5)
-        toUnit = `${durationInfo.days} days (≈${conversionFactor} weeks)`
-      } else if (durationInfo.months) {
-        conversionFactor = durationInfo.months * 4.33 // ~4.33 weeks per month
-        toUnit = `${durationInfo.months} months (≈${conversionFactor.toFixed(1)} weeks)`
-      }
-    } else if (salaryType === 'monthly') {
-      fromUnit = 'month'
-      if (durationInfo.hours) {
-        conversionFactor = Math.ceil(durationInfo.hours / 160)
-        toUnit = `${durationInfo.hours} hours (≈${conversionFactor} months)`
-      } else if (durationInfo.days) {
-        conversionFactor = Math.ceil(durationInfo.days / 22)
-        toUnit = `${durationInfo.days} days (≈${conversionFactor} months)`
-      } else if (durationInfo.weeks) {
-        conversionFactor = Math.ceil(durationInfo.weeks / 4.33)
-        toUnit = `${durationInfo.weeks} weeks (≈${conversionFactor} months)`
-      }
+    if (salaryType === 'hourly' && durationInfo.days) {
+      // Converting hourly to days
+      conversionFactor = durationInfo.days * 8 // 8 hours per day
+      durationLine = `${conversionFactor} ${t('paymentCalculation.units.hours')} (${t('paymentCalculation.convertedFor')} ${durationInfo.days} ${t('paymentCalculation.units.days')} x 8 ${t('paymentCalculation.units.hrsPerDay')})`
+      calculationLine = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM / ${t('paymentCalculation.units.hour')} × ${conversionFactor} ${t('paymentCalculation.units.hours')}`
+      totalMin = salaryMin * conversionFactor
+      totalMax = (salaryMax || salaryMin) * conversionFactor
+    } else if (salaryType === 'daily' && durationInfo.hours) {
+      // Converting daily to hours
+      conversionFactor = Math.ceil(durationInfo.hours / 8)
+      durationLine = `${durationInfo.hours} ${t('paymentCalculation.units.hours')} (≈${conversionFactor} ${t('paymentCalculation.units.days')})`
+      calculationLine = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM / ${t('paymentCalculation.units.day')} × ${conversionFactor} ${t('paymentCalculation.units.days')}`
+      totalMin = salaryMin * conversionFactor
+      totalMax = (salaryMax || salaryMin) * conversionFactor
     }
-    
-    totalMin = salaryMin * conversionFactor
-    totalMax = (salaryMax || salaryMin) * conversionFactor
-    calculationDetails = `${salaryMin}${salaryMax ? `-${salaryMax}` : ''} BAM/${fromUnit} × ${conversionFactor} (converted for ${toUnit})`
   }
 
   const totalRange = totalMax !== totalMin ? 
     `${totalMin.toFixed(0)} - ${totalMax.toFixed(0)} BAM` : 
     `${totalMin.toFixed(0)} BAM`
 
+  // Build the structured output
+  let result = durationLine + '\n'
+  result += calculationLine + '\n'
+  result += '─'.repeat(40) + '\n'
+  result += `${t('paymentCalculation.estimatedTotal')}: ${totalRange}`
+
   // Check if payment type is optimal for duration
   const isOptimalPayment = salaryType === durationInfo.suggestedType
   
-  if (isOptimalPayment) {
-    return `💰 Estimated total: ${totalRange} (${calculationDetails})`
-  } else {
-    return `⚠️ Estimated total: ${totalRange} (${calculationDetails})\n💡 Consider switching to "${durationInfo.suggestedType}" payment for better accuracy`
+  if (!isOptimalPayment) {
+    const translatedSuggestedType = getSalaryTypeName(durationInfo.suggestedType, t)
+    result += `\n\n${t('paymentCalculation.considerSwitching')} "${translatedSuggestedType}"`
   }
+
+  return result
 }

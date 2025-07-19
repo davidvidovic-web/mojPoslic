@@ -3,6 +3,7 @@
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CreateJobData } from "@/types/job"
+import { useTranslations } from "next-intl"
 
 interface DescriptionSectionProps {
   formData: CreateJobData
@@ -10,13 +11,15 @@ interface DescriptionSectionProps {
 }
 
 export function DescriptionSection({ formData, onChange }: DescriptionSectionProps) {
+  const t = useTranslations('jobs.postForm.jobDetails')
+  
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="description">Job Description *</Label>
+        <Label htmlFor="description">{t('description')} *</Label>
         <Textarea
           id="description"
-          placeholder="Describe the role, responsibilities, and what you're looking for..."
+          placeholder={t('descriptionPlaceholder')}
           required
           rows={4}
           value={formData.description}
@@ -25,10 +28,10 @@ export function DescriptionSection({ formData, onChange }: DescriptionSectionPro
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="requirements">Requirements (Optional)</Label>
+        <Label htmlFor="requirements">{t('requirements')} ({t('optional', { ns: 'common' })})</Label>
         <Textarea
           id="requirements"
-          placeholder="List the skills, experience, and qualifications needed..."
+          placeholder={t('requirementsPlaceholder')}
           rows={3}
           value={formData.requirements || ''}
           onChange={(e) => onChange({ requirements: e.target.value })}
@@ -36,10 +39,10 @@ export function DescriptionSection({ formData, onChange }: DescriptionSectionPro
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="benefits">Benefits (Optional)</Label>
+        <Label htmlFor="benefits">{t('benefits')} ({t('optional', { ns: 'common' })})</Label>
         <Textarea
           id="benefits"
-          placeholder="Describe benefits, perks, and what makes this opportunity special..."
+          placeholder={t('benefitsPlaceholder')}
           rows={3}
           value={formData.benefits || ''}
           onChange={(e) => onChange({ benefits: e.target.value })}

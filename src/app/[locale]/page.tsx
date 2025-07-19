@@ -1,11 +1,9 @@
 "use client";
 
 import { JobList } from "@/components/job-list";
-import SiteStats from "@/components/common/site-stats";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Zap, UserPlus } from "lucide-react";
+import { Zap, UserPlus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 
@@ -73,7 +71,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Site Stats Section */}
+      {/* Site Stats Section - Hidden for now */}
+      {/* 
       <section className="bg-muted/30 py-16">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-8">
@@ -87,117 +86,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+      */}
 
       {/* Footer */}
       <footer className="border-t bg-background/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted border">
-                  <Briefcase className="h-4 w-4" />
-                </div>
-                <span className="font-bold">mojPoslić</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {t('footer.description')}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-medium">{t('footer.forWorkers.title')}</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.forWorkers.findJobs')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.forWorkers.dailyWork')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.forWorkers.hourlyJobs')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-medium">{t('footer.forClients.title')}</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.forClients.postJobs')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.forClients.findWorkers')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.forClients.free')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-medium">{t('footer.company.title')}</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.company.about')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.company.contact')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {t('footer.company.privacy')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <Separator className="my-8" />
-
-          <div className="text-center text-sm text-default-600">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center text-sm text-muted-foreground">
             <p>
               {t('footer.copyright', { year: new Date().getFullYear() })}
             </p>

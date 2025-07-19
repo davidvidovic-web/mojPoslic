@@ -12,7 +12,7 @@ const LazyNotificationCenter = lazy(() =>
 function NotificationSkeleton() {
   return (
     <Button variant="ghost" size="sm" className="relative h-9 w-9 rounded-full" disabled>
-      <Bell className="h-5 w-5" />
+      <Bell className="h-7 w-7" />
     </Button>
   );
 }

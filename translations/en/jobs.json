@@ -92,10 +92,13 @@
       "category": "Category",
       "description": "Description",
       "requirements": "Requirements",
+      "salary": "Salary",
+      "paymentType": "Payment Type",
       "salaryType": "Salary Type",
       "salaryMin": "Minimum Salary",
       "salaryMax": "Maximum Salary",
       "location": "Location",
+      "transportation": "Transportation",
       "contactName": "Contact Name",
       "contactEmail": "Contact Email",
       "contactPhone": "Contact Phone"
@@ -138,6 +141,7 @@
     "payment": "Payment",
     "salary": "Salary",
     "transportation": "Transportation",
+    "transportationNotProvided": "Transportation not provided",
     "address": "Address"
   },
   "content": {
@@ -171,5 +175,121 @@
   "hourly": "/hour",
   "daily": "/day",
   "weekly": "/week",
-  "monthly": "/month"
+  "monthly": "/month",
+  "postForm": {
+    "title": "Post a Job",
+    "submit": "Post Job",
+    "posting": "Posting...",
+    "basicInformation": {
+      "title": "Basic Information",
+      "jobTitle": "Job Title",
+      "jobTitlePlaceholder": "e.g., Web Developer, Graphic Designer",
+      "city": "City",
+      "selectCity": "Select a city",
+      "category": "Category",
+      "selectCategory": "Select a category",
+      "subcategory": "Subcategory", 
+      "selectSubcategory": "Select a subcategory"
+    },
+    "jobDetails": {
+      "title": "Job Details",
+      "description": "Job Description",
+      "descriptionPlaceholder": "Describe what you need done, including specific requirements and expectations...",
+      "requirements": "Requirements",
+      "requirementsPlaceholder": "List any specific skills, experience, or qualifications needed...",
+      "benefits": "Benefits",
+      "benefitsPlaceholder": "Mention any perks, benefits, or what makes this opportunity attractive...",
+      "jobType": "Job Type",
+      "startDate": "Start Date",
+      "includeStartTime": "Include start time",
+      "jobAddress": "Job Address",
+      "addressPlaceholder": "Enter the specific address where work will be performed"
+    },
+    "salary": {
+      "title": "Salary & Payment",
+      "amount": "Salary Amount",
+      "salaryPlaceholder": "Enter amount",
+      "salaryType": "Payment Type",
+      "type": "Payment Type",
+      "selectSalaryType": "Select payment type",
+      "fixed": "Fixed Price",
+      "hourly": "Hourly Rate",
+      "daily": "Daily Rate",
+      "weekly": "Weekly Rate", 
+      "monthly": "Monthly Salary",
+      "range": "Salary Range",
+      "minSalary": "Minimum",
+      "maxSalary": "Maximum",
+      "enterAmount": "Enter amount",
+      "minPlaceholder": "Minimum amount",
+      "maxPlaceholder": "Maximum amount",
+      "hourlyPlaceholder": "Hourly rate",
+      "dailyPlaceholder": "Daily rate",
+      "monthlyPlaceholder": "Monthly salary",
+      "enterMaxAmount": "Enter max amount",
+      "salaryTextExample": "e.g., 2000-3000 BAM or negotiable",
+      "types": {
+        "fixed": "Fixed Price",
+        "hourly": "Hourly Rate", 
+        "daily": "Daily Rate",
+        "weekly": "Weekly Rate",
+        "monthly": "Monthly Salary"
+      }
+    },
+    "contact": {
+      "title": "Contact Information",
+      "contactEmail": "Contact Email",
+      "contactEmailPlaceholder": "your@email.com",
+      "website": "Website (Optional)",
+      "websitePlaceholder": "https://yourwebsite.com",
+      "applicationUrl": "Application URL (Optional)",
+      "applicationUrlPlaceholder": "https://apply.yourcompany.com"
+    },
+    "errors": {
+      "mustBeLoggedIn": "You must be logged in to post a job",
+      "fillRequiredFields": "Please fill in all required fields",
+      "selectCategorySubcategory": "Please select both category and subcategory",
+      "contactEmailRequired": "Contact email is required",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidUrl": "Please enter a valid URL",
+      "titleTooShort": "Job title must be at least 5 characters",
+      "titleTooLong": "Job title must be less than 100 characters",
+      "descriptionTooShort": "Job description must be at least 50 characters",
+      "descriptionTooLong": "Job description must be less than 5000 characters"
+    },
+    "success": {
+      "jobPosted": "Job posted successfully!",
+      "jobUpdated": "Job updated successfully!",
+      "redirecting": "Redirecting to your job..."
+    }
+  },
+  "sections": {
+    "compensationTransportation": "Compensation & Transportation"
+  },
+  "labels": {
+    "salary": "Salary"
+  },
+  "review": {
+    "title": "Review Your Job Posting",
+    "description": "Review all the details below before submitting your job posting",
+    "starts": "Starts",
+    "duration": "Duration",
+    "at": "at",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "jobDescription": "Job Description", 
+      "locationSchedule": "Location & Schedule",
+      "contactInformation": "Contact Information"
+    },
+    "featureYourJob": "Feature Your Job",
+    "makeJobFeatured": "Make this job featured",
+    "featuredJobsAppear": "Featured jobs appear at the top of search results and get more visibility",
+    "willCostConnections": "This will cost {connections} connections",
+    "willBeFeatured": "This job will be featured for 7 days",
+    "readyToPost": "Ready to Post",
+    "jobLooksGreat": "Your job posting looks great! Click submit to publish it and start receiving applications.",
+    "submitJobPosting": "Submit Job Posting",
+    "updateJobPosting": "Update Job Posting",
+    "submitting": "Submitting..."
+  }
 }

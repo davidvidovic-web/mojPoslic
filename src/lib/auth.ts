@@ -13,6 +13,7 @@ declare module "next-auth" {
       email?: string | null
       name?: string | null
       image?: string | null
+      phone?: string | null
       role?: string
       profileSetupCompleted?: boolean
     }
@@ -20,6 +21,7 @@ declare module "next-auth" {
   
   interface User {
     role: string
+    phone?: string | null
     profileSetupCompleted?: boolean
   }
 }
@@ -28,6 +30,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id: string
     role: string
+    phone?: string | null
     profileSetupCompleted?: boolean
   }
 }
@@ -124,6 +127,7 @@ const config: NextAuthConfig = {
       if (user) {
         token.role = user.role
         token.id = user.id!
+        token.phone = user.phone
         token.profileSetupCompleted = user.profileSetupCompleted
       }
       return token
@@ -132,6 +136,7 @@ const config: NextAuthConfig = {
       if (session.user && token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.phone = token.phone as string | null
         session.user.profileSetupCompleted = token.profileSetupCompleted as boolean
       }
       return session

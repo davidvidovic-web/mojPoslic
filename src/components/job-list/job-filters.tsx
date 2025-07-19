@@ -125,6 +125,7 @@ export function JobFilters({
                 showSubcategories={true}
                 subcategoryValue={subcategoryFilter}
                 onSubcategoryChange={setSubcategoryFilter}
+                stackOnMobile={true}
               />
               
               <Select value={typeFilter} onValueChange={setTypeFilter}>
