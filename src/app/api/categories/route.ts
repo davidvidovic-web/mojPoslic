@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 const CATEGORIES_CACHE_FILE = join(process.cwd(), 'public', 'cache', 'categories.json')
 
@@ -20,6 +22,15 @@ interface FlatCategory {
   is_popular: boolean
 }
 
+interface DatabaseCategory {
+  id: string
+  key: string
+  nameBS: string
+  nameEN: string
+  parentId: string | null
+  isPopular: boolean
+}
+
 export async function GET() {
   try {
     // First, try to serve from cache file
@@ -29,11 +40,11 @@ export async function GET() {
         
         // Transform flat array to hierarchical structure for frontend
         const flatCategories: FlatCategory[] = cachedData.categories || []
-        const parentCategories = flatCategories.filter((cat) => !cat.parent_id)
-        const childCategories = flatCategories.filter((cat) => cat.parent_id)
+        const parentCategories = flatCategories.filter((cat: FlatCategory) => !cat.parent_id)
+        const childCategories = flatCategories.filter((cat: FlatCategory) => cat.parent_id)
         
         // Build hierarchical structure with correct property names
-        const hierarchicalCategories = parentCategories.map((parent) => ({
+        const hierarchicalCategories = parentCategories.map((parent: FlatCategory) => ({
           id: parent.id,
           nameEN: parent.name_en,
           nameBS: parent.name_bs,
@@ -42,8 +53,8 @@ export async function GET() {
           is_popular: parent.is_popular,  // Add for component compatibility
           key: parent.key,
           children: childCategories
-            .filter((child) => child.parent_id === parent.id)
-            .map((child) => ({
+            .filter((child: FlatCategory) => child.parent_id === parent.id)
+            .map((child: FlatCategory) => ({
               id: child.id,
               nameEN: child.name_en,
               nameBS: child.name_bs,
@@ -56,7 +67,7 @@ export async function GET() {
         
         // Also return flat categories for skills component
         const allCategories = [
-          ...parentCategories.map(cat => ({
+          ...parentCategories.map((cat: FlatCategory) => ({
             id: cat.id,
             key: cat.key,
             name_en: cat.name_en,
@@ -64,7 +75,7 @@ export async function GET() {
             is_popular: cat.is_popular,
             parent_id: cat.parent_id
           })),
-          ...childCategories.map(cat => ({
+          ...childCategories.map((cat: FlatCategory) => ({
             id: cat.id,
             key: cat.key,
             name_en: cat.name_en,
@@ -84,10 +95,6 @@ export async function GET() {
     }
 
     // Fallback to database if cache doesn't exist or fails
-    if (!prisma) {
-      throw new Error('Database connection not available')
-    }
-
     // Fetch all categories
     const categories = await prisma.category.findMany({
       where: {
@@ -101,11 +108,11 @@ export async function GET() {
     })
 
     // Separate parent and child categories
-    const parentCategories = categories.filter(cat => !cat.parentId)
-    const childCategories = categories.filter(cat => cat.parentId)
+    const parentCategories = categories.filter((cat: DatabaseCategory) => !cat.parentId)
+    const childCategories = categories.filter((cat: DatabaseCategory) => cat.parentId)
     
     // Build hierarchical structure with correct property names
-    const hierarchicalCategories = parentCategories.map((parent) => ({
+    const hierarchicalCategories = parentCategories.map((parent: DatabaseCategory) => ({
       id: parent.id,
       nameEN: parent.nameEN,
       nameBS: parent.nameBS,
@@ -114,8 +121,8 @@ export async function GET() {
       is_popular: parent.isPopular,  // Add for component compatibility
       key: parent.key,
       children: childCategories
-        .filter(child => child.parentId === parent.id)
-        .map(child => ({
+        .filter((child: DatabaseCategory) => child.parentId === parent.id)
+        .map((child: DatabaseCategory) => ({
           id: child.id,
           nameEN: child.nameEN,
           nameBS: child.nameBS,
@@ -128,7 +135,7 @@ export async function GET() {
 
     // Also return flat categories for skills component
     const allCategories = [
-      ...parentCategories.map(cat => ({
+      ...parentCategories.map((cat: DatabaseCategory) => ({
         id: cat.id,
         key: cat.key,
         name_en: cat.nameEN,
@@ -136,7 +143,7 @@ export async function GET() {
         is_popular: cat.isPopular,
         parent_id: cat.parentId
       })),
-      ...childCategories.map(cat => ({
+      ...childCategories.map((cat: DatabaseCategory) => ({
         id: cat.id,
         key: cat.key,
         name_en: cat.nameEN,

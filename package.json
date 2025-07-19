@@ -8,6 +8,10 @@
     "postinstall": "prisma generate --no-engine",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "check": "npm run lint && npm run type-check",
+    "check:fix": "npm run lint:fix && npm run type-check",
     "db:push": "prisma db push",
     "db:generate": "prisma generate --no-engine"
   },
@@ -72,6 +76,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@prisma/engines": "^6.12.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/google.maps": "^3.58.1",
     "@types/lodash": "^4.17.19",

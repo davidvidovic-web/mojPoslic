@@ -30,26 +30,26 @@ interface RoleOption {
 const roleOptions: RoleOption[] = [
   {
     id: 'tasker',
-    titleKey: 'roleSelection.tasker.title',
-    descriptionKey: 'roleSelection.tasker.description',
+    titleKey: 'tasker.title',
+    descriptionKey: 'tasker.description',
     icon: <User className="h-8 w-8" />,
-    featuresKey: 'roleSelection.tasker.features',
-    badgeKey: 'roleSelection.tasker.badge'
+    featuresKey: 'tasker.features',
+    badgeKey: 'tasker.badge'
   },
   {
     id: 'client',
-    titleKey: 'roleSelection.client.title',
-    descriptionKey: 'roleSelection.client.description',
+    titleKey: 'client.title',
+    descriptionKey: 'client.description',
     icon: <Briefcase className="h-8 w-8" />,
-    featuresKey: 'roleSelection.client.features'
+    featuresKey: 'client.features'
   },
   {
     id: 'company',
-    titleKey: 'roleSelection.company.title',
-    descriptionKey: 'roleSelection.company.description',
+    titleKey: 'company.title',
+    descriptionKey: 'company.description',
     icon: <Building2 className="h-8 w-8" />,
-    featuresKey: 'roleSelection.company.features',
-    badgeKey: 'roleSelection.company.badge'
+    featuresKey: 'company.features',
+    badgeKey: 'company.badge'
   }
 ]
 
@@ -108,7 +108,7 @@ export default function RoleSelectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -184,7 +184,7 @@ export default function RoleSelectionPage() {
 
                 <CardContent>
                   <ul className="space-y-2">
-                    {(t.raw(role.featuresKey) as string[]).map((feature, index) => (
+                    {(t.raw(`${role.id}.features`) as string[]).map((feature, index) => (
                       <li key={index} className="flex items-center text-sm text-foreground">
                         <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
                         {feature}

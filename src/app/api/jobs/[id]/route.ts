@@ -77,16 +77,16 @@ export async function GET(
       city: city ? {
         id: city.id,
         key: city.key,
-        name_bs: city.nameBS,
-        name_en: city.nameEN,
-        name: city.nameEN || city.nameBS // Convenience field
+        name_bs: city.name_bs,
+        name_en: city.name_en,
+        name: city.name_en || city.name_bs // Convenience field
       } : null,
       category: category ? {
         id: category.id,
         key: category.key,
-        name_bs: category.nameBS,
-        name_en: category.nameEN,
-        name: category.nameEN || category.nameBS // Convenience field
+        name_bs: category.name_bs,
+        name_en: category.name_en,
+        name: category.name_en || category.name_bs // Convenience field
       } : null,
       postedBy
     }
@@ -268,21 +268,41 @@ export async function PUT(
         benefits: benefits || null,
         tags: tags || null,
         updatedAt: new Date()
-      },
-      include: {
-        city: true,
-        category: true,
-        postedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
       }
     })
 
-    return NextResponse.json(updatedJob)
+    // Fetch related data using static helpers
+    const [city, category, postedBy] = await Promise.all([
+      getCityById(updatedJob.cityId),
+      getCategoryById(updatedJob.categoryId),
+      getUserBasicInfo(updatedJob.postedById)
+    ])
+
+    // Transform the response to include city and category data
+    const transformedJob = {
+      ...updatedJob,
+      city: city ? {
+        id: city.id,
+        key: city.key,
+        name_bs: city.name_bs,
+        name_en: city.name_en,
+        name: city.name_en || city.name_bs
+      } : null,
+      category: category ? {
+        id: category.id,
+        key: category.key,
+        name_bs: category.name_bs,
+        name_en: category.name_en,
+        name: category.name_en || category.name_bs
+      } : null,
+      postedBy: {
+        id: postedBy?.id,
+        name: postedBy?.name,
+        email: postedBy?.email
+      }
+    }
+
+    return NextResponse.json(transformedJob)
   } catch (error) {
     console.error('Error updating job:', error)
     return NextResponse.json(

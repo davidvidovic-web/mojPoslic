@@ -1,8 +1,11 @@
 {
   "title": "Profile",
   "subtitle": "Manage your profile and settings",
+  "autoGenerateUsername": "Auto-generate username",
   "setup": {
     "loading": "Loading...",
+    "saving": "Saving...",
+    "completeSetup": "Complete Setup",
     "titles": {
       "client": "Complete your client profile",
       "company": "Complete your company profile",
@@ -10,10 +13,18 @@
       "admin": "Complete your admin profile",
       "default": "Complete your profile"
     },
+    "descriptions": {
+      "client": "Complete your profile setup to start using the platform",
+      "company": "Add your company information to build trust with clients",
+      "tasker": "Set up your profile to start receiving job requests",
+      "admin": "Complete your admin profile setup",
+      "default": "Complete your profile setup to continue"
+    },
     "sections": {
       "basicInformation": "Basic Information",
       "location": "Location",
       "professionalSkills": "Professional Skills",
+      "experienceLevel": "Experience Level",
       "experienceLevels": "Experience Levels",
       "portfolio": "Portfolio",
       "companyInformation": "Company Information"
@@ -53,9 +64,7 @@
     "errors": {
       "usernameAlreadyExists": "Username already exists. Please choose another one.",
       "profileSetupCompleted": "Profile setup completed!",
-      "failedToUpdateProfile": "Failed to update profile. Please try again.",
-      "saving": "Saving...",
-      "completeSetup": "Complete Setup"
+      "failedToUpdateProfile": "Failed to update profile. Please try again."
     }
   },
   "settings": {

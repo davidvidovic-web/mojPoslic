@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+type Category = {
+  id: string
+  key: string
+  nameEN: string
+  nameBS: string
+  isPopular: boolean
+  sortOrder: number
+  isActive: boolean
+  createdAt: Date
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +24,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
+
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -21,7 +42,7 @@ export async function GET() {
     }
 
     // Fetch all categories
-    const categories = await prisma.category.findMany({
+    const categories: Category[] = await client.category.findMany({
       orderBy: [
         { sortOrder: 'asc' },
         { nameBS: 'asc' }
@@ -29,8 +50,7 @@ export async function GET() {
     })
 
     // Transform to match expected format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedCategories = categories.map((category: any) => ({
+    const formattedCategories = categories.map((category: Category) => ({
       id: category.id,
       key: category.key,
       nameEN: category.nameEN,

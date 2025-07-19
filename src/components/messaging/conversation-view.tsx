@@ -50,6 +50,7 @@ interface ConversationViewProps {
     messages?: boolean;
   };
   hasMoreMessages?: boolean;
+  locale?: 'bs' | 'en';
   isMobile?: boolean;
   className?: string;
 }
@@ -235,6 +236,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   typingUsers = [],
   loading = {},
   hasMoreMessages = false,
+  locale = 'bs',
   isMobile = false,
   className,
 }) => {
@@ -312,6 +314,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
             selectedConversationId={selectedConversation?.id}
             onSelectConversation={handleSelectConversation}
             loading={loading.conversations}
+            locale={locale}
             className="flex-1"
           />
         </div>
@@ -370,6 +373,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           selectedConversationId={selectedConversation?.id}
           onSelectConversation={onSelectConversation}
           loading={loading.conversations}
+          locale={locale}
           className="flex-1"
         />
       </div>

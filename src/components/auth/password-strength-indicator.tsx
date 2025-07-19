@@ -17,7 +17,6 @@ interface PasswordStrengthIndicatorProps {
   userInfo?: {
     name?: string
     email?: string
-    company?: string
   }
   showRequirements?: boolean
   showStrengthBar?: boolean
@@ -34,8 +33,8 @@ export function PasswordStrengthIndicator({
   const t = useTranslations('auth')
   const strength = useMemo(() => {
     if (!password) return null
-    return validatePassword(password, userInfo)
-  }, [password, userInfo])
+    return validatePassword(password, userInfo, t)
+  }, [password, userInfo, t])
 
   if (!password || !strength) {
     return null
@@ -79,7 +78,7 @@ export function PasswordStrengthIndicator({
           <div className="flex justify-between items-center text-sm">
             <span className="font-medium">{t('passwordStrength')}</span>
             <span className={cn('font-medium', getPasswordStrengthColor(strength.level))}>
-              {getPasswordStrengthText(strength.level)} ({strength.score}%)
+              {getPasswordStrengthText(strength.level, t)} ({strength.score}%)
             </span>
           </div>
           
@@ -114,27 +113,9 @@ export function PasswordStrengthIndicator({
                 {getRequirementIcon(requirement)}
                 <span className={getRequirementTextColor(requirement)}>
                   {requirement.label}
-                  {requirement.severity === 'warning' && (
-                    <span className="ml-1 text-xs text-muted-foreground">{t('optional')}</span>
-                  )}
                 </span>
               </div>
             ))}
-          </div>
-          
-          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-blue-700 dark:text-blue-300">
-                <p className="font-medium mb-1">Security Tips:</p>
-                <ul className="space-y-1">
-                  <li>• Use a unique password you haven&apos;t used elsewhere</li>
-                  <li>• Consider using a passphrase with multiple words</li>
-                  <li>• Avoid personal information like names or birthdays</li>
-                  <li>• Enable two-factor authentication when available</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -143,13 +124,16 @@ export function PasswordStrengthIndicator({
 }
 
 // Hook for easy password validation
-export function usePasswordValidation(password: string, userInfo?: {
-  name?: string
-  email?: string
-  company?: string
-}) {
+export function usePasswordValidation(
+  password: string, 
+  userInfo?: {
+    name?: string
+    email?: string
+  },
+  t?: (key: string) => string
+) {
   return useMemo(() => {
     if (!password) return null
-    return validatePassword(password, userInfo)
-  }, [password, userInfo])
+    return validatePassword(password, userInfo, t)
+  }, [password, userInfo, t])
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function GET() {
   try {
@@ -11,7 +13,7 @@ export async function GET() {
     }
 
     // Get current user
-    const user = await prisma?.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: session.user.email }
     })
 
@@ -20,7 +22,7 @@ export async function GET() {
     }
 
     // Get all applications for jobs posted by this user
-    const applications = await prisma?.application.findMany({
+    const applications = await prisma.application.findMany({
       where: {
         job: {
           postedById: user.id

@@ -67,7 +67,17 @@ function SetPasswordForm() {
       showToast.success(t('passwordSetSuccessfully'))
       router.push('/auth/signin?message=password-set')
     } catch (error) {
-      showToast.error(error instanceof Error ? error.message : 'Failed to set password')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to set password'
+      
+      // Map common error messages to translation keys
+      const errorMap: Record<string, string> = {
+        'Failed to set password': 'failedToSetPassword',
+        'Internal server error': 'internalServerError',
+        'Invalid or expired token': 'invalidOrMissingToken'
+      }
+      
+      const translationKey = errorMap[errorMessage] || 'failedToSetPassword'
+      showToast.error(t(`errorMessages.${translationKey}`))
     } finally {
       setLoading(false)
     }
@@ -75,12 +85,12 @@ function SetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Invalid Link</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('invalidLinkTitle')}</h2>
             <p className="text-muted-foreground">
-              This password reset link is invalid or has expired.
+              {t('invalidLinkMessage')}
             </p>
           </CardContent>
         </Card>
@@ -89,7 +99,7 @@ function SetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
@@ -97,9 +107,9 @@ function SetPasswordForm() {
               <Lock className="h-5 w-5 text-primary" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold">Set Your Password</h2>
+          <h2 className="text-2xl font-bold">{t('setYourPasswordTitle')}</h2>
           <p className="text-muted-foreground">
-            Choose a secure password for your account
+            {t('setYourPasswordSubtitle')}
           </p>
         </CardHeader>
         

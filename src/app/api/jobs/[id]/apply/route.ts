@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 import { getConnectionCost } from '@/lib/connections'
 import { ApplicationStatus } from '@/types/application'
+import { getCityById, getCategoryById } from '@/lib/job-helpers'
 
 const prisma = new PrismaClient()
 
@@ -97,20 +98,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               title: true,
               company: true,
               type: true,
-              city: {
-                select: {
-                  id: true,
-                  nameEN: true,
-                  nameBS: true
-                }
-              },
-              category: {
-                select: {
-                  id: true,
-                  nameEN: true,
-                  nameBS: true
-                }
-              }
+              cityId: true,
+              categoryId: true
             }
           },
           user: {
@@ -155,9 +144,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return application
     })
 
+    // Add city and category data to the result
+    const city = getCityById(result.job.cityId)
+    const category = result.job.categoryId ? getCategoryById(result.job.categoryId) : null
+    
+    const enhancedResult = {
+      ...result,
+      job: {
+        ...result.job,
+        city: city ? {
+          id: city.id,
+          nameEN: city.name_en,
+          nameBS: city.name_bs
+        } : null,
+        category: category ? {
+          id: category.id,
+          nameEN: category.name_en,
+          nameBS: category.name_bs
+        } : null
+      }
+    }
+
     return NextResponse.json({ 
       success: true, 
-      application: result,
+      application: enhancedResult,
       connectionsSpent: connectionCost,
       remainingConnections: currentConnections - connectionCost,
       message: 'Application submitted successfully!'

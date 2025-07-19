@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+import { generateUniqueUsernameFromEmail } from '@/lib/username-validation'
 import { z } from 'zod'
+
+const prisma = new PrismaClient()
+
+// Type for pending registration from database
+type PendingRegistrationRecord = {
+  id: string
+  email: string
+  hashed_password: string
+  verification_code: string
+  expires: Date
+  created_at: Date
+}
 
 const verifyEmailSchema = z.object({
   code: z.string().length(6, 'Code must be exactly 6 digits'),
@@ -11,60 +24,53 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { code } = verifyEmailSchema.parse(body)
 
-    if (!prisma) {
-      return NextResponse.json(
-        { error: 'Database connection unavailable' },
-        { status: 500 }
-      )
-    }
+    // Find the pending registration
+    const pendingRegistrationResults = await prisma.$queryRaw`
+      SELECT * FROM pending_registrations 
+      WHERE verification_code = ${code} 
+      AND expires > ${new Date()}
+      LIMIT 1
+    ` as PendingRegistrationRecord[]
 
-    // Find the verification token
-    const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token: code }
-    })
+    const pendingRegistration = pendingRegistrationResults[0]
 
-    if (!verificationToken) {
+    if (!pendingRegistration) {
       return NextResponse.json(
-        { error: 'Invalid or expired verification token' },
+        { error: 'Invalid or expired verification code' },
         { status: 400 }
       )
     }
 
-    // Check if token has expired
-    if (verificationToken.expires < new Date()) {
-      // Try to delete expired token (ignore errors if table has constraints)
-      try {
-        await prisma.verificationToken.delete({
-          where: { token: code }
-        })        } catch {
-          // Could not delete expired verification token (this is OK)
-      }
+    // Check if user already exists (edge case)
+    const existingUser = await prisma.user.findUnique({
+      where: { email: pendingRegistration.email }
+    })
+
+    if (existingUser) {
+      // Clean up pending registration
+      await prisma.$queryRaw`
+        DELETE FROM pending_registrations WHERE id = ${pendingRegistration.id}
+      `
       
       return NextResponse.json(
-        { error: 'Verification token has expired. Please request a new one.' },
+        { error: 'User with this email already exists' },
         { status: 400 }
       )
     }
 
-    // Find the user and verify their email
-    const user = await prisma.user.findUnique({
-      where: { email: verificationToken.identifier }
-    })
+    // Generate unique username from email
+    const username = await generateUniqueUsernameFromEmail(pendingRegistration.email)
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    // Update user as verified (but don't mark profile as completed yet)
-    // Profile will be completed after role selection
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: { 
-        emailVerified: true,
-        // Don't set profileSetupCompleted here - will be set after role selection
+    // Create the actual user account now that email is verified
+    const user = await prisma.user.create({
+      data: {
+        name: '', // Let user enter their own name during profile setup
+        username,
+        email: pendingRegistration.email,
+        password: pendingRegistration.hashed_password,
+        role: 'client',
+        emailVerified: true, // Already verified
+        profileSetupCompleted: false,
       },
       select: {
         id: true,
@@ -76,19 +82,15 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    // Try to delete the verification token (ignore errors if table has constraints)
-    try {
-      await prisma.verificationToken.delete({
-        where: { token: code }
-      })      } catch {
-        // Could not delete verification token (this is OK)
-      // Continue - the token will expire naturally
-    }
+    // Clean up pending registration
+    await prisma.$queryRaw`
+      DELETE FROM pending_registrations WHERE id = ${pendingRegistration.id}
+    `
 
     return NextResponse.json({
       message: 'Email verified successfully!',
-      user: updatedUser,
-      shouldRedirectToRoleSelection: !updatedUser.role || !updatedUser.profileSetupCompleted
+      user: user,
+      shouldRedirectToRoleSelection: !user.role || !user.profileSetupCompleted
     })
 
   } catch (error) {

@@ -15,6 +15,7 @@ import { Eye, EyeOff, Lock, Shield } from 'lucide-react'
 export function ChangePasswordForm() {
   const { user } = useAuth()
   const t = useTranslations('auth.changePassword')
+  const tAuth = useTranslations('auth')
   const tErrors = useTranslations('errors.auth')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -30,7 +31,7 @@ export function ChangePasswordForm() {
   const passwordValidation = usePasswordValidation(newPassword, {
     name: user?.name || undefined,
     email: user?.email || undefined,
-  })
+  }, tAuth)
 
   const passwordsMatch = newPassword === confirmPassword && newPassword.length > 0
   const canSubmit = passwordValidation?.isValid && passwordsMatch && currentPassword.length > 0

@@ -97,7 +97,7 @@ export function ConnectionsWidget({ className }: ConnectionsWidgetProps) {
         <MonthlyRefreshInfo />
         
         {/* Purchase connections */}
-        <PurchaseConnectionsSection onPurchaseComplete={fetchConnectionData} />
+        <PurchaseConnectionsSection />
         
         {/* Recent activity preview */}
         {history.length > 0 && (

@@ -32,7 +32,18 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        showToast.error(t('invalidCredentials'))
+        // Handle specific verification email errors
+        if (result.error === 'EMAIL_NOT_VERIFIED_RESENT') {
+          showToast.success(t('verificationEmailResent'))
+          // Redirect to verification page with email
+          window.location.href = `/auth/verify-email?email=${encodeURIComponent(formData.email)}`
+        } else if (result.error === 'EMAIL_NOT_VERIFIED_FAILED_TO_RESEND') {
+          showToast.error(t('emailNotVerifiedFailedResend'))
+          // Still redirect to verification page so user can manually resend
+          window.location.href = `/auth/verify-email?email=${encodeURIComponent(formData.email)}`
+        } else {
+          showToast.error(t('invalidCredentials'))
+        }
       } else {
         showToast.success(t('signedInSuccessfully'))
         window.location.href = '/dashboard'
@@ -52,7 +63,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">{t('signInToMojPoslic')}</CardTitle>

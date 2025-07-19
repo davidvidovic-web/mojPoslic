@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { emailService } from '@/lib/email'
-import { generateUniqueUsernameFromEmail } from '@/lib/username-validation'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+
+const prisma = new PrismaClient()
+
+// Simple CUID generator function
+function generateCuid() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -29,70 +35,54 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if there's already a pending registration
+    const existingPending = await prisma.$queryRaw`
+      SELECT * FROM pending_registrations WHERE email = ${email} LIMIT 1
+    ` as Array<{ id: string; email: string; hashed_password: string; verification_code: string; expires: Date; created_at: Date }>
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Generate unique username from email
-    const username = await generateUniqueUsernameFromEmail(email)
-
     // Generate 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
-    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes (shorter for codes)
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
 
-    // Create user with email verification
-    const user = await prisma.user.create({
-      data: {
-        name: '', // Let user enter their own name during profile setup
-        username,
-        email,
-        password: hashedPassword,
-        role: 'client',
-        profileSetupCompleted: false,
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-      }
-    })
+    if (existingPending && existingPending.length > 0) {
+      // Update existing pending registration
+      await prisma.$queryRaw`
+        UPDATE pending_registrations 
+        SET hashed_password = ${hashedPassword}, 
+            verification_code = ${verificationCode},
+            expires = ${verificationExpires}
+        WHERE email = ${email}
+      `
+    } else {
+      // Create new pending registration
+      await prisma.$queryRaw`
+        INSERT INTO pending_registrations (id, email, hashed_password, verification_code, expires, created_at)
+        VALUES (${generateCuid()}, ${email}, ${hashedPassword}, ${verificationCode}, ${verificationExpires}, ${new Date()})
+      `
+    }
 
-    // Create verification token
-    await prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token: verificationCode,
-        expires: verificationExpires,
-      }
-    })
-
-    // Send verification email
-    const emailResult = await emailService.sendVerificationEmail(email, verificationCode)
+    // Send verification email with localization
+    const emailResult = await emailService.sendVerificationEmail(
+      email, 
+      verificationCode, 
+      undefined, // name will be set during profile setup
+      'bs' // default to Bosnian
+    )
     
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error)
-      // Continue with registration but inform user of email issue
       return NextResponse.json({
-        message: 'Account created successfully, but there was an issue sending the verification email. Please try resending it.',
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          role: user.role,
-        },
+        error: 'Account created successfully, but there was an issue sending the verification email. Please try resending it.',
         redirectTo: `/auth/verify-email?email=${encodeURIComponent(email)}`,
         emailError: true
-      })
+      }, { status: 500 })
     }
 
     return NextResponse.json({
-      message: 'Account created successfully. Please check your email for your verification code.',
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      },
+      message: 'Verification code sent. Please check your email.',
       redirectTo: `/auth/verify-email?email=${encodeURIComponent(email)}`
     })
 

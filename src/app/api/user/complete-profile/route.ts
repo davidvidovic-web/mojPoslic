@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export async function PATCH() {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     
@@ -23,5 +25,7 @@ export async function PATCH() {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

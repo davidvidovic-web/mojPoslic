@@ -22,7 +22,6 @@ export function Providers({ children }: ProvidersProps) {
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          suppressHydrationWarning
         >
           <AuthProvider>
             <MessagingProvider>

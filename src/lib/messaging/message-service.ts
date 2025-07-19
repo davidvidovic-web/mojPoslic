@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Message, SendMessageData, MessageStatus } from '@/types/messaging'
+import type { Message, SendMessageData, MessageStatus } from '../../types/messaging'
 
 // Internal type for database response
 type MessageWithSender = {
@@ -67,7 +67,8 @@ export class MessageService {
           }
 
           // Get message status
-          const status = await this.getMessageStatus(msg.id)
+          const statusArray = await this.getMessageStatus(msg.id)
+          const status = this.extractMessageStatus(statusArray)
 
           return {
             id: msg.id,
@@ -291,7 +292,8 @@ export class MessageService {
     if (error) throw error
 
     const msg = data as MessageWithSender
-    const status = await this.getMessageStatus(messageId)
+    const statusArray = await this.getMessageStatus(messageId)
+    const status = this.extractMessageStatus(statusArray)
 
     return {
       id: msg.id,
@@ -314,6 +316,26 @@ export class MessageService {
       },
       status
     }
+  }
+
+  // Helper method to extract the most relevant status from MessageStatus array
+  private static extractMessageStatus(statusArray: MessageStatus[]): 'sending' | 'sent' | 'delivered' | 'read' | 'failed' | undefined {
+    if (!statusArray || statusArray.length === 0) {
+      return 'sent' // Default status
+    }
+
+    // If there are read statuses, use 'read'
+    if (statusArray.some(s => s.status === 'read')) {
+      return 'read'
+    }
+
+    // If there are delivered statuses, use 'delivered'
+    if (statusArray.some(s => s.status === 'delivered')) {
+      return 'delivered'
+    }
+
+    // Otherwise use 'sent'
+    return 'sent'
   }
 
   private static async getMessageStatus(messageId: string): Promise<MessageStatus[]> {

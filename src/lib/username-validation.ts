@@ -102,14 +102,29 @@ export function generateUsernameSuggestions(name: string, email: string): string
  */
 export async function checkUsernameAvailability(username: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/auth/check-username', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
-    })
-    
-    const data = await response.json()
-    return data.available
+    // Check if we're in a server environment (Node.js)
+    if (typeof window === 'undefined') {
+      // Server-side: use Prisma directly
+      const { PrismaClient } = await import('@prisma/client')
+      const prisma = new PrismaClient()
+      
+      const existingUser = await prisma.user.findUnique({
+        where: { username }
+      })
+      
+      await prisma.$disconnect()
+      return !existingUser
+    } else {
+      // Client-side: use fetch
+      const response = await fetch('/api/auth/check-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      })
+      
+      const data = await response.json()
+      return data.available
+    }
   } catch (error) {
     console.error('Error checking username availability:', error)
     return false

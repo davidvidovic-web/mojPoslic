@@ -1,0 +1,46 @@
+{
+  "title": "Choose Your Role",
+  "subtitle": "Select how you'd like to use MojPoslic. You can change this later in your profile settings.",
+  "selectRole": "Please select a role to continue",
+  "updateRoleFailed": "Failed to update role. Please try again.",
+  "welcomeMessage": "Welcome! Your role has been set to {role}.",
+  "tasker": {
+    "title": "Tasker",
+    "description": "Find and apply for jobs that match your skills",
+    "badge": "Most Popular",
+    "features": [
+      "Browse available jobs",
+      "Apply with one click",
+      "Track application status",
+      "Build your professional profile",
+      "Receive job recommendations"
+    ]
+  },
+  "client": {
+    "title": "Client",
+    "description": "Post jobs and hire talented individuals",
+    "features": [
+      "Post unlimited jobs",
+      "Review applications",
+      "Message candidates",
+      "Manage your projects",
+      "Leave reviews and ratings"
+    ]
+  },
+  "company": {
+    "title": "Company",
+    "description": "Manage your workforce and large-scale hiring",
+    "badge": "Coming Soon",
+    "features": [
+      "Team management",
+      "Bulk job posting",
+      "Advanced analytics",
+      "Enterprise features",
+      "Priority support"
+    ]
+  },
+  "continue": "Continue as {role}",
+  "continueAsUser": "Continue",
+  "settingUpAccount": "Setting up your account...",
+  "canChangeRole": "You can change your role anytime in your profile settings"
+}

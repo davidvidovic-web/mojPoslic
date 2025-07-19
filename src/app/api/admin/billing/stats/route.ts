@@ -2,6 +2,25 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+type TransactionWithUser = {
+  id: string
+  stripePaymentIntentId: string
+  userId: string
+  amount: number
+  currency: string
+  status: string
+  description: string | null
+  createdAt: Date
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +29,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
+
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -25,7 +51,7 @@ export async function GET() {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
     // Fetch all transactions for calculations
-    const allTransactions = await prisma.stripeTransaction.findMany({
+    const allTransactions: TransactionWithUser[] = await client.stripeTransaction.findMany({
       include: {
         user: {
           select: {
@@ -38,19 +64,19 @@ export async function GET() {
     })
 
     // Calculate total revenue (successful transactions only)
-    const successfulTransactions = allTransactions.filter(t => t.status === 'succeeded')
-    const totalRevenue = successfulTransactions.reduce((sum, t) => sum + t.amount, 0)
+    const successfulTransactions = allTransactions.filter((t: TransactionWithUser) => t.status === 'succeeded')
+    const totalRevenue = successfulTransactions.reduce((sum: number, t: TransactionWithUser) => sum + t.amount, 0)
 
     // Calculate monthly revenue
-    const monthlyTransactions = successfulTransactions.filter(t => 
+    const monthlyTransactions = successfulTransactions.filter((t: TransactionWithUser) => 
       new Date(t.createdAt) >= firstDayOfMonth
     )
-    const monthlyRevenue = monthlyTransactions.reduce((sum, t) => sum + t.amount, 0)
+    const monthlyRevenue = monthlyTransactions.reduce((sum: number, t: TransactionWithUser) => sum + t.amount, 0)
 
     // Calculate transaction stats
     const totalTransactions = allTransactions.length
     const successfulCount = successfulTransactions.length
-    const failedTransactions = allTransactions.filter(t => 
+    const failedTransactions = allTransactions.filter((t: TransactionWithUser) => 
       t.status === 'failed' || t.status === 'canceled'
     ).length
 
@@ -61,7 +87,7 @@ export async function GET() {
 
     // Calculate top paying users
     const userSpending = new Map()
-    successfulTransactions.forEach(transaction => {
+    successfulTransactions.forEach((transaction: TransactionWithUser) => {
       const userId = transaction.userId
       if (!userSpending.has(userId)) {
         userSpending.set(userId, {

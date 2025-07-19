@@ -74,7 +74,7 @@ async function shouldUpdateCache(): Promise<boolean> {
         orderBy: [
           { isSpecial: 'desc' },
           { sortOrder: 'asc' },
-          { nameEn: 'asc' }
+          { nameEN: 'asc' }
         ]
       }),
       prisma.category.findMany({
@@ -82,7 +82,7 @@ async function shouldUpdateCache(): Promise<boolean> {
         orderBy: [
           { isPopular: 'desc' },
           { sortOrder: 'asc' },
-          { nameEn: 'asc' }
+          { nameEN: 'asc' }
         ]
       })
     ])

@@ -203,7 +203,7 @@ export default function JobDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Job Header */}
-            <JobHeader job={job} formatDate={formatDate} formatSalary={formatSalary} hasApplied={hasApplied} />
+            <JobHeader job={job} formatDate={formatDate} formatSalary={formatSalary} />
 
             {/* Job Content */}
             <JobContent job={job} />

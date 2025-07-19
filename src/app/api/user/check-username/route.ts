@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const { searchParams } = new URL(request.url)
     const username = searchParams.get('username')
 
     if (!username) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 })
-    }
-
-    if (!prisma) {
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 })
     }
 
     // Check if username exists (case-insensitive)
@@ -32,5 +30,7 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to check username' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

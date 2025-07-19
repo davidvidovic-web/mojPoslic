@@ -50,9 +50,6 @@ export function JobLocation({ job, showFullLocation = false }: JobLocationProps)
               <GoogleJobLocationMap
                 latitude={job.job_latitude}
                 longitude={job.job_longitude}
-                address={job.job_address}
-                jobTitle={job.title}
-                company={job.company}
               />
             )}
           </>

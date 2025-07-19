@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-
 import { PrismaClient } from '@prisma/client'
+import { getCityById } from '@/lib/job-helpers'
 
 const prismaForJobs = new PrismaClient()
 
@@ -19,8 +19,6 @@ export async function GET() {
         postedById: session.user.id
       },
       include: {
-        city: true,
-        category: true,
         applications: {
           select: {
             id: true,
@@ -51,19 +49,21 @@ export async function GET() {
     }
 
     // Transform the data to match the expected format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedJobs = jobs.map((job: any) => ({
-      id: job.id,
-      title: job.title,
-      description: job.description,
-      type: job.type,
-      salary: job.salary,
-      location: job.city.nameEN,
-      createdAt: job.createdAt.toISOString(),
-      status: job.status,
-      applicationsCount: job.applications.length,
-      viewsCount: viewCounts[job.id] || 0
-    }))
+    const formattedJobs = jobs.map((job) => {
+      const city = getCityById(job.cityId)
+      return {
+        id: job.id,
+        title: job.title,
+        description: job.description,
+        type: job.type,
+        salary: job.salary,
+        location: city?.name_en || 'Unknown',
+        createdAt: job.createdAt.toISOString(),
+        status: job.status,
+        applicationsCount: job.applications.length,
+        viewsCount: viewCounts[job.id] || 0
+      }
+    })
 
     return NextResponse.json(formattedJobs)
   } catch (error) {

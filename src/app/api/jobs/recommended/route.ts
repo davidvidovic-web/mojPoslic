@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { enrichJobsWithStaticData } from '@/lib/job-helpers'
 
 export async function GET() {
@@ -10,63 +10,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!prisma) {
-      // Fallback for edge runtime or when Prisma is not available - return mock recommended jobs
-      const mockRecommendedJobs = [
-        {
-          id: 'rec-job-1',
-          title: 'React Developer',
-          description: 'Looking for an experienced React developer for a modern web application.',
-          company: 'Tech Innovations',
-          salaryMin: 1000,
-          salaryMax: 1500,
-          salaryType: 'monthly',
-          type: 'full_time',
-          duration: '3-6 months',
-          posted_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          posted_by: 'company-user-1',
-          city: { id: '1', name: 'Sarajevo' },
-          category: { id: '1', name: 'Web Development' }
-        },
-        {
-          id: 'rec-job-2',
-          title: 'Graphic Designer',
-          description: 'Create stunning visual designs for marketing materials and web content.',
-          company: 'Creative Studio',
-          salaryMin: 600,
-          salaryMax: 900,
-          salaryType: 'monthly',
-          type: 'part_time',
-          duration: '1-2 months',
-          posted_at: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-          posted_by: 'company-user-2',
-          city: { id: '2', name: 'Mostar' },
-          category: { id: '2', name: 'Design' }
-        },
-        {
-          id: 'rec-job-3',
-          title: 'Content Writer',
-          description: 'Write engaging content for blogs, websites, and social media platforms.',
-          company: 'Digital Agency',
-          salaryMin: 400,
-          salaryMax: 700,
-          salaryType: 'monthly',
-          type: 'freelance',
-          duration: '2-4 weeks',
-          posted_at: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
-          posted_by: 'company-user-3',
-          city: { id: '3', name: 'Banja Luka' },
-          category: { id: '3', name: 'Writing' }
-        }
-      ]
+    const prisma = new PrismaClient()
 
-      return NextResponse.json({
-        jobs: mockRecommendedJobs
-      })
-    }
-
-    // Get user profile information for better recommendations
-    const user = await prisma.user.findUnique({
+    try {
+      // Get user profile information for better recommendations
+      const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
         location: true, // User's city/location for location-based recommendations
@@ -121,7 +69,7 @@ export async function GET() {
 
     const postedByUsers = await prisma.user.findMany({
       where: {
-        id: { in: recommendedJobs.map(job => job.postedById) }
+        id: { in: recommendedJobs.map((job: { postedById: string }) => job.postedById) }
       },
       select: {
         id: true,
@@ -136,7 +84,7 @@ export async function GET() {
     
     // Transform jobs with user info and score them
     const scoredJobs = enrichedJobs.map(enrichedJob => {
-      const postedBy = postedByUsers.find(u => u.id === enrichedJob.postedById)
+      const postedBy = postedByUsers.find((u: { id: string }) => u.id === enrichedJob.postedById)
       
       const transformedJob = {
         ...enrichedJob,
@@ -172,7 +120,7 @@ export async function GET() {
         const categoryName = (transformedJob.category.name_en || transformedJob.category.name_bs).toLowerCase()
         let categoryScore = 0
         
-        userSkills.forEach(skill => {
+        userSkills.forEach((skill: string) => {
           if (skill && categoryName.includes(skill)) {
             categoryScore += 30 // Up to 30 points per skill match in category
           }
@@ -184,7 +132,7 @@ export async function GET() {
         
         commonCategories.forEach(commonCat => {
           if (categoryKey.includes(commonCat)) {
-            userSkills.forEach(skill => {
+            userSkills.forEach((skill: string) => {
               if (skill.includes(commonCat)) {
                 categoryScore += 50 // Bonus for category alignment
               }
@@ -200,7 +148,7 @@ export async function GET() {
         const jobText = `${jobData.title} ${jobData.description} ${jobData.requirements || ''}`.toLowerCase()
         let skillScore = 0
         
-        userSkills.forEach(skill => {
+        userSkills.forEach((skill: string) => {
           if (skill && jobText.includes(skill)) {
             skillScore += 25 // 25 points per skill match in job content
           }
@@ -212,7 +160,7 @@ export async function GET() {
       // PRIORITY 4: Job type matching (50 points)
       if (userPreferredTypes.length > 0) {
         const jobType = jobData.type?.toLowerCase() || ''
-        userPreferredTypes.forEach(preferredType => {
+        userPreferredTypes.forEach((preferredType: string) => {
           if (preferredType && jobType.includes(preferredType.replace('_', ' ').replace('-', ' '))) {
             score += 50
           }
@@ -286,11 +234,20 @@ export async function GET() {
     return NextResponse.json({
       jobs: topRecommendations.slice(0, 3) // Ensure we return exactly 3 jobs
     })
+    } catch (error) {
+      console.error('Error fetching recommended jobs:', error)
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      )
+    } finally {
+      await prisma.$disconnect()
+    }
   } catch (error) {
-    console.error('Error fetching recommended jobs:', error)
+    console.error('Authentication error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: 'Authentication failed' },
+      { status: 401 }
     )
   }
 }

@@ -21,11 +21,11 @@ export function CitiesFilter({ value, onChange, placeholder, className, includeA
 
   // Get special and regular active cities
   const specialCities = Array.isArray(getSpecialCities()) 
-    ? getSpecialCities().filter(city => city.is_active !== false && city.isActive !== false) 
+    ? getSpecialCities().filter(city => city.is_active !== false) 
     : []
     
   const regularCities = Array.isArray(getActiveCities())
-    ? getActiveCities().filter(city => !(city.is_special === true || city.isSpecial === true))
+    ? getActiveCities().filter(city => !(city.is_special === true))
     : []
 
   return (
@@ -43,9 +43,9 @@ export function CitiesFilter({ value, onChange, placeholder, className, includeA
               <SelectItem key={city.id} value={city.key}>
                 <span className="flex items-center gap-2">
                   {city.key === 'remote' && <Globe className="h-4 w-4" />}
-                  {city.name_en || city.nameEN}
-                  {(city.name_bs || city.nameBS) !== (city.name_en || city.nameEN) && (
-                    <span className="text-muted-foreground text-sm">({city.name_bs || city.nameBS})</span>
+                  {city.name_en}
+                  {city.name_bs !== city.name_en && (
+                    <span className="text-muted-foreground text-sm">({city.name_bs})</span>
                   )}
                 </span>
               </SelectItem>
@@ -63,9 +63,9 @@ export function CitiesFilter({ value, onChange, placeholder, className, includeA
         {Array.isArray(regularCities) && regularCities.map((city) => (
           <SelectItem key={city.id} value={city.key}>
             <span className="flex items-center gap-2">
-              {city.name_en || city.nameEN}
-              {(city.name_bs || city.nameBS) !== (city.name_en || city.nameEN) && (
-                <span className="text-muted-foreground text-sm">({city.name_bs || city.nameBS})</span>
+              {city.name_en}
+              {city.name_bs !== city.name_en && (
+                <span className="text-muted-foreground text-sm">({city.name_bs})</span>
               )}
             </span>
           </SelectItem>

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { emailService } from '@/lib/email'
 import { z } from 'zod'
+
+const prisma = new PrismaClient()
 
 const resendSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -54,8 +56,13 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Send verification email
-    const emailResult = await emailService.sendVerificationEmail(email, verificationCode)
+    // Send verification email with localization
+    const emailResult = await emailService.sendVerificationEmail(
+      email, 
+      verificationCode,
+      user.name || undefined,
+      'bs' // default to Bosnian
+    )
     
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error)

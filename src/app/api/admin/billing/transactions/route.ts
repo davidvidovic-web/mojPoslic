@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+type TransactionWithUser = {
+  id: string
+  stripePaymentIntentId: string
+  userId: string
+  amount: number
+  currency: string
+  status: string
+  description: string | null
+  createdAt: Date
+  user: {
+    id: string
+    name: string
+    email: string
+    role: string
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +30,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
+
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -21,7 +48,7 @@ export async function GET() {
     }
 
     // Fetch all transactions with user details
-    const transactions = await prisma.stripeTransaction.findMany({
+    const transactions: TransactionWithUser[] = await client.stripeTransaction.findMany({
       include: {
         user: {
           select: {
@@ -38,8 +65,7 @@ export async function GET() {
     })
 
     // Transform the data for consistent API response
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedTransactions = transactions.map((transaction: any) => ({
+    const formattedTransactions = transactions.map((transaction: TransactionWithUser) => ({
       id: transaction.id,
       stripePaymentIntentId: transaction.stripePaymentIntentId,
       userId: transaction.userId,

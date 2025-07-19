@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export async function GET() {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    if (!prisma) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
     }
 
     // Get the user
@@ -53,5 +51,7 @@ export async function GET() {
       { error: 'Failed to get today job count' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

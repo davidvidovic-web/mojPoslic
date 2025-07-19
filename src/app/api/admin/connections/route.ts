@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+type UserWithConnections = {
+  id: string
+  email: string
+  name: string
+  role: string
+  connections: number
+  companyName: string | null
+}
+
+type UpdatedUser = {
+  id: string
+  email: string
+  name: string
+  connections: number
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +29,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
+
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -21,7 +47,7 @@ export async function GET() {
     }
 
     // Fetch all users with their connection balances
-    const users = await prisma.user.findMany({
+    const users: UserWithConnections[] = await client.user.findMany({
       select: {
         id: true,
         email: true,
@@ -53,8 +79,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if Prisma client is available
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
+    }
+
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -70,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user connections
-    const updatedUser = await prisma.user.update({
+    const updatedUser: UpdatedUser = await client.user.update({
       where: { id: userId },
       data: {
         connections: {
@@ -86,7 +119,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Log the connection grant in history
-    await prisma.connectionHistory.create({
+    await client.connectionHistory.create({
       data: {
         userId: userId,
         action: 'ADMIN_ADJUSTMENT',

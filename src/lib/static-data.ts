@@ -56,70 +56,35 @@ class StaticDataManager {
   }
 
   /**
-   * Fetch data from JSON files (server-side using filesystem, client-side using fetch)
+   * Fetch data from JSON files (client-side using fetch only)
    */
   private async fetchData(): Promise<StaticDataCache> {
     try {
-      // Check if we're on server side
-      const isServer = typeof window === 'undefined'
+      // Use fetch for all environments (client and server)
+      const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
+        fetch('/cache/cities.json'),
+        fetch('/cache/categories.json'),
+        fetch('/cache/metadata.json').catch(() => null) // metadata is optional
+      ])
       
-      if (isServer) {
-        // Server-side: use filesystem access
-        const fs = await import('fs/promises')
-        const path = await import('path')
-        
-        const publicPath = path.join(process.cwd(), 'public', 'cache')
-        
-        const [citiesFile, categoriesFile] = await Promise.all([
-          fs.readFile(path.join(publicPath, 'cities.json'), 'utf-8'),
-          fs.readFile(path.join(publicPath, 'categories.json'), 'utf-8')
-        ])
-        
-        const citiesData = JSON.parse(citiesFile) as CitiesResponse
-        const categoriesData = JSON.parse(categoriesFile) as CategoriesResponse
-        
-        // Try to load metadata (optional)
-        let metadataData: CacheMetadata | null = null
-        try {
-          const metadataFile = await fs.readFile(path.join(publicPath, 'metadata.json'), 'utf-8')
-          metadataData = JSON.parse(metadataFile) as CacheMetadata
-        } catch {
-          // Metadata is optional
-        }
-        
-        return {
-          cities: citiesData.cities,
-          categories: this.processCategories(categoriesData.categories),
-          lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
-          version: metadataData?.version || '1.0.0'
-        }
-      } else {
-        // Client-side: use fetch
-        const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
-          fetch('/cache/cities.json'),
-          fetch('/cache/categories.json'),
-          fetch('/cache/metadata.json').catch(() => null) // metadata is optional
-        ])
-        
-        if (!citiesRes.ok) {
-          throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
-        }
-        if (!categoriesRes.ok) {
-          throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
-        }
-        
-        const [citiesData, categoriesData, metadataData] = await Promise.all([
-          citiesRes.json() as Promise<CitiesResponse>,
-          categoriesRes.json() as Promise<CategoriesResponse>,
-          metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
-        ])
-        
-        return {
-          cities: citiesData.cities,
-          categories: this.processCategories(categoriesData.categories),
-          lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
-          version: metadataData?.version || '1.0.0'
-        }
+      if (!citiesRes.ok) {
+        throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
+      }
+      if (!categoriesRes.ok) {
+        throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
+      }
+      
+      const [citiesData, categoriesData, metadataData] = await Promise.all([
+        citiesRes.json() as Promise<CitiesResponse>,
+        categoriesRes.json() as Promise<CategoriesResponse>,
+        metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
+      ])
+      
+      return {
+        cities: citiesData.cities,
+        categories: this.processCategories(categoriesData.categories),
+        lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
+        version: metadataData?.version || '1.0.0'
       }
     } catch (error) {
       console.error('Error loading static data:', error)

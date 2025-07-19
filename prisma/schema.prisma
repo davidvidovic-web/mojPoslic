@@ -87,6 +87,17 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+model PendingRegistration {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  hashedPassword  String   @map("hashed_password")
+  verificationCode String  @map("verification_code")
+  expires         DateTime
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("pending_registrations")
+}
+
 model City {
   id          String       @id @default(cuid())
   key         String       @unique

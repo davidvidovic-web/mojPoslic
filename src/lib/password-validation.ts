@@ -12,103 +12,54 @@ export interface PasswordStrength {
   isValid: boolean
 }
 
-// Common passwords to check against
-const COMMON_PASSWORDS = [
-  'password', '123456', '123456789', 'qwerty', 'abc123', 'password123',
-  'admin', 'letmein', 'welcome', 'monkey', '1234567890', 'iloveyou',
-  'password1', 'qwerty123', '123123', 'dragon', 'sunshine', 'princess',
-  'football', 'charlie', 'aa123456', 'donald', 'bailey', 'passw0rd'
-]
-
-export function validatePassword(password: string, userInfo?: {
-  name?: string
-  email?: string
-  company?: string
-}): PasswordStrength {
+export function validatePassword(
+  password: string, 
+  userInfo?: {
+    name?: string
+    email?: string
+  },
+  t?: (key: string) => string
+): PasswordStrength {
   const requirements: PasswordRequirement[] = [
     {
       id: 'length',
-      label: 'At least 8 characters long',
+      label: t ? t('passwordRequirementLabels.length') : 'At least 8 characters long',
       met: password.length >= 8,
       severity: 'error'
     },
     {
       id: 'uppercase',
-      label: 'Contains uppercase letter (A-Z)',
+      label: t ? t('passwordRequirementLabels.uppercase') : 'Contains uppercase letter (A-Z)',
       met: /[A-Z]/.test(password),
       severity: 'error'
     },
     {
       id: 'lowercase',
-      label: 'Contains lowercase letter (a-z)',
+      label: t ? t('passwordRequirementLabels.lowercase') : 'Contains lowercase letter (a-z)',
       met: /[a-z]/.test(password),
       severity: 'error'
-    },
-    {
-      id: 'number',
-      label: 'Contains number (0-9)',
-      met: /\d/.test(password),
-      severity: 'error'
-    },
-    {
-      id: 'special',
-      label: 'Contains special character (!@#$%^&*)',
-      met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-      severity: 'warning'
-    },
-    {
-      id: 'length-strong',
-      label: 'At least 12 characters (recommended)',
-      met: password.length >= 12,
-      severity: 'warning'
-    },
-    {
-      id: 'no-common',
-      label: 'Not a common password',
-      met: !COMMON_PASSWORDS.includes(password.toLowerCase()),
-      severity: 'error'
-    },
-    {
-      id: 'no-sequential',
-      label: 'No sequential characters (123, abc)',
-      met: !hasSequentialChars(password),
-      severity: 'warning'
-    },
-    {
-      id: 'no-repeated',
-      label: 'No repeated characters (aaa, 111)',
-      met: !hasRepeatedChars(password),
-      severity: 'warning'
     }
   ]
 
   // Add personal information checks if userInfo is provided
   if (userInfo) {
-    const personalInfoChecks = checkPersonalInfo(password, userInfo)
+    const personalInfoChecks = checkPersonalInfo(password, userInfo, t)
     requirements.push(...personalInfoChecks)
   }
 
   // Calculate score based on met requirements
   const errorRequirements = requirements.filter(r => r.severity === 'error')
-  const warningRequirements = requirements.filter(r => r.severity === 'warning')
-  
   const errorsMet = errorRequirements.filter(r => r.met).length
-  const warningsMet = warningRequirements.filter(r => r.met).length
   
-  // Base score from critical requirements (60% weight)
-  const errorScore = (errorsMet / errorRequirements.length) * 60
-  
-  // Bonus score from warnings (40% weight)
-  const warningScore = (warningsMet / warningRequirements.length) * 40
-  
-  const score = Math.round(errorScore + warningScore)
+  // Score based on critical requirements (100% weight since no warnings)
+  const score = Math.round((errorsMet / errorRequirements.length) * 100)
   
   // Determine strength level
   let level: PasswordStrength['level']
-  if (score < 20) level = 'very-weak'
-  else if (score < 40) level = 'weak'
-  else if (score < 60) level = 'fair'
-  else if (score < 80) level = 'good'
+  if (score < 25) level = 'very-weak'
+  else if (score < 50) level = 'weak'
+  else if (score < 75) level = 'fair'
+  else if (score < 100) level = 'good'
   else level = 'strong'
   
   // Password is valid if all critical requirements are met
@@ -122,38 +73,10 @@ export function validatePassword(password: string, userInfo?: {
   }
 }
 
-function hasSequentialChars(password: string): boolean {
-  const sequences = [
-    'abcdefghijklmnopqrstuvwxyz',
-    '0123456789',
-    'qwertyuiop',
-    'asdfghjkl',
-    'zxcvbnm'
-  ]
-  
-  for (const sequence of sequences) {
-    for (let i = 0; i <= sequence.length - 3; i++) {
-      const subseq = sequence.substring(i, i + 3)
-      if (password.toLowerCase().includes(subseq) || 
-          password.toLowerCase().includes(subseq.split('').reverse().join(''))) {
-        return true
-      }
-    }
-  }
-  
-  return false
-}
-
-function hasRepeatedChars(password: string): boolean {
-  // Check for 3 or more repeated characters
-  return /(.)\1{2,}/.test(password)
-}
-
 function checkPersonalInfo(password: string, userInfo: {
   name?: string
   email?: string
-  company?: string
-}): PasswordRequirement[] {
+}, t?: (key: string) => string): PasswordRequirement[] {
   const checks: PasswordRequirement[] = []
   
   if (userInfo.name) {
@@ -164,7 +87,7 @@ function checkPersonalInfo(password: string, userInfo: {
     
     checks.push({
       id: 'no-name',
-      label: 'Does not contain your name',
+      label: t ? t('passwordRequirementLabels.noName') : 'Does not contain your name',
       met: !containsName,
       severity: 'error'
     })
@@ -176,22 +99,9 @@ function checkPersonalInfo(password: string, userInfo: {
     
     checks.push({
       id: 'no-email',
-      label: 'Does not contain your email',
+      label: t ? t('passwordRequirementLabels.noEmail') : 'Does not contain your email',
       met: !containsEmail,
       severity: 'error'
-    })
-  }
-  
-  if (userInfo.company) {
-    const companyClean = userInfo.company.toLowerCase().replace(/[^\w]/g, '')
-    const containsCompany = companyClean.length > 2 && 
-      password.toLowerCase().includes(companyClean)
-    
-    checks.push({
-      id: 'no-company',
-      label: 'Does not contain company name',
-      met: !containsCompany,
-      severity: 'warning'
     })
   }
   
@@ -220,7 +130,18 @@ export function getPasswordStrengthBgColor(level: PasswordStrength['level']): st
   }
 }
 
-export function getPasswordStrengthText(level: PasswordStrength['level']): string {
+export function getPasswordStrengthText(level: PasswordStrength['level'], t?: (key: string) => string): string {
+  if (t) {
+    switch (level) {
+      case 'very-weak': return t('passwordStrengthLevels.veryWeak')
+      case 'weak': return t('passwordStrengthLevels.weak')
+      case 'fair': return t('passwordStrengthLevels.fair')
+      case 'good': return t('passwordStrengthLevels.good')
+      case 'strong': return t('passwordStrengthLevels.strong')
+      default: return 'Unknown'
+    }
+  }
+  
   switch (level) {
     case 'very-weak': return 'Very Weak'
     case 'weak': return 'Weak'
@@ -228,41 +149,5 @@ export function getPasswordStrengthText(level: PasswordStrength['level']): strin
     case 'good': return 'Good'
     case 'strong': return 'Strong'
     default: return 'Unknown'
-  }
-}
-
-// Simple validation for registration form
-export function validatePasswordSimple(password: string, email?: string): {
-  isValid: boolean
-  errors: string[]
-} {
-  const errors: string[] = []
-  
-  // Must have at least one capital letter
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one capital letter')
-  }
-  
-  // Must have at least one number
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number')
-  }
-  
-  // Must be at least 8 characters
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long')
-  }
-  
-  // Should not contain email address part
-  if (email) {
-    const emailUsername = email.split('@')[0].toLowerCase()
-    if (emailUsername.length > 2 && password.toLowerCase().includes(emailUsername)) {
-      errors.push('Password should not contain your email address')
-    }
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
   }
 }

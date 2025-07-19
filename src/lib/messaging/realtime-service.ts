@@ -1,6 +1,18 @@
 import { supabase } from './supabase'
-import type { Message, TypingUser, UserPresence } from '@/types/messaging'
+import type { Message, TypingUser, UserPresence } from '../../types/messaging'
 import { RealtimeChannel } from '@supabase/supabase-js'
+
+// Types for presence data
+type TypingPresenceData = {
+  presence_ref: string
+  is_typing?: boolean
+}
+
+type UserPresenceData = {
+  presence_ref: string
+  status?: 'online' | 'offline' | 'away'
+  last_seen?: string
+}
 
 export class RealtimeService {
   private static channels: Map<string, RealtimeChannel> = new Map()
@@ -145,7 +157,7 @@ export class RealtimeService {
         const typingUsers: TypingUser[] = []
 
         Object.keys(newState).forEach((userId) => {
-          const presence = newState[userId][0] // Get latest presence
+          const presence = newState[userId][0] as TypingPresenceData // Get latest presence
           if (presence?.is_typing) {
             typingUsers.push({
               user_id: userId,
@@ -190,7 +202,7 @@ export class RealtimeService {
         const presenceList: UserPresence[] = []
 
         Object.keys(newState).forEach((userId) => {
-          const presence = newState[userId][0] // Get latest presence
+          const presence = newState[userId][0] as UserPresenceData // Get latest presence
           presenceList.push({
             user_id: userId,
             status: presence?.status || 'offline',

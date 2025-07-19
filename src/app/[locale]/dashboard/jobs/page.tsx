@@ -9,12 +9,15 @@ import { AppliedJobsSection } from '@/components/dashboard/tasker/applied-jobs-s
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { useTranslations } from 'next-intl'
 
-interface JobApplication {
+// Local interface that matches the API response format
+interface JobApplicationResponse {
   id: string
   job_id: string
-  applied_at: string
+  appliedAt: string
   status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   job: Job
+  message?: string
+  feedback?: string
 }
 
 export default function JobsPage() {
@@ -22,7 +25,7 @@ export default function JobsPage() {
   const t = useTranslations('dashboard.jobs')
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
-  const [applications, setApplications] = useState<JobApplication[]>([])
+  const [applications, setApplications] = useState<JobApplicationResponse[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +13,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -21,7 +26,7 @@ export async function GET() {
     }
 
     // Get user statistics
-    const userStats = await prisma.user.groupBy({
+    const userStats = await client.user.groupBy({
       by: ['role'],
       _count: {
         role: true
@@ -43,11 +48,11 @@ export async function GET() {
     })
 
     // Get job statistics
-    const totalJobs = await prisma.jobListing.count()
-    const activeJobs = await prisma.jobListing.count({
+    const totalJobs = await client.jobListing.count()
+    const activeJobs = await client.jobListing.count({
       where: { isActive: true }
     })
-    const featuredJobs = await prisma.jobListing.count({
+    const featuredJobs = await client.jobListing.count({
       where: { isFeatured: true }
     })
 
@@ -58,7 +63,7 @@ export async function GET() {
     const sixtyDaysAgo = new Date()
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
 
-    const recentUsers = await prisma.user.count({
+    const recentUsers = await client.user.count({
       where: {
         createdAt: {
           gte: thirtyDaysAgo
@@ -66,7 +71,7 @@ export async function GET() {
       }
     })
 
-    const previousUsers = await prisma.user.count({
+    const previousUsers = await client.user.count({
       where: {
         createdAt: {
           gte: sixtyDaysAgo,

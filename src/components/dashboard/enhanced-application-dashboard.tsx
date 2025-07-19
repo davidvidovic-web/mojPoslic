@@ -17,6 +17,19 @@ import { InterviewScheduling } from './interview-scheduling'
 import { AdvancedFilters } from './advanced-filters'
 import { ApplicationDetailsModal } from './application-details-modal'
 
+// Import types
+interface MessageTemplate {
+  id: string
+  name: string
+  subject: string
+  content: string
+  category: 'application_received' | 'application_reviewed' | 'shortlisted' | 'selected' | 'rejected' | 'interview_invite' | 'follow_up' | 'custom'
+  isDefault: boolean
+  variables: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
 interface EnhancedApplicationDashboardProps {
   jobId: string
   jobTitle: string
@@ -96,7 +109,7 @@ export function EnhancedApplicationDashboard({ jobId, jobTitle }: EnhancedApplic
     // Here you would typically make an API call to cancel the interview
   }
 
-  const handleSelectTemplate = (template: Record<string, unknown>) => {
+  const handleSelectTemplate = (template: MessageTemplate) => {
     console.log('Selected template:', template)
     // Here you would typically open a message composer with the template
   }
@@ -316,6 +329,7 @@ export function EnhancedApplicationDashboard({ jobId, jobTitle }: EnhancedApplic
             applications={applications.filter(app => 
               app.status === 'SHORTLISTED' || app.status === 'REVIEWED'
             )}
+            jobId={jobId}
             onScheduleInterview={handleScheduleInterview}
             onUpdateInterview={handleUpdateInterview}
             onCancelInterview={handleCancelInterview}
@@ -398,7 +412,7 @@ export function EnhancedApplicationDashboard({ jobId, jobTitle }: EnhancedApplic
       {/* Application Details Modal */}
       {selectedApplicationId && (
         <ApplicationDetailsModal
-          applicationId={selectedApplicationId}
+          application={applications.find(app => app.id === selectedApplicationId) || null}
           isOpen={!!selectedApplicationId}
           onClose={() => setSelectedApplicationId(null)}
         />

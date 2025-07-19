@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Users, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Users, CheckCircle, XCircle, Clock, Eye, MessageCircle } from 'lucide-react'
 import { useApplications } from '@/hooks/use-applications'
 import { ApplicationStatus, JobApplication } from '@/types/application'
-import { MessageUserButton } from '@/components/messaging/examples'
 
 interface JobApplicationsManagerProps {
   // For future enhancement - job filtering
@@ -130,12 +130,14 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                         {getStatusIcon(application.status)}
                         <span className="ml-1 capitalize">{application.status.toLowerCase()}</span>
                       </Badge>
-                      <MessageUserButton 
-                        userId={application.user?.id || application.user?.email || ''} 
-                        userName={application.user?.name || 'Unknown User'}
+                      <Button 
                         size="sm"
                         variant="outline"
-                      />
+                        onClick={() => {/* TODO: Implement messaging */}}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Message
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -174,12 +176,14 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                         {getStatusIcon(application.status)}
                         <span className="ml-1 capitalize">{application.status.toLowerCase()}</span>
                       </Badge>
-                      <MessageUserButton 
-                        userId={application.user?.id || application.user?.email || ''} 
-                        userName={application.user?.name || 'Unknown User'}
+                      <Button 
                         size="sm"
                         variant="outline"
-                      />
+                        onClick={() => {/* TODO: Implement messaging */}}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Message
+                      </Button>
                     </div>
                   </div>
                 ))}

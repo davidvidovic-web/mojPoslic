@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -13,19 +15,6 @@ export async function POST(request: NextRequest) {
 
     if (!role || !['tasker', 'client', 'company'].includes(role)) {
       return NextResponse.json({ error: 'Invalid role provided' }, { status: 400 })
-    }
-
-    if (!prisma) {
-      // Fallback for edge runtime - in production this should work with proper Prisma setup
-      return NextResponse.json({ 
-        success: true,
-        message: 'Role updated successfully (mock)',
-        user: {
-          id: session.user.id,
-          role: role,
-          profileSetupCompleted: true
-        }
-      })
     }
 
     // Update user role but keep profileSetupCompleted as false
@@ -60,5 +49,7 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

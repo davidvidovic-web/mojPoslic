@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
-export async function POST(request: NextRequest) {
+export async function PUT(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     
@@ -44,5 +46,7 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to update language preference' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

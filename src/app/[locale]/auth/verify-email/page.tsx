@@ -24,7 +24,7 @@ function VerifyEmailForm() {
     
     if (!code || code.length !== 6) {
       setStatus('error')
-      setMessage('Please enter a valid 6-digit code')
+      setMessage(t('pleaseEnterValidCode'))
       return
     }
 
@@ -41,11 +41,11 @@ function VerifyEmailForm() {
 
       if (response.ok) {
         setStatus('success')
-        setMessage('Email verified successfully!')
+        setMessage(t('emailVerifiedSuccessfully'))
         
         // Update message after a short delay
         setTimeout(() => {
-          setMessage('Logging you in...')
+          setMessage(t('loggingYouIn'))
         }, 1000)
         
         // Create a session by signing in the user automatically
@@ -57,7 +57,7 @@ function VerifyEmailForm() {
           })
 
           if (signInResult?.ok) {
-            setMessage('Redirecting to dashboard...')
+            setMessage(t('redirectingToDashboard'))
             // Redirect based on whether user needs role selection
             if (data.shouldRedirectToRoleSelection) {
               setTimeout(() => {
@@ -78,11 +78,11 @@ function VerifyEmailForm() {
         }, 1500)
       } else {
         setStatus('error')
-        setMessage(data.error || 'Invalid or expired verification code')
+        setMessage(data.error || t('invalidOrExpiredCode'))
       }
     } catch {
       setStatus('error')
-      setMessage('An error occurred during verification')
+      setMessage(t('verificationError'))
     }
   }
 
@@ -107,7 +107,7 @@ function VerifyEmailForm() {
 
   const handleResendCode = async () => {
     if (!email) {
-      setMessage('Email address not found. Please try registering again.')
+      setMessage(t('emailNotFound'))
       return
     }
 
@@ -123,29 +123,29 @@ function VerifyEmailForm() {
       
       if (response.ok) {
         setStatus('idle')
-        setMessage('A new verification code has been sent to your email.')
+        setMessage(t('newCodeSent'))
       } else {
         setStatus('error')
-        setMessage(data.error || 'Failed to resend verification code')
+        setMessage(data.error || t('resendFailed'))
       }
     } catch {
       setStatus('error')
-      setMessage('An error occurred while resending the code')
+      setMessage(t('resendError'))
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Mail className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Verify Your Email</CardTitle>
+          <CardTitle className="text-2xl">{t('title')}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            We&apos;ve sent a 6-digit verification code to{' '}
+            {t('sentCodeTo')}{' '}
             {email && <span className="font-medium">{email}</span>}
-            {!email && 'your email address'}
+            {!email && t('yourEmailAddress')}
           </p>
         </CardHeader>
         <CardContent>
@@ -153,7 +153,7 @@ function VerifyEmailForm() {
             <div className="text-center">
               <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-500" />
               <h3 className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">
-                Email Verified!
+                {t('emailVerified')}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {message}
@@ -162,7 +162,7 @@ function VerifyEmailForm() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <p className="text-sm font-medium text-center mb-4">Enter verification code</p>
+                <p className="text-sm font-medium text-center mb-4">{t('enterVerificationCode')}</p>
                 <CodeInput
                   length={6}
                   value={code}
@@ -189,19 +189,19 @@ function VerifyEmailForm() {
                 className="w-full bg-foreground hover:bg-foreground/80 text-background" 
                 disabled={status === 'loading' || code.length !== 6}
               >
-                {status === 'loading' ? 'Verifying...' : 'Verify Email'}
+                {status === 'loading' ? t('verifying') : t('verifyEmailButton')}
               </Button>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Didn&apos;t receive the code?{' '}
+                  {t('didntReceiveCode')}{' '}
                   <button
                     type="button"
                     onClick={handleResendCode}
                     className="text-primary hover:text-primary/80 hover:underline"
                     disabled={status === 'loading'}
                   >
-                    Resend code
+                    {t('resendCode')}
                   </button>
                 </p>
               </div>
@@ -225,7 +225,7 @@ function VerifyEmailForm() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background p-4">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     }>

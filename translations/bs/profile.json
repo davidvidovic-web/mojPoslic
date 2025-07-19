@@ -1,19 +1,30 @@
 {
   "title": "Profil",
   "subtitle": "Upravljajte svojim profilom i postavkama",
+  "autoGenerateUsername": "Automatski generirati korisničko ime",
   "setup": {
     "loading": "Učitavanje...",
+    "saving": "Čuva se...",
+    "completeSetup": "Završi podešavanje",
     "titles": {
       "client": "Završite svoj profil klijenta",
-      "company": "Završite svoj profil kompanije",
+      "company": "Završite svoj profil kompanije", 
       "tasker": "Završite svoj profil radnika",
       "admin": "Završite svoj admin profil",
       "default": "Završite svoj profil"
+    },
+    "descriptions": {
+      "client": "Završite podešavanje vašeg profila da možete početi koristiti platformu",
+      "company": "Dodajte informacije o vašoj kompaniji da izgradite poverenje sa klijentima",
+      "tasker": "Postavite vaš profil da počnete primati zahtjeve za posao",
+      "admin": "Završite podešavanje vašeg admin profila",
+      "default": "Završite podešavanje vašeg profila da možete nastaviti"
     },
     "sections": {
       "basicInformation": "Osnovne informacije",
       "location": "Lokacija",
       "professionalSkills": "Profesionalne vještine",
+      "experienceLevel": "Nivo iskustva",
       "experienceLevels": "Nivoi iskustva",
       "portfolio": "Portfolio",
       "companyInformation": "Informacije o kompaniji"

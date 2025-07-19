@@ -22,7 +22,7 @@ interface SkillExperience {
 }
 
 export default function ProfileSetupPage() {
-  const t = useTranslations()
+  const t = useTranslations('profile')
   const tErrors = useTranslations('errors')
   const { user, loading, refreshUser } = useAuth()
   const router = useRouter()
@@ -192,28 +192,28 @@ export default function ProfileSetupPage() {
     switch (user.role) {
       case 'client':
         return {
-          title: t('profileSetup.titles.client'),
-          description: t('profileSetup.descriptions.client')
+          title: t('setup.titles.client'),
+          description: t('setup.descriptions.client')
         }
       case 'company':
         return {
-          title: t('profileSetup.titles.company'),
-          description: t('profileSetup.descriptions.company')
+          title: t('setup.titles.company'),
+          description: t('setup.descriptions.company')
         }
       case 'tasker':
         return {
-          title: t('profileSetup.titles.tasker'),
-          description: t('profileSetup.descriptions.tasker')
+          title: t('setup.titles.tasker'),
+          description: t('setup.descriptions.tasker')
         }
       case 'admin':
         return {
-          title: t('profileSetup.titles.admin'),
-          description: t('profileSetup.descriptions.admin')
+          title: t('setup.titles.admin'),
+          description: t('setup.descriptions.admin')
         }
       default:
         return {
-          title: t('profileSetup.titles.default'),
-          description: t('profileSetup.descriptions.default')
+          title: t('setup.titles.default'),
+          description: t('setup.descriptions.default')
         }
     }
   }
@@ -234,29 +234,29 @@ export default function ProfileSetupPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information - Show for all roles */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t('profileSetup.sections.basicInformation')}</h3>
+                <h3 className="text-lg font-semibold">{t('setup.sections.basicInformation')}</h3>
                 
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    {user.role === 'company' ? t('profileSetup.fields.companyName') : t('profileSetup.fields.fullName')} *
+                    {user.role === 'company' ? t('setup.fields.companyName') : t('setup.fields.fullName')} *
                   </Label>
                   <Input
                     id="name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder={user.role === 'company' ? t('profileSetup.placeholders.companyName') : t('profileSetup.placeholders.fullName')}
+                    placeholder={user.role === 'company' ? t('setup.placeholders.companyName') : t('setup.placeholders.fullName')}
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="username">{t('profileSetup.fields.username')}</Label>
+                  <Label htmlFor="username">{t('setup.fields.username')}</Label>
                   <Input
                     id="username"
                     value={formData.username}
                     onChange={(e) => handleInputChange('username', e.target.value)}
-                    placeholder={t('profileSetup.placeholders.chooseUsername')}
+                    placeholder={t('setup.placeholders.chooseUsername')}
                   />
                   {!formData.username && (
                     <p className="text-sm text-muted-foreground">
@@ -266,13 +266,13 @@ export default function ProfileSetupPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">{t('profileSetup.fields.phoneNumber')} *</Label>
+                  <Label htmlFor="phone">{t('setup.fields.phoneNumber')} *</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder={t('profileSetup.placeholders.phoneNumber')}
+                    placeholder={t('setup.placeholders.phoneNumber')}
                     required
                   />
                 </div>
@@ -280,13 +280,13 @@ export default function ProfileSetupPage() {
 
               {/* Location - Show for all roles */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t('profileSetup.sections.location')}</h3>
+                <h3 className="text-lg font-semibold">{t('setup.sections.location')}</h3>
                 <div className="space-y-2">
-                  <Label>{t('profileSetup.fields.yourCity')} *</Label>
+                  <Label>{t('setup.fields.yourCity')} *</Label>
                   <CitiesFilter
                     value={formData.location}
                     onChange={(value) => handleInputChange('location', value)}
-                                          placeholder={t('profileSetup.placeholders.selectYourCity')}
+                    placeholder={t('setup.placeholders.selectYourCity')}
                     className="w-full"
                     includeAllOption={false}
                   />
@@ -298,21 +298,21 @@ export default function ProfileSetupPage() {
                 <>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">{t('profileSetup.sections.professionalSkills')}</h3>
+                      <h3 className="text-lg font-semibold">{t('setup.sections.professionalSkills')}</h3>
                       <div className="flex items-start gap-2 text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                         <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-                        <span>{t('profileSetup.helpText.skillsRecommendation')}</span>
+                        <span>{t('setup.helpText.skillsRecommendation')}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('profileSetup.fields.yourSkills')}</Label>
+                      <Label>{t('setup.fields.yourSkills')}</Label>
                       <SkillsBubbleInput
                         value={formData.skills}
                         onChange={handleSkillsChange}
-                        placeholder={t('profileSetup.placeholders.addSkills')}
+                        placeholder={t('setup.placeholders.addSkills')}
                       />
                       <p className="text-sm text-muted-foreground">
-                        {t('profileSetup.helpText.skillsDescription')}
+                        {t('setup.helpText.skillsDescription')}
                       </p>
                     </div>
                   </div>
@@ -320,9 +320,9 @@ export default function ProfileSetupPage() {
                   {/* Experience Levels - Only show for taskers */}
                   {formData.skillExperiences.length > 0 && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">{t('profileSetup.sections.experienceLevels')}</h3>
+                      <h3 className="text-lg font-semibold">{t('setup.sections.experienceLevels')}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {t('profileSetup.helpText.experienceDescription')}
+                        {t('setup.helpText.experienceDescription')}
                       </p>
                       
                       <div className="space-y-3">
@@ -340,11 +340,11 @@ export default function ProfileSetupPage() {
                                 <SelectValue className="truncate" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="not-specified">{t('profileSetup.experienceLevels.notSpecified')}</SelectItem>
-                                <SelectItem value="beginner">{t('profileSetup.experienceLevels.beginner')}</SelectItem>
-                                <SelectItem value="1-2-years">{t('profileSetup.experienceLevels.oneToTwoYears')}</SelectItem>
-                                <SelectItem value="3-5-years">{t('profileSetup.experienceLevels.threeToFiveYears')}</SelectItem>
-                                <SelectItem value="5plus-years">{t('profileSetup.experienceLevels.fivePlusYears')}</SelectItem>
+                                <SelectItem value="not-specified">{t('setup.experienceLevels.notSpecified')}</SelectItem>
+                                <SelectItem value="beginner">{t('setup.experienceLevels.beginner')}</SelectItem>
+                                <SelectItem value="1-2-years">{t('setup.experienceLevels.oneToTwoYears')}</SelectItem>
+                                <SelectItem value="3-5-years">{t('setup.experienceLevels.threeToFiveYears')}</SelectItem>
+                                <SelectItem value="5plus-years">{t('setup.experienceLevels.fivePlusYears')}</SelectItem>
                               </SelectContent>
                             </Select>
                             
@@ -365,14 +365,14 @@ export default function ProfileSetupPage() {
 
                   {/* Website/Portfolio - Show for taskers and companies */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">{t('profileSetup.sections.portfolio')}</h3>
+                    <h3 className="text-lg font-semibold">{t('setup.sections.portfolio')}</h3>
                     <div className="space-y-2">
-                                              <Label htmlFor="website">{t('profileSetup.fields.websitePortfolio')}</Label>
+                      <Label htmlFor="website">{t('setup.fields.websitePortfolio')}</Label>
                       <Input
                         id="website"
                         value={formData.website}
                         onChange={(e) => handleInputChange('website', e.target.value)}
-                        placeholder={t('profileSetup.placeholders.websitePortfolio')}
+                        placeholder={t('setup.placeholders.websitePortfolio')}
                       />
                     </div>
                   </div>
@@ -382,14 +382,14 @@ export default function ProfileSetupPage() {
               {/* Website/Company URL - Show for companies only */}
               {user.role === 'company' && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">{t('profileSetup.sections.companyInformation')}</h3>
+                  <h3 className="text-lg font-semibold">{t('setup.sections.companyInformation')}</h3>
                   <div className="space-y-2">
-                                          <Label htmlFor="website">{t('profileSetup.fields.companyWebsite')}</Label>
+                    <Label htmlFor="website">{t('setup.fields.companyWebsite')}</Label>
                     <Input
                       id="website"
                       value={formData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder={t('profileSetup.placeholders.companyWebsite')}
+                      placeholder={t('setup.placeholders.companyWebsite')}
                     />
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function ProfileSetupPage() {
                 className="w-full"
                 disabled={isSubmitting || !formData.name || !formData.phone || formData.location === 'all'}
               >
-                {isSubmitting ? t('profileSetup.saving') : t('profileSetup.completeSetup')}
+                {isSubmitting ? t('setup.saving') : t('setup.completeSetup')}
               </Button>
             </form>
           </CardContent>

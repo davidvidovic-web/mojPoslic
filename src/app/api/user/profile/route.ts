@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 
 export async function PUT(request: Request) {
+  const prisma = new PrismaClient();
+  
   try {
     const session = await auth();
 
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database unavailable" },
-        { status: 503 }
-      );
     }
 
     const {
@@ -103,22 +98,19 @@ export async function PUT(request: Request) {
       { error: "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 export async function GET() {
+  const prisma = new PrismaClient();
+  
   try {
     const session = await auth();
 
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!prisma) {
-      return NextResponse.json(
-        { error: "Database unavailable" },
-        { status: 503 }
-      );
     }
 
     // Use timeout to prevent hanging requests during database issues
@@ -178,5 +170,7 @@ export async function GET() {
       { error: "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

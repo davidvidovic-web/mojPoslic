@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PasswordRequirements } from "@/components/ui/password-requirements"
+import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { showToast } from "@/lib/toast"
-import { validatePasswordSimple } from "@/lib/password-validation"
 import { useTranslations } from "next-intl"
 
 export default function RegisterPage() {
@@ -25,13 +24,6 @@ export default function RegisterPage() {
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Validate password
-    const validation = validatePasswordSimple(formData.password, formData.email)
-    if (!validation.isValid) {
-      showToast.error(validation.errors[0]) // Show first error in toast
-      return
-    }
     
     setLoading(true)
 
@@ -69,7 +61,24 @@ export default function RegisterPage() {
       
       // Don't auto-sign in, wait for email verification
     } catch (error) {
-      showToast.error(error instanceof Error ? error.message : t('registrationFailed'))
+      let errorMessage = t('registrationFailed')
+      
+      if (error instanceof Error) {
+        // Map API error messages to translation keys
+        if (error.message.includes('User with this email already exists')) {
+          errorMessage = t('errorMessages.userAlreadyExists')
+        } else if (error.message.includes('Invalid email address')) {
+          errorMessage = t('errorMessages.invalidEmailAddress')
+        } else if (error.message.includes('Password must be at least 8 characters')) {
+          errorMessage = t('errorMessages.passwordTooShort')
+        } else if (error.message.includes('Internal server error')) {
+          errorMessage = t('errorMessages.internalServerError')
+        } else if (error.message.includes('Account created successfully, but there was an issue sending the verification email')) {
+          errorMessage = t('errorMessages.emailSendFailed')
+        }
+      }
+      
+      showToast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -83,7 +92,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">{t('createAccount')}</CardTitle>
@@ -138,9 +147,11 @@ export default function RegisterPage() {
                 </Button>
               </div>
               {formData.password && (
-                <PasswordRequirements 
+                <PasswordStrengthIndicator 
                   password={formData.password} 
-                  email={formData.email}
+                  userInfo={{ email: formData.email }}
+                  showStrengthBar={true}
+                  showRequirements={true}
                   className="mt-3"
                 />
               )}

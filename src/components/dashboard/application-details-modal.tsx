@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   User, 
   Mail, 
-  Phone, 
   MapPin, 
   Calendar, 
   FileText, 
@@ -24,7 +23,7 @@ import {
   Eye
 } from 'lucide-react'
 import { JobApplication, ApplicationStatus } from '@/types/application'
-import { useUpdateApplicationStatus } from '@/hooks/use-applications'
+import { useUpdateApplication } from '@/hooks/use-applications'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 
@@ -45,17 +44,19 @@ export function ApplicationDetailsModal({
   const [clientNotes, setClientNotes] = useState(application?.clientNotes || '')
   const [activeTab, setActiveTab] = useState('profile')
 
-  const updateStatusMutation = useUpdateApplicationStatus()
+  const updateApplicationMutation = useUpdateApplication()
 
   if (!application) return null
 
   const handleStatusUpdate = async (status: ApplicationStatus, includeFeedback = false) => {
     try {
-      await updateStatusMutation.mutateAsync({
+      await updateApplicationMutation.mutateAsync({
         applicationId: application.id,
-        status,
-        feedback: includeFeedback ? feedback : undefined,
-        clientNotes: clientNotes || undefined
+        data: {
+          status,
+          feedback: includeFeedback ? feedback : undefined,
+          clientNotes: clientNotes || undefined
+        }
       })
       
       toast.success(`Application ${status.toLowerCase()} successfully`)
@@ -131,12 +132,6 @@ export function ApplicationDetailsModal({
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">{application.user?.email}</span>
                   </div>
-                  {application.user?.phone && (
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{application.user.phone}</span>
-                    </div>
-                  )}
                   {application.user?.location && (
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -241,7 +236,7 @@ export function ApplicationDetailsModal({
                   onClick={() => handleStatusUpdate(application.status)}
                   className="mt-2"
                   size="sm"
-                  disabled={updateStatusMutation.isPending}
+                  disabled={updateApplicationMutation.isPending}
                 >
                   Save Notes
                 </Button>
@@ -330,7 +325,7 @@ export function ApplicationDetailsModal({
                     <>
                       <Button
                         onClick={() => handleStatusUpdate(ApplicationStatus.REVIEWED)}
-                        disabled={updateStatusMutation.isPending}
+                        disabled={updateApplicationMutation.isPending}
                         className="w-full"
                       >
                         <Eye className="h-4 w-4 mr-2" />
@@ -338,7 +333,7 @@ export function ApplicationDetailsModal({
                       </Button>
                       <Button
                         onClick={() => handleStatusUpdate(ApplicationStatus.SHORTLISTED)}
-                        disabled={updateStatusMutation.isPending}
+                        disabled={updateApplicationMutation.isPending}
                         variant="outline"
                         className="w-full"
                       >
@@ -351,7 +346,7 @@ export function ApplicationDetailsModal({
                   {application.status === ApplicationStatus.REVIEWED && (
                     <Button
                       onClick={() => handleStatusUpdate(ApplicationStatus.SHORTLISTED)}
-                      disabled={updateStatusMutation.isPending}
+                      disabled={updateApplicationMutation.isPending}
                       className="w-full"
                     >
                       <Star className="h-4 w-4 mr-2" />
@@ -362,7 +357,7 @@ export function ApplicationDetailsModal({
                   {application.status === ApplicationStatus.SHORTLISTED && (
                     <Button
                       onClick={() => handleStatusUpdate(ApplicationStatus.SELECTED)}
-                      disabled={updateStatusMutation.isPending}
+                      disabled={updateApplicationMutation.isPending}
                       className="w-full"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -395,7 +390,7 @@ export function ApplicationDetailsModal({
                     />
                     <Button
                       onClick={() => handleStatusUpdate(ApplicationStatus.REJECTED, true)}
-                      disabled={updateStatusMutation.isPending}
+                      disabled={updateApplicationMutation.isPending}
                       variant="destructive"
                       className="w-full"
                     >

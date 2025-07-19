@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export async function DELETE() {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     
@@ -61,5 +63,7 @@ export async function DELETE() {
     return NextResponse.json({ 
       error: 'Failed to delete account' 
     }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

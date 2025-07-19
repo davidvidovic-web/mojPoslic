@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
       const { payload } = await jwtVerify(token, secret)
       
       // Validate user still exists
-      const user = await prisma?.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: payload.userId as string },
         select: {
           id: true,

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 import { ApplicationStatus } from '@/types/application'
-
-const prisma = new PrismaClient()
+import { getCityById, getCategoryById } from '@/lib/job-helpers'
 
 export async function GET(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     
@@ -91,27 +92,9 @@ export async function GET(request: NextRequest) {
               status: true,
               createdAt: true,
               expiresAt: true,
-              city: {
-                select: {
-                  id: true,
-                  nameEN: true,
-                  nameBS: true
-                }
-              },
-              category: {
-                select: {
-                  id: true,
-                  nameEN: true,
-                  nameBS: true
-                }
-              },
-              postedBy: {
-                select: {
-                  id: true,
-                  name: true,
-                  companyName: true
-                }
-              }
+              cityId: true,
+              categoryId: true,
+              postedById: true
             }
           }
         },
@@ -123,6 +106,44 @@ export async function GET(request: NextRequest) {
       }),
       prisma.application.count({ where })
     ])
+
+    // Get unique poster IDs and fetch user data
+    const posterIds = [...new Set(applications.map(app => app.job.postedById))]
+    const postedByUsers = await prisma.user.findMany({
+      where: { id: { in: posterIds } },
+      select: {
+        id: true,
+        name: true,
+        companyName: true
+      }
+    })
+
+    // Transform applications with static data
+    const transformedApplications = await Promise.all(
+      applications.map(async (application) => {
+        const city = application.job.cityId ? await getCityById(application.job.cityId) : null
+        const category = application.job.categoryId ? await getCategoryById(application.job.categoryId) : null
+        const postedBy = postedByUsers.find(user => user.id === application.job.postedById)
+
+        return {
+          ...application,
+          job: {
+            ...application.job,
+            city: city ? {
+              id: city.id,
+              nameEN: city.name_en,
+              nameBS: city.name_bs
+            } : null,
+            category: category ? {
+              id: category.id,
+              nameEN: category.name_en,
+              nameBS: category.name_bs
+            } : null,
+            postedBy: postedBy || null
+          }
+        }
+      })
+    )
 
     // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit)
@@ -154,7 +175,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      applications,
+      applications: transformedApplications,
       stats,
       pagination: {
         page,
@@ -172,5 +193,7 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch applications' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

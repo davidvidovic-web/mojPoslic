@@ -2,6 +2,24 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+type ConnectionHistoryWithUser = {
+  id: string
+  userId: string
+  action: string
+  amount: number
+  description: string | null
+  createdAt: Date
+  user: {
+    id: string
+    name: string
+    email: string
+    role: string
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +28,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -21,7 +41,7 @@ export async function GET() {
     }
 
     // Fetch connection history with user details
-    const connectionHistory = await prisma.connectionHistory.findMany({
+    const connectionHistory: ConnectionHistoryWithUser[] = await client.connectionHistory.findMany({
       include: {
         user: {
           select: {
@@ -38,8 +58,7 @@ export async function GET() {
     })
 
     // Transform the data for consistent API response
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedHistory = connectionHistory.map((entry: any) => ({
+    const formattedHistory = connectionHistory.map((entry: ConnectionHistoryWithUser) => ({
       id: entry.id,
       userId: entry.userId,
       action: entry.action,

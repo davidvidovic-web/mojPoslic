@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 import { ApplicationStatus } from '@/types/application'
+import { getCityById, getCategoryById } from '@/lib/job-helpers'
 
 const prisma = new PrismaClient()
 
@@ -34,8 +35,6 @@ export async function GET(
       include: {
         job: {
           include: {
-            city: true,
-            category: true,
             postedBy: {
               select: {
                 id: true,
@@ -66,6 +65,10 @@ export async function GET(
       return NextResponse.json({ error: 'Application not found' }, { status: 404 })
     }
 
+    // Get city and category data from static data
+    const city = getCityById(application.job.cityId)
+    const category = application.job.categoryId ? getCategoryById(application.job.categoryId) : null
+
     // Check access permissions
     const isApplicant = application.userId === user.id
     const isJobPoster = application.job.postedById === user.id
@@ -75,9 +78,14 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Filter sensitive data based on user role
+    // Filter sensitive data based on user role and add static data
     const responseData = {
       ...application,
+      job: {
+        ...application.job,
+        city,
+        category
+      },
       // Hide client notes from applicant
       clientNotes: isApplicant && !isAdmin ? undefined : application.clientNotes
     }

@@ -1,14 +1,12 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { enrichJobsWithStaticData } from '@/lib/job-helpers'
 import type { JobListing } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
-    if (!prisma) {
-      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
-    }
-
     const { searchParams } = new URL(request.url)
     
     // Extract filter parameters
@@ -116,5 +114,7 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch jobs', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

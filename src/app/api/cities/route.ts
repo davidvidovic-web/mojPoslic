@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 const CITIES_CACHE_FILE = join(process.cwd(), 'public', 'cache', 'cities.json')
+
+interface DatabaseCity {
+  id: string
+  key: string
+  nameBS: string
+  nameEN: string
+  isSpecial: boolean
+  sortOrder: number
+  isActive: boolean
+}
 
 export async function GET() {
   try {
@@ -18,10 +30,6 @@ export async function GET() {
     }
 
     // Fallback to database if cache doesn't exist or fails
-    if (!prisma) {
-      throw new Error('Database connection not available')
-    }
-
     const cities = await prisma.city.findMany({
       where: {
         isActive: true,
@@ -34,7 +42,7 @@ export async function GET() {
     })
 
     // Transform the data to match the expected format
-    const formattedCities = cities.map((city) => ({
+    const formattedCities = cities.map((city: DatabaseCity) => ({
       id: city.id,
       key: city.key,
       name_bs: city.nameBS,

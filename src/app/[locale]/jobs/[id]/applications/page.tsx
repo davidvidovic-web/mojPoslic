@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { ApplicationManager } from '@/components/dashboard/comprehensive-application-manager'
+import { ApplicationManager } from '@/components/dashboard/simple-application-manager'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -146,44 +146,6 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
         applications: prev.applications.map(app =>
           app.id === applicationId ? { ...app, status: newStatus as JobApplication['status'] } : app
         )
-      }
-    })
-
-    // Refetch data to ensure consistency
-    setTimeout(() => {
-      if (jobId) {
-        fetch(`/api/jobs/${jobId}/applications`)
-          .then(res => res.json())
-          .then(data => setApplicationsData(data))
-          .catch(console.error)
-      }
-    }, 1000)
-  }
-
-  const handleBulkUpdate = async (applicationIds: string[], action: string, data?: { feedback?: string; clientNotes?: string }) => {
-    // Optimistically update the local state
-    setApplicationsData(prev => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        applications: prev.applications.map(app => {
-          if (applicationIds.includes(app.id)) {
-            let newStatus = app.status
-            switch (action) {
-              case 'move_to_reviewed':
-                newStatus = 'REVIEWED'
-                break
-              case 'shortlist':
-                newStatus = 'SHORTLISTED'
-                break
-              case 'reject':
-                newStatus = 'REJECTED'
-                break
-            }
-            return { ...app, status: newStatus, ...data }
-          }
-          return app
-        })
       }
     })
 
@@ -394,10 +356,8 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
 
         {/* Applications Manager */}
         <ApplicationManager
-          jobId={jobId!}
           applications={applicationsData.applications}
           onApplicationUpdate={handleApplicationUpdate}
-          onBulkUpdate={handleBulkUpdate}
         />
       </div>
     </div>

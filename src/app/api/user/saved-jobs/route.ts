@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+import { getCityById, getCategoryById } from '@/lib/job-helpers'
 
 export async function GET(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -17,13 +20,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (!prisma) {
-      // Fallback for edge runtime or when Prisma is not available
-      return NextResponse.json({
-        savedJobs: []
-      })
-    }
-
     // Fetch saved jobs with job details
     const savedJobs = await prisma.savedJob.findMany({
       where: {
@@ -32,8 +28,6 @@ export async function GET(request: NextRequest) {
       include: {
         job: {
           include: {
-            city: true,
-            category: true,
             postedBy: {
               select: {
                 id: true,
@@ -56,12 +50,27 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform the data to match the expected format
-    const transformedJobs = savedJobs.map(savedJob => ({
-      ...savedJob.job,
-      posted_by: savedJob.job.postedById,
-      posted_at: savedJob.job.createdAt,
-      applicationCount: savedJob.job._count.applications,
-      savedAt: savedJob.createdAt
+    const transformedJobs = await Promise.all(savedJobs.map(async (savedJob) => {
+      const city = savedJob.job.cityId ? await getCityById(savedJob.job.cityId) : null
+      const category = savedJob.job.categoryId ? await getCategoryById(savedJob.job.categoryId) : null
+      
+      return {
+        ...savedJob.job,
+        city: city ? {
+          id: city.id,
+          key: city.key,
+          name: city.name_en || city.name_bs
+        } : null,
+        category: category ? {
+          id: category.id,
+          key: category.key,
+          name: category.name_en || category.name_bs
+        } : null,
+        posted_by: savedJob.job.postedById,
+        posted_at: savedJob.job.createdAt,
+        applicationCount: savedJob.job._count.applications,
+        savedAt: savedJob.createdAt
+      }
     }))
 
     return NextResponse.json({
@@ -73,10 +82,14 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 export async function POST(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -87,10 +100,6 @@ export async function POST(request: NextRequest) {
 
     if (!jobId) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 })
-    }
-
-    if (!prisma) {
-      return NextResponse.json({ error: 'Database not available' }, { status: 503 })
     }
 
     // Check if job exists
@@ -127,10 +136,14 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 export async function DELETE(request: NextRequest) {
+  const prisma = new PrismaClient()
+  
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -142,10 +155,6 @@ export async function DELETE(request: NextRequest) {
 
     if (!jobId) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 })
-    }
-
-    if (!prisma) {
-      return NextResponse.json({ error: 'Database not available' }, { status: 503 })
     }
 
     // Remove saved job
@@ -165,5 +174,7 @@ export async function DELETE(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }

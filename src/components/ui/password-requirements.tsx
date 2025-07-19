@@ -2,6 +2,7 @@
 
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface PasswordRequirement {
   label: string
@@ -15,21 +16,23 @@ interface PasswordRequirementsProps {
 }
 
 export function PasswordRequirements({ password, email, className }: PasswordRequirementsProps) {
+  const t = useTranslations('auth')
+  
   const requirements: PasswordRequirement[] = [
     {
-      label: "At least 8 characters long",
+      label: t('passwordRequirementLabels.length'),
       met: password.length >= 8
     },
     {
-      label: "Contains at least one capital letter",
+      label: t('passwordRequirementLabels.uppercase'),
       met: /[A-Z]/.test(password)
     },
     {
-      label: "Contains at least one number",
+      label: t('passwordRequirementLabels.number'),
       met: /\d/.test(password)
     },
     {
-      label: "Does not contain your email address",
+      label: t('passwordRequirementLabels.noEmail'),
       met: !email || email.length === 0 || !password.toLowerCase().includes(email.split('@')[0].toLowerCase()) || email.split('@')[0].length <= 2
     }
   ]

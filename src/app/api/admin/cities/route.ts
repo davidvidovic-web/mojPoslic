@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+type City = {
+  id: string
+  key: string
+  nameEN: string
+  nameBS: string
+  isSpecial: boolean
+  sortOrder: number
+  isActive: boolean
+  createdAt: Date
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPrismaClient = () => prisma as any
+
 export async function GET() {
   try {
     const session = await auth()
@@ -10,8 +24,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const client = getPrismaClient()
+
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     })
@@ -21,7 +37,7 @@ export async function GET() {
     }
 
     // Fetch all cities
-    const cities = await prisma.city.findMany({
+    const cities: City[] = await client.city.findMany({
       orderBy: [
         { sortOrder: 'asc' },
         { nameBS: 'asc' }
@@ -29,8 +45,7 @@ export async function GET() {
     })
 
     // Transform to match expected format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedCities = cities.map((city: any) => ({
+    const formattedCities = cities.map((city: City) => ({
       id: city.id,
       key: city.key,
       nameEN: city.nameEN,

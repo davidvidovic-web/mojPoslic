@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Star, CheckCircle } from "lucide-react"
 import Link from "next/link"
-import { useTranslations, useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
 
 interface JobCardProps {
   job: Job
@@ -15,7 +15,6 @@ interface JobCardProps {
 
 export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardProps) {
   const t = useTranslations('jobs')
-  const locale = useLocale()
   
   // Get relative time string for job posting date
   const getRelativeTimeString = (date: string) => {

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, getPackageById } from '@/lib/stripe'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 // Use the webhook secret or provide instructions if missing
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
 export async function POST(request: NextRequest) {
-  // Add detailed logging for debugging
+  const prisma = new PrismaClient()
   
   try {
     // Check if Stripe is properly configured
@@ -156,5 +156,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Webhook error:', error)
     return NextResponse.json({ error: 'Webhook error', details: error }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }
