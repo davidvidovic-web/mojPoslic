@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
 import { useTranslations } from 'next-intl'
+import { useData } from '@/hooks/use-data'
 
 interface JobPostFormProps {
   onJobPosted?: () => void
@@ -14,9 +15,19 @@ interface JobPostFormProps {
 
 export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPostFormProps) {
   const { user } = useAuth()
+  const { cities } = useData()
   const t = useTranslations('jobs.review')
 
   const handleSubmit = async (formData: CreateJobData) => {
+    // Convert city_id (numeric) to city key (string) that the API expects
+    const selectedCity = formData.city_id ? cities.find(c => c.id === formData.city_id) : null
+    const cityKey = selectedCity?.key
+    
+    if (!cityKey) {
+      toast.error('Please select a valid city')
+      return
+    }
+
     const response = await fetch('/api/jobs/create', {
       method: 'POST',
       headers: {
@@ -27,7 +38,7 @@ export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPo
         company: formData.company,
         description: formData.description,
         type: formData.type,
-        city_id: formData.city_id,
+        city_id: cityKey, // Send city key instead of numeric ID
         category_id: formData.category_id || null,
         salaryType: formData.salaryType || null,
         salaryMin: formData.salaryMin || null,
@@ -57,7 +68,7 @@ export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPo
     const data = await response.json()
     
     // Show success message
-    toast.success('Job posted successfully!')
+    toast.success(t('jobPosted'))
     
     // Dispatch events to refresh connection count and job cost info
     // Add a small delay to ensure backend transaction is complete

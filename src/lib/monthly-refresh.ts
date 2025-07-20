@@ -21,17 +21,16 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
 
   try {
 
-    // Get all users who need a monthly refresh using raw SQL for compatibility
-    const users = await prisma.$queryRaw`
-      SELECT id, name, email, connections_last_refresh, connections
-      FROM users
-    ` as Array<{
-      id: string
-      name: string
-      email: string
-      connections_last_refresh: Date | null
-      connections: number
-    }>
+    // Get all users who need a monthly refresh
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        connectionsLastRefresh: true,
+        connections: true
+      }
+    })
 
 
     // Process users in batches to avoid overwhelming the database
@@ -43,19 +42,20 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
         batch.map(async (user) => {
           try {
             // Check if user needs refresh
-            if (!isTimeForMonthlyRefresh(user.connections_last_refresh)) {
+            if (!isTimeForMonthlyRefresh(user.connectionsLastRefresh)) {
               return // User doesn't need refresh yet
             }
 
-            // Perform the refresh using raw SQL for compatibility
+            // Perform the refresh using Prisma
             await prisma.$transaction(async (tx) => {
               // Add monthly connections
-              await tx.$executeRaw`
-                UPDATE users 
-                SET connections = connections + ${MONTHLY_CONNECTIONS},
-                    connections_last_refresh = NOW()
-                WHERE id = ${user.id}
-              `
+              await tx.user.update({
+                where: { id: user.id },
+                data: {
+                  connections: { increment: MONTHLY_CONNECTIONS },
+                  connectionsLastRefresh: new Date()
+                }
+              })
 
               // Log the refresh
               await tx.$executeRaw`

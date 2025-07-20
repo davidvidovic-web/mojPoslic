@@ -13,9 +13,9 @@ import {
   Filter, 
   Download,
   Calendar,
-  TrendingUp,
   TrendingDown,
-  Activity
+  Plus,
+  ShoppingCart
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -57,11 +57,25 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
       'Purchase': 'purchase',
       'Monthly Refresh': 'monthlyRefresh',
       'Bonus': 'bonus',
-      'Refund': 'refund'
+      'Refund': 'refund',
+      'Initial Signup': 'initialSignup'
     }
     
     // Return translated label if exists, otherwise return original
     return actionMap[actionLabel] ? t(actionMap[actionLabel]) : actionLabel
+  }
+
+  // Function to translate descriptions
+  const getTranslatedDescription = (description: string) => {
+    // Map common descriptions to translation keys
+    const descriptionMap: Record<string, string> = {
+      'Welcome bonus connections (monthly refresh eligible)': 'welcomeBonusDescription',
+      'Welcome bonus connections': 'welcomeBonusDescriptionNoRefresh',
+      'Role changed to tasker (monthly refresh eligible)': 'roleChangeDescription'
+    }
+    
+    // Return translated description if exists, otherwise return original
+    return descriptionMap[description] ? t(descriptionMap[description]) : description
   }
 
   useEffect(() => {
@@ -93,9 +107,11 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
   const filteredHistory = (Array.isArray(history) ? history : [])
     .filter(entry => {
       const translatedLabel = getTranslatedActionLabel(entry.actionLabel)
+      const translatedDescription = entry.description ? getTranslatedDescription(entry.description) : ''
       const matchesSearch = translatedLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            entry.actionLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (entry.description && entry.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                           (entry.description && entry.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                           (translatedDescription && translatedDescription.toLowerCase().includes(searchTerm.toLowerCase()))
       
       const matchesFilter = filterType === 'all' || 
                            (filterType === 'positive' && entry.isPositive) ||
@@ -109,10 +125,10 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB
     })
 
-  // Get summary stats
-  const totalPositive = history.filter(h => h.isPositive).reduce((sum, h) => sum + h.amount, 0)
-  const totalNegative = history.filter(h => h.isNegative).reduce((sum, h) => sum + h.amount, 0)
-  const netChange = totalPositive - totalNegative
+  // Get summary stats with more detailed breakdown
+  const totalReceived = history.filter(h => h.isPositive).reduce((sum, h) => sum + h.amount, 0)
+  const totalBought = history.filter(h => h.isPositive && h.actionLabel === 'Purchase').reduce((sum, h) => sum + h.amount, 0)
+  const totalSpent = history.filter(h => h.isNegative).reduce((sum, h) => sum + h.amount, 0)
 
   const exportHistory = () => {
     const csvContent = [
@@ -163,12 +179,20 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">{t('totalReceived')}</span>
+            </div>
+            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">+{totalReceived}</p>
+          </div>
+          
           <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium">{t('totalEarned')}</span>
+              <ShoppingCart className="h-4 w-4 text-emerald-600" />
+              <span className="text-sm font-medium">{t('totalBought')}</span>
             </div>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{totalPositive}</p>
+            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{totalBought}</p>
           </div>
           
           <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-800">
@@ -176,17 +200,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
               <TrendingDown className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium">{t('totalSpent')}</span>
             </div>
-            <p className="text-lg font-bold text-red-600 dark:text-red-400">-{totalNegative}</p>
-          </div>
-          
-          <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">{t('netChange')}</span>
-            </div>
-            <p className={`text-lg font-bold ${netChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-              {netChange >= 0 ? '+' : ''}{netChange}
-            </p>
+            <p className="text-lg font-bold text-red-600 dark:text-red-400">-{totalSpent}</p>
           </div>
         </div>
       </CardHeader>
@@ -254,7 +268,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
                       </Badge>
                     </div>
                     {entry.description && (
-                      <p className="text-sm text-muted-foreground mb-1">{entry.description}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{getTranslatedDescription(entry.description)}</p>
                     )}
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>{new Date(entry.createdAt).toLocaleDateString()}</span>

@@ -16,8 +16,8 @@ interface ScheduleSectionProps {
 }
 
 export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
-  const [dontKnowExactDate, setDontKnowExactDate] = useState(false)
-  const [dontKnowExactTime, setDontKnowExactTime] = useState(false)
+  const [dontKnowExactDate, setDontKnowExactDate] = useState(formData.start_date === 'negotiable')
+  const [dontKnowExactTime, setDontKnowExactTime] = useState(formData.start_time === 'negotiable')
   const [showTips, setShowTips] = useState(false)
   const t = useTranslations('jobPost.types.schedule')
 
@@ -85,7 +85,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
               onCheckedChange={(checked) => {
                 setDontKnowExactDate(!!checked)
                 if (checked) {
-                  onChange({ start_date: t('byAgreement') })
+                  onChange({ start_date: 'negotiable' }) // Use constant instead of translation
                 } else {
                   onChange({ start_date: undefined })
                 }
@@ -120,7 +120,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
               onCheckedChange={(checked) => {
                 setDontKnowExactTime(!!checked)
                 if (checked) {
-                  onChange({ start_time: t('byAgreement') })
+                  onChange({ start_time: 'negotiable' }) // Use constant instead of translation
                 } else {
                   onChange({ start_time: undefined })
                 }

@@ -46,7 +46,7 @@ export function getJobPostingAction(_jobType: string): ConnectionAction {
 }
 
 /**
- * Gets the connection cost for job application (always 3)
+ * Gets the connection cost for job application (always 4)
  */
 export function getJobApplicationCost(): number {
   return JOB_APPLICATION_COST

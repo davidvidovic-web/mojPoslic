@@ -288,8 +288,22 @@
     "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
     "readyToPost": "Spremno za Objavu",
     "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave.",
+    "connectionCostNotice": "Obavještenje o Trošku Konekcija",
+    "alreadyPostedToday": "Već ste objavili {count} posao{plural} danas.",
+    "additionalCostMessage": "Ova dodatna {jobType} objava će koštati {connections} konekcij{plural}.",
+    "jobPosted": "Oglas za posao je uspješno objavljen!",
     "submitJobPosting": "Objavi Oglas",
     "updateJobPosting": "Ažuriraj Oglas", 
-    "submitting": "Objavljivanje..."
+    "submitting": "Objavljivanje...",
+    "success": {
+      "jobPosted": "Oglas za posao je uspješno objavljen!",
+      "jobUpdated": "Oglas za posao je uspješno ažuriran!"
+    }
+  },
+  "dialogs": {
+    "postJobDialog": "Objavi Novi Posao",
+    "postJobDescription": "Kreirajte novi oglas za posao da pronađete kvalifikovane kandidate.",
+    "editJobDialog": "Uredi Oglas za Posao",
+    "editJobDescription": "Ažurirajte detalje vašeg oglasa za posao."
   }
 } 

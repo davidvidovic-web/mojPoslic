@@ -306,8 +306,8 @@ export const Header = React.memo(function Header() {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link
-                              href="/connections"
-                              className={getMenuItemClass('/connections')}
+                              href="/dashboard/connections"
+                              className={getMenuItemClass('/dashboard/connections')}
                             >
                               <Zap className="mr-2 h-6 w-6" />
                               {tNavigation('connections')}
@@ -401,8 +401,8 @@ export const Header = React.memo(function Header() {
                               </Link>
 
                               <Link
-                                href="/connections"
-                                className={getMobileMenuItemClass('/connections')}
+                                href="/dashboard/connections"
+                                className={getMobileMenuItemClass('/dashboard/connections')}
                                 onClick={handleCloseMobileMenu}
                               >
                                 <Zap className="mr-4 h-6 w-6" />

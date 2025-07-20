@@ -54,7 +54,7 @@ export function DashboardLayout({
   const currentTab = activeTab || (() => {
     if (pathname?.includes('/dashboard/messages')) return 'messages'
     if (pathname?.includes('/dashboard/jobs')) return 'jobs'
-    if (pathname?.includes('/connections')) return 'connections'
+    if (pathname?.includes('/dashboard/connections')) return 'connections'
     return 'overview'
   })()
 
@@ -71,7 +71,7 @@ export function DashboardLayout({
         router.push('/dashboard/messages')
         break
       case 'connections':
-        router.push('/connections')
+        router.push('/dashboard/connections')
         break
       default:
         router.push('/dashboard')

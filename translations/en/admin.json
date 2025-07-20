@@ -41,5 +41,15 @@
     "status": "Status",
     "type": "Type",
     "actions": "Actions"
+  },
+  "packages": {
+    "title": "Package Management",
+    "pricePerConnection": "Price per connection",
+    "currency": "€",
+    "backToDashboard": "Back to Dashboard",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "saved": "Packages saved successfully!",
+    "error": "Error saving packages"
   }
 } 

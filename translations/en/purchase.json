@@ -1,0 +1,19 @@
+{
+  "connections": {
+    "title": "Purchase Connection Credits",
+    "description": "Choose a package to add connection credits to your account and continue engaging with candidates and clients.",
+    "connections": "Connections",
+    "pricePerConnection": "Price per connection",
+    "processing": "Processing...",
+    "purchaseNow": "Purchase Now",
+    "securePayment": "Secure payment with Stripe",
+    "instantAdd": "Credits added instantly to your account",
+    "cancel": "Cancel",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "currency": "€",
+    "package_10_description": "Perfect for occasional use",
+    "package_20_description": "Great for regular job searching",
+    "package_50_description": "Best value for power users"
+  }
+}

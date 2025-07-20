@@ -24,6 +24,9 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
     formData.salaryMin && 
     formData.salaryMax && 
     formData.salaryMax < formData.salaryMin
+
+  // Validation: Check if payment is below minimum 5 BAM
+  const hasBelowMinimumPayment = formData.salaryMin && formData.salaryMin < 5
   
   return (
     <div className="space-y-4">
@@ -110,7 +113,15 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
                   salaryMin: e.target.value ? Number(e.target.value) : undefined,
                   salaryMax: undefined // Clear max for fixed price
                 })}
+                className={hasBelowMinimumPayment ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
               />
+              {/* Minimum payment validation */}
+              {hasBelowMinimumPayment && (
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                  <span className="text-red-500">⚠</span>
+                  {t('validation.minimumPayment')}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {t('fixedAmountHelp')}
               </p>
@@ -129,13 +140,21 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
                   salaryMin: e.target.value ? Number(e.target.value) : undefined,
                   salaryMax: undefined // Clear max for daily rate
                 })}
+                className={hasBelowMinimumPayment ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
               />
+              {/* Minimum payment validation */}
+              {hasBelowMinimumPayment && (
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                  <span className="text-red-500">⚠</span>
+                  {t('validation.minimumPayment')}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {t('dailyRateHelp')}
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="salary-min">
                   {t('minimumRate')}
@@ -148,8 +167,15 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
                   onChange={(e) => onChange({ 
                     salaryMin: e.target.value ? Number(e.target.value) : undefined 
                   })}
-                  className={hasInvalidRange ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
+                  className={(hasInvalidRange || hasBelowMinimumPayment) ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
                 />
+                {/* Minimum payment validation */}
+                {hasBelowMinimumPayment && (
+                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {t('validation.minimumPayment')}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="salary-max">
@@ -179,7 +205,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
       )}
 
       {/* Payment calculation display */}
-      {formData.salaryType && formData.salaryType !== 'negotiable' && (formData.salaryType === 'hourly' || formData.salaryType === 'daily') && formData.salaryMin && formData.duration && !hasInvalidRange && (
+      {formData.salaryType && formData.salaryType !== 'negotiable' && (formData.salaryType === 'hourly' || formData.salaryType === 'daily') && formData.salaryMin && formData.duration && !hasInvalidRange && !hasBelowMinimumPayment && (
         <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
           <h4 className="text-sm font-medium text-green-800 mb-3 flex items-center gap-1">
             <Wallet className="h-5 w-5" />

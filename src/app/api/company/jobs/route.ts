@@ -36,13 +36,24 @@ export async function GET() {
     const viewCounts: Record<string, number> = {}
     
     try {
-      // Get view counts for each job
-      for (const jobId of jobIds) {
-        const result = await prismaForJobs.$queryRaw<Array<{ count: bigint }>>`
-          SELECT COUNT(*) as count FROM job_views WHERE job_id = ${jobId}
-        `
-        viewCounts[jobId] = Number(result[0]?.count || 0)
-      }
+      // Get view counts for all jobs in bulk
+      const viewResults = await prismaForJobs.jobView.groupBy({
+        by: ['jobId'],
+        where: { jobId: { in: jobIds } },
+        _count: true
+      })
+      
+      // Map results to viewCounts object
+      viewResults.forEach((result) => {
+        viewCounts[result.jobId] = result._count
+      })
+      
+      // Ensure all jobs have a count (default to 0)
+      jobIds.forEach(jobId => {
+        if (!(jobId in viewCounts)) {
+          viewCounts[jobId] = 0
+        }
+      })
     } catch (error) {
       console.error('Error fetching view counts:', error)
       // If view counts fail, we'll use 0 for all jobs

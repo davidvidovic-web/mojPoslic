@@ -40,6 +40,7 @@ export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
   const router = useRouter();
   const { user } = useAuth();
   const t = useTranslations('jobCard');
+  const tSuccess = useTranslations('jobs.success');
   const locale = useLocale();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
@@ -169,7 +170,7 @@ export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
   const handleJobUpdated = () => {
     setIsEditDialogOpen(false);
     onJobUpdated?.();
-    toast.success("Job updated successfully!");
+    toast.success(tSuccess('jobUpdated'));
   };
 
   return (

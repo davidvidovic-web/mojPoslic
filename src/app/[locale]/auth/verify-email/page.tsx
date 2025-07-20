@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, Suspense } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { signIn } from 'next-auth/react'
@@ -18,6 +18,18 @@ function VerifyEmailForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
+
+  // Auto-fill verification code in development mode
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code')
+    if (codeFromUrl && codeFromUrl.length === 6) {
+      setCode(codeFromUrl)
+      // Show a toast or message that code was auto-filled in development
+      if (process.env.NODE_ENV === 'development') {
+        setMessage('Development mode: Verification code auto-filled')
+      }
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,7 +73,11 @@ function VerifyEmailForm() {
             // Redirect based on whether user needs role selection
             if (data.shouldRedirectToRoleSelection) {
               setTimeout(() => {
-                router.push('/role-selection')
+                router.push('/account-type')
+              }, 800)
+            } else if (data.shouldRedirectToProfileSetup) {
+              setTimeout(() => {
+                router.push('/profile-setup')
               }, 800)
             } else {
               setTimeout(() => {
@@ -96,8 +112,8 @@ function VerifyEmailForm() {
 
   const handleCodeComplete = (value: string) => {
     setCode(value)
-    // Auto-submit when all 6 digits are entered
-    if (value.length === 6) {
+    // Only auto-submit when all 6 digits are entered and we're not in an error state
+    if (value.length === 6 && status !== 'error' && status !== 'loading') {
       setTimeout(() => {
         const form = document.querySelector('form') as HTMLFormElement
         form?.requestSubmit()
@@ -123,7 +139,13 @@ function VerifyEmailForm() {
       
       if (response.ok) {
         setStatus('idle')
-        setMessage(t('newCodeSent'))
+        setMessage(data.message || t('newCodeSent'))
+        
+        // In development mode, show verification code in alert and auto-fill
+        if (data.developmentMode && data.verificationCode) {
+          alert(`Development Mode: Your new verification code is: ${data.verificationCode}`)
+          setCode(data.verificationCode)
+        }
       } else {
         setStatus('error')
         setMessage(data.error || t('resendFailed'))
@@ -172,9 +194,14 @@ function VerifyEmailForm() {
                   className="mb-4"
                 />
                 {status === 'error' && (
-                  <div className="mt-2 flex items-center justify-center gap-2 text-sm text-red-600">
-                    <XCircle className="h-4 w-4" />
-                    {message}
+                  <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-center justify-center gap-2 text-sm text-red-600 dark:text-red-400 mb-2">
+                      <XCircle className="h-4 w-4" />
+                      {message}
+                    </div>
+                    <p className="text-xs text-center text-red-500 dark:text-red-400">
+                      {t('checkCodeAndTryAgain')} {t('orClickResendBelow')}
+                    </p>
                   </div>
                 )}
                 {status === 'idle' && message && (

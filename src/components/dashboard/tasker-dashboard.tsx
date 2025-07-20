@@ -7,8 +7,6 @@ import { Job } from '@/types/job'
 import { AppliedJobsSection } from './tasker/applied-jobs-section'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { TaskerQuickActions } from './tasker/tasker-quick-actions'
-import { SavedJobsSection } from './tasker/saved-jobs-section'
-import { RecommendedJobsSection } from './tasker/recommended-jobs-section'
 import { ConnectionsSection } from './connections-section'
 import { DashboardLayout } from './dashboard-layout'
 import { Badge } from '@/components/ui/badge'
@@ -44,9 +42,6 @@ export function TaskerDashboard() {
   const tErrors = useTranslations('errors')
   
   const [applications, setApplications] = useState<JobApplication[]>([])
-  const [savedJobs, setSavedJobs] = useState<Job[]>([])
-  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
-  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
   const [shortlistedApplications, setShortlistedApplications] = useState<JobApplication[]>([])
   const [stats, setStats] = useState<ApplicationStats>({
     total: 0,
@@ -64,15 +59,11 @@ export function TaskerDashboard() {
       if (!user) return
       
       try {
-        // Fetch all data in parallel
-        const [applicationsResponse, savedResponse, recommendedResponse] = await Promise.all([
-          fetch('/api/tasker/applications', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          }),
-          fetch(`/api/user/saved-jobs?userId=${user.id}`),
-          fetch('/api/jobs/recommended')
-        ])
+        // Fetch applications data
+        const applicationsResponse = await fetch('/api/tasker/applications', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        })
         
         // Handle applications data
         if (applicationsResponse.ok) {
@@ -130,21 +121,6 @@ export function TaskerDashboard() {
           setStats(newStats)
         }
 
-        // Handle saved jobs data
-        if (savedResponse.ok) {
-          const savedData = await savedResponse.json()
-          const jobs = savedData.savedJobs || []
-          setSavedJobs(jobs)
-          // Create a set of saved job IDs for quick lookup
-          setSavedJobIds(new Set(jobs.map((job: Job) => job.id)))
-        }
-
-        // Handle recommended jobs data
-        if (recommendedResponse.ok) {
-          const recommendedData = await recommendedResponse.json()
-          setRecommendedJobs(recommendedData.jobs || [])
-        }
-
       } catch (error) {
         console.error('Error fetching tasker data:', error)
         toast.error(tErrors('failedToLoad.dashboardData'))
@@ -156,38 +132,12 @@ export function TaskerDashboard() {
     fetchTaskerData()
   }, [user, tErrors])
 
-  // Handle job save/unsave
-  const handleJobSaveToggle = async (jobId: string, isSaved: boolean) => {
-    if (isSaved) {
-      // Add to saved jobs
-      setSavedJobIds(prev => new Set([...prev, jobId]))
-      // Optionally refresh saved jobs list to get full job data
-      try {
-        const response = await fetch(`/api/user/saved-jobs?userId=${user?.id}`)
-        if (response.ok) {
-          const savedData = await response.json()
-          setSavedJobs(savedData.savedJobs || [])
-        }
-      } catch (error) {
-        console.error('Error refreshing saved jobs:', error)
-      }
-    } else {
-      // Remove from saved jobs
-      setSavedJobIds(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(jobId)
-        return newSet
-      })
-      setSavedJobs(prev => prev.filter(job => job.id !== jobId))
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-muted-foreground">{tDashboard('loading.tasker')}</p>
         </div>
       </div>
     )
@@ -250,23 +200,6 @@ export function TaskerDashboard() {
               </div>
             </div>
           )}
-          
-          {/* Recommended Jobs - third/fourth on mobile */}
-          <div className="mb-8">
-            <RecommendedJobsSection 
-              recommendedJobs={recommendedJobs.slice(0, 3)} 
-              savedJobIds={savedJobIds}
-              onSaveToggle={handleJobSaveToggle}
-            />
-          </div>
-          
-          {/* Saved Jobs - fourth on mobile */}
-          <div>
-            <SavedJobsSection 
-              savedJobs={savedJobs.slice(0, 3)} 
-              onSaveToggle={handleJobSaveToggle}
-            />
-          </div>
         </div>
         
         {/* Right Column - Quick Actions & Connections for desktop */}

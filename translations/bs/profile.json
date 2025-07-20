@@ -27,7 +27,8 @@
       "experienceLevel": "Nivo iskustva",
       "experienceLevels": "Nivoi iskustva",
       "portfolio": "Portfolio",
-      "companyInformation": "Informacije o kompaniji"
+      "companyInformation": "Informacije o kompaniji",
+      "additional": "Dodatno"
     },
     "fields": {
       "fullName": "Puno ime",
@@ -37,13 +38,14 @@
       "yourCity": "Vaš grad",
       "yourSkills": "Vaše vještine",
       "websitePortfolio": "Website ili Portfolio URL",
-      "companyWebsite": "Website kompanije"
+      "companyWebsite": "Website kompanije",
+      "optional": "opcionalno"
     },
     "placeholders": {
       "fullName": "Unesite vaše puno ime",
       "companyName": "Unesite naziv vaše kompanije",
       "chooseUsername": "Odaberite korisničko ime",
-      "phoneNumber": "Unesite vaš broj telefona",
+      "phoneNumber": "XX 123 456",
       "selectYourCity": "Odaberite vaš grad",
       "addSkills": "Dodajte vaše vještine (npr., Vodovodstvo, Web Dizajn, Podučavanje...)",
       "websitePortfolio": "https://vašastranica.com ili https://vašportfolio.com",

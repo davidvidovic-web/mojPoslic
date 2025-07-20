@@ -184,7 +184,7 @@ export default function AdminPackagesPage() {
                   </div>
 
                   <div className="mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium">{t('admin.packages.pricePerConnection')}:</span> €{calculatePerConnectionPrice(pkg.price, pkg.connections)}
+                    <span className="font-medium">{t('admin.packages.pricePerConnection')}:</span> {t('admin.packages.currency')}{calculatePerConnectionPrice(pkg.price, pkg.connections)}
                   </div>
                 </div>
               ))}

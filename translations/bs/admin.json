@@ -41,5 +41,15 @@
     "status": "Status",
     "type": "Tip",
     "actions": "Akcije"
+  },
+  "packages": {
+    "title": "Upravljanje paketima",
+    "pricePerConnection": "Cijena po konekciji",
+    "currency": "KM",
+    "backToDashboard": "Povratak na dashboard",
+    "save": "Sačuvaj promjene",
+    "saving": "Čuva se...",
+    "saved": "Paketi su uspješno sačuvani!",
+    "error": "Greška pri čuvanju paketa"
   }
 } 

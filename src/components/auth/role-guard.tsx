@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface RoleGuardProps {
   children: React.ReactNode
@@ -20,6 +21,7 @@ export function RoleGuard({
   const { user, loading } = useAuth()
   const router = useRouter()
   const [redirecting, setRedirecting] = useState(false)
+  const t = useTranslations('common')
 
   useEffect(() => {
     if (loading || redirecting) return
@@ -49,7 +51,7 @@ export function RoleGuard({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )

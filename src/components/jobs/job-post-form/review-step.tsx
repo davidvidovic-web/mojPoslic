@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreateJobData } from '@/types/job'
-import { Rocket, Star } from 'lucide-react'
+import { Rocket, Star, Zap } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useEffect, useState } from 'react'
 import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone } from 'lucide-react'
@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { useTranslations, useLocale } from 'next-intl'
 import { useData } from '@/hooks/use-data'
 import type { City, Category } from '@/lib/static-data-types'
+import { getJobPostingCost } from '@/lib/connections/utils'
 
 interface ReviewStepProps {
   formData: CreateJobData
@@ -23,12 +24,14 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
   const t = useTranslations('jobs')
   const tCommon = useTranslations('common')
   const tSalary = useTranslations('jobPost.types.compensation')
+  const tSchedule = useTranslations('jobPost.types.schedule')
   const tDuration = useTranslations('jobPost.types.schedule.durationOptions')
   const tTransportation = useTranslations('jobPost.types.transportation.options')
   const locale = useLocale()
   const { cities, categories } = useData()
   const [city, setCity] = useState<City | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
+  const [todayJobCount, setTodayJobCount] = useState<number>(0)
 
   // Helper function to map job type to translation key
   const getJobTypeTranslationKey = (type: string) => {
@@ -77,16 +80,36 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
     }
   }, [formData.city_id, formData.category_id, cities, categories])
 
-  // Validation - invalid if date/time has passed
+  // Fetch today's job count to determine if connections will be deducted
+  useEffect(() => {
+    const fetchTodayJobCount = async () => {
+      if (!user?.id) return
+      
+      try {
+        const response = await fetch('/api/jobs/today-count')
+        if (response.ok) {
+          const data = await response.json()
+          setTodayJobCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error fetching today job count:', error)
+        setTodayJobCount(0)
+      }
+    }
+
+    fetchTodayJobCount()
+  }, [user?.id])
+
+  // Validation - invalid if date/time has passed OR if required fields are missing
   useEffect(() => {
     // Check if the start date/time has passed
     const checkDateTimePassed = () => {
-      if (!formData.start_date) return false
+      if (!formData.start_date || formData.start_date === 'negotiable') return false
       
       const now = new Date()
       const startDate = new Date(formData.start_date)
       
-      if (formData.start_time) {
+      if (formData.start_time && formData.start_time !== 'negotiable') {
         // If we have both date and time, combine them
         const [hours, minutes] = formData.start_time.split(':').map(Number)
         startDate.setHours(hours, minutes, 0, 0)
@@ -103,18 +126,39 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
       }
     }
 
+    // Check if all required fields from previous steps are complete
+    const areAllRequiredFieldsComplete = () => {
+      const requiredFields = [
+        'title',
+        'description', 
+        'category_id',
+        'city_id',
+        'start_date',
+        'start_time'
+      ]
+      
+      return requiredFields.every(field => {
+        const value = formData[field as keyof CreateJobData]
+        // More strict checking - must be truthy string, not just non-empty
+        return value && typeof value === 'string' && value.trim().length > 0
+      })
+    }
+
     const hasPassedDateTime = checkDateTimePassed()
-    onValidation(!hasPassedDateTime)
-  }, [onValidation, formData.start_date, formData.start_time])
+    const allFieldsComplete = areAllRequiredFieldsComplete()
+    
+    // Review step is only valid if date/time hasn't passed AND all required fields are complete
+    onValidation(!hasPassedDateTime && allFieldsComplete)
+  }, [onValidation, formData])
 
   // Check if the start date/time has passed for UI display
   const isDateTimePassed = () => {
-    if (!formData.start_date) return false
+    if (!formData.start_date || formData.start_date === 'negotiable') return false
     
     const now = new Date()
     const startDate = new Date(formData.start_date)
     
-    if (formData.start_time) {
+    if (formData.start_time && formData.start_time !== 'negotiable') {
       // If we have both date and time, combine them
       const [hours, minutes] = formData.start_time.split(':').map(Number)
       startDate.setHours(hours, minutes, 0, 0)
@@ -181,6 +225,11 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
 
   const getPerformanceBonusDisplay = () => {
     return formData.performance_bonus ? tCommon('general.yes') : tCommon('general.no')
+  }
+
+  const formatJobTypeForDisplay = (jobType: string) => {
+    const formatted = jobType.replace(/[_-]/g, ' ')
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1).toLowerCase()
   }
 
   return (
@@ -270,20 +319,27 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
               )}
               {formData.start_date && (
                 <div className="space-y-2">
-                  <div className={`flex items-center gap-2 ${isDateTimePassed() ? 'text-destructive' : ''}`}>
+                  <div className={`flex items-center gap-2 ${formData.start_date !== 'negotiable' && isDateTimePassed() ? 'text-destructive' : ''}`}>
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {t('review.starts')}: {new Date(formData.start_date).toLocaleDateString()}
-                      {formData.start_time && ` ${t('review.at')} ${new Date(`2000-01-01T${formData.start_time}`).toLocaleTimeString(locale === 'bs' ? 'bs-BA' : 'en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit', 
-                        hour12: locale !== 'bs'
-                      })}`}
+                      {formData.start_date === 'negotiable' ? (
+                        `${t('review.starts')}: ${tSchedule('byAgreement')}`
+                      ) : (
+                        <>
+                          {t('review.starts')}: {new Date(formData.start_date).toLocaleDateString()}
+                          {formData.start_time && formData.start_time !== 'negotiable' && ` ${t('review.at')} ${new Date(`2000-01-01T${formData.start_time}`).toLocaleTimeString(locale === 'bs' ? 'bs-BA' : 'en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit', 
+                            hour12: locale !== 'bs'
+                          })}`}
+                          {formData.start_time === 'negotiable' && ` ${t('review.at')} ${tSchedule('byAgreement')}`}
+                        </>
+                      )}
                     </span>
                   </div>
-                  {isDateTimePassed() && (
+                  {formData.start_date !== 'negotiable' && isDateTimePassed() && (
                     <div className="flex items-center gap-2 text-destructive text-sm">
-                      <span className="font-medium">⚠️ {formData.start_time ? 'This date and time has already passed' : 'This date has already passed'}</span>
+                      <span className="font-medium">⚠️ {formData.start_time && formData.start_time !== 'negotiable' ? 'This date and time has already passed' : 'This date has already passed'}</span>
                     </div>
                   )}
                 </div>
@@ -346,7 +402,7 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
             {user?.phone && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{user.phone}</span>
+                <span className="text-sm">+387 {user.phone}</span>
               </div>
             )}
             {formData.website && (
@@ -416,13 +472,34 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
 
       {/* Ready to post message - only show if no errors */}
       {!isDateTimePassed() && (
-        <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-          <h4 className="text-sm font-medium mb-2 text-primary flex items-center gap-1">
+        <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-600 dark:border-green-400 rounded-lg">
+          <h4 className="text-sm font-medium mb-2 text-green-700 dark:text-green-400 flex items-center gap-1">
             <Rocket className="h-4 w-4" />
             {t('review.readyToPost')}
           </h4>
           <p className="text-xs text-muted-foreground">
             {t('review.jobLooksGreat')}
+          </p>
+        </div>
+      )}
+
+      {/* Connection deduction notification - show if user has already posted today */}
+      {!isDateTimePassed() && todayJobCount >= 1 && formData.type && (
+        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-600 dark:border-blue-400 rounded-lg">
+          <h4 className="text-sm font-medium mb-2 text-blue-700 dark:text-blue-400 flex items-center gap-1">
+            <Zap className="h-4 w-4" />
+            {t('review.connectionCostNotice')}
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            {t('review.alreadyPostedToday', { 
+              count: todayJobCount, 
+              plural: todayJobCount > 1 ? 's' : '' 
+            })}{' '}
+            {t('review.additionalCostMessage', {
+              jobType: formatJobTypeForDisplay(formData.type),
+              connections: getJobPostingCost(formData.type),
+              plural: getJobPostingCost(formData.type) !== 1 ? 's' : ''
+            })}
           </p>
         </div>
       )}

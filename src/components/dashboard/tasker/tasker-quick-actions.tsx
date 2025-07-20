@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Search, Star, BookOpen, User, BarChart } from "lucide-react"
+import { Search, User, BarChart } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from 'next-intl'
 
@@ -52,38 +51,6 @@ export function TaskerQuickActions() {
             </div>
           </Button>
         </Link>
-
-        {/* View Skills */}
-        <Button 
-          variant="outline" 
-          className="w-full justify-start gap-3 h-12 hover:bg-yellow-50 dark:hover:bg-yellow-950/50 hover:text-foreground dark:hover:text-foreground"
-          disabled
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/40">
-            <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-          </div>
-          <div className="text-left">
-            <div className="font-medium">{t('dashboard.tasker.quickActions.manageSkills')}</div>
-            <div className="text-xs text-muted-foreground">{t('dashboard.tasker.quickActions.manageSkillsDesc')}</div>
-          </div>
-          <Badge variant="secondary" className="ml-auto text-xs">{t('common.status.comingSoon')}</Badge>
-        </Button>
-
-        {/* Learning Center */}
-        <Button 
-          variant="outline" 
-          className="w-full justify-start gap-3 h-12 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-foreground dark:hover:text-foreground"
-          disabled
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40">
-            <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-          </div>
-          <div className="text-left">
-            <div className="font-medium">{t('dashboard.tasker.quickActions.learningCenter')}</div>
-            <div className="text-xs text-muted-foreground">{t('dashboard.tasker.quickActions.learningCenterDesc')}</div>
-          </div>
-          <Badge variant="secondary" className="ml-auto text-xs">{t('common.status.comingSoon')}</Badge>
-        </Button>
 
         {/* Tips Section */}
         <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800">

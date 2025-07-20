@@ -31,21 +31,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check user's connections using raw SQL (since TypeScript types might not be updated)
-    const connectionResult = await prisma.$queryRaw`
-      SELECT connections 
-      FROM users 
-      WHERE id = ${userId}
-    ` as Array<{ connections: number }>
+    // Check user's connections
+    const userWithConnections = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { connections: true }
+    })
 
-    if (!connectionResult || connectionResult.length === 0) {
+    if (!userWithConnections) {
       return NextResponse.json(
         { error: 'Could not fetch user connections' },
         { status: 500 }
       )
     }
 
-    const currentConnections = connectionResult[0].connections || 0
+    const currentConnections = userWithConnections.connections || 0
 
     // Get today's date range (start and end of day in UTC to avoid timezone issues)
     const now = new Date()
@@ -128,11 +127,26 @@ export async function POST(request: NextRequest) {
 
     // Resolve city key to city ID using static data
     await staticDataManager.loadData() // Ensure data is loaded
-    const city = getCityByKey(city_id)
+    
+    let city = null
+    
+    // First try to get city by key (string like 'sarajevo')
+    if (typeof city_id === 'string' && isNaN(Number(city_id))) {
+      city = getCityByKey(city_id)
+    } 
+    // If it's a numeric ID, convert to key first
+    else {
+      // Load cities and find by numeric ID, then get the key
+      const cities = staticDataManager.getCities()
+      const cityById = cities.find(c => c.id === Number(city_id))
+      if (cityById) {
+        city = getCityByKey(cityById.key)
+      }
+    }
 
     if (!city) {
       return NextResponse.json(
-        { error: `City with key '${city_id}' not found` },
+        { error: `City with identifier '${city_id}' not found` },
         { status: 400 }
       )
     }
@@ -243,12 +257,11 @@ export async function POST(request: NextRequest) {
 
       // Only spend connections if needed (not first job today)
       if (needsConnections && connectionCost > 0) {
-        // Spend connections using raw SQL
-        await tx.$executeRaw`
-          UPDATE users 
-          SET connections = connections - ${connectionCost}
-          WHERE id = ${userId}
-        `
+        // Spend connections using Prisma
+        await tx.user.update({
+          where: { id: userId },
+          data: { connections: { decrement: connectionCost } }
+        })
 
         // Log connection usage using raw SQL
         const actionType = user.role === 'company' ? 'JOB_POST_COMPANY' : 'JOB_POST_CLIENT'

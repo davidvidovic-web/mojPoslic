@@ -1,10 +1,12 @@
 {
   "ui": {
     "popularCategories": "Popularne kategorije:",
+    "allCategories": "Sve kategorije:",
     "relatedSkills": "Povezane vještine:",
-    "addMore": "Dodaj još...",
+    "availableSubcategories": "Dostupne podkategorije:",
+    "addMore": "Dodaj više...",
     "addCustom": "Dodaj \"{skill}\"",
-    "skillsCounter": "{count}/{max} vještina • Kliknite prijedloge ili ukucajte i pritisnite Enter da dodate",
+    "skillsCounter": "{count}/{max} vještine • Kliknite prijedloge ili ukucajte i pritisnite Enter za dodavanje",
     "skillsAndExpertise": "Vještine i stručnost"
   }
 }

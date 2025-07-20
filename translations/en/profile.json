@@ -27,7 +27,8 @@
       "experienceLevel": "Experience Level",
       "experienceLevels": "Experience Levels",
       "portfolio": "Portfolio",
-      "companyInformation": "Company Information"
+      "companyInformation": "Company Information",
+      "additional": "Additional"
     },
     "fields": {
       "fullName": "Full Name",
@@ -37,13 +38,14 @@
       "yourCity": "Your City",
       "yourSkills": "Your Skills",
       "websitePortfolio": "Website or Portfolio URL",
-      "companyWebsite": "Company Website"
+      "companyWebsite": "Company Website",
+      "optional": "optional"
     },
     "placeholders": {
       "fullName": "Enter your full name",
       "companyName": "Enter your company name",
       "chooseUsername": "Choose a username",
-      "phoneNumber": "Enter your phone number",
+      "phoneNumber": "XX 123 456",
       "selectYourCity": "Select your city",
       "addSkills": "Add your skills (e.g., Plumbing, Web Design, Tutoring...)",
       "websitePortfolio": "https://yourwebsite.com or https://yourportfolio.com",

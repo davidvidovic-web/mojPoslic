@@ -30,7 +30,8 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
     
     // Check required fields for this step
     const cityValid = !!(formData.city_id?.trim())
-    const startDateValid = !!(formData.start_date?.trim())
+    const startDateValid = !!(formData.start_date?.trim()) // Accept both date strings and 'negotiable'
+    const startTimeValid = !!(formData.start_time?.trim()) // Accept both time strings and 'negotiable'
     
     // For companies, email is required; for clients, auto-set email
     let emailValid = true
@@ -41,9 +42,9 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
       onChange({ email: user.email })
     }
     
-    const isValid = cityValid && startDateValid && emailValid && !hasBlockingLocationError
+    const isValid = cityValid && startDateValid && startTimeValid && emailValid && !hasBlockingLocationError
     onValidation(isValid)
-  }, [formData.city_id, formData.start_date, formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange])
+  }, [formData.city_id, formData.start_date, formData.start_time, formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange])
 
   const handleLocationValidationChange = (error: string | null) => {
     setLocationValidationError(error)

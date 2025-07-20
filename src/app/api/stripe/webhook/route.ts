@@ -70,33 +70,24 @@ export async function POST(request: NextRequest) {
 
         
         // First, check if the user exists
-        const userExistsResult = await prisma.$queryRaw`
-          SELECT id, connections FROM users WHERE id = ${userId}
-        ` as Array<{ id: string; connections: number }>
+        const existingUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, connections: true }
+        })
         
-        if (!userExistsResult || userExistsResult.length === 0) {
+        if (!existingUser) {
           console.error(`User ${userId} not found in database`)
           return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
         
-        const currentConnections = userExistsResult[0].connections
+        const currentConnections = existingUser.connections
         
-        // Update the user's connections using raw SQL to avoid TypeScript issues
-        await prisma.$executeRaw`
-          UPDATE users 
-          SET connections = connections + ${connectionsAmount} 
-          WHERE id = ${userId}
-        `
-        
-        
-        // Get the updated user data to verify the update worked
-        const updatedUserResult = await prisma.$queryRaw`
-          SELECT id, name, email, connections
-          FROM users 
-          WHERE id = ${userId}
-        ` as Array<{ id: string; name: string; email: string; connections: number }>
-        
-        const updatedUser = updatedUserResult[0]
+        // Update the user's connections using Prisma
+        const updatedUser = await prisma.user.update({
+          where: { id: userId },
+          data: { connections: { increment: connectionsAmount } },
+          select: { id: true, name: true, email: true, connections: true }
+        })
         
         
         // Verify the update actually happened

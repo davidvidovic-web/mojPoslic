@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/auth-context'
 import { useTranslations } from 'next-intl'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,27 +13,29 @@ import { showToast } from '@/lib/toast'
 
 export default function AccountTypePage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { user, loading: authLoading } = useAuth()
   const tValidation = useTranslations('errors.validation')
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [loading, setLoading] = useState(false)
 
-  // Redirect if not authenticated
+  // Redirect non-authenticated users to register
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/')
+    if (!authLoading && !user) {
+      router.replace('/auth/register')
     }
-  }, [status, router])
+  }, [user, authLoading, router])
 
-  // Redirect if already completed profile setup
+  // Redirect if user already has a role and profile setup completed
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      // Check if user has completed profile setup
-      // This would need to be checked against your database
-      // For now, redirecting to dashboard if user exists
-      // router.push('/dashboard')
+    if (!authLoading && user) {
+      if (user.role && user.profileSetupCompleted) {
+        router.replace('/dashboard')
+      } else if (user.role) {
+        // User has role but hasn't completed profile setup
+        router.replace('/profile-setup')
+      }
     }
-  }, [session, status, router])
+  }, [user, authLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +45,7 @@ export default function AccountTypePage() {
       return
     }
 
-    if (!session?.user) {
+    if (!user) {
       showToast.error('User not authenticated')
       return
     }
@@ -59,7 +61,7 @@ export default function AccountTypePage() {
         },
         body: JSON.stringify({
           role: selectedRole,
-          userId: session.user.id,
+          userId: user.id,
         }),
       })
 
@@ -70,8 +72,8 @@ export default function AccountTypePage() {
 
       showToast.success('Account type set successfully!')
       
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Redirect to profile setup
+      router.push('/profile-setup')
     } catch (error) {
       showToast.error(error instanceof Error ? error.message : 'Failed to update profile')
     } finally {
@@ -80,7 +82,7 @@ export default function AccountTypePage() {
   }
 
   // If loading or user not authenticated, show loading state
-  if (status === 'loading' || !session?.user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>

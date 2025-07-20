@@ -138,30 +138,56 @@ class StaticDataManager {
    * Load data from fetch (client-side only)
    */
   private async loadDataFromFetch(): Promise<StaticDataCache> {
-    const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
-      fetch('/cache/cities.json'),
-      fetch('/cache/categories.json'),
-      fetch('/cache/metadata.json').catch(() => null) // metadata is optional
+    // Try to load from cache files first, then fallback to API endpoints
+    try {
+      const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
+        fetch('/cache/cities.json'),
+        fetch('/cache/categories.json'),
+        fetch('/cache/metadata.json').catch(() => null) // metadata is optional
+      ])
+      
+      if (citiesRes.ok && categoriesRes.ok) {
+        const [citiesData, categoriesData, metadataData] = await Promise.all([
+          citiesRes.json() as Promise<CitiesResponse>,
+          categoriesRes.json() as Promise<CategoriesResponse>,
+          metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
+        ])
+        
+        return {
+          cities: citiesData.cities,
+          categories: this.processCategories(categoriesData.categories),
+          lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
+          version: metadataData?.version || '1.0.0'
+        }
+      }
+    } catch (cacheError) {
+      console.warn('Failed to load from cache files, falling back to API:', cacheError)
+    }
+    
+    // Fallback to API endpoints
+    console.log('Loading static data from API endpoints...')
+    const [citiesRes, categoriesRes] = await Promise.all([
+      fetch('/api/cities'),
+      fetch('/api/categories')
     ])
     
     if (!citiesRes.ok) {
-      throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
+      throw new Error(`Failed to load cities from API: ${citiesRes.status} ${citiesRes.statusText}`)
     }
     if (!categoriesRes.ok) {
-      throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
+      throw new Error(`Failed to load categories from API: ${categoriesRes.status} ${categoriesRes.statusText}`)
     }
     
-    const [citiesData, categoriesData, metadataData] = await Promise.all([
-      citiesRes.json() as Promise<CitiesResponse>,
-      categoriesRes.json() as Promise<CategoriesResponse>,
-      metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
+    const [citiesData, categoriesData] = await Promise.all([
+      citiesRes.json(),
+      categoriesRes.json()
     ])
     
     return {
-      cities: citiesData.cities,
-      categories: this.processCategories(categoriesData.categories),
-      lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
-      version: metadataData?.version || '1.0.0'
+      cities: citiesData.cities || citiesData, // Handle different response formats
+      categories: this.processCategories(categoriesData.categories || categoriesData),
+      lastUpdated: new Date().toISOString(),
+      version: '1.0.0'
     }
   }
 
@@ -169,6 +195,25 @@ class StaticDataManager {
    * Process categories to build hierarchical structure
    */
   private processCategories(categories: Category[]): Category[] {
+    // Check if categories already have a hierarchical structure (subcategories property)
+    const hasSubcategories = categories.some(cat => 'subcategories' in cat)
+    
+    if (hasSubcategories) {
+      // Categories already have hierarchical structure with subcategories, just convert to children format
+      return categories.map(category => {
+        const processedCategory = { ...category }
+        const categoryWithSubs = category as Category & { subcategories?: Category[] }
+        if (categoryWithSubs.subcategories && Array.isArray(categoryWithSubs.subcategories)) {
+          processedCategory.children = categoryWithSubs.subcategories.map((sub: Category) => ({
+            ...sub,
+            parent_id: category.id
+          }))
+        }
+        return processedCategory
+      }).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    }
+    
+    // Original logic for flat array structure
     const categoryMap = new Map<string, Category>()
     const rootCategories: Category[] = []
     
@@ -207,6 +252,10 @@ class StaticDataManager {
   }
 
   // Helper methods for cities
+  getCities(): City[] {
+    return this.cache?.cities || []
+  }
+
   getCityById(id: string): City | undefined {
     return this.cache?.cities.find(city => city.id === id)
   }

@@ -48,7 +48,16 @@
     "findingLocation": "Finding...",
     "locationError": "Unable to get your location",
     "locationPermissionDenied": "Location access denied",
-    "outsideBosniaWarning": "We currently only operate in Bosnia & Herzegovina"
+    "outsideBosniaWarning": "We currently only operate in Bosnia & Herzegovina",
+    "cityMismatchTitle": "Different location detected",
+    "cityMismatchMessage": "It seems like you are far away from your selected city ({selectedCity}). Your current location appears to be in {currentCity}. Are you sure you want to use your current location?",
+    "outsideBosniaTitle": "Location not supported",
+    "outsideBosniaMessage": "Your current location appears to be outside Bosnia & Herzegovina. We currently only operate within Bosnia & Herzegovina.",
+    "confirmLocation": "Use Current Location",
+    "keepSelected": "Keep Selected City",
+    "understood": "Understood",
+    "noResults": "No locations found for your search",
+    "searchError": "Unable to search for location. Please try again."
   },
   "messages": {
     "notSpecified": "Not specified",

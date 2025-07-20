@@ -1,0 +1,15 @@
+# Vercel ignore file
+# Ensure these files/folders are NOT ignored (include them in deployment)
+
+# Do NOT ignore public/cache/ directory and its contents
+!public/cache/
+!public/cache/**
+
+# Standard ignores (keep these)
+node_modules/
+.next/
+.env.local
+.env.development
+.env.test
+*.log
+.DS_Store

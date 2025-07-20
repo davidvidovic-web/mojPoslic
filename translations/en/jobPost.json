@@ -74,6 +74,7 @@
       "cityRequired": "City *",
       "selectCity": "Select a city",
       "hasSpecificLocation": "Job has a specific address location",
+      "notAvailableForRemote": "Not available for remote jobs",
       "specificAddress": "Specific Job Address (Optional)",
       "addressPlaceholder": "Enter the exact address where work will be performed...",
       "mapNote": "Click on the map to set the exact location",
@@ -149,7 +150,8 @@
       "performanceBonus": "Possibility of a performance bonus?",
       "performanceBonusHelp": "Check this if you offer performance-based bonuses or incentives.",
       "validation": {
-        "maxLessThanMin": "Maximum rate cannot be less than minimum rate"
+        "maxLessThanMin": "Maximum rate cannot be less than minimum rate",
+        "minimumPayment": "The minimum payment for any service is 5 BAM"
       },
       "bestPractices": {
         "title": "Salary Best Practices",

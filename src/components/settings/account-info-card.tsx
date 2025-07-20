@@ -26,11 +26,22 @@ export function AccountInfoCard() {
         return t('recentMember')
       }
       
-      // Use current locale for date formatting
-      return dateObj.toLocaleDateString(locale === 'bs' ? 'bs-BA' : 'en-US', {
-        year: 'numeric',
-        month: 'long'
-      })
+      // Handle Bosnian locale specifically to avoid M07 format
+      if (locale === 'bs') {
+        const monthNames = [
+          'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni',
+          'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
+        ]
+        const year = dateObj.getFullYear()
+        const month = monthNames[dateObj.getMonth()]
+        return `${month} ${year}`
+      } else {
+        // Use standard formatting for English
+        return dateObj.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long'
+        })
+      }
     } catch {
       return t('recentMember')
     }

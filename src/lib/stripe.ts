@@ -42,35 +42,27 @@ export const getStripe = () => {
 // Connection packages configuration
 export const CONNECTION_PACKAGES = [
   {
-    id: 'package_20',
-    connections: 20,
+    id: 'package_10',
+    connections: 10,
     price: 1.00,
     currency: 'eur',
-    name: '20 Connections',
+    name: '10 Connections',
     description: 'Perfect for occasional use'
   },
   {
-    id: 'package_40',
-    connections: 40,
+    id: 'package_20',
+    connections: 20,
     price: 2.00,
     currency: 'eur',
-    name: '40 Connections',
+    name: '20 Connections',
     description: 'Great for regular job searching'
   },
   {
-    id: 'package_60',
-    connections: 60,
-    price: 3.00,
+    id: 'package_50',
+    connections: 50,
+    price: 3.75,
     currency: 'eur',
-    name: '60 Connections',
-    description: 'Ideal for active users'
-  },
-  {
-    id: 'package_100',
-    connections: 100,
-    price: 3.60,
-    currency: 'eur',
-    name: '100 Connections',
+    name: '50 Connections',
     description: 'Best value for power users'
   }
 ] as const

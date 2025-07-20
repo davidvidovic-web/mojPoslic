@@ -25,17 +25,23 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
   const t = useTranslations('jobPost.types.location')
   const [hasSpecificLocation, setHasSpecificLocation] = useState(!!formData.job_address)
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
+  const [userConfirmedCrossCityLocation, setUserConfirmedCrossCityLocation] = useState(false)
   
   // City coordinates for map centering
   const [selectedCityCoordinates, setSelectedCityCoordinates] = useState<{ lat: number; lng: number; name: string } | null>(null)
   const [selectedCityName, setSelectedCityName] = useState<string>('')
 
+  // Get selected city info
+  const selectedCity = formData.city_id ? cities.find(c => c.id === formData.city_id) : null
+  const isRemoteSelected = selectedCity?.key === 'remote'
+
   // Auto-load user's city if not already set (based on location if available)
   useEffect(() => {
     if (!formData.city_id && user?.location && cities.length > 0) {
       // Try to match user's location to a city
-      const userLocation = user.location.toLowerCase();
-      // First try exact match with city key
+      const userLocation = user.location.toLowerCase().trim();
+      
+      // First try exact match with city key (e.g., 'banja-luka')
       const cityByKey = cities.find(city => 
         city.key.toLowerCase() === userLocation
       );
@@ -45,15 +51,43 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
         return;
       }
       
-      // Then try to match by name
-      const cityByName = cities.find(city => 
-        userLocation.includes(city.name_en.toLowerCase()) || 
-        userLocation.includes(city.name_bs.toLowerCase()) ||
-        (city.name && userLocation.includes(city.name.toLowerCase()))
-      );
+      // Then try to match by name (both English and Bosnian)
+      const cityByName = cities.find(city => {
+        const cityNameEn = city.name_en.toLowerCase();
+        const cityNameBs = city.name_bs.toLowerCase();
+        const cityName = city.name ? city.name.toLowerCase() : '';
+        
+        return userLocation.includes(cityNameEn) || 
+               userLocation.includes(cityNameBs) ||
+               cityNameEn.includes(userLocation) ||
+               cityNameBs.includes(userLocation) ||
+               (cityName && (userLocation.includes(cityName) || cityName.includes(userLocation)));
+      });
       
       if (cityByName) {
         onChange({ city_id: cityByName.id });
+        return;
+      }
+      
+      // Try partial matching for common city variations
+      const cityByPartialMatch = cities.find(city => {
+        const cityKey = city.key.toLowerCase();
+        const cityNameEn = city.name_en.toLowerCase();
+        const cityNameBs = city.name_bs.toLowerCase();
+        
+        // Handle cases like "banja luka" vs "banja-luka"
+        const normalizedUserLocation = userLocation.replace(/[\s-]/g, '');
+        const normalizedKey = cityKey.replace(/[\s-]/g, '');
+        const normalizedNameEn = cityNameEn.replace(/[\s-]/g, '');
+        const normalizedNameBs = cityNameBs.replace(/[\s-]/g, '');
+        
+        return normalizedUserLocation === normalizedKey ||
+               normalizedUserLocation === normalizedNameEn ||
+               normalizedUserLocation === normalizedNameBs;
+      });
+      
+      if (cityByPartialMatch) {
+        onChange({ city_id: cityByPartialMatch.id });
         return;
       }
     }
@@ -87,8 +121,8 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
   }, [formData.city_id, cities, formData.job_address])
 
   // Enhanced location validation against selected city with script handling
-  const validateLocation = (address: string) => {
-    if (!address || !selectedCityName) {
+  const validateLocation = (address: string, skipValidation = false) => {
+    if (!address || !selectedCityName || skipValidation || userConfirmedCrossCityLocation) {
       setLocationValidationError(null)
       onLocationValidationChange(null)
       return
@@ -143,9 +177,26 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
       <div className="space-y-2">
         <Label htmlFor="city">{t('cityRequired')}</Label>
         <CitiesFilter
-          value={formData.city_id || ''}
-          onChange={(cityId: string) => {
-            onChange({ city_id: cityId })
+          value={formData.city_id ? cities.find(c => c.id === formData.city_id)?.key || '' : ''}
+          onChange={(cityKey: string) => {
+            const selectedCity = cities.find(c => c.key === cityKey)
+            if (selectedCity) {
+              const updates: Partial<CreateJobData> = { city_id: selectedCity.id }
+              
+              // If remote is selected, clear specific location data
+              if (selectedCity.key === 'remote') {
+                updates.job_address = ''
+                updates.job_latitude = undefined
+                updates.job_longitude = undefined
+                setHasSpecificLocation(false)
+                setLocationValidationError(null)
+                onLocationValidationChange(null)
+              }
+              
+              onChange(updates)
+              // Reset cross-city confirmation when city changes
+              setUserConfirmedCrossCityLocation(false)
+            }
           }}
           placeholder={t('selectCity')}
           includeAllOption={false}
@@ -157,9 +208,13 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
         <div className="flex items-center space-x-2">
           <Checkbox 
             id="has-specific-location"
-            checked={hasSpecificLocation}
+            checked={hasSpecificLocation && !isRemoteSelected}
+            disabled={isRemoteSelected}
             onCheckedChange={(checked) => {
+              if (isRemoteSelected) return // Don't allow changes when remote is selected
+              
               setHasSpecificLocation(!!checked)
+              setUserConfirmedCrossCityLocation(false) // Reset confirmation when toggling
               if (!checked) {
                 onChange({ 
                   job_address: '',
@@ -179,10 +234,20 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
               }
             }}
           />
-          <Label htmlFor="has-specific-location">{t('hasSpecificLocation')}</Label>
+          <Label 
+            htmlFor="has-specific-location"
+            className={isRemoteSelected ? "text-muted-foreground cursor-not-allowed" : "cursor-pointer"}
+          >
+            {t('hasSpecificLocation')}
+            {isRemoteSelected && (
+              <span className="text-xs text-muted-foreground ml-2">
+                ({t('notAvailableForRemote')})
+              </span>
+            )}
+          </Label>
         </div>
         
-        {hasSpecificLocation && (
+        {hasSpecificLocation && !isRemoteSelected && (
           <div className="space-y-4">
             <LocationPicker
               value={formData.job_address ? {
@@ -190,24 +255,61 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
                 latitude: formData.job_latitude || 0,
                 longitude: formData.job_longitude || 0
               } : undefined}
-              onChange={(location) => {
+              onChange={(location, isConfirmedCrossCity = false) => {
                 // Clean the address to handle mixed scripts and redundant info
                 const cleanedAddress = cleanMapAddress(location.address)
                 
-                // Update form data first
-                onChange({
+                // Prepare the updates object
+                const updates: Partial<CreateJobData> = {
                   job_address: cleanedAddress,
                   job_latitude: location.latitude,
                   job_longitude: location.longitude
-                })
+                }
                 
-                // Defer validation to avoid immediate re-renders during map interaction
-                setTimeout(() => {
-                  validateLocation(cleanedAddress)
-                }, 0)
+                // If location picker found a matching city, update the city selection
+                if (location.cityKey && cities.length > 0) {
+                  const matchingCity = cities.find(city => city.key === location.cityKey)
+                  if (matchingCity) {
+                    updates.city_id = matchingCity.id
+                  }
+                } else if (location.city && cities.length > 0) {
+                  // Try to match by city name if no cityKey provided
+                  const cityName = location.city.toLowerCase().trim()
+                  const matchingCity = cities.find(city => 
+                    city.name_en.toLowerCase().includes(cityName) ||
+                    city.name_bs.toLowerCase().includes(cityName) ||
+                    cityName.includes(city.name_en.toLowerCase()) ||
+                    cityName.includes(city.name_bs.toLowerCase())
+                  )
+                  if (matchingCity) {
+                    updates.city_id = matchingCity.id
+                  }
+                }
+                
+                // Update form data
+                onChange(updates)
+                
+                // Skip validation if this was a confirmed cross-city location
+                if (isConfirmedCrossCity) {
+                  setUserConfirmedCrossCityLocation(true)
+                  setLocationValidationError(null)
+                  onLocationValidationChange(null)
+                } else {
+                  // Defer validation to avoid immediate re-renders during map interaction
+                  setTimeout(() => {
+                    validateLocation(cleanedAddress)
+                  }, 0)
+                }
+              }}
+              onCrossCityConfirmation={() => {
+                // User confirmed cross-city location, skip validation for next update
+                setUserConfirmedCrossCityLocation(true)
+                setLocationValidationError(null)
+                onLocationValidationChange(null)
               }}
               placeholder={t('addressPlaceholder')}
               selectedCityCoordinates={selectedCityCoordinates}
+              selectedCityName={selectedCityName}
             />
             {locationValidationError && (
               <div className={`text-sm p-4 rounded-lg border ${

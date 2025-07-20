@@ -9,6 +9,7 @@ const prisma = new PrismaClient()
 function getErrorMessage(key: string, locale: string = 'en') {
   const messages = {
     en: {
+      invalidRequest: 'Invalid request format',
       invalidCode: 'Invalid verification code',
       expiredCode: 'Verification code has expired',
       invalidOrExpiredCode: 'Invalid or expired verification code',
@@ -18,6 +19,7 @@ function getErrorMessage(key: string, locale: string = 'en') {
       internalError: 'Internal server error'
     },
     bs: {
+      invalidRequest: 'Neispravan format zahtjeva',
       invalidCode: 'Neispravan verifikacijski kod',
       expiredCode: 'Verifikacijski kod je istekao',
       invalidOrExpiredCode: 'Neispravan ili istekao verifikacijski kod',
@@ -54,7 +56,17 @@ export async function POST(request: NextRequest) {
   const locale = getLocaleFromRequest(request)
   
   try {
-    const body = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch (jsonError) {
+      console.error('Invalid JSON in request body:', jsonError)
+      return NextResponse.json(
+        { error: getErrorMessage('invalidRequest', locale) },
+        { status: 400 }
+      )
+    }
+
     const { code } = verifyEmailSchema.parse(body)
 
     // Find the pending registration with better debugging
@@ -129,9 +141,9 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       console.log('User already exists, cleaning up pending registration')
       // Clean up pending registration
-      await prisma.$queryRaw`
-        DELETE FROM pending_registrations WHERE id = ${pendingRegistration.id}
-      `
+      await prisma.pendingRegistration.delete({
+        where: { id: pendingRegistration.id }
+      })
       
       if (existingUser.emailVerified) {
         console.log('User already verified, redirecting to sign in')
@@ -213,9 +225,9 @@ export async function POST(request: NextRequest) {
       // Don't initialize connections here - wait until after role selection
       
       // Clean up pending registration
-      await prisma.$queryRaw`
-        DELETE FROM pending_registrations WHERE id = ${pendingRegistration.id}
-      `
+      await prisma.pendingRegistration.delete({
+        where: { id: pendingRegistration.id }
+      })
 
       return NextResponse.json({
         message: getErrorMessage('emailVerified', locale),
@@ -239,9 +251,9 @@ export async function POST(request: NextRequest) {
         
         if (raceConditionUser) {
           // Clean up pending registration
-          await prisma.$queryRaw`
-            DELETE FROM pending_registrations WHERE id = ${pendingRegistration.id}
-          `
+          await prisma.pendingRegistration.delete({
+            where: { id: pendingRegistration.id }
+          })
           
           return NextResponse.json({
             message: getErrorMessage('emailVerified', locale),

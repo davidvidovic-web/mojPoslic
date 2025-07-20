@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Category } from '@/types/job'
+import type { Category } from '@/lib/static-data-types'
 import { useTranslations, useLocale } from 'next-intl'
+import { useStaticCategories } from '@/hooks/use-static-data'
 
 interface SkillsBubbleInputProps {
   value: string[]
@@ -24,28 +25,49 @@ export function SkillsBubbleInput({
   value = [],
   onChange,
   placeholder = "Add skills...",
-  maxSkills = 20,
+  maxSkills = 10,
   className,
   label
 }: SkillsBubbleInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const t = useTranslations('skills.ui')
   const locale = useLocale()
+  
+  // Use static categories instead of API
+  const { data: categoriesData } = useStaticCategories()
+  
+  // Flatten categories for easier processing (static data manager now provides correct structure)
+  const categories = useMemo(() => {
+    if (!categoriesData) return []
+    
+    const flatCategories: Category[] = []
+    
+    categoriesData.forEach(category => {
+      // Add parent category
+      flatCategories.push(category)
+      
+      // Add children if they exist (processed by static data manager)
+      if (category.children && Array.isArray(category.children)) {
+        category.children.forEach(subcategory => {
+          flatCategories.push({
+            ...subcategory,
+            is_popular: false        // Subcategories are not popular by default
+          })
+        })
+      }
+    })
+    
+    return flatCategories
+  }, [categoriesData])
 
   // Helper function to get category name in current locale
   const getCategoryName = useCallback((category: Category) => {
     return locale === 'bs' ? category.name_bs : category.name_en
   }, [locale])
-
-  // Fetch categories on component mount
-  useEffect(() => {
-    fetchCategories()
-  }, [])
 
   // Click outside to close suggestions
   useEffect(() => {
@@ -61,80 +83,65 @@ export function SkillsBubbleInput({
 
   // Filter suggestions based on input and selected skills
   useEffect(() => {
-    // Get related categories based on selected skills
-    const getRelatedCategories = () => {
-      if (!categories || categories.length === 0 || value.length === 0) {
-        return []
-      }
+    // Helper function to get all subcategories for selected parent categories
+    const getAllSubcategories = () => {
+      const subcategorySuggestions: string[] = []
+      const selectedParentIds = new Set<string>()
 
-      const relatedSuggestions: string[] = []
-      const selectedCategoryIds = new Set<string>()
-
-      // Find parent categories of selected skills
-      value.forEach(skill => {
-        const category = categories.find(cat => 
-          getCategoryName(cat) === skill || cat.name_en === skill || cat.name_bs === skill
+      // Find parent categories that are currently selected
+      value.forEach(selectedSkill => {
+        const parentCategory = categories.find(cat => 
+          !cat.parent_id && (getCategoryName(cat) === selectedSkill || cat.name_en === selectedSkill || cat.name_bs === selectedSkill)
         )
-        if (category) {
-          if (category.parent_id) {
-            selectedCategoryIds.add(category.parent_id)
-          } else {
-            selectedCategoryIds.add(category.id)
-          }
+        if (parentCategory) {
+          selectedParentIds.add(parentCategory.id)
         }
       })
 
-      // Find subcategories of selected parent categories
-      selectedCategoryIds.forEach(parentId => {
+      // Get all subcategories from selected parents (cumulative)
+      selectedParentIds.forEach(parentId => {
         const subcategories = categories.filter(cat => 
           cat.parent_id === parentId && 
           getCategoryName(cat) && 
-          !value.includes(getCategoryName(cat))
+          !value.includes(getCategoryName(cat)!) // Exclude already selected
         )
         subcategories.forEach(sub => {
-          const categoryName = getCategoryName(sub)
-          if (categoryName && !relatedSuggestions.includes(categoryName)) {
-            relatedSuggestions.push(categoryName)
+          const subcategoryName = getCategoryName(sub)!
+          if (!subcategorySuggestions.includes(subcategoryName)) {
+            subcategorySuggestions.push(subcategoryName)
           }
         })
       })
 
-      // If no related subcategories found, suggest popular categories
-      if (relatedSuggestions.length === 0) {
-        const popularUnselected = categories
-          .filter(cat => cat.is_popular && getCategoryName(cat) && !value.includes(getCategoryName(cat)))
-          .map(cat => getCategoryName(cat)!)
-          .slice(0, 6)
-        relatedSuggestions.push(...popularUnselected)
-      }
-
-      return relatedSuggestions
+      return subcategorySuggestions
     }
 
     const searchTerm = inputValue.toLowerCase()
     const newSuggestions: string[] = []
 
-    // If there's no input, show related categories based on selected skills
-    if (!inputValue.trim() && value.length > 0) {
-      const relatedSuggestions = getRelatedCategories()
-      setFilteredSuggestions(relatedSuggestions.slice(0, 8))
+    // If there's no input, show only subcategories of selected parents
+    if (!inputValue.trim()) {
+      // Only show subcategories of selected parent categories
+      const subcategories = getAllSubcategories()
+      newSuggestions.push(...subcategories.slice(0, 6))
+      
+      setFilteredSuggestions(newSuggestions)
       return
     }
 
-    // If there's input, filter normally
+    // If there's input, filter only subcategories that match (no primary categories in suggestions)
     if (inputValue.trim()) {
-      // Add category suggestions
-      if (categories && Array.isArray(categories)) {
-        categories.forEach((category: Category) => {
-          // Add category name if it matches search and isn't already selected
-          const categoryName = getCategoryName(category)
-          if (categoryName && 
-              categoryName.toLowerCase().includes(searchTerm) && 
-              !value.includes(categoryName)) {
-            newSuggestions.push(categoryName)
-          }
-        })
-      }
+      // Add matching subcategories only (not parent categories)
+      categories.forEach((category: Category) => {
+        const categoryName = getCategoryName(category)
+        // Only include subcategories (those with parent_id) in search suggestions
+        if (categoryName && 
+            category.parent_id && // Only subcategories
+            categoryName.toLowerCase().includes(searchTerm) && 
+            !value.includes(categoryName)) {
+          newSuggestions.push(categoryName)
+        }
+      })
 
       // Add common tech skills that might not be in categories
       const commonSkills = [
@@ -160,11 +167,7 @@ export function SkillsBubbleInput({
         'Digital Marketing', 'SEO', 'Content Writing', 'Social Media', 'Google Analytics', 'Project Management',
         
         // Soft Skills
-        'Team Leadership', 'Communication', 'Problem Solving', 'Agile', 'Scrum', 'Time Management',
-        
-        // Handyman Skills (from categories)
-        'Plumbing', 'Electrical Work', 'Carpentry', 'Painting', 'Home Repairs', 'Furniture Assembly',
-        'Appliance Repair', 'HVAC', 'Tiling', 'Drywall', 'Flooring', 'Roofing'
+        'Team Leadership', 'Communication', 'Problem Solving', 'Agile', 'Scrum', 'Time Management'
       ]
 
       commonSkills.forEach(skill => {
@@ -180,19 +183,6 @@ export function SkillsBubbleInput({
       setFilteredSuggestions([])
     }
   }, [inputValue, categories, value, getCategoryName, locale])
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories')
-      if (response.ok) {
-        const data = await response.json()
-        // Use flatCategories for skills component
-        setCategories(data.flatCategories || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch categories:', error)
-    }
-  }
 
   const addSkill = (skill: string) => {
     const trimmedSkill = skill.trim()
@@ -229,12 +219,14 @@ export function SkillsBubbleInput({
     addSkill(suggestion)
   }
 
-  // Popular categories for quick selection
-  const popularCategories = (categories || [])
-    .filter(cat => cat.is_popular)
-    .map(cat => getCategoryName(cat))
-    .filter(name => name) // Filter out undefined names
-    .slice(0, 8)
+  // All parent categories for quick selection
+  const allParentCategories = useMemo(() => {
+    return categories
+      .filter(cat => !cat.parent_id) // All parent categories
+      .map(cat => getCategoryName(cat))
+      .filter((name): name is string => name !== undefined) // Type guard to filter out undefined
+      .slice(0, 8)
+  }, [categories, getCategoryName])
 
   return (
     <div className={cn("space-y-3 relative", className)} ref={containerRef}>
@@ -278,10 +270,15 @@ export function SkillsBubbleInput({
         </div>
       </div>
 
-      {/* Related Skills Section - shows when skills are selected and no input */}
+      {/* Subcategories and Related Skills Section - shows when skills are selected and no input */}
       {!inputValue.trim() && value.length > 0 && filteredSuggestions.length > 0 && (
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">{t('relatedSkills')}</Label>
+          <Label className="text-xs text-muted-foreground">
+            {categories.some(cat => !cat.parent_id && value.includes(getCategoryName(cat) || ''))
+              ? t('availableSubcategories')
+              : t('relatedSkills')
+            }
+          </Label>
           <div className="flex flex-wrap gap-2">
             {filteredSuggestions.slice(0, 6).map((suggestion, index) => (
               <Button
@@ -337,12 +334,12 @@ export function SkillsBubbleInput({
         </Card>
       )}
 
-      {/* Popular Skills Quick Add */}
-      {popularCategories.length > 0 && value.length < 5 && (
+      {/* All Categories Quick Add */}
+      {allParentCategories.length > 0 && value.length < 10 && (
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">{t('popularCategories')}</Label>
+          <Label className="text-xs text-muted-foreground">{t('allCategories')}</Label>
           <div className="flex flex-wrap gap-2">
-            {popularCategories.map((category, index) => (
+            {allParentCategories.map((category, index) => (
               <Button
                 key={index}
                 type="button"

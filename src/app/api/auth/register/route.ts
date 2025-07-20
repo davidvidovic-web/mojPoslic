@@ -6,11 +6,6 @@ import { z } from 'zod'
 
 const prisma = new PrismaClient()
 
-// Simple CUID generator function
-function generateCuid() {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-}
-
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -36,9 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if there's already a pending registration
-    const existingPending = await prisma.$queryRaw`
-      SELECT * FROM pending_registrations WHERE email = ${email} LIMIT 1
-    ` as Array<{ id: string; email: string; hashed_password: string; verification_code: string; expires: Date; created_at: Date }>
+    const existingPending = await prisma.pendingRegistration.findUnique({
+      where: { email }
+    })
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
@@ -47,21 +42,26 @@ export async function POST(request: NextRequest) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
     const verificationExpires = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
 
-    if (existingPending && existingPending.length > 0) {
+    if (existingPending) {
       // Update existing pending registration
-      await prisma.$queryRaw`
-        UPDATE pending_registrations 
-        SET hashed_password = ${hashedPassword}, 
-            verification_code = ${verificationCode},
-            expires = ${verificationExpires}
-        WHERE email = ${email}
-      `
+      await prisma.pendingRegistration.update({
+        where: { email },
+        data: {
+          hashedPassword,
+          verificationCode,
+          expires: verificationExpires
+        }
+      })
     } else {
       // Create new pending registration
-      await prisma.$queryRaw`
-        INSERT INTO pending_registrations (id, email, hashed_password, verification_code, expires, created_at)
-        VALUES (${generateCuid()}, ${email}, ${hashedPassword}, ${verificationCode}, ${verificationExpires}, ${new Date()})
-      `
+      await prisma.pendingRegistration.create({
+        data: {
+          email,
+          hashedPassword,
+          verificationCode,
+          expires: verificationExpires
+        }
+      })
     }
 
     // Send verification email with localization
@@ -81,10 +81,25 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    return NextResponse.json({
+    // Prepare response object
+    const response: {
+      message: string
+      redirectTo: string
+      developmentMode?: boolean
+      verificationCode?: string
+    } = {
       message: 'Verification code sent. Please check your email.',
       redirectTo: `/auth/verify-email?email=${encodeURIComponent(email)}`
-    })
+    }
+
+    // In development mode, include the verification code in the response
+    if (emailResult.developmentMode && emailResult.verificationCode) {
+      response.developmentMode = true
+      response.verificationCode = emailResult.verificationCode
+      response.message = `Development mode: Verification code is ${emailResult.verificationCode}. Email sending is disabled.`
+    }
+
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error('Registration error:', error)

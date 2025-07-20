@@ -55,12 +55,99 @@ export function useJobFormState({ initialData, isEditMode = false }: UseJobFormS
     }
   }, [])
 
-  const [currentStep, setCurrentStep] = useState<JobFormStep>('basic-details')
-  const [completedSteps, setCompletedSteps] = useState<Set<JobFormStep>>(new Set())
+  const [currentStep, setCurrentStep] = useState<JobFormStep>(() => {
+    // Determine initial step based on form data completeness
+    if (typeof window === 'undefined') return 'basic-details'
+    
+    let savedData = null
+    try {
+      const saved = localStorage.getItem(FORM_STORAGE_KEY)
+      savedData = saved ? JSON.parse(saved) : null
+    } catch (error) {
+      console.error('Error loading saved form data for step calculation:', error)
+    }
+    
+    const data = { ...initialData, ...savedData }
+    
+    if (!data || Object.keys(data).length === 0) {
+      return 'basic-details'
+    }
+    
+    // Check basic details completion
+    const hasBasicDetails = !!(
+      data.title?.trim() &&
+      data.description?.trim() &&
+      data.category_id?.trim() &&
+      data.type
+    )
+    
+    if (!hasBasicDetails) {
+      return 'basic-details'
+    }
+    
+    // Check location-compensation completion
+    const hasLocationCompensation = !!(
+      data.city_id?.trim() &&
+      data.start_date?.trim() &&
+      data.email?.trim()
+    )
+    
+    if (!hasLocationCompensation) {
+      return 'location-compensation'
+    }
+    
+    // If we have all required data, go to review
+    return 'review'
+  })
+  
+  const [completedSteps, setCompletedSteps] = useState<Set<JobFormStep>>(() => {
+    // Determine completed steps based on form data
+    if (typeof window === 'undefined') return new Set()
+    
+    let savedData = null
+    try {
+      const saved = localStorage.getItem(FORM_STORAGE_KEY)
+      savedData = saved ? JSON.parse(saved) : null
+    } catch (error) {
+      console.error('Error loading saved form data for completed steps:', error)
+    }
+    
+    const data = { ...initialData, ...savedData }
+    const completed = new Set<JobFormStep>()
+    
+    if (!data || Object.keys(data).length === 0) {
+      return completed
+    }
+    
+    // Check basic details completion
+    const hasBasicDetails = !!(
+      data.title?.trim() &&
+      data.description?.trim() &&
+      data.category_id?.trim() &&
+      data.type
+    )
+    
+    if (hasBasicDetails) {
+      completed.add('basic-details')
+    }
+    
+    // Check location-compensation completion
+    const hasLocationCompensation = !!(
+      data.city_id?.trim() &&
+      data.start_date?.trim() &&
+      data.email?.trim()
+    )
+    
+    if (hasLocationCompensation) {
+      completed.add('location-compensation')
+    }
+    
+    return completed
+  })
   const [stepValidations, setStepValidations] = useState<Record<JobFormStep, boolean>>({
     'basic-details': false,
     'location-compensation': false,
-    'review': true // Always valid
+    'review': false // Should start as invalid until all fields are complete
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -79,8 +166,8 @@ export function useJobFormState({ initialData, isEditMode = false }: UseJobFormS
       benefits: '',
       salary: '',
       salaryType: 'fixed' as const,
-      salaryMin: 0,
-      salaryMax: 0,
+      salaryMin: undefined, // Changed from 0 to undefined
+      salaryMax: undefined, // Changed from 0 to undefined
       website: '',
       email: user?.email || '',
       start_date: '',

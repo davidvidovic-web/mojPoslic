@@ -3,6 +3,7 @@
  */
 
 import { JobFormStep, getNextStep, getPreviousStep, getStepIndex } from './types'
+import { CreateJobData } from '@/types/job'
 
 export interface UseJobFormNavigationProps {
   currentStep: JobFormStep
@@ -11,6 +12,41 @@ export interface UseJobFormNavigationProps {
   setCompletedSteps: (steps: Set<JobFormStep>) => void
   stepValidations: Record<JobFormStep, boolean>
   isEditMode: boolean
+  formData?: CreateJobData
+}
+
+// Check if a step can be accessed based on saved form data
+function canAccessStepWithData(step: JobFormStep, formData?: CreateJobData): boolean {
+  if (!formData) return false
+  
+  switch (step) {
+    case 'basic-details':
+      return true // Always accessible
+      
+    case 'location-compensation':
+      // Can access if basic details are filled
+      return !!(
+        formData.title?.trim() &&
+        formData.description?.trim() &&
+        formData.category_id?.trim() &&
+        formData.type
+      )
+      
+    case 'review':
+      // Can access if location-compensation requirements are met
+      return !!(
+        formData.title?.trim() &&
+        formData.description?.trim() &&
+        formData.category_id?.trim() &&
+        formData.type &&
+        formData.city_id?.trim() &&
+        formData.start_date?.trim() &&
+        formData.email?.trim()
+      )
+      
+    default:
+      return false
+  }
 }
 
 export function useJobFormNavigation({
@@ -19,10 +55,11 @@ export function useJobFormNavigation({
   completedSteps,
   setCompletedSteps,
   stepValidations,
-  isEditMode
+  isEditMode,
+  formData
 }: UseJobFormNavigationProps) {
   
-  const isCurrentStepValid = stepValidations[currentStep]
+  const isCurrentStepValid = stepValidations[currentStep] || false
   const canGoPrevious = getPreviousStep(currentStep) !== null
   const canGoNext = isEditMode || isCurrentStepValid
 
@@ -79,14 +116,26 @@ export function useJobFormNavigation({
       return
     }
     
-    // In create mode, only allow clicking on completed steps or the next immediate step
-    const stepIndex = getStepIndex(step)
-    const currentIndex = getStepIndex(currentStep)
-    
-    if (completedSteps.has(step) || stepIndex <= currentIndex) {
+    // Use the canClickStep function to determine if step is accessible
+    if (canClickStep(step)) {
       setCurrentStep(step)
       scrollToTop()
     }
+  }
+
+  // Helper function to check if a step can be clicked
+  const canClickStep = (step: JobFormStep): boolean => {
+    if (isEditMode) return true
+    
+    const stepIndex = getStepIndex(step)
+    const currentIndex = getStepIndex(currentStep)
+    
+    // Always allow clicking on current and previous steps
+    if (stepIndex <= currentIndex) return true
+    
+    // For future steps, check if they're accessible based on data
+    // But don't require current step to be valid (more permissive)
+    return canAccessStepWithData(step, formData)
   }
 
   return {
@@ -94,6 +143,7 @@ export function useJobFormNavigation({
     canGoNext,
     handleNext,
     handlePrevious,
-    handleStepClick
+    handleStepClick,
+    canClickStep
   }
 }

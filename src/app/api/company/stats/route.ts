@@ -57,13 +57,14 @@ export async function GET() {
     // Calculate total views across all jobs
     let totalViews = 0
     try {
-      const viewResult = await prismaForStats.$queryRaw<Array<{ total_views: bigint }>>`
-        SELECT COUNT(*) as total_views 
-        FROM job_views jv 
-        JOIN job_listings jl ON jv.job_id = jl.id 
-        WHERE jl.posted_by_id = ${userId}
-      `
-      totalViews = Number(viewResult[0]?.total_views || 0)
+      const viewCount = await prismaForStats.jobView.count({
+        where: {
+          job: {
+            postedById: userId
+          }
+        }
+      })
+      totalViews = viewCount
     } catch (error) {
       console.error('Error fetching total views:', error)
       // totalViews remains 0 if query fails

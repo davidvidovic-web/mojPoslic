@@ -37,17 +37,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // Get user info
-    const userResult = await prisma.$queryRaw`
-      SELECT id, connections 
-      FROM users 
-      WHERE email = ${session.user.email}
-    ` as Array<{ id: string; connections: number }>
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, connections: true }
+    })
 
-    if (!userResult || userResult.length === 0) {
+    if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-
-    const user = userResult[0]
 
     // Check if user is trying to apply to their own job
     if (job.postedById === user.id) {
@@ -114,11 +111,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       })
 
       // Spend connections
-      await tx.$executeRaw`
-        UPDATE users 
-        SET connections = connections - ${connectionCost}
-        WHERE id = ${user.id}
-      `
+      await tx.user.update({
+        where: { id: user.id },
+        data: { connections: { decrement: connectionCost } }
+      })
 
       // Log connection usage
       await tx.$executeRaw`

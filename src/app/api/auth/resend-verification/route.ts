@@ -56,20 +56,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if there's a pending registration for this email
-    const pendingRegistration = await prisma.$queryRaw`
-      SELECT * FROM pending_registrations 
-      WHERE email = ${email}
-      LIMIT 1
-    ` as Array<{
-      id: string
-      email: string
-      hashed_password: string
-      verification_code: string
-      expires: Date
-      created_at: Date
-    }>
+    const pendingRegistration = await prisma.pendingRegistration.findUnique({
+      where: { email }
+    })
 
-    if (pendingRegistration.length === 0 && !existingUser) {
+    if (!pendingRegistration && !existingUser) {
       return NextResponse.json(
         { error: getErrorMessage('noAccount', locale) },
         { status: 404 }
@@ -80,13 +71,15 @@ export async function POST(request: NextRequest) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
     const verificationExpires = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
 
-    if (pendingRegistration.length > 0) {
+    if (pendingRegistration) {
       // Update existing pending registration with new code
-      await prisma.$queryRaw`
-        UPDATE pending_registrations 
-        SET verification_code = ${verificationCode}, expires = ${verificationExpires}
-        WHERE email = ${email}
-      `
+      await prisma.pendingRegistration.update({
+        where: { email },
+        data: {
+          verificationCode,
+          expires: verificationExpires
+        }
+      })
     } else if (existingUser && !existingUser.emailVerified) {
       // For unverified existing users, we need to create a pending registration
       // This shouldn't normally happen but could occur in edge cases
@@ -112,9 +105,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    // Prepare response object
+    const response: {
+      message: string
+      developmentMode?: boolean
+      verificationCode?: string
+    } = {
       message: getErrorMessage('newCodeSent', locale)
-    })
+    }
+
+    // In development mode, include the verification code in the response
+    if (emailResult.developmentMode && emailResult.verificationCode) {
+      response.developmentMode = true
+      response.verificationCode = emailResult.verificationCode
+      response.message = `Development mode: Verification code is ${emailResult.verificationCode}. Email sending is disabled.`
+    }
+
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error('Resend verification error:', error)

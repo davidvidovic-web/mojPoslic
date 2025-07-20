@@ -24,6 +24,7 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
   const { user } = useAuth()
   const tCommon = useTranslations('common')
   const t = useTranslations('jobApplication')
+  const tSuccess = useTranslations('jobs.success')
   const locale = useLocale()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [applicationCount, setApplicationCount] = useState<number | null>(null)
@@ -115,7 +116,7 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
   const handleJobUpdated = () => {
     setIsEditDialogOpen(false)
     onJobUpdated?.()
-    toast.success('Job updated successfully!')
+    toast.success(tSuccess('jobUpdated'))
   }
 
   return (

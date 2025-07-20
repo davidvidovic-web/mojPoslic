@@ -100,17 +100,38 @@ function DashboardContent({ user, loading }: DashboardContentProps) {
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const { user, loading } = useAuth();
+  
+  // Determine the appropriate loading message based on user role
+  const getLoadingMessage = () => {
+    if (user?.role) {
+      return t(`loading.${user.role}`)
+    }
+    return t('loading.dashboard')
+  }
+  
+  // Single loading state for better UX - show dashboard loading immediately
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">{getLoadingMessage()}</p>
+        </div>
+      </div>
+    )
+  }
+  
   return (
     <RoleGuard requireRole={true} requireProfileSetup={true}>
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t('loading.dashboard')}</p>
+            <p className="text-muted-foreground">{getLoadingMessage()}</p>
           </div>
         </div>
       }>
-        <DashboardContent user={user} loading={loading} />
+        <DashboardContent user={user} loading={false} />
       </Suspense>
     </RoleGuard>
   )

@@ -243,33 +243,68 @@ export function ProfileSettingsCard() {
             <div className="space-y-4">
               <h3 className="text-lg font-medium">{t('professionalInformation')}</h3>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="bio">{t('bio')}</Label>
-                  <SimpleRichTextEditor
-                    value={profile.bio || ''}
-                    onChange={(content) => setProfile({ ...profile, bio: content })}
-                    placeholder={t('bioPlaceholder')}
-                  />
-                </div>
+                {/* Skills first for taskers, bio first for companies */}
+                {profile.role === 'tasker' ? (
+                  <>
+                    <div className="space-y-2">
+                      <SkillsBubbleInput
+                        value={profile.skills || []}
+                        onChange={(skills) => setProfile({ ...profile, skills })}
+                        placeholder={t('skillsPlaceholder')}
+                        label={t('skills')}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="website">{t('website')}</Label>
-                  <Input
-                    id="website"
-                    value={profile.website || ''}
-                    onChange={(e) => setProfile({ ...profile, website: e.target.value })}
-                    placeholder={t('websitePlaceholder')}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <SkillsBubbleInput
-                    value={profile.skills || []}
-                    onChange={(skills) => setProfile({ ...profile, skills })}
-                    placeholder={t('skillsPlaceholder')}
-                    label={t('skills')}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">{t('bio')}</Label>
+                      <SimpleRichTextEditor
+                        value={profile.bio || ''}
+                        onChange={(content) => setProfile({ ...profile, bio: content })}
+                        placeholder={t('bioPlaceholder')}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="website">{t('website')}</Label>
+                      <Input
+                        id="website"
+                        value={profile.website || ''}
+                        onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                        placeholder={t('websitePlaceholder')}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">{t('bio')}</Label>
+                      <SimpleRichTextEditor
+                        value={profile.bio || ''}
+                        onChange={(content) => setProfile({ ...profile, bio: content })}
+                        placeholder={t('bioPlaceholder')}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="website">{t('website')}</Label>
+                      <Input
+                        id="website"
+                        value={profile.website || ''}
+                        onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                        placeholder={t('websitePlaceholder')}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <SkillsBubbleInput
+                        value={profile.skills || []}
+                        onChange={(skills) => setProfile({ ...profile, skills })}
+                        placeholder={t('skillsPlaceholder')}
+                        label={t('skills')}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Experience levels for each skill */}
                 {profile.skills && profile.skills.length > 0 && (

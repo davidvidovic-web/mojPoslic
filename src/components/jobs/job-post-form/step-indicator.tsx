@@ -23,14 +23,14 @@ function getStepIcon(iconName: string) {
 
 interface StepIndicatorProps {
   currentStep: JobFormStep
-  completedSteps: Set<JobFormStep>
   stepValidations?: Partial<Record<JobFormStep, boolean>>
   isEditMode?: boolean
   onStepClick?: (step: JobFormStep) => void
   formData?: CreateJobData
+  canClickStep?: (step: JobFormStep) => boolean
 }
 
-export function StepIndicator({ currentStep, completedSteps, stepValidations = {}, isEditMode = false, onStepClick, formData }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, stepValidations = {}, isEditMode = false, onStepClick, formData, canClickStep }: StepIndicatorProps) {
   const t = useTranslations('jobPost.form.steps')
   const tNavigation = useTranslations('jobPost.form.navigation')
   const { user } = useAuth()
@@ -98,10 +98,12 @@ export function StepIndicator({ currentStep, completedSteps, stepValidations = {
       {/* Desktop Step Navigation */}
       <div className="hidden md:flex justify-between items-center mb-4">
         {JOB_FORM_STEPS.map((step, index) => {
-          const isCompleted = completedSteps.has(step.id)
           const isCurrent = step.id === currentStep
+          const isValid = stepValidations[step.id] === true
           const hasValidationIssue = isEditMode && stepValidations[step.id] === false
-          const isClickable = isEditMode || isCompleted || index <= currentIndex
+
+          // Use the canClickStep function if provided, otherwise fall back to default logic
+          const isClickable = canClickStep ? canClickStep(step.id) : (isEditMode || isValid || index <= currentIndex)
 
           return (
             <button
@@ -117,20 +119,22 @@ export function StepIndicator({ currentStep, completedSteps, stepValidations = {
             >
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2",
+                isCurrent && isValid ? "bg-green-500 text-white border-green-500" :
                 isCurrent ? "bg-primary text-primary-foreground border-primary" :
-                isCompleted ? "bg-blue-500 text-primary-foreground border-blue-500" :
+                isValid ? "bg-green-500 text-white border-green-500" :
                 hasValidationIssue ? "bg-destructive/10 border-destructive text-destructive" :
                 "bg-background border-border"
               )}>
-                {isCompleted ? <Check className="h-4 w-4" /> : 
+                {isValid ? <Check className="h-4 w-4" /> : 
                  hasValidationIssue ? <AlertCircle className="h-4 w-4" /> : 
                  index + 1}
               </div>
               <div className="space-y-1">
                 <div className={cn(
                   "text-xs font-medium",
+                  isCurrent && isValid ? "text-green-600 dark:text-green-400" :
                   isCurrent ? "text-primary" : 
-                  isCompleted ? "text-green-600" : 
+                  isValid ? "text-green-600 dark:text-green-400" : 
                   hasValidationIssue ? "text-destructive" :
                   "text-muted-foreground"
                 )}>

@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,19 +10,26 @@ import { Label } from "@/components/ui/label"
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { showToast } from "@/lib/toast"
 import { useTranslations } from "next-intl"
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   })
-  const router = useRouter()
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard')
+    }
+  }, [user, authLoading, router])
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,11 +54,20 @@ export default function RegisterPage() {
       }
 
       // Show success message - email should be sent automatically
-      showToast.success(t('accountCreated'))
+      showToast.success(data.message || t('accountCreated'))
+      
+      // In development mode, show verification code in alert
+      if (data.developmentMode && data.verificationCode) {
+        alert(`🔐 Development Mode\n\nYour verification code: ${data.verificationCode}\n\nThis code will be auto-filled on the next page.`)
+      }
       
       // Redirect to verification page
       if (data.redirectTo) {
-        router.push(data.redirectTo)
+        // In development mode, append the verification code to the URL for auto-fill
+        const redirectUrl = data.developmentMode && data.verificationCode 
+          ? `${data.redirectTo}&code=${data.verificationCode}`
+          : data.redirectTo
+        router.push(redirectUrl)
         return
       }
       
@@ -89,6 +107,23 @@ export default function RegisterPage() {
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render form if user is already logged in
+  if (user) {
+    return null
   }
 
   return (

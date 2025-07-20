@@ -72,7 +72,7 @@ export function SalarySection({ formData, onChange }: SalarySectionProps) {
                 <div className="text-center text-sm text-muted-foreground">or</div>
                 <div className="space-y-2">
                   <Label>Price Range (BAM)</Label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                       type="number"
                       placeholder={t('minPlaceholder')}

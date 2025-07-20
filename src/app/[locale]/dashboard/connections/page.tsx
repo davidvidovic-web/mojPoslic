@@ -1,35 +1,30 @@
 'use client'
 
-import { useAuth } from '@/contexts/auth-context'
-import { ConnectionsSection } from '@/components/dashboard/connections-section'
-import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
-import { useTranslations } from 'next-intl'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
+import { ConnectionsSection } from '@/components/dashboard/connections-section'
+import { ConnectionsFullHistory } from '@/components/dashboard/connections/connections-full-history'
+import { useTranslations } from 'next-intl'
 
 export default function ConnectionsPage() {
-  const { user } = useAuth()
-  const t = useTranslations('connections')
-
+  const t = useTranslations('dashboard.connections')
+  
   return (
     <DashboardLayout 
-      activeTab="connections" 
-      title={t('title')} 
+      title={t('title')}
       subtitle={t('subtitle')}
-      userRole={user?.role}
+      activeTab="connections"
     >
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
-          Connections
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          {getTimeBasedGreeting()}, <span className="font-bold">{formatDisplayName(user?.name || undefined)}</span>! Manage your application credits.
-        </p>
-      </div>
-
-      {/* Connections Content */}
-      <div className="max-w-4xl">
-        <ConnectionsSection />
+      {/* Responsive grid layout - stacked on mobile, side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left column - Connections Section (same as overview dashboard) */}
+        <div className="lg:sticky lg:top-8 lg:self-start">
+          <ConnectionsSection />
+        </div>
+        
+        {/* Right column - Full Connections History */}
+        <div>
+          <ConnectionsFullHistory />
+        </div>
       </div>
     </DashboardLayout>
   )

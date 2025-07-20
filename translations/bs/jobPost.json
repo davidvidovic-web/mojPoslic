@@ -74,6 +74,7 @@
       "cityRequired": "Grad *",
       "selectCity": "Odaberite grad",
       "hasSpecificLocation": "Posao ima specifičnu adresu",
+      "notAvailableForRemote": "Nije dostupno za rad na daljinu",
       "specificAddress": "Specifična adresa posla (Opcionalno)",
       "addressPlaceholder": "Unesite tačnu adresu gdje će se obavljati posao...",
       "mapNote": "Kliknite na mapu da postavite tačnu lokaciju",
@@ -150,7 +151,8 @@
       "performanceBonus": "Mogućnost bonusa za performanse?",
       "performanceBonusHelp": "Označite ovo ako nudite bonuse ili podsticaje na osnovu performansi.",
       "validation": {
-        "maxLessThanMin": "Maksimalna stopa ne može biti manja od minimalne stope"
+        "maxLessThanMin": "Maksimalna stopa ne može biti manja od minimalne stope",
+        "minimumPayment": "Minimalna naknada za bilo koju uslugu je 5 BAM"
       },
       "bestPractices": {
         "title": "Najbolje prakse za platu",

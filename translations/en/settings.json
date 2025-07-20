@@ -80,9 +80,20 @@
     "dataPrivacy": "Data Privacy",
     "privacyDescription": "Your data is protected and will never be shared with third parties without your consent.",
     "dangerZone": "Danger Zone",
-    "deleteAccountDescription": "Once you delete your account, there is no going back. Please be certain.",
+    "deleteAccountDescription": "Your account will be scheduled for deletion in 90 days. You can cancel this request anytime before the final deletion date.",
     "deleteAccount": "Delete Account",
-    "deleteAccountNotAvailable": "Account deletion is not available at this time"
+    "deleteAccountNotAvailable": "Account deletion is not available at this time",
+    "confirmDeletion": "Confirm Account Deletion",
+    "confirmDeletionDescription": "This action will schedule your account for deletion in 90 days. Please type your username to confirm:",
+    "typeUsernameToConfirm": "Type your username to confirm",
+    "usernameConfirmationPlaceholder": "Enter your username here",
+    "confirmDeletionButton": "Schedule Account Deletion",
+    "deletionScheduled": "Account deletion scheduled",
+    "deletionScheduledDescription": "Your account has been scheduled for deletion on {date}. You can cancel this request anytime before that date.",
+    "cancelDeletion": "Cancel Deletion Request",
+    "deletionCancelled": "Deletion request cancelled successfully",
+    "reasonForDeletion": "Reason for deletion (optional)",
+    "reasonPlaceholder": "Let us know why you're leaving..."
   },
   "appearance": {
     "title": "Appearance",

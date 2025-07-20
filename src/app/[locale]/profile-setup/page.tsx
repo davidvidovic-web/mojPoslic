@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 import { CitiesFilter } from '@/components/filters/cities-filter'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Badge } from '@/components/ui/badge'
 import { X, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
@@ -35,6 +36,7 @@ export default function ProfileSetupPage() {
     location: '',
     skills: [] as string[],
     skillExperiences: [] as SkillExperience[],
+    bio: '',
     website: '',
   }))
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -59,7 +61,16 @@ export default function ProfileSetupPage() {
       redirectAttempted.current = true
       setIsRedirecting(true)
       localStorage.setItem('lastRedirectTime', Date.now().toString())
-      router.replace('/auth/signin')
+      router.replace('/auth/register')
+      return
+    }
+
+    // If user doesn't have a role, redirect to account type selection
+    if (user && !user.role) {
+      redirectAttempted.current = true
+      setIsRedirecting(true)
+      localStorage.setItem('lastRedirectTime', Date.now().toString())
+      router.replace('/account-type')
       return
     }
 
@@ -259,27 +270,11 @@ export default function ProfileSetupPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="username">{t('setup.fields.username')}</Label>
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange('username', e.target.value)}
-                    placeholder={t('setup.placeholders.chooseUsername')}
-                  />
-                  {!formData.username && (
-                    <p className="text-sm text-muted-foreground">
-                      {t('autoGenerateUsername')}: {generateUsernameFromName(formData.name || 'user')}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
                   <Label htmlFor="phone">{t('setup.fields.phoneNumber')} *</Label>
-                  <Input
+                  <PhoneInput
                     id="phone"
-                    type="tel"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(value) => handleInputChange('phone', value)}
                     placeholder={t('setup.placeholders.phoneNumber')}
                     required
                   />
@@ -371,37 +366,43 @@ export default function ProfileSetupPage() {
                     </div>
                   )}
 
-                  {/* Website/Portfolio - Show for taskers and companies */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">{t('setup.sections.portfolio')}</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="website">{t('setup.fields.websitePortfolio')}</Label>
-                      <Input
-                        id="website"
-                        value={formData.website}
-                        onChange={(e) => handleInputChange('website', e.target.value)}
-                        placeholder={t('setup.placeholders.websitePortfolio')}
-                      />
-                    </div>
-                  </div>
                 </>
               )}
 
-              {/* Website/Company URL - Show for companies only */}
-              {user.role === 'company' && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">{t('setup.sections.companyInformation')}</h3>
+              {/* Username - Show for all roles at the end */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">{t('setup.sections.additional')}</h3>
+                
+                {/* Website/Portfolio - Show for taskers and companies */}
+                {(user.role === 'tasker' || user.role === 'company') && (
                   <div className="space-y-2">
-                    <Label htmlFor="website">{t('setup.fields.companyWebsite')}</Label>
+                    <Label htmlFor="website">
+                      {user.role === 'company' ? t('setup.fields.companyWebsite') : t('setup.fields.websitePortfolio')}
+                    </Label>
                     <Input
                       id="website"
                       value={formData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder={t('setup.placeholders.companyWebsite')}
+                      placeholder={user.role === 'company' ? t('setup.placeholders.companyWebsite') : t('setup.placeholders.websitePortfolio')}
                     />
                   </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="username">{t('setup.fields.username')} ({t('setup.fields.optional')})</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
+                    placeholder={t('setup.placeholders.chooseUsername')}
+                  />
+                  {!formData.username && (
+                    <p className="text-sm text-muted-foreground">
+                      {t('autoGenerateUsername')}: {generateUsernameFromName(formData.name || 'user')}
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
 
               <Button 
                 type="submit" 

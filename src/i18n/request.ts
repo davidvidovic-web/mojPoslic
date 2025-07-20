@@ -42,6 +42,7 @@ export default getRequestConfig(async ({requestLocale}) => {
   await loadTranslation('admin');
   await loadTranslation('messageTemplates');
   await loadTranslation('theme');
+  await loadTranslation('purchase');
 
   return {
     locale,

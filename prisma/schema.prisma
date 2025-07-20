@@ -45,6 +45,7 @@ model User {
   savedJobs                   SavedJob[]
   sessions                    Session[]
   stripeTransactions          StripeTransaction[]
+  deletionRequest             AccountDeletionRequest?
 
   @@map("users")
 }
@@ -96,6 +97,20 @@ model PendingRegistration {
   createdAt       DateTime @default(now()) @map("created_at")
 
   @@map("pending_registrations")
+}
+
+model AccountDeletionRequest {
+  id                String   @id @default(cuid())
+  userId            String   @unique @map("user_id")
+  requestedAt       DateTime @default(now()) @map("requested_at")
+  scheduledDeletion DateTime @map("scheduled_deletion")
+  reason            String?
+  confirmationText  String   @map("confirmation_text")
+  ipAddress         String?  @map("ip_address")
+  userAgent         String?  @map("user_agent")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account_deletion_requests")
 }
 
 model City {

@@ -21,6 +21,7 @@ interface JobPostFormProps {
 
 export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   const t = useTranslations('jobs.postForm')
+  const tSuccess = useTranslations('jobs.success')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cities, categories } = useData()
   
@@ -165,7 +166,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
         throw new Error(result.error || 'Failed to post job')
       }
 
-      toast.success('Job posted successfully!')
+      toast.success(tSuccess('jobPosted'))
       
       // Reset form
       setFormData({

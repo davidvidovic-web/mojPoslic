@@ -1,0 +1,19 @@
+{
+  "connections": {
+    "title": "Kupovina konekcijskih kredita",
+    "description": "Odaberite paket za dodavanje konekcijskih kredita na vaš račun i nastavite komuniciranje s kandidatima i klijentima.",
+    "connections": "Konekcije",
+    "pricePerConnection": "Cijena po konekciji",
+    "processing": "Obrađuje se...",
+    "purchaseNow": "Kupi sada",
+    "securePayment": "Sigurno plaćanje sa Stripe",
+    "instantAdd": "Krediti se odmah dodaju na vaš račun",
+    "cancel": "Otkaži",
+    "mostPopular": "Najpopularniji",
+    "bestValue": "Najbolja vrijednost",
+    "currency": "KM",
+    "package_10_description": "Savršeno za povremenu upotrebu",
+    "package_20_description": "Odlično za redovno traženje posla",
+    "package_50_description": "Najbolja vrijednost za napredne korisnike"
+  }
+}

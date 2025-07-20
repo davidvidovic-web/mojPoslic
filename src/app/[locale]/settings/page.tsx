@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ProfileSettingsCard } from '@/components/settings/profile-settings-card'
 import { AccountInfoCard } from '@/components/settings/account-info-card'
 import { SecurityCard } from '@/components/settings/security-card'
@@ -13,17 +13,43 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
+interface DeletionRequest {
+  scheduledDeletion: string
+}
+
 export default function SettingsPage() {
   const tSettings = useTranslations('settings')
   const tCommon = useTranslations('common')
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [deletionRequest, setDeletionRequest] = useState<DeletionRequest | null>(null)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/signin')
     }
   }, [user, loading, router])
+
+  // Fetch deletion request status
+  useEffect(() => {
+    const fetchDeletionRequest = async () => {
+      if (!user) return
+      
+      try {
+        const response = await fetch('/api/user/deletion-status')
+        if (response.ok) {
+          const data = await response.json()
+          setDeletionRequest(data.deletionRequest)
+        }
+      } catch (error) {
+        console.error('Error fetching deletion request:', error)
+      }
+    }
+
+    if (user) {
+      fetchDeletionRequest()
+    }
+  }, [user])
 
   if (loading) {
     return (
@@ -63,7 +89,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <ProfileSettingsCard />
           <AccountInfoCard />
-          <SecurityCard />
+          <SecurityCard deletionRequest={deletionRequest} />
           <AppearanceCard />
           <HelpSupportCard />
         </div>

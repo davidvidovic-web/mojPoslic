@@ -71,6 +71,28 @@ class EmailService {
 
   async sendVerificationEmail(email: string, code: string, name?: string, locale: 'bs' | 'en' = 'bs') {
     try {
+      // Check if we're in development mode
+      const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.RESEND_API_KEY;
+      
+      if (isDevelopment) {
+        // Simple console log for development
+        console.log('');
+        console.log('🔐 DEVELOPMENT MODE - EMAIL VERIFICATION');
+        console.log('📧 Email:', email);
+        console.log('� Verification Code:', code);
+        console.log('⏰ Code expires in 15 minutes');
+        console.log('');
+        
+        return {
+          success: true,
+          data: { id: 'dev-mode' },
+          messageId: 'dev-mode',
+          developmentMode: true,
+          verificationCode: code,
+          message: `Development mode: Verification code is ${code}`
+        };
+      }
+
       if (!this.resend) {
         console.warn('Email service not available - RESEND_API_KEY not configured');
         return {
@@ -139,7 +161,7 @@ class EmailService {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #007cba; margin: 0; font-size: 28px;">mojPoslić</h1>
+          <h1 style="color: #22c55e; margin: 0; font-size: 28px;">mojPoslić</h1>
         </div>
         
         <h2 style="color: #333; text-align: center; margin-bottom: 20px;">${content.welcome}</h2>
@@ -152,8 +174,8 @@ class EmailService {
           ${content.thankYou}
         </p>
         
-        <div style="background-color: #f8f9fa; border: 2px dashed #007cba; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
-          <h1 style="color: #007cba; font-size: 42px; letter-spacing: 6px; margin: 0; font-family: 'Courier New', monospace; font-weight: bold;">
+        <div style="background-color: #f0fdf4; border: 2px dashed #22c55e; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
+          <h1 style="color: #16a34a; font-size: 42px; letter-spacing: 6px; margin: 0; font-family: 'Courier New', monospace; font-weight: bold;">
             ${code}
           </h1>
           <p style="color: #666; margin: 15px 0 0 0; font-size: 14px;">

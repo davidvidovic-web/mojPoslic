@@ -288,8 +288,18 @@
     "willBeFeatured": "This job will be featured for 7 days",
     "readyToPost": "Ready to Post",
     "jobLooksGreat": "Your job posting looks great! Click submit to publish it and start receiving applications.",
+    "connectionCostNotice": "Connection Cost Notice",
+    "alreadyPostedToday": "You have already posted {count} job{plural} today.",
+    "additionalCostMessage": "This additional {jobType} posting will cost {connections} connection{plural}.",
+    "jobPosted": "Job posted successfully!",
     "submitJobPosting": "Submit Job Posting",
     "updateJobPosting": "Update Job Posting",
     "submitting": "Submitting..."
+  },
+  "dialogs": {
+    "postJobDialog": "Post New Job",
+    "postJobDescription": "Create a new job posting to find qualified candidates.",
+    "editJobDialog": "Edit Job Posting",
+    "editJobDescription": "Update your job posting details."
   }
 }

@@ -61,7 +61,7 @@ export function JobEditForm({ jobId, initialData, onJobUpdated, onCancel }: JobE
     }
 
     const data = await response.json()
-    toast.success('Job updated successfully!')
+    toast.success(t('jobUpdated'))
     onJobUpdated?.()
     
     return data

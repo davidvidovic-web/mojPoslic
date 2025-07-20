@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
+import { useTranslations } from 'next-intl'
 import { ConnectionBalance } from './connections/connection-balance'
 import { ConnectionCosts } from './connections/connection-costs'
 import { MonthlyRefreshInfo } from './connections/monthly-refresh-info'
@@ -26,6 +27,7 @@ interface ConnectionHistoryEntry {
 
 export function ConnectionsSection() {
   const { user, loading: authLoading } = useAuth()
+  const t = useTranslations('dashboard.connections')
   const [connections, setConnections] = useState<number>(0)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
@@ -142,7 +144,7 @@ export function ConnectionsSection() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            Connections
+            {t('title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -161,7 +163,7 @@ export function ConnectionsSection() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-blue-500" />
-          Connections
+          {t('title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

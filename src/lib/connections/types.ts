@@ -28,13 +28,13 @@ export const INITIAL_CONNECTIONS_CLIENT = 10 // One-time only
 export const INITIAL_CONNECTIONS_COMPANY = 10 // One-time only
 export const INITIAL_CONNECTIONS_ADMIN = 50 // Admin gets more
 
-// Job application costs (always 3 connections for professional jobs)
-export const JOB_APPLICATION_COST = 3
+// Job application costs (always 4 connections for professional jobs)
+export const JOB_APPLICATION_COST = 4
 
 // Job posting costs based on job type
 export const JOB_POSTING_COSTS: Record<string, number> = {
-  'quick-job': 3,
-  'quick_job': 3,
+  'quick-job': 4,
+  'quick_job': 4,
   'part-time': 4,
   'part_time': 4,
   'full-time': 5,

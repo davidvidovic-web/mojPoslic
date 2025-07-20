@@ -59,14 +59,16 @@ export function JobFormBase({
     canGoNext,
     handleNext,
     handlePrevious,
-    handleStepClick
+    handleStepClick,
+    canClickStep
   } = useJobFormNavigation({
     currentStep,
     setCurrentStep,
     completedSteps,
     setCompletedSteps,
     stepValidations,
-    isEditMode
+    isEditMode,
+    formData
   })
 
   const handleFormSubmit = async () => {
@@ -170,11 +172,11 @@ export function JobFormBase({
     <>
       <StepIndicator
         currentStep={currentStep}
-        completedSteps={completedSteps}
         stepValidations={stepValidations}
         isEditMode={isEditMode}
         onStepClick={handleStepClick}
         formData={formData}
+        canClickStep={canClickStep}
       />
 
       <div className="mt-8">

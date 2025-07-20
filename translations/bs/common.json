@@ -166,7 +166,16 @@
     "findingLocation": "Pronalažim...",
     "locationError": "Nije moguće dobiti vašu lokaciju",
     "locationPermissionDenied": "Pristup lokaciji odbačen",
-    "outsideBosniaWarning": "Trenutno radimo samo u Bosni i Hercegovini"
+    "outsideBosniaWarning": "Trenutno radimo samo u Bosni i Hercegovini",
+    "cityMismatchTitle": "Otkrivena drugačija lokacija",
+    "cityMismatchMessage": "Izgleda da ste daleko od odabranog grada ({selectedCity}). Vaša trenutna lokacija je u {currentCity}. Da li ste sigurni da želite koristiti trenutnu lokaciju?",
+    "outsideBosniaTitle": "Lokacija nije podržana",
+    "outsideBosniaMessage": "Vaša trenutna lokacija je van Bosne i Hercegovine. Trenutno radimo samo u okviru Bosne i Hercegovine.",
+    "confirmLocation": "Koristi Trenutnu Lokaciju",
+    "keepSelected": "Zadrži Odabrani Grad",
+    "understood": "Razumijem",
+    "noResults": "Nema pronađenih lokacija za vašu pretragu",
+    "searchError": "Nije moguće pretražiti lokaciju. Molimo pokušajte ponovo."
   },
   "general": {
     "yes": "Da",

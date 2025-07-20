@@ -43,6 +43,11 @@ export default async function middleware(request: NextRequest) {
     '/profile-setup'
   ];
   
+  // Define protected paths that require full authentication + role + profile setup
+  const protectedPaths = [
+    '/dashboard'
+  ];
+  
   // Skip auth checks for public paths
   if (publicPaths.includes(finalPath)) {
     return cleanedResponse;
@@ -62,9 +67,12 @@ export default async function middleware(request: NextRequest) {
     let userRole = token?.role;
     let profileSetupCompleted = token?.profileSetupCompleted;
     
-    // Only fetch fresh data if we're on critical paths AND the token shows no role
+    // Only fetch fresh data if we're on critical paths AND need to verify current state
     // This reduces unnecessary API calls when the token is already up-to-date
-    if (token?.id && (finalPath === '/role-selection' || finalPath === '/profile-setup') && !token.role) {
+    if (token?.id && (
+      (finalPath === '/role-selection' || finalPath === '/profile-setup') && !token.role ||
+      finalPath === '/dashboard' || finalPath.startsWith('/dashboard/')
+    )) {
       try {
         // Call our API endpoint to get fresh user data (since Prisma doesn't work in Edge Runtime)
         const response = await fetch(new URL('/api/user/fresh-state', request.url), {
@@ -98,6 +106,20 @@ export default async function middleware(request: NextRequest) {
       }
     }
     
+    // Debug logging for dashboard access
+    if (finalPath === '/dashboard') {
+      console.log('Middleware Debug (Dashboard):', {
+        path: finalPath,
+        hasToken: !!token,
+        tokenRole: token?.role,
+        freshUserRole: userRole,
+        tokenProfileSetup: token?.profileSetupCompleted,
+        freshProfileSetup: profileSetupCompleted,
+        tokenId: token?.id,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     // Debug logging for role selection issues
     if (finalPath === '/role-selection' || finalPath === '/profile-setup') {
       console.log('Middleware Debug:', {
@@ -127,10 +149,28 @@ export default async function middleware(request: NextRequest) {
     // User is authenticated - now check role and profile completion
     // (userRole and profileSetupCompleted are already set above from fresh DB data)
     
+    // Special handling for dashboard - ensure user is fully set up
+    if (finalPath === '/dashboard' || finalPath.startsWith('/dashboard/')) {
+      if (!userRole) {
+        console.log('Dashboard access denied: No role, redirecting to role selection');
+        const roleSelectionUrl = new URL('/role-selection', request.url);
+        return NextResponse.redirect(roleSelectionUrl);
+      }
+      if (!profileSetupCompleted) {
+        console.log('Dashboard access denied: Profile not completed, redirecting to profile setup');
+        const profileSetupUrl = new URL('/profile-setup', request.url);
+        return NextResponse.redirect(profileSetupUrl);
+      }
+      // User is fully set up, allow dashboard access
+      console.log('Dashboard access allowed: User fully set up');
+      return cleanedResponse;
+    }
+    
     // If user has completed everything (role + profile), redirect them away from onboarding pages
     if (userRole && profileSetupCompleted) {
       // If they're trying to access onboarding pages, redirect to dashboard
       if (finalPath === '/role-selection' || finalPath === '/profile-setup') {
+        console.log('Completed user accessing onboarding page, redirecting to dashboard');
         const dashboardUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(dashboardUrl);
       }

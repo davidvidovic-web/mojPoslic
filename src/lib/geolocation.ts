@@ -133,4 +133,89 @@ export class GeolocationService {
     geocodeCache.set(roundedLat, roundedLng, fallbackAddress, 'fallback');
     return fallbackAddress;
   }
+
+  // Enhanced reverse geocoding that extracts city information
+  static async reverseGeocodeDetailed(lat: number, lng: number): Promise<{
+    address: string;
+    city?: string;
+    cityKey?: string;
+  }> {
+    const roundedLat = parseFloat(lat.toFixed(6));
+    const roundedLng = parseFloat(lng.toFixed(6));
+    
+    // First check if these are city coordinates
+    try {
+      const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+      
+      // Check if within ~500 meters of a city center for detailed matching
+      for (const [cityKey, city] of Object.entries(CITY_COORDINATES)) {
+        if (Math.abs(city.lat - roundedLat) <= 0.005 && 
+            Math.abs(city.lng - roundedLng) <= 0.005) {
+          
+          return {
+            address: city.name,
+            city: city.name,
+            cityKey: cityKey
+          };
+        }
+      }
+    } catch (cityError) {
+      console.warn('City lookup error:', cityError);
+    }
+    
+    // Try to get detailed address via our proxy API
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      try {
+        const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data && data.display_name) {
+            const result = {
+              address: data.display_name,
+              city: data.address?.city || data.address?.town || data.address?.village,
+              cityKey: undefined as string | undefined
+            };
+            
+            // Try to match the found city to our city list
+            if (result.city) {
+              try {
+                const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+                for (const [cityKey, cityData] of Object.entries(CITY_COORDINATES)) {
+                  if (cityData.name.toLowerCase().includes(result.city.toLowerCase()) ||
+                      result.city.toLowerCase().includes(cityData.name.toLowerCase())) {
+                    result.cityKey = cityKey;
+                    break;
+                  }
+                }
+              } catch (error) {
+                console.warn('City matching error:', error);
+              }
+            }
+            
+            return result;
+          }
+        }
+      } catch (error) {
+        console.warn('Detailed geocoding API error:', error);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    } catch (error) {
+      console.error('Detailed geocoding error:', error);
+    }
+    
+    // Fallback
+    return {
+      address: `${roundedLat}, ${roundedLng}`
+    };
+  }
 }

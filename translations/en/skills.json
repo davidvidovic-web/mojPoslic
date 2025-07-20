@@ -1,7 +1,9 @@
 {
   "ui": {
     "popularCategories": "Popular categories:",
+    "allCategories": "All categories:",
     "relatedSkills": "Related skills:",
+    "availableSubcategories": "Available subcategories:",
     "addMore": "Add more...",
     "addCustom": "Add \"{skill}\"",
     "skillsCounter": "{count}/{max} skills • Click suggestions or type and press Enter to add",
