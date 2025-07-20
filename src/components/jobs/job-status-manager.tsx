@@ -130,7 +130,7 @@ export function JobStatusManager({
               <AlertCircle className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="w-[95vw] max-w-md p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>{t('statusManager.updateJobStatus')}</DialogTitle>
               <DialogDescription>

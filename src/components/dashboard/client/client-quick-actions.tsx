@@ -2,15 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Search, Users, MessageSquare, BarChart3, Settings, Lock } from 'lucide-react'
+import { Search, Users, MessageSquare, BarChart3, Settings, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
-interface ClientQuickActionsProps {
-  onPostNewJob: () => void
-}
-
-export function ClientQuickActions({ onPostNewJob }: ClientQuickActionsProps) {
+export function ClientQuickActions() {
   const t = useTranslations()
   
   return (
@@ -24,19 +20,6 @@ export function ClientQuickActions({ onPostNewJob }: ClientQuickActionsProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button 
-          onClick={onPostNewJob} 
-          className="w-full justify-start gap-3 h-12"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20">
-            <Plus className="h-4 w-4" />
-          </div>
-          <div className="text-left">
-            <div className="font-medium">{t('dashboard.actions.postJob')}</div>
-            <div className="text-xs opacity-80">{t('dashboard.client.quickActions.postJobDesc')}</div>
-          </div>
-        </Button>
-        
         <Button 
           variant="outline" 
           className="w-full justify-start gap-3 h-12 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-foreground dark:hover:text-foreground"

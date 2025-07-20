@@ -273,7 +273,7 @@ export function MessageTemplates({ onSelectTemplate }: Omit<MessageTemplatesProp
               {t('createTemplate')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="w-[95vw] max-w-2xl p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>{t('createTemplateTitle')}</DialogTitle>
               <DialogDescription>
@@ -477,7 +477,7 @@ export function MessageTemplates({ onSelectTemplate }: Omit<MessageTemplatesProp
 
       {/* Edit Template Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[95vw] max-w-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>{t('editTemplateTitle')}</DialogTitle>
             <DialogDescription>

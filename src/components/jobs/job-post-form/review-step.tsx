@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { CreateJobData } from '@/types/job'
 import { Rocket, Star, Zap } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useTranslations, useLocale } from 'next-intl'
@@ -17,9 +17,10 @@ interface ReviewStepProps {
   formData: CreateJobData
   onValidation: (isValid: boolean) => void
   onChange?: (updates: Partial<CreateJobData>) => void
+  isEditMode?: boolean
 }
 
-export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps) {
+export function ReviewStep({ formData, onValidation, onChange, isEditMode = false }: ReviewStepProps) {
   const { user } = useAuth()
   const t = useTranslations('jobs')
   const tCommon = useTranslations('common')
@@ -81,24 +82,32 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
   }, [formData.city_id, formData.category_id, cities, categories])
 
   // Fetch today's job count to determine if connections will be deducted
+  // Only fetch this for create mode, not edit mode
+  // Use a ref to cache the result and avoid repeated API calls
+  const todayJobCountRef = useRef<number | null>(null)
+  
   useEffect(() => {
     const fetchTodayJobCount = async () => {
-      if (!user?.id) return
+      if (!user?.id || isEditMode) return
+      if (todayJobCountRef.current !== null) return // Already fetched
       
       try {
         const response = await fetch('/api/jobs/today-count')
         if (response.ok) {
           const data = await response.json()
-          setTodayJobCount(data.count || 0)
+          const count = data.count || 0
+          setTodayJobCount(count)
+          todayJobCountRef.current = count
         }
       } catch (error) {
         console.error('Error fetching today job count:', error)
         setTodayJobCount(0)
+        todayJobCountRef.current = 0
       }
     }
 
     fetchTodayJobCount()
-  }, [user?.id])
+  }, [user?.id, isEditMode])
 
   // Validation - invalid if date/time has passed OR if required fields are missing
   useEffect(() => {
@@ -422,38 +431,40 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
         </Card>
       </div>
 
-      {/* Feature Job Option */}
-      <Card className="border-2 border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Star className="h-4 w-4 text-yellow-600" />
-            {t('review.featureYourJob')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{t('review.makeJobFeatured')}</p>
-              <p className="text-xs text-muted-foreground">
-                {t('review.featuredJobsAppear')}
-              </p>
-              <p className="text-xs font-medium text-yellow-600 mt-1">
-                {t('review.willCostConnections', { connections: 5 })}
-              </p>
+      {/* Feature Job Option - only show for creating new jobs */}
+      {!isEditMode && (
+        <Card className="border-2 border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Star className="h-4 w-4 text-yellow-600" />
+              {t('review.featureYourJob')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t('review.makeJobFeatured')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('review.featuredJobsAppear')}
+                </p>
+                <p className="text-xs font-medium text-yellow-600 mt-1">
+                  {t('review.willCostConnections', { connections: 5 })}
+                </p>
+              </div>
+              <Switch
+                checked={formData.is_featured || false}
+                onCheckedChange={(checked) => onChange?.({ is_featured: checked })}
+              />
             </div>
-            <Switch
-              checked={formData.is_featured || false}
-              onCheckedChange={(checked) => onChange?.({ is_featured: checked })}
-            />
-          </div>
-          {formData.is_featured && (
-            <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded">
-              <Star className="h-3 w-3 inline mr-1" />
-              {t('review.willBeFeatured')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {formData.is_featured && (
+              <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded">
+                <Star className="h-3 w-3 inline mr-1" />
+                {t('review.willBeFeatured')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Error message if date/time has passed */}
       {isDateTimePassed() && (
@@ -466,19 +477,6 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
               ? 'The start date and time you selected has already passed. Please go back and choose a future date and time.'
               : 'The start date you selected has already passed. Please go back and choose a future date.'
             }
-          </p>
-        </div>
-      )}
-
-      {/* Ready to post message - only show if no errors */}
-      {!isDateTimePassed() && (
-        <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-600 dark:border-green-400 rounded-lg">
-          <h4 className="text-sm font-medium mb-2 text-green-700 dark:text-green-400 flex items-center gap-1">
-            <Rocket className="h-4 w-4" />
-            {t('review.readyToPost')}
-          </h4>
-          <p className="text-xs text-muted-foreground">
-            {t('review.jobLooksGreat')}
           </p>
         </div>
       )}
@@ -500,6 +498,19 @@ export function ReviewStep({ formData, onValidation, onChange }: ReviewStepProps
               connections: getJobPostingCost(formData.type),
               plural: getJobPostingCost(formData.type) !== 1 ? 's' : ''
             })}
+          </p>
+        </div>
+      )}
+
+      {/* Ready to post message - only show if no errors and moved to final position */}
+      {!isDateTimePassed() && (
+        <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-600 dark:border-green-400 rounded-lg">
+          <h4 className="text-sm font-medium mb-2 text-green-700 dark:text-green-400 flex items-center gap-1">
+            <Rocket className="h-4 w-4" />
+            {t('review.readyToPost')}
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            {t('review.jobLooksGreat')}
           </p>
         </div>
       )}

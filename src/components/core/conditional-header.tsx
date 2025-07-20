@@ -7,8 +7,6 @@ import { OptimizedHeader } from './optimized-header'
 const ONBOARDING_PATHS = [
   '/role-selection',
   '/profile-setup',
-  '/auth/signin',
-  '/auth/register',
   '/auth/verify-email',
   '/auth/forgot-password',
   '/auth/reset-password'

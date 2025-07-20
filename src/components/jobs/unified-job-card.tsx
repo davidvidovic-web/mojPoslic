@@ -4,45 +4,31 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from 'next-intl';
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import {
   MapPin,
   DollarSign,
-  Edit,
   Car,
   Star,
   Clock,
   Users,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Job } from "@/types/job";
 import {
   getJobTypeBadgeVariant,
   formatTimeAgo,
 } from "@/lib/job-utils";
 import { useAuth } from "@/hooks/useAuth";
-import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 
 interface UnifiedJobCardProps {
   job: Job;
-  onJobUpdated?: () => void;
 }
 
-export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
+export function UnifiedJobCard({ job }: UnifiedJobCardProps) {
   const router = useRouter();
   const { user } = useAuth();
   const t = useTranslations('jobCard');
-  const tSuccess = useTranslations('jobs.success');
   const locale = useLocale();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
 
   // Check if the current user owns this job
@@ -111,9 +97,6 @@ export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
     }
   }, [isOwner, checkApplicationCount]);
 
-  const canEdit =
-    isOwner && (applicationCount === null || applicationCount === 0);
-
   const formatSalary = (job: Job) => {
     // If we have structured salary data
     if (job.salaryMin && job.salaryMax && job.salaryType) {
@@ -160,17 +143,6 @@ export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
 
   const handleViewDetails = () => {
     router.push(`/jobs/${job.id}`);
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    setIsEditDialogOpen(true);
-  };
-
-  const handleJobUpdated = () => {
-    setIsEditDialogOpen(false);
-    onJobUpdated?.();
-    toast.success(tSuccess('jobUpdated'));
   };
 
   return (
@@ -266,39 +238,7 @@ export function UnifiedJobCard({ job, onJobUpdated }: UnifiedJobCardProps) {
             applied
           </div>
         )}
-
-        {/* Action Buttons */}
-        {isOwner && canEdit && (
-          <div className="flex items-center justify-end pt-2 border-t border-border/40">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEdit}
-              className="h-8 w-8 p-0 hover:bg-muted"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </CardContent>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Job Posting</DialogTitle>
-            <DialogDescription>
-              Update the details of your job posting
-            </DialogDescription>
-          </DialogHeader>
-          <MultiStepJobForm
-            initialData={job}
-            isEditMode={true}
-            jobId={job.id}
-            onJobPosted={handleJobUpdated}
-          />
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

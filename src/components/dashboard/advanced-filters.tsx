@@ -495,7 +495,7 @@ export function AdvancedFilters({ applications, onFilterChange, onFiltersReset }
             {uniqueSkills.length > 0 && (
               <div>
                 <Label className="text-sm font-medium">Skills</Label>
-                <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+                <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto thin-scrollbar">
                   {uniqueSkills.map((skill) => (
                     <Badge
                       key={skill}

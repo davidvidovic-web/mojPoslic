@@ -7,6 +7,7 @@ import { Zap, UserPlus, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
+import { GlobalFooter } from '@/components/core/global-footer';
 
 export default function Home() {
   const t = useTranslations('homepage');
@@ -106,15 +107,7 @@ export default function Home() {
       */}
 
       {/* Footer */}
-      <footer className="border-t bg-background/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>
-              {t('footer.copyright', { year: new Date().getFullYear() })}
-            </p>
-          </div>
-        </div>
-      </footer>
+      <GlobalFooter />
     </>
   );
 }

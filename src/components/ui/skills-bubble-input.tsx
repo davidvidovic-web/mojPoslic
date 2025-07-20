@@ -302,7 +302,7 @@ export function SkillsBubbleInput({
       {showSuggestions && inputValue.trim() && (
         <Card className="absolute top-full left-0 right-0 z-50 mt-1 shadow-lg">
           <CardContent className="p-2">
-            <div className="max-h-48 overflow-y-auto">
+            <div className="max-h-48 overflow-y-auto thin-scrollbar">
               {/* Show filtered suggestions when typing */}
               {filteredSuggestions.map((suggestion, index) => (
                 <Button

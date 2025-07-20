@@ -8,7 +8,6 @@ import { Briefcase } from 'lucide-react'
 interface JobsListSectionProps {
   jobs: Job[]
   applicationCounts: Record<string, number>
-  onEdit: (job: Job) => void
   onDelete: (jobId: string) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
   isLoading?: boolean
@@ -17,7 +16,6 @@ interface JobsListSectionProps {
 export function JobsListSection({ 
   jobs, 
   applicationCounts, 
-  onEdit, 
   onDelete, 
   onFeature,
   isLoading = false 
@@ -62,7 +60,6 @@ export function JobsListSection({
           key={job.id}
           job={job}
           applicationCount={applicationCounts[job.id] || 0}
-          onEdit={onEdit}
           onDelete={onDelete}
           onFeature={onFeature}
         />

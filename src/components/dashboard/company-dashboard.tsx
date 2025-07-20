@@ -5,14 +5,12 @@ import { useUserJobs, useDeleteJob } from '@/hooks/use-jobs'
 import { useMultipleJobApplicantCounts } from '@/hooks/use-applications'
 import { useDialogStore } from '@/stores/dialog-store'
 import { Job } from '@/types/job'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { MultiStepJobForm } from '@/components/jobs/job-post-form/multi-step-job-form'
+import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { ConnectionsSection } from '@/components/dashboard/connections-section'
 import { JobsListSection } from './company/jobs-list-section'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
 import { DashboardLayout } from './dashboard-layout'
-import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 
@@ -119,67 +117,46 @@ export function CompanyDashboard() {
       </div>
 
       {/* Post New Job Dialog */}
-      <Dialog open={isJobPostDialogOpen} onOpenChange={(open) => open ? openJobPostDialog() : closeJobPostDialog()}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="hidden">
-            Post Job
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto xl:max-w-6xl 2xl:max-w-7xl">
-          <DialogHeader>
-            <DialogTitle>{t('jobs.dialogs.postJobDialog')}</DialogTitle>
-          </DialogHeader>
-          <MultiStepJobForm
-            onJobPosted={handleJobPosted}
-            showCard={false}
-          />
-        </DialogContent>
-      </Dialog>
+      <UnifiedJobDialog
+        isOpen={isJobPostDialogOpen}
+        onOpenChange={(open) => open ? openJobPostDialog() : closeJobPostDialog()}
+        onJobPosted={handleJobPosted}
+        triggerText="Post Job"
+        isEditMode={false}
+      />
 
       {/* Edit Job Dialog */}
-      <Dialog open={isEditJobDialogOpen} onOpenChange={(open) => open ? openEditJobDialog(editingJob!) : closeEditJobDialog()}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="hidden">
-            Edit Job
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('jobs.dialogs.editJobDialog')}</DialogTitle>
-          </DialogHeader>
-          {editingJob && (
-            <MultiStepJobForm 
-              initialData={{
-                title: editingJob.title,
-                description: editingJob.description,
-                type: editingJob.type,
-                city_id: editingJob.city_id,
-                category_id: editingJob.category_id || '',
-                salary: editingJob.salary || '',
-                salaryType: editingJob.salaryType,
-                salaryMin: editingJob.salaryMin,
-                salaryMax: editingJob.salaryMax,
-                website: editingJob.website || '',
-                email: editingJob.email,
-                contact_email: editingJob.email,
-                application_url: editingJob.website || '',
-                start_date: editingJob.start_date,
-                job_address: editingJob.job_address,
-                job_latitude: editingJob.job_latitude,
-                job_longitude: editingJob.job_longitude,
-                tags: editingJob.tags 
-                  ? (Array.isArray(editingJob.tags) 
-                      ? editingJob.tags 
-                      : (editingJob.tags as string).split(',').filter(Boolean))
-                  : []
-              }}
-              isEditMode={true}
-              jobId={editingJob.id}
-              onJobPosted={handleEditComplete}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <UnifiedJobDialog
+        isOpen={isEditJobDialogOpen}
+        onOpenChange={(open) => open ? openEditJobDialog(editingJob!) : closeEditJobDialog()}
+        onJobUpdated={handleEditComplete}
+        isEditMode={true}
+        initialData={editingJob ? {
+          title: editingJob.title,
+          description: editingJob.description,
+          type: editingJob.type,
+          city_id: editingJob.city_id,
+          category_id: editingJob.category_id || '',
+          salary: editingJob.salary || '',
+          salaryType: editingJob.salaryType,
+          salaryMin: editingJob.salaryMin,
+          salaryMax: editingJob.salaryMax,
+          website: editingJob.website || '',
+          email: editingJob.email,
+          contact_email: editingJob.email,
+          application_url: editingJob.website || '',
+          start_date: editingJob.start_date,
+          job_address: editingJob.job_address,
+          job_latitude: editingJob.job_latitude,
+          job_longitude: editingJob.job_longitude,
+          tags: editingJob.tags 
+            ? (Array.isArray(editingJob.tags) 
+                ? editingJob.tags 
+                : (editingJob.tags as string).split(',').filter(Boolean))
+            : []
+        } : undefined}
+        jobId={editingJob?.id}
+      />
     </DashboardLayout>
   )
 }

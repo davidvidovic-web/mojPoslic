@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl'
 import { CreateJobData } from '@/types/job'
 import { useAuth } from '@/contexts/auth-context'
 
-function getStepIcon(iconName: string) {
+function getStepIcon(iconName: string, size: 'sm' | 'md' = 'md') {
   const iconMap = {
     'FileText': FileText,
     'Search': Search,
@@ -18,19 +18,19 @@ function getStepIcon(iconName: string) {
     'CheckCircle': CheckCircle
   }
   const IconComponent = iconMap[iconName as keyof typeof iconMap] || FileText
-  return <IconComponent className="h-6 w-6" />
+  const sizeClass = size === 'sm' ? 'h-4 w-4' : 'h-6 w-6'
+  return <IconComponent className={sizeClass} />
 }
 
 interface StepIndicatorProps {
   currentStep: JobFormStep
   stepValidations?: Partial<Record<JobFormStep, boolean>>
-  isEditMode?: boolean
   onStepClick?: (step: JobFormStep) => void
   formData?: CreateJobData
   canClickStep?: (step: JobFormStep) => boolean
 }
 
-export function StepIndicator({ currentStep, stepValidations = {}, isEditMode = false, onStepClick, formData, canClickStep }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, stepValidations = {}, onStepClick, formData, canClickStep }: StepIndicatorProps) {
   const t = useTranslations('jobPost.form.steps')
   const tNavigation = useTranslations('jobPost.form.navigation')
   const { user } = useAuth()
@@ -96,14 +96,15 @@ export function StepIndicator({ currentStep, stepValidations = {}, isEditMode = 
   return (
     <div className="w-full mb-8">
       {/* Desktop Step Navigation */}
-      <div className="hidden md:flex justify-between items-center mb-4">
+      <div className="hidden md:flex gap-[10px] mb-4">
         {JOB_FORM_STEPS.map((step, index) => {
           const isCurrent = step.id === currentStep
           const isValid = stepValidations[step.id] === true
-          const hasValidationIssue = isEditMode && stepValidations[step.id] === false
+          // Disable validation issues in edit mode entirely to ensure clean appearance
+          const hasValidationIssue = false
 
           // Use the canClickStep function if provided, otherwise fall back to default logic
-          const isClickable = canClickStep ? canClickStep(step.id) : (isEditMode || isValid || index <= currentIndex)
+          const isClickable = canClickStep ? canClickStep(step.id) : (isValid || index <= currentIndex)
 
           return (
             <button
@@ -111,7 +112,7 @@ export function StepIndicator({ currentStep, stepValidations = {}, isEditMode = 
               onClick={() => isClickable && onStepClick?.(step.id)}
               disabled={!isClickable}
               className={cn(
-                "flex flex-col items-center text-center space-y-2 flex-1 py-2 px-1 rounded-lg transition-colors",
+                "flex flex-col items-center text-center space-y-2 flex-1 py-3 px-2 rounded-lg transition-colors min-h-[80px]",
                 isCurrent && "bg-primary/10",
                 hasValidationIssue && "bg-destructive/5",
                 isClickable ? "hover:bg-secondary cursor-pointer" : "cursor-not-allowed opacity-50"

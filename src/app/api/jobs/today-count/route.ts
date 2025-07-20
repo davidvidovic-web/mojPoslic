@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-  const prisma = new PrismaClient()
   
   try {
     const session = await auth()
@@ -51,7 +50,5 @@ export async function GET() {
       { error: 'Failed to get today job count' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

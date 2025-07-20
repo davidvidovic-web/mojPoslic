@@ -47,12 +47,22 @@ export function JobDetailsSidebar({ job, formatDate, formatSalary, showAddress =
           <span className="text-sm">{job.posted_at ? formatDate(job.posted_at) : ''}</span>
         </div>
         
-        {job.start_date && (
+        {job.start_date && job.start_date !== 'negotiable' && (
           <>
             <Separator />
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">{t('startDate')}</span>
               <span className="text-sm">{new Date(job.start_date).toLocaleDateString()}</span>
+            </div>
+          </>
+        )}
+        
+        {job.start_date === 'negotiable' && (
+          <>
+            <Separator />
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">{t('startDate')}</span>
+              <span className="text-sm">{t('byAgreement')}</span>
             </div>
           </>
         )}

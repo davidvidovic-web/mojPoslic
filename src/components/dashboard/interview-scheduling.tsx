@@ -492,7 +492,7 @@ export function InterviewScheduling({
 
       {/* Schedule Interview Modal */}
       <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[95vw] max-w-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>{t('scheduleInterview')}</DialogTitle>
             <DialogDescription>

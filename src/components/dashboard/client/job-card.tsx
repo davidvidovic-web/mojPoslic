@@ -11,12 +11,11 @@ import { useTranslations } from 'next-intl'
 interface JobCardProps {
   job: Job
   applicationCount: number
-  onEdit: (job: Job) => void
   onDelete: (jobId: string) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
 }
 
-export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: JobCardProps) {
+export function JobCard({ job, applicationCount, onDelete, onFeature }: JobCardProps) {
   const t = useTranslations('dashboard.jobCard')
   
   const formatDate = (dateString: string) => {
@@ -62,8 +61,6 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, onFeature }: 
             {/* Actions moved to top right corner */}
             <div className="flex-shrink-0">
               <JobCardActions 
-                applicationCount={applicationCount}
-                onEdit={() => onEdit(job)}
                 onDelete={() => onDelete(job.id)}
                 onFeature={onFeature ? () => onFeature(job.id, !job.is_featured) : undefined}
                 isFeatured={job.is_featured}

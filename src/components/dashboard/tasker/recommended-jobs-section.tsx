@@ -33,7 +33,7 @@ export function RecommendedJobsSection({ recommendedJobs, savedJobIds, onSaveTog
             </p>
           </div>
         ) : (
-          <div className="space-y-4 max-h-[600px] overflow-y-auto">
+          <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar">
             {recommendedJobs.map((job) => (
               <JobCard 
                 key={job.id} 

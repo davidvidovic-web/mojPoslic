@@ -31,18 +31,31 @@ export function JobTimeline({ job, formatDate }: JobTimelineProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {job.start_date && (
+        {job.start_date && job.start_date !== 'negotiable' && (
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <div>
               <p className="text-sm font-medium">{t('startDate')}</p>
               <p className="text-sm text-muted-foreground">
                 {new Date(job.start_date).toLocaleDateString()}
-                {job.start_time && ` ${t('at')} ${new Date(`2000-01-01T${job.start_time}`).toLocaleTimeString(locale === 'bs' ? 'bs-BA' : 'en-US', { 
+                {job.start_time && job.start_time !== 'negotiable' && ` ${t('at')} ${new Date(`2000-01-01T${job.start_time}`).toLocaleTimeString(locale === 'bs' ? 'bs-BA' : 'en-US', { 
                   hour: 'numeric', 
                   minute: '2-digit', 
                   hour12: locale !== 'bs'
                 })}`}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {job.start_date === 'negotiable' && (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-orange-600" />
+            <div>
+              <p className="text-sm font-medium">{t('startDate')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('byAgreement')}
+                {job.start_time === 'negotiable' && ` - ${t('timeByAgreement')}`}
               </p>
             </div>
           </div>

@@ -21,7 +21,7 @@ export default function JobDetailPage() {
   const t = useTranslations()
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
@@ -31,7 +31,19 @@ export default function JobDetailPage() {
   const hasApplied = job ? appliedJobIds.has(job.id) : false
   const isOwner = !!(user && job && job.postedBy?.id === user.id)
 
+  // Redirect non-logged-in users to login page
   useEffect(() => {
+    if (!authLoading && !user) {
+      const returnUrl = `/jobs/${params.id}`
+      router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`)
+      return
+    }
+  }, [user, authLoading, params.id, router])
+
+  useEffect(() => {
+    // Don't fetch job if user is not authenticated
+    if (!user || authLoading) return
+    
     const fetchJob = async (jobId: string) => {
       try {
         setLoading(true)
@@ -71,17 +83,9 @@ export default function JobDetailPage() {
     if (params.id) {
       fetchJob(params.id as string)
     }
-  }, [params.id, router, t])
+  }, [params.id, router, t, user, authLoading])
 
   const handleApply = async () => {
-    // Check if user is logged in
-    if (!user) {
-      // Redirect to login with return URL
-      const returnUrl = `/jobs/${params.id}`
-      router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`)
-      return
-    }
-
     if (!job) return
 
     // Check if user is the owner of this job
@@ -162,6 +166,23 @@ export default function JobDetailPage() {
     return job.salary || null
   }
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render anything if user is not authenticated (redirect will happen)
+  if (!user) {
+    return null
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -237,7 +258,7 @@ export default function JobDetailPage() {
         {/* Application Form Modal/Overlay */}
         {showApplicationForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl thin-scrollbar">
               <div className="p-6">
                 <JobApplicationForm
                   jobId={job.id}

@@ -34,7 +34,7 @@ function ConfirmationDialog({ isOpen, onClose, onConfirm, options }: Confirmatio
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="w-[95vw] max-w-md p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{options.title}</DialogTitle>
           <DialogDescription>{options.message}</DialogDescription>

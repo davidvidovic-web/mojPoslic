@@ -231,7 +231,7 @@ export function CandidateComparisonView({
                         Assign Job
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="w-[95vw] max-w-md p-4 sm:p-6">
                       <DialogHeader>
                         <DialogTitle>{t('comparison.assignmentDialog.title', { name: application.user?.name || tCommon('messages.unknown') })}</DialogTitle>
                         <DialogDescription>

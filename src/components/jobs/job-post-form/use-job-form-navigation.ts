@@ -11,7 +11,6 @@ export interface UseJobFormNavigationProps {
   completedSteps: Set<JobFormStep>
   setCompletedSteps: (steps: Set<JobFormStep>) => void
   stepValidations: Record<JobFormStep, boolean>
-  isEditMode: boolean
   formData?: CreateJobData
 }
 
@@ -55,13 +54,12 @@ export function useJobFormNavigation({
   completedSteps,
   setCompletedSteps,
   stepValidations,
-  isEditMode,
   formData
 }: UseJobFormNavigationProps) {
   
   const isCurrentStepValid = stepValidations[currentStep] || false
   const canGoPrevious = getPreviousStep(currentStep) !== null
-  const canGoNext = isEditMode || isCurrentStepValid
+  const canGoNext = isCurrentStepValid
 
   const scrollToTop = () => {
     // Try multiple approaches to ensure scrolling works
@@ -79,17 +77,7 @@ export function useJobFormNavigation({
   }
 
   const handleNext = () => {
-    // In edit mode, allow navigation without validation
-    if (isEditMode) {
-      const nextStep = getNextStep(currentStep)
-      if (nextStep) {
-        setCurrentStep(nextStep)
-        scrollToTop()
-      }
-      return
-    }
-    
-    // In create mode, require validation
+    // Require validation for create mode
     if (!isCurrentStepValid) return
     
     const nextStep = getNextStep(currentStep)
@@ -109,13 +97,6 @@ export function useJobFormNavigation({
   }
 
   const handleStepClick = (step: JobFormStep) => {
-    // In edit mode, allow unrestricted navigation between steps
-    if (isEditMode) {
-      setCurrentStep(step)
-      scrollToTop()
-      return
-    }
-    
     // Use the canClickStep function to determine if step is accessible
     if (canClickStep(step)) {
       setCurrentStep(step)
@@ -125,8 +106,6 @@ export function useJobFormNavigation({
 
   // Helper function to check if a step can be clicked
   const canClickStep = (step: JobFormStep): boolean => {
-    if (isEditMode) return true
-    
     const stepIndex = getStepIndex(step)
     const currentIndex = getStepIndex(currentStep)
     

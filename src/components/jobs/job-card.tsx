@@ -6,22 +6,13 @@ import {
   Card,
   CardHeader,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   MapPin,
   Clock,
   DollarSign,
-  Edit,
   Car,
   Star,
   Users,
@@ -34,23 +25,20 @@ import {
   formatTimeAgo,
 } from "@/lib/job-utils";
 import { useAuth } from "@/contexts/auth-context";
-import { MultiStepJobForm } from "@/components/jobs/job-post-form/multi-step-job-form";
 import { toast } from "sonner";
 import { useTranslations, useLocale } from 'next-intl';
 
 interface JobCardProps {
   job: Job;
-  onJobUpdated?: () => void;
   isSaved?: boolean;
   onSaveToggle?: (jobId: string, isSaved: boolean) => void;
 }
 
-export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: JobCardProps) {
+export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
   const router = useRouter();
   const { user } = useAuth();
   const t = useTranslations('jobCard');
   const locale = useLocale();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isJobSaved, setIsJobSaved] = useState(isSaved);
@@ -179,9 +167,6 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
     }
   }, [isOwner, checkApplicationCount]);
 
-  const canEdit =
-    isOwner && (applicationCount === null || applicationCount === 0);
-
   const formatSalary = (job: Job) => {
     // If we have structured salary data
     if (job.salaryMin && job.salaryMax && job.salaryType) {
@@ -228,17 +213,6 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
 
   const handleViewDetails = () => {
     router.push(`/jobs/${job.id}`);
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    setIsEditDialogOpen(true);
-  };
-
-  const handleJobUpdated = () => {
-    setIsEditDialogOpen(false);
-    onJobUpdated?.();
-    toast.success(t("jobUpdatedSuccessfully"));
   };
 
   const toggleDescription = (e: React.MouseEvent) => {
@@ -388,38 +362,6 @@ export function JobCard({ job, onJobUpdated, isSaved = false, onSaveToggle }: Jo
         )}
       </CardContent>
 
-      {/* Edit Dialog (only for owners) */}
-      {isOwner && canEdit && (
-        <CardFooter className="p-4 pt-0">
-          <Button 
-            onClick={handleEdit} 
-            variant="outline" 
-            size="sm"
-            className="ml-auto"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            {t('editJob')}
-          </Button>
-        </CardFooter>
-      )}
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('editJobPosting')}</DialogTitle>
-            <DialogDescription>
-              {t('updateJobDetails')}
-            </DialogDescription>
-          </DialogHeader>
-          <MultiStepJobForm
-            initialData={job}
-            isEditMode={true}
-            jobId={job.id}
-            onJobPosted={handleJobUpdated}
-          />
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

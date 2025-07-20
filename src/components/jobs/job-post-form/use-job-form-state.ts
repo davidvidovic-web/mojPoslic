@@ -9,12 +9,11 @@ import { JobFormStep } from './types'
 
 export interface UseJobFormStateProps {
   initialData?: Partial<CreateJobData>
-  isEditMode?: boolean
 }
 
 const FORM_STORAGE_KEY = 'job-form-draft'
 
-export function useJobFormState({ initialData, isEditMode = false }: UseJobFormStateProps) {
+export function useJobFormState({ initialData }: UseJobFormStateProps) {
   const { user } = useAuth()
   
   // Check if user can post all job types (companies and admins)
@@ -144,10 +143,49 @@ export function useJobFormState({ initialData, isEditMode = false }: UseJobFormS
     
     return completed
   })
-  const [stepValidations, setStepValidations] = useState<Record<JobFormStep, boolean>>({
-    'basic-details': false,
-    'location-compensation': false,
-    'review': false // Should start as invalid until all fields are complete
+  const [stepValidations, setStepValidations] = useState<Record<JobFormStep, boolean>>(() => {
+    // Get saved data from localStorage
+    let savedData = null
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(FORM_STORAGE_KEY)
+        savedData = saved ? JSON.parse(saved) : null
+      } catch (error) {
+        console.error('Error loading saved form data for validation:', error)
+      }
+    }
+    
+    // Get combined data from initialData and savedData
+    const combinedData = { ...savedData, ...initialData }
+    
+    // Initialize validations based on existing data (either initial or saved)
+    if (combinedData && Object.keys(combinedData).length > 0) {
+      const hasBasicDetails = !!(
+        combinedData.title?.trim() &&
+        combinedData.description?.trim() &&
+        combinedData.category_id?.trim() &&
+        combinedData.type
+      )
+      
+      const hasLocationCompensation = !!(
+        combinedData.city_id?.trim() &&
+        combinedData.start_date?.trim() &&
+        (combinedData.email?.trim() || user?.email?.trim())
+      )
+      
+      return {
+        'basic-details': hasBasicDetails,
+        'location-compensation': hasLocationCompensation,
+        'review': hasBasicDetails && hasLocationCompensation
+      }
+    }
+    
+    // Start with all false (will be validated by each step component)
+    return {
+      'basic-details': false,
+      'location-compensation': false,
+      'review': false
+    }
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -193,13 +231,11 @@ export function useJobFormState({ initialData, isEditMode = false }: UseJobFormS
   const updateFormData = useCallback((field: keyof CreateJobData, value: unknown) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value }
-      // Auto-save to localStorage (but not in edit mode)
-      if (!isEditMode) {
-        saveFormData(newData)
-      }
+      // Auto-save to localStorage
+      saveFormData(newData)
       return newData
     })
-  }, [saveFormData, isEditMode])
+  }, [saveFormData])
 
   // Clear form and saved data
   const clearForm = useCallback(() => {

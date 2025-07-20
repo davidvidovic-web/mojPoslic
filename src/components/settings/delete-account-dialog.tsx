@@ -68,7 +68,7 @@ export function DeleteAccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="w-[95vw] max-w-md p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />

@@ -460,7 +460,7 @@ export function LocationPicker({
         {/* Search Results Dropdown */}
         {showResults && searchResults.length > 0 && (
           <div className="relative">
-            <Card className="absolute top-0 left-0 right-0 z-10 max-h-64 overflow-y-auto border border-gray-200 shadow-lg">
+            <Card className="absolute top-0 left-0 right-0 z-10 max-h-64 overflow-y-auto border border-gray-200 shadow-lg thin-scrollbar">
               <CardContent className="p-2">
                 <div className="space-y-1">
                   {searchResults.map((result, index) => (

@@ -142,7 +142,8 @@
     "salary": "Salary",
     "transportation": "Transportation",
     "transportationNotProvided": "Transportation not provided",
-    "address": "Address"
+    "address": "Address",
+    "byAgreement": "By agreement"
   },
   "content": {
     "jobDescription": "Job Description",
@@ -155,7 +156,9 @@
     "startDate": "Start Date",
     "expectedDuration": "Expected Duration",
     "applicationDeadline": "Application Deadline",
-    "at": "at"
+    "at": "at",
+    "byAgreement": "By agreement",
+    "timeByAgreement": "time by agreement"
   },
   "location": {
     "jobLocation": "Job Location",
@@ -292,6 +295,7 @@
     "alreadyPostedToday": "You have already posted {count} job{plural} today.",
     "additionalCostMessage": "This additional {jobType} posting will cost {connections} connection{plural}.",
     "jobPosted": "Job posted successfully!",
+    "jobUpdated": "Job updated successfully!",
     "submitJobPosting": "Submit Job Posting",
     "updateJobPosting": "Update Job Posting",
     "submitting": "Submitting..."

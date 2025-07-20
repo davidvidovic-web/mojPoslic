@@ -7,6 +7,7 @@ import { getTimeBasedGreetingWithIcon } from '@/lib/localized-greetings'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslations } from 'next-intl'
+import { DashboardFooter } from '@/components/core/global-footer'
 import { 
   Sunrise, 
   Sun, 
@@ -221,6 +222,9 @@ export function DashboardLayout({
           </div>
         </div>
       </div>
+      
+      {/* Dashboard Footer */}
+      <DashboardFooter />
     </div>
   )
 }

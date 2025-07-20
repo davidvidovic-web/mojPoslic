@@ -87,7 +87,7 @@ export function ApplicationDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto thin-scrollbar p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-3">

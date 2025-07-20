@@ -16,7 +16,6 @@ import { useCallback } from 'react'
 
 interface JobFormBaseProps {
   initialData?: Partial<CreateJobData>
-  isEditMode?: boolean
   onSubmit: (formData: CreateJobData) => Promise<void>
   onCancel?: () => void
   submitButtonText?: string
@@ -26,7 +25,6 @@ interface JobFormBaseProps {
 
 export function JobFormBase({
   initialData,
-  isEditMode = false,
   onSubmit,
   onCancel,
   submitButtonText,
@@ -52,7 +50,7 @@ export function JobFormBase({
     isCurrentStepValid,
     clearForm,
     clearSavedDataOnSubmit
-  } = useJobFormState({ initialData, isEditMode })
+  } = useJobFormState({ initialData })
 
   const {
     canGoPrevious,
@@ -67,7 +65,6 @@ export function JobFormBase({
     completedSteps,
     setCompletedSteps,
     stepValidations,
-    isEditMode,
     formData
   })
 
@@ -173,7 +170,6 @@ export function JobFormBase({
       <StepIndicator
         currentStep={currentStep}
         stepValidations={stepValidations}
-        isEditMode={isEditMode}
         onStepClick={handleStepClick}
         formData={formData}
         canClickStep={canClickStep}
@@ -183,50 +179,47 @@ export function JobFormBase({
         {renderCurrentStep()}
       </div>
 
-      <div className="relative flex items-center mt-8 pt-6 border-t gap-4">
-        {/* Left buttons - only render if there are buttons to show */}
-        {(canGoPrevious || onCancel) && (
-          <div className="flex gap-2 justify-start">
-            {canGoPrevious && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={isSubmitting}
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                {tNav('previous')}
-              </Button>
-            )}
-            {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                {tNav('cancel')}
-              </Button>
-            )}
-          </div>
-        )}
+      <div className="grid grid-cols-3 items-center mt-8 pt-6 border-t gap-4">
+        {/* Left section - Previous/Cancel buttons (33% width, aligned start) */}
+        <div className="flex gap-2 justify-start">
+          {canGoPrevious && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={isSubmitting}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              {tNav('previous')}
+            </Button>
+          )}
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              {tNav('cancel')}
+            </Button>
+          )}
+        </div>
 
-        {/* Clear form button */}
-        {!isEditMode && (
+        {/* Center section - Clear form button (33% width, aligned center) */}
+        <div className="flex justify-center">
           <Button
             type="button"
             variant="destructive"
             onClick={clearForm}
             disabled={isSubmitting}
-            className={(canGoPrevious || onCancel) ? "mx-auto" : "mr-auto"}
           >
             <Trash2 className="h-4 w-4 md:mr-2" />
             <span className="hidden md:inline">{tNav('clearForm')}</span>
           </Button>
-        )}
+        </div>
 
-        {/* Right buttons */}
-        <div className="flex gap-2 ml-auto">
+        {/* Right section - Next/Submit buttons (33% width, aligned end) */}
+        <div className="flex gap-2 justify-end">
           {!isLastStep ? (
             <Button
               type="button"
@@ -240,7 +233,7 @@ export function JobFormBase({
             <Button
               type="button"
               onClick={handleFormSubmit}
-              disabled={isSubmitting || (!isEditMode && !isCurrentStepValid)}
+              disabled={isSubmitting || !isCurrentStepValid}
             >
               {isSubmitting ? (submittingText || tNav('saving')) : (submitButtonText || tNav('submit'))}
             </Button>
@@ -252,7 +245,7 @@ export function JobFormBase({
 
   if (!showCard) {
     return (
-      <div className="w-full">
+      <div className="max-w-4xl mx-auto p-4 md:p-6">
         {content}
       </div>
     )
@@ -263,7 +256,7 @@ export function JobFormBase({
       <Card>
         <CardHeader>
           <CardTitle>
-            {isEditMode ? t('form.editJobPosting') : t('form.createJobPosting')}
+            {t('form.createJobPosting')}
           </CardTitle>
         </CardHeader>
         <CardContent>
