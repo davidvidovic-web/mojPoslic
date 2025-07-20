@@ -13,7 +13,7 @@ model User {
   username                    String?             @unique
   name                        String
   password                    String?
-  role                        UserRole            @default(client)
+  role                        UserRole?
   emailVerified               Boolean             @default(false) @map("email_verified")
   profileSetupCompleted       Boolean             @default(false) @map("profile_setup_completed")
   avatarUrl                   String?             @map("avatar_url")
@@ -389,6 +389,7 @@ enum ContractStatus {
 enum ConnectionAction {
   MONTHLY_REFRESH
   INITIAL_SIGNUP
+  ROLE_CHANGE
   JOB_APPLICATION
   JOB_POST_CLIENT
   JOB_POST_COMPANY

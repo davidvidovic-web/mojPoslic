@@ -8,36 +8,36 @@
     "title": "Tasker",
     "description": "Find and apply for jobs that match your skills",
     "badge": "Most Popular",
-    "features": [
-      "Browse available jobs",
-      "Apply with one click",
-      "Track application status",
-      "Build your professional profile",
-      "Receive job recommendations"
-    ]
+    "features": {
+      "0": "Browse available jobs",
+      "1": "Apply with one click",
+      "2": "Track application status",
+      "3": "Build your professional profile",
+      "4": "Receive job recommendations"
+    }
   },
   "client": {
     "title": "Client",
     "description": "Post jobs and hire talented individuals",
-    "features": [
-      "Post unlimited jobs",
-      "Review applications",
-      "Message candidates",
-      "Manage your projects",
-      "Leave reviews and ratings"
-    ]
+    "features": {
+      "0": "Post unlimited jobs",
+      "1": "Review applications",
+      "2": "Message candidates",
+      "3": "Manage your projects",
+      "4": "Leave reviews and ratings"
+    }
   },
   "company": {
     "title": "Company",
     "description": "Manage your workforce and large-scale hiring",
     "badge": "Coming Soon",
-    "features": [
-      "Team management",
-      "Bulk job posting",
-      "Advanced analytics",
-      "Enterprise features",
-      "Priority support"
-    ]
+    "features": {
+      "0": "Team management",
+      "1": "Bulk job posting",
+      "2": "Advanced analytics",
+      "3": "Enterprise features",
+      "4": "Priority support"
+    }
   },
   "continue": "Continue as {role}",
   "continueAsUser": "Continue",

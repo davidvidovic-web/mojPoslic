@@ -56,39 +56,112 @@ class StaticDataManager {
   }
 
   /**
-   * Fetch data from JSON files (client-side using fetch only)
+   * Fetch data from JSON files (using fetch for both client and server)
    */
   private async fetchData(): Promise<StaticDataCache> {
     try {
-      // Use fetch for all environments (client and server)
-      const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
-        fetch('/cache/cities.json'),
-        fetch('/cache/categories.json'),
-        fetch('/cache/metadata.json').catch(() => null) // metadata is optional
-      ])
+      // Check if we're running on the server side
+      const isServer = typeof window === 'undefined'
       
-      if (!citiesRes.ok) {
-        throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
-      }
-      if (!categoriesRes.ok) {
-        throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
-      }
-      
-      const [citiesData, categoriesData, metadataData] = await Promise.all([
-        citiesRes.json() as Promise<CitiesResponse>,
-        categoriesRes.json() as Promise<CategoriesResponse>,
-        metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
-      ])
-      
-      return {
-        cities: citiesData.cities,
-        categories: this.processCategories(categoriesData.categories),
-        lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
-        version: metadataData?.version || '1.0.0'
+      if (isServer) {
+        // Server-side: use absolute URLs or fallback to localhost
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}`
+          : process.env.NEXTAUTH_URL 
+          ? process.env.NEXTAUTH_URL
+          : 'http://localhost:3000'
+        
+        const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
+          fetch(`${baseUrl}/cache/cities.json`),
+          fetch(`${baseUrl}/cache/categories.json`),
+          fetch(`${baseUrl}/cache/metadata.json`).catch(() => null) // metadata is optional
+        ])
+        
+        if (!citiesRes.ok) {
+          throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
+        }
+        if (!categoriesRes.ok) {
+          throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
+        }
+        
+        const [citiesData, categoriesData, metadataData] = await Promise.all([
+          citiesRes.json() as Promise<CitiesResponse>,
+          categoriesRes.json() as Promise<CategoriesResponse>,
+          metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
+        ])
+        
+        return {
+          cities: citiesData.cities,
+          categories: this.processCategories(categoriesData.categories),
+          lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
+          version: metadataData?.version || '1.0.0'
+        }
+      } else {
+        // Client-side: use relative URLs
+        return this.loadDataFromFetch()
       }
     } catch (error) {
       console.error('Error loading static data:', error)
       throw new Error(`Failed to load static data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Load data from filesystem (server-side only) - kept for potential future use
+   */
+  private async loadDataFromFileSystem(): Promise<StaticDataCache> {
+    // Use eval to prevent webpack from analyzing the import during build
+    const fs = await eval('import("fs")')
+    const path = await eval('import("path")')
+    
+    const publicDir = path.join(process.cwd(), 'public')
+    
+    const [citiesData, categoriesData, metadataData] = await Promise.all([
+      fs.promises.readFile(path.join(publicDir, 'cache', 'cities.json'), 'utf8')
+        .then((data: string) => JSON.parse(data) as CitiesResponse),
+      fs.promises.readFile(path.join(publicDir, 'cache', 'categories.json'), 'utf8')
+        .then((data: string) => JSON.parse(data) as CategoriesResponse),
+      fs.promises.readFile(path.join(publicDir, 'cache', 'metadata.json'), 'utf8')
+        .then((data: string) => JSON.parse(data) as CacheMetadata)
+        .catch(() => null) // metadata is optional
+    ])
+    
+    return {
+      cities: citiesData.cities,
+      categories: this.processCategories(categoriesData.categories),
+      lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
+      version: metadataData?.version || '1.0.0'
+    }
+  }
+
+  /**
+   * Load data from fetch (client-side only)
+   */
+  private async loadDataFromFetch(): Promise<StaticDataCache> {
+    const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
+      fetch('/cache/cities.json'),
+      fetch('/cache/categories.json'),
+      fetch('/cache/metadata.json').catch(() => null) // metadata is optional
+    ])
+    
+    if (!citiesRes.ok) {
+      throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
+    }
+    if (!categoriesRes.ok) {
+      throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
+    }
+    
+    const [citiesData, categoriesData, metadataData] = await Promise.all([
+      citiesRes.json() as Promise<CitiesResponse>,
+      categoriesRes.json() as Promise<CategoriesResponse>,
+      metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
+    ])
+    
+    return {
+      cities: citiesData.cities,
+      categories: this.processCategories(categoriesData.categories),
+      lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
+      version: metadataData?.version || '1.0.0'
     }
   }
 

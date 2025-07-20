@@ -27,7 +27,7 @@ export default function JobDetailPage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   
   // Check if user has already applied to this job
-  const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs()
+  const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs(!!user)
   const hasApplied = job ? appliedJobIds.has(job.id) : false
   const isOwner = !!(user && job && job.postedBy?.id === user.id)
 

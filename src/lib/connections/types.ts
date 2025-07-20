@@ -5,6 +5,7 @@
 export type ConnectionAction = 
   | 'MONTHLY_REFRESH'
   | 'INITIAL_SIGNUP'
+  | 'ROLE_CHANGE'
   | 'JOB_APPLICATION'
   | 'JOB_POST_CLIENT'
   | 'JOB_POST_COMPANY'
@@ -19,7 +20,13 @@ export interface ConnectionCost {
 
 // Connection amounts
 export const INITIAL_CONNECTIONS = 20
-export const MONTHLY_CONNECTIONS = 15
+export const MONTHLY_CONNECTIONS = 10
+
+// Initial connections for different user roles
+export const INITIAL_CONNECTIONS_TASKER = 10 // Monthly refresh eligible
+export const INITIAL_CONNECTIONS_CLIENT = 10 // One-time only
+export const INITIAL_CONNECTIONS_COMPANY = 10 // One-time only
+export const INITIAL_CONNECTIONS_ADMIN = 50 // Admin gets more
 
 // Job application costs (always 3 connections for professional jobs)
 export const JOB_APPLICATION_COST = 3

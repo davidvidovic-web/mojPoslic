@@ -3,12 +3,14 @@
 import { JobList } from "@/components/job-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Zap, UserPlus } from "lucide-react";
+import { Zap, UserPlus, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function Home() {
   const t = useTranslations('homepage');
+  const { user } = useAuth();
   
   return (
     <>
@@ -38,15 +40,30 @@ export default function Home() {
 
               {/* Call to Action Button */}
               <div className="flex justify-center items-center mt-8">
-                <Link href="/auth/register">
-                  <Button
-                    size="lg"
-                    className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    <UserPlus className="h-5 w-5 mr-2" />
-                    {t('hero.registerButton')}
-                  </Button>
-                </Link>
+                {user ? (
+                  // Only show "Post Job" button for clients and companies, not taskers
+                  user.role !== 'tasker' ? (
+                    <Link href="/dashboard">
+                      <Button
+                        size="lg"
+                        className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        <Plus className="h-5 w-5 mr-2" />
+                        {t('hero.postJob')}
+                      </Button>
+                    </Link>
+                  ) : null
+                ) : (
+                  <Link href="/auth/register">
+                    <Button
+                      size="lg"
+                      className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <UserPlus className="h-5 w-5 mr-2" />
+                      {t('hero.registerButton')}
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

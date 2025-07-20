@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +16,7 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 
 interface RoleOption {
   id: 'tasker' | 'client' | 'company'
@@ -56,7 +56,7 @@ const roleOptions: RoleOption[] = [
 export default function RoleSelectionPage() {
   const t = useTranslations('roleSelection')
   const { refreshUser } = useAuth()
-  const router = useRouter()
+  const { update } = useSession()
   const [selectedRole, setSelectedRole] = useState<'tasker' | 'client' | 'company' | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -86,22 +86,28 @@ export default function RoleSelectionPage() {
           role: selectedRole
         })
       })
-
+      
       if (response.ok) {
-        // Refresh user context to get updated role
-        await refreshUser()
-
+        // Show immediate success feedback
         toast.success(t('welcomeMessage', { role: t(`${selectedRole}.title`) }))
         
-        // Redirect to profile setup to complete the onboarding
-        router.push('/profile-setup')
+        // Update NextAuth session to trigger JWT refresh (in background)
+        update()
+        
+        // Refresh user context (in background)
+        refreshUser()
+        
+        // Quick redirect for better UX
+        setTimeout(() => {
+          window.location.replace('/profile-setup')
+        }, 300) // Even faster - 300ms
       } else {
         const errorData = await response.json()
         toast.error(errorData.error || t('updateRoleFailed'))
       }
     } catch (error) {
       console.error('Error updating role:', error)
-      toast.error(t('common.messages.somethingWentWrong'))
+      toast.error(t('updateRoleFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -184,12 +190,24 @@ export default function RoleSelectionPage() {
 
                 <CardContent>
                   <ul className="space-y-2">
-                    {(t.raw(`${role.id}.features`) as string[]).map((feature, index) => (
-                      <li key={index} className="flex items-center text-sm text-foreground">
-                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
+                    {/* Manually map features since t.raw() might not work reliably with arrays */}
+                    {[0, 1, 2, 3, 4].map((index) => {
+                      try {
+                        const featureText = t(`${role.id}.features.${index}`)
+                        // Check if translation exists (if it returns the key itself, translation is missing)
+                        if (featureText === `${role.id}.features.${index}`) {
+                          return null
+                        }
+                        return (
+                          <li key={index} className="flex items-center text-sm text-foreground">
+                            <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
+                            {featureText}
+                          </li>
+                        )
+                      } catch {
+                        return null
+                      }
+                    }).filter(Boolean)}
                   </ul>
                 </CardContent>
               </Card>

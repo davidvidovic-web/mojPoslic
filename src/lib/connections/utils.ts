@@ -61,6 +61,8 @@ export function formatConnectionAction(action: ConnectionAction): string {
       return 'Monthly Refresh'
     case 'INITIAL_SIGNUP':
       return 'Welcome Bonus'
+    case 'ROLE_CHANGE':
+      return 'Role Change'
     case 'JOB_APPLICATION':
       return 'Job Application'
     case 'JOB_POST_CLIENT':

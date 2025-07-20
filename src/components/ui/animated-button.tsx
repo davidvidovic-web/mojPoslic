@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 interface AnimatedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "gradient"
+  variant?: "default" | "destructive" | "success" | "warning" | "info" | "outline" | "secondary" | "ghost" | "link" | "gradient"
   size?: "default" | "sm" | "lg" | "icon"
   className?: string
 }

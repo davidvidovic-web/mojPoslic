@@ -38,10 +38,12 @@ export function getAuthAdapter() {
               username,
               emailVerified: !!user.emailVerified,
               avatarUrl: user.image,
-              role: 'client',
+              // Don't set role here - OAuth users will also go through role selection
               profileSetupCompleted: false,
             }
           })
+          
+          // Don't initialize connections here - wait until after role selection
           
           return {
             id: createdUser.id,

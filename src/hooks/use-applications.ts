@@ -517,7 +517,7 @@ export function useMultipleJobApplicantCounts(jobIds: string[]) {
 }
 
 // Hook for getting user's applied job IDs (for job listing indication)
-export function useUserAppliedJobs() {
+export function useUserAppliedJobs(enabled: boolean = true) {
   return useQuery({
     queryKey: ['user-applied-jobs'],
     queryFn: async (): Promise<Set<string>> => {
@@ -538,6 +538,7 @@ export function useUserAppliedJobs() {
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
     retry: false, // Don't retry on auth errors
+    enabled, // Enable based on parameter
   })
 }
 

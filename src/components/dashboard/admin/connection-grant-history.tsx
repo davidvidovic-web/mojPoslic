@@ -74,6 +74,8 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
         return 'default'
       case 'INITIAL_SIGNUP':
         return 'secondary'
+      case 'ROLE_CHANGE':
+        return 'default'
       default:
         return 'outline'
     }
@@ -95,6 +97,8 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
         return 'Monthly Refresh'
       case 'INITIAL_SIGNUP':
         return 'Initial Signup'
+      case 'ROLE_CHANGE':
+        return 'Role Change'
       default:
         return action
     }
@@ -190,6 +194,7 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
               <SelectItem value="JOB_APPLICATION">Applications</SelectItem>
               <SelectItem value="MONTHLY_REFRESH">Monthly Refresh</SelectItem>
               <SelectItem value="INITIAL_SIGNUP">Initial Signup</SelectItem>
+              <SelectItem value="ROLE_CHANGE">Role Change</SelectItem>
             </SelectContent>
           </Select>
           <Button

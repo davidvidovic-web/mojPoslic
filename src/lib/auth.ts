@@ -14,13 +14,13 @@ declare module "next-auth" {
       name?: string | null
       image?: string | null
       phone?: string | null
-      role?: string
+      role?: string | null
       profileSetupCompleted?: boolean
     }
   }
   
   interface User {
-    role: string
+    role?: string | null
     phone?: string | null
     profileSetupCompleted?: boolean
   }
@@ -29,7 +29,7 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     id: string
-    role: string
+    role?: string | null
     phone?: string | null
     profileSetupCompleted?: boolean
   }
@@ -121,21 +121,77 @@ const config: NextAuthConfig = {
   },
   session: {
     strategy: "jwt" as const,
+    maxAge: 30 * 60, // 30 minutes (shorter for faster token refresh)
+  },
+  jwt: {
+    maxAge: 30 * 60, // 30 minutes 
   },
   callbacks: {
     async jwt({ token, user }) {
+      // If user object is provided (during sign-in), update token
       if (user) {
+        console.log('JWT Callback: Initial token setup with user:', {
+          id: user.id,
+          role: user.role,
+          profileSetupCompleted: user.profileSetupCompleted
+        })
         token.role = user.role
         token.id = user.id!
         token.phone = user.phone
         token.profileSetupCompleted = user.profileSetupCompleted
+        return token
       }
+      
+      // Always refresh user data from database when token is accessed
+      // This ensures we have the latest role and profile completion status
+      if (token.id) {
+        console.log('JWT Callback: Refreshing token data for user:', token.id)
+        try {
+          const { PrismaClient } = await import('@prisma/client')
+          const prisma = new PrismaClient()
+          
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { 
+              role: true, 
+              profileSetupCompleted: true, 
+              phone: true 
+            }
+          })
+          
+          if (dbUser) {
+            const oldRole = token.role
+            const oldProfileSetup = token.profileSetupCompleted
+            
+            // Force update the token properties
+            token.role = dbUser.role
+            token.profileSetupCompleted = dbUser.profileSetupCompleted
+            token.phone = dbUser.phone
+            
+            console.log('JWT Callback: Token updated with fresh data:', {
+              id: token.id,
+              oldRole,
+              newRole: token.role,
+              oldProfileSetup,
+              newProfileSetup: token.profileSetupCompleted,
+              tokenRoleAfterUpdate: token.role
+            })
+          } else {
+            console.log('JWT Callback: User not found in database:', token.id)
+          }
+          
+          await prisma.$disconnect()
+        } catch (error) {
+          console.error('JWT Callback: Error refreshing user data:', error)
+        }
+      }
+      
       return token
     },
     async session({ session, token }) {
       if (session.user && token) {
         session.user.id = token.id as string
-        session.user.role = token.role as string
+        session.user.role = token.role as string | null
         session.user.phone = token.phone as string | null
         session.user.profileSetupCompleted = token.profileSetupCompleted as boolean
       }

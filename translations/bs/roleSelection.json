@@ -8,36 +8,36 @@
     "title": "Izvršilac",
     "description": "Pronađite i aplicirajte za poslove koji odgovaraju vašim vještinama",
     "badge": "Najpopularniji",
-    "features": [
-      "Pregledajte dostupne poslove",
-      "Aplicirajte jednim klikom",
-      "Pratite status aplikacije",
-      "Izgradite svoj profesionalni profil",
-      "Primajte preporuke za poslove"
-    ]
+    "features": {
+      "0": "Pregledajte dostupne poslove",
+      "1": "Aplicirajte jednim klikom",
+      "2": "Pratite status aplikacije",
+      "3": "Izgradite svoj profesionalni profil",
+      "4": "Primajte preporuke za poslove"
+    }
   },
   "client": {
     "title": "Klijent",
     "description": "Objavite poslove i zaposlite talentovane pojedince",
-    "features": [
-      "Objavite neograničene poslove",
-      "Pregledajte aplikacije",
-      "Pošaljite poruke kandidatima",
-      "Upravljajte vašim projektima",
-      "Ostavite recenzije i ocjene"
-    ]
+    "features": {
+      "0": "Objavite neograničene poslove",
+      "1": "Pregledajte aplikacije",
+      "2": "Pošaljite poruke kandidatima",
+      "3": "Upravljajte vašim projektima",
+      "4": "Ostavite recenzije i ocjene"
+    }
   },
   "company": {
     "title": "Kompanija",
     "description": "Upravljajte vašom radnom snagom i velikim zapošljavanjem",
     "badge": "Uskoro",
-    "features": [
-      "Upravljanje timom",
-      "Masovno objavljivanje poslova",
-      "Napredna analitika",
-      "Funkcije za preduzeća",
-      "Prioritetna podrška"
-    ]
+    "features": {
+      "0": "Upravljanje timom",
+      "1": "Masovno objavljivanje poslova",
+      "2": "Napredna analitika",
+      "3": "Funkcije za preduzeća",
+      "4": "Prioritetna podrška"
+    }
   },
   "continue": "Nastavi kao {role}",
   "continueAsUser": "Nastavi",

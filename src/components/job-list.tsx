@@ -49,7 +49,7 @@ export function JobList() {
   const { data: jobs, isLoading, isError, error } = useJobs(filters)
   
   // Fetch user's applied jobs for display indication (only if user is logged in)
-  const { data: appliedJobIds = new Set() } = useUserAppliedJobs()
+  const { data: appliedJobIds = new Set() } = useUserAppliedJobs(!!user)
 
   return (
     <div className="space-y-6">

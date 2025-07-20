@@ -4,7 +4,6 @@ import { CreateJobData } from '@/types/job'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
-import { JobCostInfo } from './job-cost-info'
 import { useTranslations } from 'next-intl'
 
 interface JobPostFormProps {
@@ -74,11 +73,6 @@ export function JobPostForm({ onJobPosted, initialData, showCard = true }: JobPo
 
   return (
     <div className="space-y-4">
-      {/* Show cost information for clients and companies */}
-      {(user?.role === 'client' || user?.role === 'company') && (
-        <JobCostInfo />
-      )}
-      
       <JobFormBase
         initialData={initialData}
         isEditMode={false}

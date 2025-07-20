@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
+import { RoleGuard } from '@/components/auth/role-guard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -114,7 +115,7 @@ export default function ProfileSetupPage() {
       // Refresh user context to get updated profileSetupCompleted status
       await refreshUser()
       
-      toast.success('Profile setup completed!')
+      toast.success(t('setup.errors.profileSetupCompleted'))
       router.push('/dashboard')
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -177,7 +178,7 @@ export default function ProfileSetupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t('profileSetup.loading')}</p>
+          <p className="text-muted-foreground">{t('setup.loading')}</p>
         </div>
       </div>
     )
@@ -210,6 +211,12 @@ export default function ProfileSetupPage() {
           title: t('setup.titles.admin'),
           description: t('setup.descriptions.admin')
         }
+      case null:
+      case undefined:
+        return {
+          title: t('setup.titles.default'),
+          description: t('setup.descriptions.default')
+        }
       default:
         return {
           title: t('setup.titles.default'),
@@ -221,32 +228,33 @@ export default function ProfileSetupPage() {
   const roleContent = getRoleContent()
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
-      <div className="w-full max-w-2xl">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">{roleContent.title}</CardTitle>
-            <CardDescription>
-              {roleContent.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information - Show for all roles */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t('setup.sections.basicInformation')}</h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="name">
-                    {user.role === 'company' ? t('setup.fields.companyName') : t('setup.fields.fullName')} *
-                  </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder={user.role === 'company' ? t('setup.placeholders.companyName') : t('setup.placeholders.fullName')}
-                    required
+    <RoleGuard requireRole={true} requireProfileSetup={false}>
+      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+        <div className="w-full max-w-2xl">
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">{roleContent.title}</CardTitle>
+              <CardDescription>
+                {roleContent.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Information - Show for all roles */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">{t('setup.sections.basicInformation')}</h3>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="name">
+                      {user.role === 'company' ? t('setup.fields.companyName') : t('setup.fields.fullName')} *
+                    </Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      placeholder={user.role === 'company' ? t('setup.placeholders.companyName') : t('setup.placeholders.fullName')}
+                      required
                   />
                 </div>
                 
@@ -407,5 +415,6 @@ export default function ProfileSetupPage() {
         </Card>
       </div>
     </div>
+    </RoleGuard>
   )
 }

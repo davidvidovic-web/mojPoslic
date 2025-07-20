@@ -38,6 +38,10 @@ export default getRequestConfig(async ({requestLocale}) => {
   await loadTranslation('jobApplication');
   await loadTranslation('settings');
   await loadTranslation('skills');
+  await loadTranslation('roleSelection'); // Add this missing namespace
+  await loadTranslation('admin');
+  await loadTranslation('messageTemplates');
+  await loadTranslation('theme');
 
   return {
     locale,
