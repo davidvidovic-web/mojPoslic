@@ -47,7 +47,21 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   
   const formatTimestamp = (date: string | Date) => {
     const now = new Date();
-    const messageDate = new Date(date);
+    
+    // Add error handling for invalid dates
+    let messageDate: Date;
+    try {
+      messageDate = new Date(date);
+      
+      // Check if the date is invalid
+      if (isNaN(messageDate.getTime())) {
+        console.warn('Invalid date received:', date);
+        return 'Invalid date';
+      }
+    } catch (error) {
+      console.error('Error parsing date:', date, error);
+      return 'Invalid date';
+    }
     
     // If today, show only time
     if (messageDate.toDateString() === now.toDateString()) {
@@ -136,9 +150,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     <div className={cn("flex gap-3 max-w-[80%]", isOwn ? "ml-auto flex-row-reverse" : "mr-auto")}>
       {showAvatar && (
         <Avatar className="w-8 h-8 flex-shrink-0">
-          {message.sender?.avatar_url ? (
+          {message.sender?.avatarUrl ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={message.sender.avatar_url} alt={message.sender.name} />
+            <img src={message.sender.avatarUrl} alt={message.sender.name} />
           ) : (
             <div className="w-full h-full bg-muted dark:bg-muted flex items-center justify-center text-muted-foreground dark:text-muted-foreground text-sm">
               {message.sender?.name?.charAt(0).toUpperCase() || '?'}
@@ -148,16 +162,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       )}
       
       <div className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}>
-        {message.reply_to && (
+        {message.replyTo && (
           <div className={cn(
             "text-xs text-muted-foreground dark:text-muted-foreground p-2 border-l-2 bg-muted dark:bg-muted rounded max-w-xs",
             isOwn ? "border-l-blue-500" : "border-l-gray-300"
           )}>
             <p className="font-medium">
-              {message.reply_to.sender?.name || 'Unknown'}
+              {message.replyTo.sender?.name || 'Unknown'}
             </p>
             <p className="truncate">
-              {message.reply_to.content || 'Attachment'}
+              {message.replyTo.content || 'Attachment'}
             </p>
           </div>
         )}
@@ -182,7 +196,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
           
-          {message.edited_at && (
+          {message.editedAt && (
             <Badge variant="secondary" className="text-xs mt-1">
               {locale === 'bs' ? 'uređeno' : 'edited'}
             </Badge>
@@ -192,7 +206,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {showTimestamp && (
           <div className="flex items-center gap-1">
             <span className="text-xs text-gray-500">
-              {formatTimestamp(message.created_at)}
+              {formatTimestamp(message.createdAt)}
             </span>
             {getStatusIcon()}
           </div>

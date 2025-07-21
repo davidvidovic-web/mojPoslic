@@ -38,9 +38,10 @@ export async function POST(
     try {
       if (session?.user?.id) {
         // For logged in users, use userId and jobId unique constraint
+        // Don't include ip_address to avoid conflict with the (job_id, ip_address) constraint
         await prisma.$executeRaw`
-          INSERT INTO job_views (id, job_id, user_id, ip_address, user_agent, created_at)
-          VALUES (gen_random_uuid(), ${jobId}, ${session.user.id}, ${ipAddress}, ${userAgent}, NOW())
+          INSERT INTO job_views (id, job_id, user_id, user_agent, created_at)
+          VALUES (gen_random_uuid(), ${jobId}, ${session.user.id}, ${userAgent}, NOW())
           ON CONFLICT (job_id, user_id) DO NOTHING
         `
       } else {

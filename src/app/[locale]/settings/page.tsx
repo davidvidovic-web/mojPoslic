@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { ProfileSettingsCard } from '@/components/settings/profile-settings-card'
 import { AccountInfoCard } from '@/components/settings/account-info-card'
 import { SecurityCard } from '@/components/settings/security-card'
+import { PrivacySettingsCard } from '@/components/settings/privacy-settings-card'
 import { AppearanceCard } from '@/components/settings/appearance-card'
 import { HelpSupportCard } from '@/components/settings/help-support-card'
 import { ArrowLeft } from 'lucide-react'
@@ -89,6 +90,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <ProfileSettingsCard />
           <AccountInfoCard />
+          <PrivacySettingsCard />
           <SecurityCard deletionRequest={deletionRequest} />
           <AppearanceCard />
           <HelpSupportCard />

@@ -1,6 +1,24 @@
 {
   "buttons": {
-    "save": "Sačuvaj"
+    "save": "Sačuvaj",
+    "cancel": "Otkaži",
+    "edit": "Uredi",
+    "delete": "Obriši",
+    "view": "Pogledaj",
+    "apply": "Prijavi se",
+    "close": "Zatvori",
+    "submit": "Potvrdi",
+    "back": "Nazad",
+    "next": "Sljedeće",
+    "previous": "Prethodno",
+    "create": "Kreiraj",
+    "update": "Ažuriraj",
+    "search": "Pretraži",
+    "filter": "Filtriraj",
+    "clear": "Očisti",
+    "loadMore": "Učitaj više",
+    "showMore": "Prikaži više",
+    "showLess": "Prikaži manje"
   },
   "forms": {
     "required": "Obavezno",
@@ -10,6 +28,15 @@
     "loading": "Učitavanje...",
     "saving": "Čuvanje...",
     "submitting": "Slanje..."
+  },
+  "messaging": {
+    "conversationCreated": "Razgovor je uspješno kreiran",
+    "cannotMessage": "Ne možete poslati poruku ovom korisniku",
+    "openMessageFailed": "Neuspješno otvaranje poruke",
+    "errors": {
+      "notAuthenticated": "Molimo prijavite se da biste poslali poruke",
+      "conversationFailed": "Neuspjeh kreiranja razgovora"
+    }
   },
   "actions": {
     "edit": "Uredi",
@@ -77,6 +104,15 @@
     "until": "Do",
     "from": "Od",
     "to": "Do"
+  },
+  "jobTypes": {
+    "quickJob": "Brži posao",
+    "fullTime": "Puno radno vrijeme",
+    "partTime": "Skraćeno radno vrijeme",
+    "remote": "Udaljeno",
+    "contract": "Ugovorni",
+    "freelance": "Slobodnjak",
+    "internship": "Praksa"
   },
   "navigation": {
     "home": "Početna",

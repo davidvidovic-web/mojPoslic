@@ -1,22 +1,27 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useUserJobs, useDeleteJob, jobKeys } from '@/hooks/use-jobs'
 import { useMultipleJobApplicantCounts } from '@/hooks/use-applications'
 import { useDialogStore } from '@/stores/dialog-store'
 import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
-import { ConnectionsSection } from '@/components/dashboard/connections-section'
-import { JobsListSection } from './client/jobs-list-section'
+import { JobEditDialog } from '@/components/core/job-edit-dialog'
+import { UnifiedJobsSection } from './client/unified-jobs-section'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ClientQuickActions } from './client/client-quick-actions'
 import { DashboardLayout } from './dashboard-layout'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
+import { Job } from '@/types/job'
 
 export function ClientDashboard() {
   const t = useTranslations()
   const queryClient = useQueryClient()
+  
+  // Local state for edit dialog
+  const [editingJob, setEditingJob] = useState<Job | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobs()
@@ -40,6 +45,21 @@ export function ClientDashboard() {
     queryClient.invalidateQueries({ queryKey: ['jobs'] })
     // Show success message
     toast.success(t('jobs.success.jobPosted'))
+  }
+
+  const handleJobUpdated = () => {
+    setIsEditDialogOpen(false)
+    setEditingJob(null)
+    // Explicitly invalidate and refetch job-related queries for immediate refresh
+    queryClient.invalidateQueries({ queryKey: jobKeys.user('current') })
+    queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    // Show success message
+    toast.success(t('jobs.success.jobUpdated') || 'Job updated successfully')
+  }
+
+  const handleEditJob = (job: Job) => {
+    setEditingJob(job)
+    setIsEditDialogOpen(true)
   }
 
   const handleDeleteJob = async (jobId: string) => {
@@ -85,23 +105,19 @@ export function ClientDashboard() {
           applicationCounts={applicationCounts}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Jobs List */}
-          <div className="lg:col-span-2">
-            <JobsListSection 
-              jobs={jobs}
-              applicationCounts={applicationCounts}
-              onDelete={handleDeleteJob}
-            />
-          </div>
+        {/* Unified Jobs Section with Application Management */}
+        <UnifiedJobsSection
+          jobs={jobs}
+          applicationCounts={applicationCounts}
+          onEdit={handleEditJob}
+          onDelete={handleDeleteJob}
+          onFeature={() => {}} // TODO: Implement feature job functionality
+          onPostNewJob={openJobPostDialog}
+          loading={isLoading}
+        />
 
-          {/* Right Column - Quick Actions & Connections */}
-          <div className="space-y-8">
-            <ClientQuickActions />
-            
-            <ConnectionsSection />
-          </div>
-        </div>
+        {/* Quick Actions */}
+        <ClientQuickActions />
       </div>
 
       {/* Post New Job Dialog - No trigger needed since it's controlled */}
@@ -110,6 +126,16 @@ export function ClientDashboard() {
         onOpenChange={(open) => open ? openJobPostDialog() : closeJobPostDialog()}
         onJobPosted={handleJobPosted}
       />
+
+      {/* Edit Job Dialog */}
+      {editingJob && (
+        <JobEditDialog
+          job={editingJob}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onJobUpdated={handleJobUpdated}
+        />
+      )}
     </DashboardLayout>
   )
 }

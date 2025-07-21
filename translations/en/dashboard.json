@@ -64,6 +64,7 @@
     "messages": "Messages",
     "finances": "Finances",
     "integrations": "Integrations",
+    "analytics": "Analytics",
     "statistics": "Statistics"
   },
   "taglines": {
@@ -127,13 +128,26 @@
     "featured": "Featured",
     "applications": "applications",
     "application": "application",
+    "applicants": "applicants",
     "edit": "Edit",
     "delete": "Delete",
     "view": "View",
     "status": "Status",
     "type": "Type",
     "posted": "Posted",
-    "expires": "Expires"
+    "expires": "Expires",
+    "startDate": "Start Date",
+    "startTime": "Start Time",
+    "duration": "Duration",
+    "salary": "Salary",
+    "location": "Location",
+    "remote": "Remote",
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "byAgreement": "By agreement",
+    "negotiable": "Negotiable",
+    "more": "more"
   },
   "company": {
     "quickActions": {

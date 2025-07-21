@@ -1,8 +1,10 @@
 import { create } from 'zustand'
+import { Job } from '@/types/job'
 
 interface DialogState {
   // Dialog states
   isJobPostDialogOpen: boolean
+  isEditJobDialogOpen: boolean
   isDeleteConfirmOpen: boolean
   isMobileMenuOpen: boolean
   isMessagingDialogOpen: boolean
@@ -10,10 +12,13 @@ interface DialogState {
   
   // Data for dialogs
   deletingJobId: string | null
+  editingJob: Job | null
   
   // Actions
   openJobPostDialog: () => void
   closeJobPostDialog: () => void
+  openEditJobDialog: (job: Job) => void
+  closeEditJobDialog: () => void
   openDeleteConfirm: (jobId: string) => void
   closeDeleteConfirm: () => void
   toggleMobileMenu: () => void
@@ -30,15 +35,27 @@ interface DialogState {
 export const useDialogStore = create<DialogState>((set) => ({
   // Initial state
   isJobPostDialogOpen: false,
+  isEditJobDialogOpen: false,
   isDeleteConfirmOpen: false,
   isMobileMenuOpen: false,
   isMessagingDialogOpen: false,
   isConnectionPurchaseOpen: false,
   deletingJobId: null,
+  editingJob: null,
   
   // Job posting dialog
   openJobPostDialog: () => set({ isJobPostDialogOpen: true }),
   closeJobPostDialog: () => set({ isJobPostDialogOpen: false }),
+  
+  // Job editing dialog
+  openEditJobDialog: (job) => set({ 
+    isEditJobDialogOpen: true, 
+    editingJob: job 
+  }),
+  closeEditJobDialog: () => set({ 
+    isEditJobDialogOpen: false, 
+    editingJob: null 
+  }),
   
   // Delete confirmation
   openDeleteConfirm: (jobId) => set({ 
@@ -67,10 +84,12 @@ export const useDialogStore = create<DialogState>((set) => ({
   // Bulk close
   closeAllDialogs: () => set({
     isJobPostDialogOpen: false,
+    isEditJobDialogOpen: false,
     isDeleteConfirmOpen: false,
     isMobileMenuOpen: false,
     isMessagingDialogOpen: false,
     isConnectionPurchaseOpen: false,
     deletingJobId: null,
+    editingJob: null,
   }),
 }))

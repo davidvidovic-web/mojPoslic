@@ -77,6 +77,12 @@
     "thanks": "Hvala!",
     "goodbye": "Doviđenja!"
   },
+  "dates": {
+    "today": "danas",
+    "yesterday": "jučer"
+  },
+  "loading": "Učitavanje...",
+  "unknown": "Nepoznato",
   "pageMessages": {
     "title": "Poruke i razgovori",
     "stayConnected": "Ostanite povezani",

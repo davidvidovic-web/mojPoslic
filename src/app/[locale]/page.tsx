@@ -7,7 +7,6 @@ import { Zap, UserPlus, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
-import { GlobalFooter } from '@/components/core/global-footer';
 
 export default function Home() {
   const t = useTranslations('homepage');
@@ -105,9 +104,6 @@ export default function Home() {
         </div>
       </section>
       */}
-
-      {/* Footer */}
-      <GlobalFooter />
     </>
   );
 }

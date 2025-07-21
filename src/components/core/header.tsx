@@ -157,33 +157,152 @@ export const Header = React.memo(function Header() {
 
   // Memoized header classes
   const headerClasses = useMemo(() => `
-    ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : 'relative'} 
-    ${isScrolled ? 'bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg border-b border-border/40' : 'bg-transparent border-b border-transparent'} 
-    transition-all duration-500 ease-in-out
+    ${isScrolled ? 'fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-[calc(100%-4rem)] max-w-[1400px] mx-auto rounded-lg px-6 py-3' : 'relative w-full'} 
+    ${isScrolled ? 'bg-white/10 dark:bg-black/10 backdrop-blur-xl supports-[backdrop-filter]:bg-white/5 dark:supports-[backdrop-filter]:bg-black/5 shadow-2xl border border-white/20 dark:border-white/10' : 'bg-transparent border-b border-transparent'} 
+    transition-[top,background-color,backdrop-filter,border-color,box-shadow] duration-500 ease-in-out
   `, [isScrolled]);
 
   const placeholderClasses = useMemo(() => `
-    transition-all duration-500 ease-in-out ${isScrolled ? 'h-[73px]' : 'h-0'}
+    transition-[height] duration-500 ease-in-out ${isScrolled ? 'h-[100px]' : 'h-0'}
   `, [isScrolled]);
   return (
     <>
       {/* Placeholder to maintain layout when header becomes fixed */}
       <div className={placeholderClasses} />
       
+      {/* Mobile Full-Screen Menu - Outside header to prevent positioning conflicts */}
+      {isMobileMenuOpen && (
+        <div className={`fixed inset-0 z-[70] bg-background md:hidden h-screen w-screen ${
+          isClosing 
+            ? 'animate-out fade-out-0 duration-300' 
+            : 'animate-in fade-in-0 duration-300'
+        }`}>
+          <div className={`flex h-full w-full flex-col bg-background ${
+            isClosing 
+              ? 'animate-out slide-out-to-right-full duration-300 ease-in' 
+              : 'animate-in slide-in-from-right-full duration-300 ease-out'
+          }`}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
+              <h2 className="text-lg font-semibold">{tAuth('menu')}</h2>
+              {/* Animated hamburger/close icon */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleMobileMenu()}
+                className="relative h-9 w-9 rounded-full hover:bg-accent/10 transition-colors"
+              >
+                <AnimatedHamburger ref={menuHamburgerRef} />
+              </Button>
+            </div>
+
+            {/* Menu Items - Flex container for proper spacing */}
+            <div className="flex-1 flex flex-col px-6 py-8 bg-background min-h-0">
+              {user ? (
+                <>
+                  {/* Main Navigation */}
+                  <nav className="space-y-6 border-b border-border pb-8 flex-shrink-0">
+                    <Link
+                      href="/dashboard"
+                      className={getMobileMenuItemClass('/dashboard')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <LayoutDashboard className="mr-4 h-6 w-6" />
+                      {tNavigation('dashboard')}
+                    </Link>
+
+                    <Link
+                      href="/dashboard/jobs"
+                      className={getMobileMenuItemClass('/dashboard/jobs')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <Briefcase className="mr-4 h-6 w-6" />
+                      {tNavigation('jobs')}
+                    </Link>
+
+                    <Link
+                      href="/dashboard/messages"
+                      className={getMobileMenuItemClass('/dashboard/messages')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <MessageSquare className="mr-4 h-6 w-6" />
+                      {tNavigation('messages')}
+                    </Link>
+
+                    <Link
+                      href="/dashboard/connections"
+                      className={getMobileMenuItemClass('/dashboard/connections')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <Zap className="mr-4 h-6 w-6" />
+                      {tNavigation('connections')}
+                    </Link>
+
+                    <Link
+                      href="/settings"
+                      className={getMobileMenuItemClass('/settings')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <Settings className="mr-4 h-6 w-6" />
+                      {tNavigation('settings')}
+                    </Link>
+                  </nav>
+                  
+                  {/* Logout at bottom */}
+                  <div className="mt-auto pt-8">
+                    <button
+                      onClick={() => {
+                        handleCloseMobileMenu();
+                        handleSignOut();
+                      }}
+                      className="flex items-center py-4 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors w-full text-left"
+                    >
+                      <LogOut className="mr-4 h-6 w-6" />
+                      {tAuth('signOut')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Non-authenticated users - Auth buttons */
+                <div className="flex flex-col space-y-6 justify-center flex-1">
+                  <Link href="/auth/signin" onClick={handleCloseMobileMenu}>
+                    <Button
+                      variant="outline"
+                      className="w-full border-foreground text-foreground hover:bg-foreground hover:text-background font-bold transition-all duration-200 text-lg py-6"
+                    >
+                      <LogIn className="h-5 w-5 mr-3" />
+                      {tHeader('auth.signIn')}
+                    </Button>
+                  </Link>
+                  <Link href="/auth/register" onClick={handleCloseMobileMenu}>
+                    <Button
+                      className="w-full bg-foreground hover:bg-foreground/80 text-background font-bold transition-all duration-200 text-lg py-6"
+                    >
+                      <UserPlus className="h-5 w-5 mr-3" />
+                      {tHeader('auth.register')}
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <header className={headerClasses}>
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+      <div className={`${isScrolled ? 'w-full' : 'container mx-auto px-4 py-4'}`}>
+        <div className={`flex items-center justify-between ${isScrolled ? 'py-0' : ''}`}>
           <Link
             href="/"
             className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
           >
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+              <h1 className={`${isScrolled ? 'text-lg' : 'text-2xl'} font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent transition-[font-size] duration-500`}>
                 mojPoslić
               </h1>
             </div>
           </Link>
-          <div className="flex items-center space-x-4">
+          <div className={`flex items-center ${isScrolled ? 'space-x-2' : 'space-x-4'}`}>
             {/* Optimized loading state with skeleton components */}
             {loading ? (
               user ? <AuthenticatedHeaderSkeleton /> : <HeaderLoadingSkeleton />
@@ -342,100 +461,6 @@ export const Header = React.memo(function Header() {
                         )}
                       </Button>
                     </div>
-
-                    {/* Mobile Full-Screen Menu */}
-                    {isMobileMenuOpen && (
-                      <div className={`fixed inset-0 z-[60] bg-background md:hidden h-screen w-screen ${
-                        isClosing 
-                          ? 'animate-out fade-out-0 duration-300' 
-                          : 'animate-in fade-in-0 duration-300'
-                      }`}>
-                        <div className={`flex h-full w-full flex-col bg-background ${
-                          isClosing 
-                            ? 'animate-out slide-out-to-right-full duration-300 ease-in' 
-                            : 'animate-in slide-in-from-right-full duration-300 ease-out'
-                        }`}>
-                          {/* Header */}
-                          <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-                            <h2 className="text-lg font-semibold">{tAuth('menu')}</h2>
-                            {/* Animated hamburger/close icon */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleMobileMenu()}
-                              className="relative h-9 w-9 rounded-full hover:bg-accent/10 transition-colors"
-                            >
-                              <AnimatedHamburger ref={menuHamburgerRef} />
-                            </Button>
-                          </div>
-
-                          {/* Menu Items - Flex container for proper spacing */}
-                          <div className="flex-1 flex flex-col px-6 py-8 bg-background min-h-0">
-                            {/* Main Navigation */}
-                            <nav className="space-y-6 border-b border-border pb-8 flex-shrink-0">
-                              <Link
-                                href="/dashboard"
-                                className={getMobileMenuItemClass('/dashboard')}
-                                onClick={handleCloseMobileMenu}
-                              >
-                                <LayoutDashboard className="mr-4 h-6 w-6" />
-                                {tNavigation('dashboard')}
-                              </Link>
-
-                              <Link
-                                href="/dashboard/jobs"
-                                className={getMobileMenuItemClass('/dashboard/jobs')}
-                                onClick={handleCloseMobileMenu}
-                              >
-                                <Briefcase className="mr-4 h-6 w-6" />
-                                {tNavigation('jobs')}
-                              </Link>
-
-                              <Link
-                                href="/dashboard/messages"
-                                className={getMobileMenuItemClass('/dashboard/messages')}
-                                onClick={handleCloseMobileMenu}
-                              >
-                                <MessageSquare className="mr-4 h-6 w-6" />
-                                {tNavigation('messages')}
-                              </Link>
-
-                              <Link
-                                href="/dashboard/connections"
-                                className={getMobileMenuItemClass('/dashboard/connections')}
-                                onClick={handleCloseMobileMenu}
-                              >
-                                <Zap className="mr-4 h-6 w-6" />
-                                {tNavigation('connections')}
-                              </Link>
-
-                              <Link
-                                href="/settings"
-                                className={getMobileMenuItemClass('/settings')}
-                                onClick={handleCloseMobileMenu}
-                              >
-                                <Settings className="mr-4 h-6 w-6" />
-                                {tNavigation('settings')}
-                              </Link>
-                            </nav>
-                            
-                            {/* Logout at bottom */}
-                            <div className="mt-auto pt-8">
-                              <button
-                                onClick={() => {
-                                  handleCloseMobileMenu();
-                                  handleSignOut();
-                                }}
-                                className="flex items-center py-4 text-lg font-medium text-destructive hover:text-destructive/80 transition-colors w-full text-left"
-                              >
-                                <LogOut className="mr-4 h-6 w-6" />
-                                {tAuth('signOut')}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </>
                 )}
               </div>

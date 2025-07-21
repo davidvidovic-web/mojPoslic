@@ -95,6 +95,69 @@
     "reasonForDeletion": "Reason for deletion (optional)",
     "reasonPlaceholder": "Let us know why you're leaving..."
   },
+  "privacy": {
+    "title": "Privacy Settings",
+    "description": "Control your privacy and data sharing preferences",
+    "settingsUpdated": "Privacy settings updated successfully",
+    "updateFailed": "Failed to update privacy settings",
+    "saving": "Saving...",
+    "saveSettings": "Save Settings",
+    "profileVisibility": {
+      "title": "Profile Visibility",
+      "label": "Who can see your profile"
+    },
+    "visibility": {
+      "public": {
+        "label": "Public",
+        "description": "Anyone can view your profile and contact information"
+      },
+      "verifiedOnly": {
+        "label": "Verified Users Only",
+        "description": "Only verified users can view your full profile"
+      },
+      "private": {
+        "label": "Private",
+        "description": "Your profile is hidden from public view"
+      }
+    },
+    "profileDetails": {
+      "showSkills": "Show skills on profile",
+      "showExperience": "Show experience on profile",
+      "showLocation": "Show location on profile",
+      "showContactInfo": "Show contact information on profile"
+    },
+    "applicationPrivacy": {
+      "title": "Application Privacy",
+      "label": "Who can see your job applications",
+      "open": {
+        "label": "Open Applications",
+        "description": "Your applications are visible to job posters"
+      },
+      "selective": {
+        "label": "Selective Applications",
+        "description": "You choose which applications to make visible"
+      },
+      "private": {
+        "label": "Private Applications",
+        "description": "Your applications are completely private"
+      }
+    },
+    "communication": {
+      "title": "Communication Privacy",
+      "allowDirectMessages": "Allow direct messages",
+      "directMessagesDescription": "Let other users send you direct messages",
+      "showOnlineStatus": "Show online status",
+      "onlineStatusDescription": "Let others see when you're online"
+    },
+    "dataAnalytics": {
+      "title": "Data & Analytics",
+      "dataSharing": "Data sharing for service improvement",
+      "dataSharingDescription": "Help us improve our services by sharing anonymized data",
+      "analyticsOptOut": "Opt out of analytics tracking",
+      "analyticsDescription": "Disable analytics and usage tracking"
+    },
+    "privacyImpactWarning": "These privacy settings may limit your visibility to potential clients and job opportunities."
+  },
   "appearance": {
     "title": "Appearance",
     "description": "Customize the look and feel of your dashboard",

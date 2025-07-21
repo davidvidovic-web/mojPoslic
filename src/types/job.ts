@@ -64,6 +64,7 @@ export interface Job {
     id: string
     name: string | null
     email: string | null
+    phone: string | null
     role: string
   }
   createdAt: string
@@ -75,6 +76,10 @@ export interface Job {
   benefits?: string
   application_url?: string
   contact_email?: string
+  
+  // Security-related fields for selective data exposure
+  isSelectedTasker?: boolean // Whether current user is the selected tasker
+  hasAssignment?: boolean // Whether job has been assigned to someone
 }
 
 // Create job data interface for form submission

@@ -280,7 +280,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             size="sm"
             onClick={openFileDialog}
             disabled={disabled}
-            title={t('attachFile')}
+            title={t('attachments.attachFile')}
             className="p-2"
           >
             <Paperclip className="w-4 h-4" />

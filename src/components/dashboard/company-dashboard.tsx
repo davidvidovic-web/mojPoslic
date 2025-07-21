@@ -107,9 +107,7 @@ export function CompanyDashboard() {
 
           {/* Right Column - Quick Actions & Connections */}
           <div className="space-y-8">
-            <ClientQuickActions 
-              onPostNewJob={() => openJobPostDialog()}
-            />
+            <ClientQuickActions />
             
             <ConnectionsSection />
           </div>

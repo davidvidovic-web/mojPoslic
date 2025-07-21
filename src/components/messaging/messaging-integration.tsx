@@ -93,9 +93,9 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
     
     try {
       await sendMessage({
-        conversation_id: state.activeConversation.id,
+        conversationId: state.activeConversation.id,
         content,
-        message_type: attachments && attachments.length > 0 ? 'file' : 'text',
+        messageType: attachments && attachments.length > 0 ? 'file' : 'text',
       });
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -115,7 +115,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
     if (state.activeConversation) {
       const oldestMessage = state.messages[0];
       if (oldestMessage) {
-        loadMessages(state.activeConversation.id, oldestMessage.id);
+        loadMessages(state.activeConversation.id, oldestMessage.createdAt);
       }
     }
   };

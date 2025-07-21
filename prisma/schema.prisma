@@ -46,8 +46,30 @@ model User {
   sessions                    Session[]
   stripeTransactions          StripeTransaction[]
   deletionRequest             AccountDeletionRequest?
+  privacySettings             UserPrivacySettings?
 
   @@map("users")
+}
+
+model UserPrivacySettings {
+  id                    String  @id @default(cuid())
+  userId                String  @unique @map("user_id")
+  profileVisibility     String  @default("public") @map("profile_visibility") // public, verified_only, private
+  showSkills            Boolean @default(true) @map("show_skills")
+  showExperience        Boolean @default(true) @map("show_experience")
+  showContactInfo       Boolean @default(false) @map("show_contact_info")
+  showLocation          Boolean @default(true) @map("show_location")
+  applicationPrivacy    String  @default("open") @map("application_privacy") // open, selective, private
+  allowDirectMessages   Boolean @default(true) @map("allow_direct_messages")
+  showOnlineStatus      Boolean @default(true) @map("show_online_status")
+  dataSharing           Boolean @default(false) @map("data_sharing")
+  analyticsOptOut       Boolean @default(false) @map("analytics_opt_out")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_privacy_settings")
 }
 
 model Account {

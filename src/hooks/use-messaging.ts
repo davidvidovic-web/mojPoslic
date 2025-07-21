@@ -130,9 +130,9 @@ export function useMessageActions() {
     async (conversationId: string, content: string, files?: File[]) => {
       try {
         await sendMessage({
-          conversation_id: conversationId,
+          conversationId: conversationId,
           content,
-          message_type: files && files.length > 0 ? 'file' : 'text',
+          messageType: files && files.length > 0 ? 'file' : 'text',
         });
       } catch (error) {
         console.error('Failed to send message:', error);

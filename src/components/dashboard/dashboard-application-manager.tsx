@@ -381,6 +381,22 @@ export function DashboardApplicationManager() {
                   {t('shortlist')}
                 </Button>
                 
+                {/* Message button for shortlisted applications */}
+                {(application.status === 'SHORTLISTED' || application.status === 'INTERVIEW_SCHEDULED' || application.status === 'ACCEPTED') && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-blue-600 hover:text-blue-700"
+                    onClick={() => {
+                      // Navigate to messaging page for this job/applicant
+                      window.open(`/dashboard/messages?job=${application.job.id}&user=${application.user.id}`, '_blank')
+                    }}
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    Message
+                  </Button>
+                )}
+                
                 <Button
                   size="sm"
                   variant="outline"

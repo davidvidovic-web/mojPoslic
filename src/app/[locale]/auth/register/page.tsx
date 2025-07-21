@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,11 +12,11 @@ import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { showToast } from "@/lib/toast"
 import { useTranslations } from "next-intl"
-import { GlobalFooter } from "@/components/core/global-footer"
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -25,12 +25,16 @@ export default function RegisterPage() {
     password: ""
   })
 
-  // Redirect logged-in users to dashboard
+  // Get the return URL from search params
+  const returnUrl = searchParams.get('returnUrl')
+
+  // Redirect logged-in users to returnUrl or dashboard
   useEffect(() => {
     if (!authLoading && user) {
-      router.replace('/dashboard')
+      const redirectTo = returnUrl || '/dashboard'
+      router.replace(redirectTo)
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router, returnUrl])
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -207,7 +211,7 @@ export default function RegisterPage() {
             <div className="text-center text-sm">
               <span className="text-muted-foreground">{t('alreadyHaveAccount')} </span>
               <Link
-                href="/auth/signin"
+                href={returnUrl ? `/auth/signin?returnUrl=${encodeURIComponent(returnUrl)}` : "/auth/signin"}
                 className="text-primary underline-offset-4 hover:underline"
               >
                 {t('signIn')}
@@ -216,8 +220,6 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </div>
-      
-      <GlobalFooter />
     </div>
   )
 }

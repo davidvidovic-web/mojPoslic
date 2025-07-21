@@ -1,6 +1,7 @@
 {
   "title": "Post a Job",
   "dialogDescription": "Create a new job posting to find qualified candidates",
+  "editDialogDescription": "Update your job posting details",
   "steps": {
     "basic": "Basic Info",
     "details": "Job Details", 

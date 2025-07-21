@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Job } from '@/types/job';
 
 // Lazy load the job form to improve initial load time
 const LazyMultiStepJobForm = lazy(() => 
@@ -36,18 +37,26 @@ interface UnifiedJobDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onJobPosted?: () => void;
+  onJobUpdated?: () => void;
   triggerText?: string;
   onTriggerClick?: () => void;
   children?: React.ReactNode; // For custom trigger
+  isEditMode?: boolean;
+  initialData?: Partial<Job>;
+  jobId?: string;
 }
 
 export function UnifiedJobDialog({
   isOpen,
   onOpenChange,
   onJobPosted,
+  onJobUpdated,
   triggerText,
   onTriggerClick,
-  children
+  children,
+  isEditMode, // TODO: Pass to MultiStepJobForm when edit mode is implemented
+  initialData, // TODO: Pass to MultiStepJobForm when edit mode is implemented
+  jobId // TODO: Pass to MultiStepJobForm when edit mode is implemented
 }: UnifiedJobDialogProps) {
   const t = useTranslations('jobPost')
   
@@ -83,7 +92,7 @@ export function UnifiedJobDialog({
         {isOpen && (
           <Suspense fallback={<JobFormSkeleton />}>
             <LazyMultiStepJobForm
-              onJobPosted={onJobPosted}
+              onJobPosted={onJobPosted || onJobUpdated}
               showCard={false}
             />
           </Suspense>

@@ -102,7 +102,34 @@
       "transportationNotProvided": "Prijevoz nije osiguran",
       "contactName": "Ime za kontakt",
       "contactEmail": "Email za kontakt",
-      "contactPhone": "Telefon za kontakt"
+      "contactPhone": "Telefon za kontakt",
+      "posted": "Objavljeno",
+      "applied": "Prijavljeno",
+      "yourJob": "Vaš posao",
+      "applyExternally": "Prijavi se eksterno",
+      "applyNow": "Prijavi se sada",
+      "startDate": "Datum početka",
+      "startTime": "Vrijeme početka",
+      "duration": "Trajanje",
+      "expires": "Istječe",
+      "parking": "Parking",
+      "publicTransport": "Javni prijevoz",
+      "address": "Adresa",
+      "email": "Email",
+      "phone": "Telefon",
+      "altEmail": "Alt. Email",
+      "website": "Website",
+      "applyUrl": "URL za prijavu",
+      "available": "Dostupno",
+      "notAvailable": "Nije dostupno",
+      "byAgreement": "Po dogovoru",
+      "externalApplication": "Eksterna prijava",
+      "postedBy": "Objavio",
+      "primaryContact": "Primarni kontakt",
+      "links": "Linkovi",
+      "transportationAndLocation": "Prijevoz i lokacija",
+      "contactInformation": "Kontakt informacije",
+      "scheduleAndTimeline": "Raspored i vremenski okvir"
     },
     "placeholders": {
       "jobTitleExample": "npr., Web Developer, Graphic Designer",
@@ -163,6 +190,12 @@
   "location": {
     "jobLocation": "Lokacija posla",
     "exactAddressMessage": "📍 Tačna adresa i mapa će biti otkrivene odabranom radniku iz sigurnosnih razloga."
+  },
+  "privacy": {
+    "contactHidden": "Skriveno",
+    "addressHidden": "Skriveno",
+    "mapHidden": "Mapa skrivena zbog privatnosti",
+    "availableAfterSelection": "Dostupno nakon dodjeljivanja posla"
   },
   "statusManager": {
     "updateJobStatus": "Ažuriraj status posla",
@@ -299,6 +332,9 @@
     "submitJobPosting": "Objavi Oglas",
     "updateJobPosting": "Ažuriraj Oglas", 
     "submitting": "Objavljivanje...",
+    "updating": "Ažuriranje...",
+    "alternateContact": "alternativni kontakt",
+    "applicationUrl": "URL za prijavu",
     "success": {
       "jobPosted": "Oglas za posao je uspješno objavljen!",
       "jobUpdated": "Oglas za posao je uspješno ažuriran!"

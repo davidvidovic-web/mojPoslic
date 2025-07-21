@@ -3,6 +3,7 @@ export interface Conversation {
   type: 'direct' | 'group' | 'job_related'
   title?: string
   job_id?: string
+  jobTitle?: string // Added for job-related conversations
   created_at: string
   updated_at: string
   last_message_at?: string
@@ -31,24 +32,26 @@ export interface ConversationParticipant {
 
 export interface Message {
   id: string
-  conversation_id: string
-  sender_id: string
+  conversationId: string
+  senderId: string
   content?: string
-  message_type: 'text' | 'image' | 'file' | 'system'
-  attachment_url?: string
-  attachment_filename?: string
-  attachment_size?: number
-  reply_to_message_id?: string
-  edited_at?: string
-  deleted_at?: string
-  created_at: string
-  sender: {
+  messageType: 'text' | 'image' | 'file' | 'system'
+  attachmentUrl?: string
+  attachmentFilename?: string
+  attachmentSize?: number
+  replyToMessageId?: string
+  editedAt?: string
+  deletedAt?: string
+  createdAt: string
+  updatedAt?: string
+  isRead?: boolean
+  sender?: {
     id: string
     name: string
-    avatar_url?: string
+    avatarUrl?: string
     role: string
   }
-  reply_to?: Message
+  replyTo?: Message
   attachments?: MessageAttachment[]
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed'
 }
@@ -76,6 +79,11 @@ export interface TypingUser {
   conversation_id: string
   is_typing: boolean
   timestamp: string
+  user?: {
+    id: string
+    name: string
+    avatarUrl?: string
+  }
 }
 
 export interface UserPresence {
@@ -93,13 +101,13 @@ export interface CreateConversationData {
 }
 
 export interface SendMessageData {
-  conversation_id: string
+  conversationId: string
   content?: string
-  message_type: 'text' | 'image' | 'file' | 'system'
-  attachment_url?: string
-  attachment_filename?: string
-  attachment_size?: number
-  reply_to_message_id?: string
+  messageType?: 'text' | 'image' | 'file' | 'system'
+  attachmentUrl?: string
+  attachmentFilename?: string
+  attachmentSize?: number
+  replyToMessageId?: string
 }
 
 export interface MessagingTranslations {

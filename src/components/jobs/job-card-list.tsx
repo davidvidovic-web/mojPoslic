@@ -1,59 +1,28 @@
 'use client'
 
 import { useRouter } from "next/navigation"
-import { useState, useEffect, useCallback } from "react"
 import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Edit, Car } from "lucide-react"
-import { toast } from "sonner"
+import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Car } from "lucide-react"
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
 import { useAuth } from "@/contexts/auth-context"
-import { UnifiedJobDialog } from "@/components/core/unified-job-dialog"
 
 interface JobCardListProps {
   job: Job
-  onJobUpdated?: () => void
 }
 
-export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
+export function JobCardList({ job }: JobCardListProps) {
   const router = useRouter()
   const { user } = useAuth()
   const tCommon = useTranslations('common')
   const t = useTranslations('jobApplication')
-  const tSuccess = useTranslations('jobs.success')
   const locale = useLocale()
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [applicationCount, setApplicationCount] = useState<number | null>(null)
 
   // Check if the current user owns this job
   const isOwner = user && job.posted_by === user.id
-  
-  // Check application count for owner's jobs
-  const checkApplicationCount = useCallback(async () => {
-    if (!isOwner) return
-    
-    try {
-      const response = await fetch(`/api/jobs/${job.id}/applications`)
-      if (response.ok) {
-        const data = await response.json()
-        setApplicationCount(data.applicationCount || 0)
-      }
-    } catch (error) {
-      console.error('Error checking application count:', error)
-    }
-  }, [isOwner, job.id])
-
-  // Load application count when component mounts (for owner's jobs)
-  useEffect(() => {
-    if (isOwner) {
-      checkApplicationCount()
-    }
-  }, [isOwner, checkApplicationCount])
-
-  const canEdit = isOwner && (applicationCount === null || applicationCount === 0)
 
   const formatSalary = (job: Job) => {
     // If we have structured salary data
@@ -107,131 +76,105 @@ export function JobCardList({ job, onJobUpdated }: JobCardListProps) {
     router.push(`/jobs/${job.id}`)
   }
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent card click
-    setIsEditDialogOpen(true)
-  }
-
-  const handleJobUpdated = () => {
-    setIsEditDialogOpen(false)
-    onJobUpdated?.()
-    toast.success(tSuccess('jobUpdated'))
-  }
-
   return (
     <Card 
-      className="hover:shadow-md transition-all duration-200 cursor-pointer border-border/40"
+      className="group cursor-pointer border-0 bg-white dark:bg-gray-950 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden"
       onClick={handleViewDetails}
     >
-      <CardContent className="p-4 sm:p-6">
-        {/* Mobile-first responsive layout */}
-        <div className="space-y-4">
-          {/* Header Section - Company logo, title, and company name */}
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-lg bg-muted border flex items-center justify-center font-bold text-lg shrink-0">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <CardContent className="relative p-6">
+        {/* Header Section */}
+        <div className="flex items-start gap-4 mb-5">
+          {/* Company Avatar */}
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10 shrink-0">
+            <span className="text-lg font-bold text-primary">
               {formatClientName(job.company).charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg leading-tight mb-1">
-                {job.title}
-              </h3>
-              <div className="flex items-center text-muted-foreground text-sm">
-                <Building2 className="h-4 w-4 mr-1" />
-                <span className="font-medium">{formatClientName(job.company)}</span>
-              </div>
-            </div>
+            </span>
           </div>
           
-          {/* Description */}
-          <div 
-            className="text-sm text-muted-foreground line-clamp-2 leading-relaxed prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: job.description }}
-          />
-          
-          {/* Badge Section - Better mobile spacing */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs">
-              {formatJobType(job.type)}
-            </Badge>
-            
-            {job.category && (
-              <Badge variant="secondary" className="text-xs">
-                {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
-              </Badge>
-            )}
-            
-            <Badge variant="outline" className="text-xs">
-              <MapPin className="h-3 w-3 mr-1" />
-              {job.city?.name || tCommon('jobTypes.remote')}
-            </Badge>
-            
-            {formatSalary(job) && (
-              <Badge variant="outline" className="text-xs">
-                <DollarSign className="h-3 w-3 mr-1" />
-                {formatSalary(job)}
-              </Badge>
-            )}
-            
-            {job.transportation && (
-              <Badge variant="outline" className="text-xs">
-                <Car className="h-3 w-3 mr-1" />
-                {formatTransportation(job.transportation, job.transportation_amount)}
-              </Badge>
-            )}
-            
-            <Badge variant="outline" className="text-xs">
-              <Calendar className="h-3 w-3 mr-1" />
-              {job.posted_at ? formatDate(job.posted_at) : ''}
-            </Badge>
-          </div>
-          
-          {/* Apply Button - Full width on mobile, auto width on larger screens */}
-          <div className="pt-2">
-            {isOwner ? (
-              <div className="flex gap-2 w-full">
-                {canEdit && (
-                  <Button 
-                    onClick={handleEdit}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit Job
-                  </Button>
-                )}
-                <Button 
-                  onClick={handleApply}
-                  size="sm"
-                  className="flex-1"
-                >
-                  View Details
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            ) : (
-              <Button 
-                onClick={handleApply}
-                size="sm"
-                className="w-full sm:w-auto"
-              >
-                {t('viewDetailsAndApply')}
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </Button>
-            )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-xl leading-tight mb-2 text-foreground group-hover:text-primary transition-colors">
+              {job.title}
+            </h3>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Building2 className="h-4 w-4" />
+              <span className="font-medium">{formatClientName(job.company)}</span>
+              <span className="text-xs">•</span>
+              <span className="text-sm">{job.posted_at ? formatDate(job.posted_at) : ''}</span>
+            </div>
           </div>
         </div>
+        
+        {/* Description */}
+        <div 
+          className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-5 prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: job.description }}
+        />
+        
+        {/* Key Information Pills */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">{job.city?.name || tCommon('jobTypes.remote')}</span>
+          </div>
+          
+          {formatSalary(job) && (
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl">
+              <DollarSign className="h-3.5 w-3.5 text-green-600" />
+              <span className="text-sm font-medium text-green-600">{formatSalary(job)}</span>
+            </div>
+          )}
+          
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+            <Calendar className="h-3.5 w-3.5 text-blue-600" />
+            <span className="text-sm text-blue-600">{job.posted_at ? formatDate(job.posted_at) : ''}</span>
+          </div>
+        </div>
+        
+        {/* Tags and Badges */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20">
+            {formatJobType(job.type)}
+          </Badge>
+          
+          {job.category && (
+            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-lg border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+              {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
+            </Badge>
+          )}
+          
+          {job.transportation && (
+            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700">
+              <Car className="h-3 w-3 mr-1.5" />
+              {formatTransportation(job.transportation, job.transportation_amount)}
+            </Badge>
+          )}
+        </div>
+        
+        {/* Actions */}
+        <div className="flex gap-3">
+          {isOwner ? (
+            <Button 
+              onClick={handleApply}
+              size="sm"
+              className="w-full rounded-xl bg-primary hover:bg-primary/90"
+            >
+              View Details
+              <ExternalLink className="h-3.5 w-3.5 ml-2" />
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleApply}
+              size="sm"
+              className="w-full rounded-xl bg-primary hover:bg-primary/90"
+            >
+              {t('viewDetailsAndApply')}
+              <ExternalLink className="h-3.5 w-3.5 ml-2" />
+            </Button>
+          )}
+        </div>
       </CardContent>
-
-      {/* Edit Dialog */}
-      <UnifiedJobDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        onJobUpdated={handleJobUpdated}
-        isEditMode={true}
-        initialData={job}
-        jobId={job.id}
-      />
     </Card>
   )
 }

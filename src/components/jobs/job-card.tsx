@@ -229,22 +229,34 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
 
   const plainDescription = getPlainTextDescription(job.description);
   const shouldTruncate = plainDescription.length > 150;
-  const truncatedDescription =
-    shouldTruncate && !showFullDescription
-      ? plainDescription.substring(0, 150) + "..."
-      : plainDescription;
 
   return (
     <Card
-      className="h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer border-border/40"
+      className="group cursor-pointer border-0 bg-white dark:bg-gray-950 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden"
       onClick={handleViewDetails}
     >
-      <CardHeader className="p-4 pb-3">
-        {/* 1. Posted time and save button */}
-        <div className="flex justify-between items-start mb-3">
-          <span className="text-xs text-muted-foreground">
-            {job.posted_at ? formatTimeAgo(job.posted_at) : ''}
-          </span>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <CardHeader className="relative p-6 pb-4">
+        {/* Header with time and actions */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
+            {/* Company Avatar */}
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
+              <span className="text-sm font-semibold text-primary">
+                {job.company ? job.company.charAt(0).toUpperCase() : 'J'}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {job.company || t('noCompany')}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {job.posted_at ? formatTimeAgo(job.posted_at) : ''}
+              </p>
+            </div>
+          </div>
+          
           <div className="flex items-center gap-2">
             {/* Save button for non-owners and taskers only */}
             {!isOwner && user && user.role === 'tasker' && (
@@ -253,97 +265,94 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
                 size="sm"
                 onClick={handleSaveToggle}
                 disabled={isSaving}
-                className="h-8 w-8 p-0 hover:bg-emerald-100 dark:hover:bg-emerald-900/20"
+                className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 transition-colors opacity-60 group-hover:opacity-100"
               >
                 {isJobSaved ? (
-                  <BookmarkCheck className="h-4 w-4 text-emerald-600" />
+                  <BookmarkCheck className="h-4 w-4 text-primary" />
                 ) : (
-                  <Bookmark className="h-4 w-4 text-muted-foreground hover:text-emerald-600" />
+                  <Bookmark className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 )}
               </Button>
             )}
             {/* Application count for owners */}
             {isOwner && applicationCount !== null && (
-              <Badge variant="secondary" className="text-xs">
-                <Users className="h-3 w-3 mr-1" />
-                {applicationCount} {t('applied')}
-              </Badge>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-xl">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-primary">{applicationCount}</span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* 2. Title of the post - big font */}
-        <h3 className="text-xl font-bold leading-tight mb-2 line-clamp-2">
+        {/* Job Title */}
+        <h3 className="text-xl font-bold leading-tight mb-5 line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {job.title}
         </h3>
 
-        {/* 3. Location, Payment and Duration - inline on same row */}
-        <div className="flex items-center gap-4 text-sm flex-wrap">
+        {/* Key Information Pills */}
+        <div className="flex flex-wrap gap-2 mb-4">
           {/* Location */}
-          <div className="flex items-center text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{job.city?.name || t('jobTypes.remote')}</span>
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">{job.city?.name || t('jobTypes.remote')}</span>
           </div>
           
           {/* Payment */}
           {formatSalary(job) && (
-            <div className="flex items-center font-medium text-blue-600">
-              <DollarSign className="h-4 w-4 mr-1" />
-              {formatSalary(job)}
+            <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl">
+              <DollarSign className="h-3.5 w-3.5 text-green-600" />
+              <span className="text-sm font-medium text-green-600">{formatSalary(job)}</span>
             </div>
           )}
 
           {/* Duration */}
           {job.duration && (
-            <div className="flex items-center text-muted-foreground">
-              <Clock className="h-4 w-4 mr-1" />
-              {getTranslatedDuration(job.duration)}
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+              <Clock className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-sm text-blue-600">{getTranslatedDuration(job.duration)}</span>
             </div>
           )}
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 p-4 pt-0 space-y-3">
-        {/* 5. Description - normal font with read more button */}
+      <CardContent className="relative flex-1 px-6 pb-6 pt-0 space-y-4">
+        {/* Description */}
         <div>
-          <div 
-            className="text-sm text-muted-foreground leading-relaxed"
-            dangerouslySetInnerHTML={{ 
-              __html: truncatedDescription 
-            }}
-          />
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+            {plainDescription}
+          </p>
           {shouldTruncate && (
             <button
               onClick={toggleDescription}
-              className="text-xs text-blue-600 hover:text-blue-800 mt-1 font-medium"
+              className="text-xs text-primary hover:text-primary/80 mt-2 font-medium transition-colors"
             >
               {showFullDescription ? t('readLess') : t('readMore')}
             </button>
           )}
         </div>
 
-        {/* 5. Bubble tags */}
+        {/* Tags and Badges */}
         <div className="flex flex-wrap gap-2">
           {job.is_featured && (
-            <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
-              <Star className="h-3 w-3 fill-current" />
+            <Badge className="bg-yellow-500 hover:bg-yellow-600 text-yellow-50 text-xs px-2.5 py-1 rounded-lg border-0">
+              <Star className="h-3 w-3 fill-current mr-1" />
               {t('featured')}
             </Badge>
           )}
           
-          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs">
+          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20">
             {getTranslatedJobType(job.type)}
           </Badge>
 
           {job.category && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-lg border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
             </Badge>
           )}
 
           {job.transportation && (
-            <Badge variant="outline" className="text-xs">
-              <Car className="h-3 w-3 mr-1" />
+            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700">
+              <Car className="h-3 w-3 mr-1.5" />
               {getTranslatedTransportation(
                 job.transportation,
                 job.transportation_amount
@@ -352,16 +361,18 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
           )}
         </div>
 
-        {/* 6. Amount of people applied - for non-owners, show at bottom */}
+        {/* Application count for non-owners */}
         {!isOwner && applicationCount !== null && (
-          <div className="text-xs text-muted-foreground">
-            <Users className="h-3 w-3 mr-1 inline" />
-            {applicationCount} {applicationCount === 1 ? t('person') : t('people')}{" "}
-            {t('applied')}
+          <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {applicationCount} {applicationCount === 1 ? t('person') : t('people')} {t('applied')}
+            </span>
           </div>
         )}
       </CardContent>
-
     </Card>
   );
 }

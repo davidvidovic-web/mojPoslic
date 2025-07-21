@@ -9,6 +9,7 @@ interface JobsListSectionProps {
   jobs: Job[]
   applicationCounts: Record<string, number>
   onDelete: (jobId: string) => void
+  onEdit?: (job: Job) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
   isLoading?: boolean
 }
@@ -17,6 +18,7 @@ export function JobsListSection({
   jobs, 
   applicationCounts, 
   onDelete, 
+  onEdit,
   onFeature,
   isLoading = false 
 }: JobsListSectionProps) {
@@ -61,6 +63,7 @@ export function JobsListSection({
           job={job}
           applicationCount={applicationCounts[job.id] || 0}
           onDelete={onDelete}
+          onEdit={onEdit}
           onFeature={onFeature}
         />
       ))}

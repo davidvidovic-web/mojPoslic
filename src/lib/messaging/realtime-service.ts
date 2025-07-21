@@ -16,9 +16,10 @@ type UserPresenceData = {
 
 export class RealtimeService {
   private static channels: Map<string, RealtimeChannel> = new Map()
+  private static subscriptionPromises: Map<string, Promise<void>> = new Map()
 
   /**
-   * Subscribe to new messages in a conversation
+   * Subscribe to new messages in a conversation with improved reliability
    */
   static subscribeToMessages(
     conversationId: string,
@@ -41,43 +42,41 @@ export class RealtimeService {
           filter: `conversation_id=eq.${conversationId}`
         },
         async (payload) => {
-          // Fetch complete message data with sender info
-          const { data: message, error } = await supabase
-            .from('messages')
-            .select(`
-              *,
-              sender:sender_id (
-                id,
-                name,
-                avatar_url,
-                role
-              )
-            `)
-            .eq('id', payload.new.id)
-            .single()
+          console.log('Real-time new message:', payload)
+          try {
+            // Fetch enriched message data from our API endpoint
+            const response = await fetch(`/api/messages/${payload.new.id}`, {
+              method: 'GET',
+              credentials: 'include',
+            })
 
-          if (!error && message) {
-            const formattedMessage: Message = {
-              id: message.id,
-              conversation_id: message.conversation_id,
-              sender_id: message.sender_id,
-              content: message.content || undefined,
-              message_type: message.message_type as 'text' | 'image' | 'file' | 'system',
-              attachment_url: message.attachment_url || undefined,
-              attachment_filename: message.attachment_filename || undefined,
-              attachment_size: message.attachment_size || undefined,
-              reply_to_message_id: message.reply_to_message_id || undefined,
-              edited_at: message.edited_at || undefined,
-              deleted_at: message.deleted_at || undefined,
-              created_at: message.created_at,
-              sender: {
-                id: message.sender.id,
-                name: message.sender.name,
-                avatar_url: message.sender.avatar_url || undefined,
-                role: message.sender.role
+            if (response.ok) {
+              const data = await response.json()
+              if (data.message) {
+                onNewMessage(data.message)
               }
+            } else {
+              console.error('Failed to fetch enriched message data:', response.status)
+              // Fallback to basic message data without sender info
+              const basicMessage: Message = {
+                id: payload.new.id,
+                conversationId: payload.new.conversation_id,
+                senderId: payload.new.sender_id,
+                content: payload.new.content || undefined,
+                messageType: payload.new.message_type as 'text' | 'image' | 'file' | 'system',
+                attachmentUrl: payload.new.attachment_url || undefined,
+                attachmentFilename: payload.new.attachment_filename || undefined,
+                attachmentSize: payload.new.attachment_size || undefined,
+                replyToMessageId: payload.new.reply_to_message_id || undefined,
+                editedAt: payload.new.edited_at || undefined,
+                deletedAt: payload.new.deleted_at || undefined,
+                createdAt: payload.new.created_at,
+                sender: undefined // Will be missing but at least message shows
+              }
+              onNewMessage(basicMessage)
             }
-            onNewMessage(formattedMessage)
+          } catch (error) {
+            console.error('Error processing real-time message:', error)
           }
         }
       )
@@ -90,6 +89,7 @@ export class RealtimeService {
           filter: `conversation_id=eq.${conversationId}`
         },
         async (payload) => {
+          console.log('Real-time message update:', payload)
           // Fetch updated message data
           const { data: message, error } = await supabase
             .from('messages')
@@ -108,21 +108,21 @@ export class RealtimeService {
           if (!error && message) {
             const formattedMessage: Message = {
               id: message.id,
-              conversation_id: message.conversation_id,
-              sender_id: message.sender_id,
+              conversationId: message.conversation_id,
+              senderId: message.sender_id,
               content: message.content || undefined,
-              message_type: message.message_type as 'text' | 'image' | 'file' | 'system',
-              attachment_url: message.attachment_url || undefined,
-              attachment_filename: message.attachment_filename || undefined,
-              attachment_size: message.attachment_size || undefined,
-              reply_to_message_id: message.reply_to_message_id || undefined,
-              edited_at: message.edited_at || undefined,
-              deleted_at: message.deleted_at || undefined,
-              created_at: message.created_at,
+              messageType: message.message_type as 'text' | 'image' | 'file' | 'system',
+              attachmentUrl: message.attachment_url || undefined,
+              attachmentFilename: message.attachment_filename || undefined,
+              attachmentSize: message.attachment_size || undefined,
+              replyToMessageId: message.reply_to_message_id || undefined,
+              editedAt: message.edited_at || undefined,
+              deletedAt: message.deleted_at || undefined,
+              createdAt: message.created_at,
               sender: {
                 id: message.sender.id,
                 name: message.sender.name,
-                avatar_url: message.sender.avatar_url || undefined,
+                avatarUrl: message.sender.avatar_url || undefined,
                 role: message.sender.role
               }
             }
@@ -130,9 +130,25 @@ export class RealtimeService {
           }
         }
       )
-      .subscribe()
+
+    // Subscribe with error handling
+    const subscribePromise = new Promise<void>((resolve, reject) => {
+      channel.subscribe((status) => {
+        console.log(`Message subscription status for ${conversationId}:`, status)
+        if (status === 'SUBSCRIBED') {
+          console.log(`Successfully subscribed to messages for conversation ${conversationId}`)
+          resolve()
+        } else if (status === 'CLOSED') {
+          console.log(`Message subscription closed for conversation ${conversationId}`)
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`Message subscription error for conversation ${conversationId}`)
+          reject(new Error('Channel subscription error'))
+        }
+      })
+    })
 
     this.channels.set(channelName, channel)
+    this.subscriptionPromises.set(channelName, subscribePromise)
 
     // Return unsubscribe function
     return () => this.unsubscribeFromChannel(channelName)
@@ -349,6 +365,7 @@ export class RealtimeService {
     if (channel) {
       supabase.removeChannel(channel)
       this.channels.delete(channelName)
+      this.subscriptionPromises.delete(channelName)
     }
   }
 
@@ -360,6 +377,7 @@ export class RealtimeService {
       supabase.removeChannel(channel)
     })
     this.channels.clear()
+    this.subscriptionPromises.clear()
   }
 
   /**

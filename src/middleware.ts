@@ -37,6 +37,11 @@ export default async function middleware(request: NextRequest) {
     '/about'
   ];
   
+  // Define paths that authenticated users can access regardless of profile completion
+  const jobViewingPaths = [
+    '/jobs' // This will match /jobs/[id] and other job-related paths
+  ];
+  
   // Define paths that require authentication but not role completion
   const authOnlyPaths = [
     '/role-selection',
@@ -53,6 +58,9 @@ export default async function middleware(request: NextRequest) {
     return cleanedResponse;
   }
   
+  // Check if this is a job viewing path
+  const isJobViewingPath = jobViewingPaths.some(path => finalPath.startsWith(path));
+  
   try {
     // Get the user's token/session
     const token = await getToken({ 
@@ -67,12 +75,14 @@ export default async function middleware(request: NextRequest) {
     let userRole = token?.role;
     let profileSetupCompleted = token?.profileSetupCompleted;
     
-    // Only fetch fresh data if we're on critical paths AND need to verify current state
-    // This reduces unnecessary API calls when the token is already up-to-date
-    if (token?.id && (
-      (finalPath === '/role-selection' || finalPath === '/profile-setup') && !token.role ||
-      finalPath === '/dashboard' || finalPath.startsWith('/dashboard/')
-    )) {
+    // Only fetch fresh data if token data seems outdated or missing critical info
+    // This reduces unnecessary API calls by trusting the token when it has complete data
+    const needsFreshData = token?.id && (
+      (!token.role && (finalPath === '/role-selection' || finalPath === '/dashboard' || finalPath.startsWith('/dashboard/'))) ||
+      (token.role && token.profileSetupCompleted === undefined && (finalPath === '/profile-setup' || finalPath === '/dashboard' || finalPath.startsWith('/dashboard/')))
+    );
+
+    if (needsFreshData) {
       try {
         // Call our API endpoint to get fresh user data (since Prisma doesn't work in Edge Runtime)
         const response = await fetch(new URL('/api/user/fresh-state', request.url), {
@@ -86,52 +96,47 @@ export default async function middleware(request: NextRequest) {
           const { user: dbUser } = await response.json();
           userRole = dbUser.role;
           profileSetupCompleted = dbUser.profileSetupCompleted;
-          console.log('Middleware: Fresh data from DB via API:', {
-            userId: token.id,
-            tokenRole: token.role,
-            dbRole: dbUser.role,
-            tokenProfileSetup: token.profileSetupCompleted,
-            dbProfileSetup: dbUser.profileSetupCompleted
-          });
+          // Only log in development or when there's a discrepancy
+          if (process.env.NODE_ENV === 'development' || token.role !== dbUser.role) {
+            console.log('Middleware: Fetched fresh user data - token was outdated');
+          }
         } else {
-          console.log('Middleware: API call failed, using token data');
           userRole = token?.role;
           profileSetupCompleted = token?.profileSetupCompleted;
         }
       } catch (dbError) {
-        console.error('Middleware: Error fetching fresh user data via API:', dbError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Middleware: Error fetching fresh user data:', dbError);
+        }
         // Fall back to token data
         userRole = token?.role;
         profileSetupCompleted = token?.profileSetupCompleted;
       }
     }
     
-    // Debug logging for dashboard access
-    if (finalPath === '/dashboard') {
-      console.log('Middleware Debug (Dashboard):', {
-        path: finalPath,
-        hasToken: !!token,
-        tokenRole: token?.role,
-        freshUserRole: userRole,
-        tokenProfileSetup: token?.profileSetupCompleted,
-        freshProfileSetup: profileSetupCompleted,
-        tokenId: token?.id,
-        timestamp: new Date().toISOString()
-      });
-    }
-    
-    // Debug logging for role selection issues
-    if (finalPath === '/role-selection' || finalPath === '/profile-setup') {
-      console.log('Middleware Debug:', {
-        path: finalPath,
-        hasToken: !!token,
-        tokenRole: token?.role,
-        freshUserRole: userRole,
-        tokenProfileSetup: token?.profileSetupCompleted,
-        freshProfileSetup: profileSetupCompleted,
-        tokenId: token?.id,
-        timestamp: new Date().toISOString()
-      });
+    // Only log debug info in development mode or when there are issues
+    if (process.env.NODE_ENV === 'development') {
+      // Debug logging for dashboard access
+      if (finalPath === '/dashboard') {
+        console.log('Middleware Debug (Dashboard):', {
+          path: finalPath,
+          hasToken: !!token,
+          userRole,
+          profileSetupCompleted,
+          tokenId: token?.id
+        });
+      }
+      
+      // Debug logging for role selection issues
+      if (finalPath === '/role-selection' || finalPath === '/profile-setup') {
+        console.log('Middleware Debug:', {
+          path: finalPath,
+          hasToken: !!token,
+          userRole,
+          profileSetupCompleted,
+          tokenId: token?.id
+        });
+      }
     }
     
     // If no token, redirect to signin (except for auth-only paths)
@@ -139,6 +144,12 @@ export default async function middleware(request: NextRequest) {
       if (authOnlyPaths.includes(finalPath)) {
         // Redirect to signin if trying to access auth-only paths without being logged in
         const signInUrl = new URL('/auth/signin', request.url);
+        return NextResponse.redirect(signInUrl);
+      }
+      // For job viewing paths, redirect to signin with return URL
+      if (isJobViewingPath) {
+        const signInUrl = new URL('/auth/signin', request.url);
+        signInUrl.searchParams.set('returnUrl', finalPath);
         return NextResponse.redirect(signInUrl);
       }
       // For other protected paths, redirect to signin
@@ -152,17 +163,20 @@ export default async function middleware(request: NextRequest) {
     // Special handling for dashboard - ensure user is fully set up
     if (finalPath === '/dashboard' || finalPath.startsWith('/dashboard/')) {
       if (!userRole) {
-        console.log('Dashboard access denied: No role, redirecting to role selection');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Dashboard access denied: No role, redirecting to role selection');
+        }
         const roleSelectionUrl = new URL('/role-selection', request.url);
         return NextResponse.redirect(roleSelectionUrl);
       }
       if (!profileSetupCompleted) {
-        console.log('Dashboard access denied: Profile not completed, redirecting to profile setup');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Dashboard access denied: Profile not completed, redirecting to profile setup');
+        }
         const profileSetupUrl = new URL('/profile-setup', request.url);
         return NextResponse.redirect(profileSetupUrl);
       }
       // User is fully set up, allow dashboard access
-      console.log('Dashboard access allowed: User fully set up');
       return cleanedResponse;
     }
     
@@ -170,7 +184,9 @@ export default async function middleware(request: NextRequest) {
     if (userRole && profileSetupCompleted) {
       // If they're trying to access onboarding pages, redirect to dashboard
       if (finalPath === '/role-selection' || finalPath === '/profile-setup') {
-        console.log('Completed user accessing onboarding page, redirecting to dashboard');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Completed user accessing onboarding page, redirecting to dashboard');
+        }
         const dashboardUrl = new URL('/dashboard', request.url);
         return NextResponse.redirect(dashboardUrl);
       }
@@ -178,6 +194,11 @@ export default async function middleware(request: NextRequest) {
       return cleanedResponse;
     }
     
+    // For authenticated users: Allow job viewing even without profile completion
+    if (isJobViewingPath && token) {
+      return cleanedResponse;
+    }
+
     // For authenticated users: If they don't have a role, redirect to role selection
     if (!userRole && finalPath !== '/role-selection') {
       const roleSelectionUrl = new URL('/role-selection', request.url);
@@ -206,7 +227,9 @@ export default async function middleware(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('Middleware auth error:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Middleware auth error:', error);
+    }
     // On error, allow the request to proceed to avoid breaking the app
   }
   

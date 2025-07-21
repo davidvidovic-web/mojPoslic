@@ -101,7 +101,34 @@
       "transportation": "Transportation",
       "contactName": "Contact Name",
       "contactEmail": "Contact Email",
-      "contactPhone": "Contact Phone"
+      "contactPhone": "Contact Phone",
+      "posted": "Posted",
+      "applied": "Applied",
+      "yourJob": "Your Job",
+      "applyExternally": "Apply Externally",
+      "applyNow": "Apply Now",
+      "startDate": "Start Date",
+      "startTime": "Start Time",
+      "duration": "Duration",
+      "expires": "Expires",
+      "parking": "Parking",
+      "publicTransport": "Public Transport",
+      "address": "Address",
+      "email": "Email",
+      "phone": "Phone",
+      "altEmail": "Alt. Email",
+      "website": "Website",
+      "applyUrl": "Apply URL",
+      "available": "Available",
+      "notAvailable": "Not available",
+      "byAgreement": "By agreement",
+      "externalApplication": "External Application",
+      "postedBy": "Posted By",
+      "primaryContact": "Primary Contact",
+      "links": "Links",
+      "transportationAndLocation": "Transportation & Location",
+      "contactInformation": "Contact Information",
+      "scheduleAndTimeline": "Schedule & Timeline"
     },
     "placeholders": {
       "jobTitleExample": "e.g., Web Developer, Graphic Designer",
@@ -147,7 +174,7 @@
   },
   "content": {
     "jobDescription": "Job Description",
-    "requirements": "Requirements",
+    "requirements": "Requirements", 
     "benefits": "Benefits",
     "skillsAndTechnologies": "Skills & Technologies"
   },
@@ -163,6 +190,12 @@
   "location": {
     "jobLocation": "Job Location",
     "exactAddressMessage": "📍 Exact address and map will be revealed to the selected tasker for client safety."
+  },
+  "privacy": {
+    "contactHidden": "Hidden",
+    "addressHidden": "Hidden",
+    "mapHidden": "Map hidden for privacy",
+    "availableAfterSelection": "Available after job assignment"
   },
   "statusManager": {
     "updateJobStatus": "Update Job Status",
@@ -269,9 +302,6 @@
   "sections": {
     "compensationTransportation": "Compensation & Transportation"
   },
-  "labels": {
-    "salary": "Salary"
-  },
   "review": {
     "title": "Review Your Job Posting",
     "description": "Review all the details below before submitting your job posting",
@@ -298,7 +328,10 @@
     "jobUpdated": "Job updated successfully!",
     "submitJobPosting": "Submit Job Posting",
     "updateJobPosting": "Update Job Posting",
-    "submitting": "Submitting..."
+    "submitting": "Submitting...",
+    "updating": "Updating...",
+    "alternateContact": "alternate contact",
+    "applicationUrl": "application URL"
   },
   "dialogs": {
     "postJobDialog": "Post New Job",

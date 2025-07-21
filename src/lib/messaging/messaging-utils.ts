@@ -63,9 +63,13 @@ export function createMessageUserLink(userId: string, userName?: string): string
 export function extractMessagingParams(searchParams: URLSearchParams) {
   const startConversationUserId = searchParams.get('startConversation');
   const userName = searchParams.get('userName');
+  const jobId = searchParams.get('job');
+  const userId = searchParams.get('user');
   
   return {
     startConversationUserId,
     userName,
+    jobId,
+    userId,
   };
 }

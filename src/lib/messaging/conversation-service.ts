@@ -70,99 +70,30 @@ export class ConversationService {
   /**
    * Get all conversations for the current user
    */
-  static async getUserConversations(userId: string): Promise<Conversation[]> {
+  static async getConversations(): Promise<Conversation[]> {
     try {
-      // Check if tables exist first
-      const tablesExist = await this.checkTablesExist()
-      if (!tablesExist) {
-        console.info('Messaging tables not available, returning empty conversations list')
-        return []
-      }
-
-      // Check if userId is provided
-      if (!userId) {
-        throw new Error('User ID is required')
-      }
-
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          conversation_participants!inner (
-            id,
-            user_id,
-            role,
-            last_read_at,
-            joined_at,
-            left_at
-          )
-        `)
-        .eq('conversation_participants.user_id', userId)
-        .is('conversation_participants.left_at', null)
-        .order('last_message_at', { ascending: false })
-
-      if (error) {
-        console.error('Supabase query error:', error)
-        throw error
-      }
-
-      // Transform the data to match our Conversation interface
-      const conversations: Conversation[] = await Promise.all(
-        (data || []).map(async (conv: ConversationWithParticipants) => {
-          try {
-            // Get all participants for this conversation
-            const participants = await this.getConversationParticipants(conv.id)
-            
-            // Get last message
-            const lastMessage = await this.getLastMessage(conv.id)
-            
-            // Calculate unread count
-            const unreadCount = await this.getUnreadCount(conv.id, userId)
-
-            return {
-              id: conv.id,
-              type: conv.type as 'direct' | 'group' | 'job_related',
-              title: conv.title || undefined,
-              job_id: conv.job_id || undefined,
-              created_at: conv.created_at,
-              updated_at: conv.updated_at,
-              last_message_at: conv.last_message_at || undefined,
-              archived: conv.archived,
-              participants,
-              last_message: lastMessage,
-              unread_count: unreadCount
-            }
-          } catch (convError) {
-            console.error(`Error processing conversation ${conv.id}:`, convError)
-            // Return a minimal conversation object on error
-            return {
-              id: conv.id,
-              type: conv.type as 'direct' | 'group' | 'job_related',
-              title: conv.title || undefined,
-              job_id: conv.job_id || undefined,
-              created_at: conv.created_at,
-              updated_at: conv.updated_at,
-              last_message_at: conv.last_message_at || undefined,
-              archived: conv.archived,
-              participants: [],
-              last_message: null,
-              unread_count: 0
-            }
-          }
-        })
-      )
-
-      return conversations
-    } catch (error) {
-      console.error('Error fetching user conversations:', {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        userId
+      const response = await fetch('/api/conversations', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
       })
-      
-      // Return empty array instead of throwing to prevent app crashes
-      return []
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required')
+        }
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.conversations || []
+
+    } catch (error) {
+      console.error('Error in getConversations:', error)
+      throw error
     }
   }
 
@@ -180,7 +111,7 @@ export class ConversationService {
         .from('conversation_participants')
         .select(`
           *,
-          users:user_id (
+          users!user_id (
             id,
             email,
             name,
@@ -227,6 +158,8 @@ export class ConversationService {
    */
   static async createConversation(data: CreateConversationData, createdBy: string): Promise<Conversation> {
     try {
+      console.log('Creating conversation with data:', { data, createdBy });
+
       // Start a transaction
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
@@ -238,6 +171,8 @@ export class ConversationService {
         .select()
         .single()
 
+      console.log('Conversation insert result:', { conversation, convError });
+
       if (convError) throw convError
 
       // Add participants
@@ -247,16 +182,28 @@ export class ConversationService {
         role: userId === createdBy ? 'admin' : 'member'
       }))
 
+      console.log('Inserting participants:', participantInserts);
+
       const { error: participantsError } = await supabase
         .from('conversation_participants')
         .insert(participantInserts)
 
+      console.log('Participants insert result:', { participantsError });
+
       if (participantsError) throw participantsError
 
       // Return the created conversation with participants
-      return await this.getConversationById(conversation.id)
+      const fullConversation = await this.getConversationById(conversation.id)
+      console.log('Final conversation:', fullConversation);
+      
+      return fullConversation
     } catch (error) {
-      console.error('Error creating conversation:', error)
+      console.error('Error creating conversation:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        data: error && typeof error === 'object' ? JSON.stringify(error) : error
+      })
       throw error
     }
   }
@@ -294,6 +241,12 @@ export class ConversationService {
     jobTitle: string
   ): Promise<Conversation> {
     try {
+      // Check if tables exist first
+      const tablesExist = await this.checkTablesExist()
+      if (!tablesExist) {
+        throw new Error('Messaging tables do not exist in Supabase. Please run the database migrations.')
+      }
+
       // Check if job conversation already exists
       const { data: existing } = await supabase
         .from('conversations')
@@ -314,7 +267,16 @@ export class ConversationService {
         participant_ids: [clientId, taskerId]
       }, clientId)
     } catch (error) {
-      console.error('Error creating job conversation:', error)
+      console.error('Error creating job conversation:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        jobId,
+        clientId,
+        taskerId,
+        jobTitle,
+        data: error && typeof error === 'object' ? JSON.stringify(error) : error
+      })
       throw error
     }
   }

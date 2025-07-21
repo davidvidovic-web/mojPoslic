@@ -7,6 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
+// Default unauthenticated client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -18,6 +19,34 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
   },
 })
+
+// Function to create an authenticated Supabase client with a user token
+export function createAuthenticatedSupabaseClient(accessToken?: string) {
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+    global: {
+      headers: accessToken ? {
+        Authorization: `Bearer ${accessToken}`,
+      } : {},
+    },
+  })
+
+  // If we have an access token, set the session
+  if (accessToken) {
+    // Note: We can't actually set the session without the refresh token,
+    // but we can pass the access token in headers for RLS policies
+  }
+
+  return client
+}
 
 // Type definitions for our database
 export type Database = {

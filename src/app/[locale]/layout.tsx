@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { ConditionalHeader } from "@/components/core/conditional-header";
+import { ConditionalFooter } from "@/components/core/conditional-footer";
 
 type Props = {
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export default async function LocaleLayout({
         <main className="flex-1">
           {children}
         </main>
+        <ConditionalFooter />
       </div>
     </NextIntlClientProvider>
   );

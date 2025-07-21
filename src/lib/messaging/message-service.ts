@@ -1,8 +1,35 @@
-import { supabase } from './supabase'
-import type { Message, SendMessageData, MessageStatus } from '../../types/messaging'
+import { createAuthenticatedSupabaseClient } from '../supabase-server'
+import { createClient } from '@supabase/supabase-js'
+import type { 
+  Message, 
+  SendMessageData, 
+  MessageStatus 
+} from '../../types/messaging'
 
-// Internal type for database response
-type MessageWithSender = {
+// Helper function to get authenticated client with user context
+async function getAuthenticatedSupabaseClient() {
+  return await createAuthenticatedSupabaseClient()
+}
+
+// Admin client for specific operations that require bypassing RLS
+function createSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase credentials')
+  }
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+}
+
+// Internal type for database responses
+type MessageRecord = {
   id: string
   conversation_id: string
   sender_id: string
@@ -15,12 +42,6 @@ type MessageWithSender = {
   edited_at: string | null
   deleted_at: string | null
   created_at: string
-  sender: {
-    id: string
-    name: string
-    avatar_url: string | null
-    role: string
-  }
 }
 
 export class MessageService {
@@ -33,16 +54,24 @@ export class MessageService {
     cursor?: string
   ): Promise<Message[]> {
     try {
-      let query = supabase
+      // Use authenticated client for reading messages
+      const client = await getAuthenticatedSupabaseClient()
+      
+      let query = client
         .from('messages')
         .select(`
-          *,
-          sender:sender_id (
-            id,
-            name,
-            avatar_url,
-            role
-          )
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          message_type,
+          attachment_url,
+          attachment_filename,
+          attachment_size,
+          reply_to_message_id,
+          edited_at,
+          deleted_at,
+          created_at
         `)
         .eq('conversation_id', conversationId)
         .is('deleted_at', null)
@@ -59,7 +88,21 @@ export class MessageService {
 
       // Transform and get additional data for each message
       const messages: Message[] = await Promise.all(
-        (data || []).map(async (msg: MessageWithSender) => {
+        (data || []).map(async (msg: MessageRecord) => {
+          // Get sender information from users table
+          const { data: senderData } = await client
+            .from('users')
+            .select('id, name, avatar_url, role')
+            .eq('id', msg.sender_id)
+            .single()
+
+          const sender = senderData || {
+            id: msg.sender_id,
+            name: 'Unknown User',
+            avatar_url: null,
+            role: 'user'
+          }
+
           // Get replied message if this is a reply
           let repliedMessage = undefined
           if (msg.reply_to_message_id) {
@@ -84,12 +127,12 @@ export class MessageService {
             deleted_at: msg.deleted_at || undefined,
             created_at: msg.created_at,
             sender: {
-              id: msg.sender.id,
-              name: msg.sender.name,
-              avatar_url: msg.sender.avatar_url || undefined,
-              role: msg.sender.role
+              id: sender.id,
+              name: sender.name,
+              avatar_url: sender.avatar_url || undefined,
+              role: sender.role
             },
-            replied_message: repliedMessage,
+            reply_to: repliedMessage,
             status
           }
         })
@@ -107,8 +150,10 @@ export class MessageService {
    */
   static async sendMessage(data: SendMessageData, senderId: string): Promise<Message> {
     try {
-      // Insert the message
-      const { data: message, error: messageError } = await supabase
+      const supabaseAdmin = createSupabaseAdmin()
+      
+      // Insert the message using admin client to bypass RLS
+      const { data: message, error: messageError } = await supabaseAdmin
         .from('messages')
         .insert({
           conversation_id: data.conversation_id,
@@ -121,13 +166,18 @@ export class MessageService {
           reply_to_message_id: data.reply_to_message_id
         })
         .select(`
-          *,
-          sender:sender_id (
-            id,
-            name,
-            avatar_url,
-            role
-          )
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          message_type,
+          attachment_url,
+          attachment_filename,
+          attachment_size,
+          reply_to_message_id,
+          edited_at,
+          deleted_at,
+          created_at
         `)
         .single()
 
@@ -149,7 +199,9 @@ export class MessageService {
    */
   static async editMessage(messageId: string, newContent: string, userId: string): Promise<Message> {
     try {
-      const { error } = await supabase
+      const supabaseAdmin = createSupabaseAdmin()
+      
+      const { error } = await supabaseAdmin
         .from('messages')
         .update({ 
           content: newContent, 
@@ -174,7 +226,9 @@ export class MessageService {
    */
   static async deleteMessage(messageId: string, userId: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const supabaseAdmin = createSupabaseAdmin()
+      
+      const { error } = await supabaseAdmin
         .from('messages')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', messageId)
@@ -192,8 +246,10 @@ export class MessageService {
    */
   static async markMessageAsRead(messageId: string, userId: string): Promise<void> {
     try {
+      const supabaseAdmin = createSupabaseAdmin()
+      
       // Check if read status already exists
-      const { data: existing } = await supabase
+      const { data: existing } = await supabaseAdmin
         .from('message_status')
         .select('id')
         .eq('message_id', messageId)
@@ -204,7 +260,7 @@ export class MessageService {
       if (existing) return // Already marked as read
 
       // Insert read status
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('message_status')
         .insert({
           message_id: messageId,
@@ -228,16 +284,24 @@ export class MessageService {
     limit: number = 20
   ): Promise<Message[]> {
     try {
-      const { data, error } = await supabase
+      // Use authenticated client for searching messages
+      const client = await getAuthenticatedSupabaseClient()
+      
+      const { data, error } = await client
         .from('messages')
         .select(`
-          *,
-          sender:sender_id (
-            id,
-            name,
-            avatar_url,
-            role
-          )
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          message_type,
+          attachment_url,
+          attachment_filename,
+          attachment_size,
+          reply_to_message_id,
+          edited_at,
+          deleted_at,
+          created_at
         `)
         .eq('conversation_id', conversationId)
         .ilike('content', `%${query}%`)
@@ -247,7 +311,7 @@ export class MessageService {
 
       if (error) throw error
 
-      return (data || []).map((msg: MessageWithSender) => ({
+      return (data || []).map((msg: MessageRecord) => ({
         id: msg.id,
         conversation_id: msg.conversation_id,
         sender_id: msg.sender_id,
@@ -261,10 +325,10 @@ export class MessageService {
         deleted_at: msg.deleted_at || undefined,
         created_at: msg.created_at,
         sender: {
-          id: msg.sender.id,
-          name: msg.sender.name,
-          avatar_url: msg.sender.avatar_url || undefined,
-          role: msg.sender.role
+          id: msg.sender_id,
+          name: 'User',
+          avatar_url: undefined,
+          role: 'user'
         }
       }))
     } catch (error) {
@@ -275,44 +339,65 @@ export class MessageService {
 
   // Helper methods
   private static async getMessageById(messageId: string): Promise<Message> {
-    const { data, error } = await supabase
+    // Use authenticated client for reading message
+    const client = await getAuthenticatedSupabaseClient()
+    
+    const { data, error } = await client
       .from('messages')
       .select(`
-        *,
-        sender:sender_id (
-          id,
-          name,
-          avatar_url,
-          role
-        )
+        id,
+        conversation_id,
+        sender_id,
+        content,
+        message_type,
+        attachment_url,
+        attachment_filename,
+        attachment_size,
+        reply_to_message_id,
+        edited_at,
+        deleted_at,
+        created_at
       `)
       .eq('id', messageId)
       .single()
 
     if (error) throw error
 
-    const msg = data as MessageWithSender
+    // Get sender information from users table
+    const { data: senderData } = await client
+      .from('users')
+      .select('id, name, avatar_url, role')
+      .eq('id', data.sender_id)
+      .single()
+
+    const sender = senderData || {
+      id: data.sender_id,
+      name: 'Unknown User',
+      avatar_url: null,
+      role: 'user'
+    }
+
     const statusArray = await this.getMessageStatus(messageId)
     const status = this.extractMessageStatus(statusArray)
 
     return {
-      id: msg.id,
-      conversation_id: msg.conversation_id,
-      sender_id: msg.sender_id,
-      content: msg.content || undefined,
-      message_type: msg.message_type as 'text' | 'image' | 'file' | 'system',
-      attachment_url: msg.attachment_url || undefined,
-      attachment_filename: msg.attachment_filename || undefined,
-      attachment_size: msg.attachment_size || undefined,
-      reply_to_message_id: msg.reply_to_message_id || undefined,
-      edited_at: msg.edited_at || undefined,
-      deleted_at: msg.deleted_at || undefined,
-      created_at: msg.created_at,
+      id: data.id,
+      conversation_id: data.conversation_id,
+      sender_id: data.sender_id,
+      content: data.content || undefined,
+      message_type: data.message_type as 'text' | 'image' | 'file' | 'system',
+      attachment_url: data.attachment_url || undefined,
+      attachment_filename: data.attachment_filename || undefined,
+      attachment_size: data.attachment_size || undefined,
+      reply_to_message_id: data.reply_to_message_id || undefined,
+      edited_at: data.edited_at || undefined,
+      deleted_at: data.deleted_at || undefined,
+      created_at: data.created_at,
       sender: {
-        id: msg.sender.id,
-        name: msg.sender.name,
-        avatar_url: msg.sender.avatar_url || undefined,
-        role: msg.sender.role
+        id: sender.id,
+        name: sender.name,
+        avatar_url: sender.avatar_url || undefined,
+        role: sender.role
       },
       status
     }
@@ -339,7 +424,10 @@ export class MessageService {
   }
 
   private static async getMessageStatus(messageId: string): Promise<MessageStatus[]> {
-    const { data } = await supabase
+    // Use authenticated client for reading message status
+    const client = await getAuthenticatedSupabaseClient()
+    
+    const { data } = await client
       .from('message_status')
       .select('*')
       .eq('message_id', messageId)
@@ -349,8 +437,10 @@ export class MessageService {
   }
 
   private static async createMessageStatus(messageId: string, conversationId: string): Promise<void> {
+    const supabaseAdmin = createSupabaseAdmin()
+    
     // Get all participants in the conversation
-    const { data: participants } = await supabase
+    const { data: participants } = await supabaseAdmin
       .from('conversation_participants')
       .select('user_id')
       .eq('conversation_id', conversationId)
@@ -365,7 +455,7 @@ export class MessageService {
       status: 'sent' as const
     }))
 
-    await supabase
+    await supabaseAdmin
       .from('message_status')
       .insert(statusInserts)
   }

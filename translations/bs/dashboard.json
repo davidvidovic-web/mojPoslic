@@ -64,6 +64,7 @@
     "messages": "Poruke",
     "finances": "Finansije",
     "integrations": "Integracije",
+    "analytics": "Analitika",
     "statistics": "Statistika"
   },
   "taglines": {
@@ -110,13 +111,26 @@
     "featured": "Istaknuto",
     "applications": "prijava",
     "application": "prijava",
+    "applicants": "kandidata",
     "edit": "Uredi",
     "delete": "Obriši",
     "view": "Pogledaj",
     "status": "Status",
     "type": "Tip",
     "posted": "Objavljeno",
-    "expires": "Ističe"
+    "expires": "Ističe",
+    "startDate": "Datum početka",
+    "startTime": "Vrijeme početka",
+    "duration": "Trajanje",
+    "salary": "Plata",
+    "location": "Lokacija",
+    "remote": "Udaljeno",
+    "active": "Aktivno",
+    "inactive": "Neaktivno",
+    "expired": "Isteklo",
+    "byAgreement": "Po dogovoru",
+    "negotiable": "Dogovorivo",
+    "more": "više"
   },
   "company": {
     "quickActions": {

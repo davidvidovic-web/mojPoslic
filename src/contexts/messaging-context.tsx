@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { ConversationService } from '@/lib/messaging/conversation-service'
-import { MessageService } from '@/lib/messaging/message-service'
 import { RealtimeService } from '@/lib/messaging/realtime-service'
 import type { 
   Conversation, 
@@ -23,6 +22,7 @@ interface MessagingState {
   userPresence: UserPresence[]
   isLoading: boolean
   isLoadingMessages: boolean
+  hasMoreMessages: boolean
   error: string | null
   unreadCount: number
 }
@@ -31,6 +31,7 @@ interface MessagingState {
 type MessagingAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_LOADING_MESSAGES'; payload: boolean }
+  | { type: 'SET_HAS_MORE_MESSAGES'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'SET_CONVERSATIONS'; payload: Conversation[] }
   | { type: 'ADD_CONVERSATION'; payload: Conversation }
@@ -53,6 +54,7 @@ interface MessagingContextType {
   loadConversations: () => Promise<void>
   createConversation: (data: CreateConversationData) => Promise<Conversation>
   createDirectConversation: (userId: string) => Promise<Conversation>
+  createJobConversation: (jobId: string, otherUserId: string, jobTitle: string) => Promise<Conversation>
   setActiveConversation: (conversation: Conversation | null) => void
   markConversationAsRead: (conversationId: string) => Promise<void>
   archiveConversation: (conversationId: string) => Promise<void>
@@ -81,6 +83,7 @@ const initialState: MessagingState = {
   userPresence: [],
   isLoading: false,
   isLoadingMessages: false,
+  hasMoreMessages: true,
   error: null,
   unreadCount: 0
 }
@@ -94,6 +97,9 @@ function messagingReducer(state: MessagingState, action: MessagingAction): Messa
     case 'SET_LOADING_MESSAGES':
       return { ...state, isLoadingMessages: action.payload }
     
+    case 'SET_HAS_MORE_MESSAGES':
+      return { ...state, hasMoreMessages: action.payload }
+    
     case 'SET_ERROR':
       return { ...state, error: action.payload }
     
@@ -105,6 +111,11 @@ function messagingReducer(state: MessagingState, action: MessagingAction): Messa
       }
     
     case 'ADD_CONVERSATION':
+      // Check if conversation already exists to prevent duplicates
+      const existingConversation = state.conversations.find(conv => conv.id === action.payload.id)
+      if (existingConversation) {
+        return state // Don't add if it already exists
+      }
       return { 
         ...state, 
         conversations: [action.payload, ...state.conversations] 
@@ -190,7 +201,14 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
 
-      const conversations = await ConversationService.getUserConversations(user.id)
+      const response = await fetch('/api/conversations')
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      
+      const conversations = result.data
       dispatch({ type: 'SET_CONVERSATIONS', payload: conversations })
     } catch (error) {
       console.error('Error loading conversations:', error)
@@ -233,6 +251,42 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
+  // Create job-related conversation
+  const createJobConversation = useCallback(async (jobId: string, otherUserId: string, jobTitle: string): Promise<Conversation> => {
+    if (!user) throw new Error('User not authenticated')
+
+    try {
+      // Use API endpoint for server-side conversation creation
+      const response = await fetch('/api/conversations/create-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jobId,
+          otherUserId,
+          jobTitle,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create conversation')
+      }
+
+      const { conversation } = await response.json()
+      
+      // Add to conversations if it's new
+      dispatch({ type: 'ADD_CONVERSATION', payload: conversation })
+      
+      return conversation
+    } catch (error) {
+      console.error('Error creating job conversation:', error)
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create job conversation' })
+      throw error
+    }
+  }, [user])
+
   // Set active conversation
   const setActiveConversation = useCallback((conversation: Conversation | null) => {
     dispatch({ type: 'SET_ACTIVE_CONVERSATION', payload: conversation })
@@ -243,14 +297,35 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING_MESSAGES', payload: true })
       
-      const messages = await MessageService.getMessages(conversationId, 50, cursor)
+      const params = new URLSearchParams({
+        conversationId,
+        limit: '50'
+      })
+      
+      if (cursor) {
+        params.append('cursor', cursor)
+      }
+      
+      const response = await fetch(`/api/messages?${params}`)
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      
+      const messages = result.data
+      
+      // Check if there are more messages to load
+      const hasMore = messages.length === 50 // If we got a full page, there might be more
+      dispatch({ type: 'SET_HAS_MORE_MESSAGES', payload: hasMore })
       
       if (cursor) {
         // Prepend older messages using the new action
         dispatch({ type: 'PREPEND_MESSAGES', payload: messages })
       } else {
-        // Replace all messages
+        // Replace all messages and reset hasMore to true for new conversation
         dispatch({ type: 'SET_MESSAGES', payload: messages })
+        dispatch({ type: 'SET_HAS_MORE_MESSAGES', payload: messages.length === 50 })
       }
     } catch (error) {
       console.error('Error loading messages:', error)
@@ -265,7 +340,21 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error('User not authenticated')
 
     try {
-      const message = await MessageService.sendMessage(data, user.id)
+      const response = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      
+      const message = result.data
       dispatch({ type: 'ADD_MESSAGE', payload: message })
     } catch (error) {
       console.error('Error sending message:', error)
@@ -274,37 +363,40 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
-  // Edit message
+  // Edit message (temporarily disabled - needs API implementation)
   const editMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!user) return
 
     try {
-      const updatedMessage = await MessageService.editMessage(messageId, newContent, user.id)
-      dispatch({ type: 'UPDATE_MESSAGE', payload: updatedMessage })
+      // TODO: Implement /api/messages/edit endpoint
+      console.log('Edit message not yet implemented in API', { messageId, newContent })
+      dispatch({ type: 'SET_ERROR', payload: 'Edit message feature coming soon' })
     } catch (error) {
       console.error('Error editing message:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Failed to edit message' })
     }
   }, [user])
 
-  // Delete message
+  // Delete message (temporarily disabled - needs API implementation)
   const deleteMessage = useCallback(async (messageId: string) => {
     if (!user) return
 
     try {
-      await MessageService.deleteMessage(messageId, user.id)
-      // Remove from local state using the new action
-      dispatch({ type: 'REMOVE_MESSAGE', payload: messageId })
+      // TODO: Implement /api/messages/delete endpoint
+      console.log('Delete message not yet implemented in API', { messageId })
+      dispatch({ type: 'SET_ERROR', payload: 'Delete message feature coming soon' })
     } catch (error) {
       console.error('Error deleting message:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete message' })
     }
   }, [user])
 
-  // Search messages
+  // Search messages (temporarily disabled - needs API implementation)
   const searchMessages = useCallback(async (conversationId: string, query: string): Promise<Message[]> => {
     try {
-      return await MessageService.searchMessages(conversationId, query)
+      // TODO: Implement /api/messages/search endpoint
+      console.log('Search messages not yet implemented in API', { conversationId, query })
+      return []
     } catch (error) {
       console.error('Error searching messages:', error)
       throw error
@@ -369,20 +461,22 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_ERROR', payload: null })
   }, [])
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions for active conversation
   useEffect(() => {
     if (!user || !state.activeConversation) return
 
     const conversationId = state.activeConversation.id
 
-    // Subscribe to new messages
+    // Subscribe to new messages in active conversation
     const unsubscribeMessages = RealtimeService.subscribeToMessages(
       conversationId,
-      (message) => dispatch({ type: 'ADD_MESSAGE', payload: message }),
+      (message) => {
+        dispatch({ type: 'ADD_MESSAGE', payload: message })
+      },
       (message) => dispatch({ type: 'UPDATE_MESSAGE', payload: message })
     )
 
-    // Subscribe to typing indicators
+    // Subscribe to typing indicators for active conversation
     const unsubscribeTyping = RealtimeService.subscribeToTyping(
       conversationId,
       (typingUsers) => dispatch({ type: 'SET_TYPING_USERS', payload: typingUsers })
@@ -394,7 +488,39 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, state.activeConversation])
 
-  // Subscribe to global presence
+  // Set up global real-time subscriptions for all user conversations
+  useEffect(() => {
+    if (!user || state.conversations.length === 0) return
+
+    const conversationIds = state.conversations.map(conv => conv.id)
+    const globalUnsubscribeFunctions: (() => void)[] = []
+
+    // Subscribe to messages in ALL user conversations for conversation list updates
+    conversationIds.forEach(conversationId => {
+      const unsubscribe = RealtimeService.subscribeToMessages(
+        conversationId,
+        (message) => {
+          // If this message is for a conversation that's not currently active,
+          // refresh the conversation list to update last message
+          if (message.conversationId !== state.activeConversation?.id) {
+            console.log(`New message in conversation ${conversationId}, refreshing conversation list...`)
+            loadConversations()
+          }
+        },
+        () => {
+          // Message updates also trigger conversation list refresh
+          loadConversations()
+        }
+      )
+      globalUnsubscribeFunctions.push(unsubscribe)
+    })
+
+    return () => {
+      globalUnsubscribeFunctions.forEach(unsub => unsub())
+    }
+  }, [user, state.conversations, state.activeConversation?.id, loadConversations])
+
+  // Subscribe to global presence and conversation list updates
   useEffect(() => {
     if (!user) return
 
@@ -405,12 +531,23 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     // Set user as online
     RealtimeService.updatePresence(user.id, 'online')
 
+    // Subscribe to general conversation list updates for real-time refresh
+    const unsubscribeConversationUpdates = RealtimeService.subscribeToConversationUpdates(
+      state.activeConversation?.id || 'global',
+      () => {
+        // Reload conversations when there are updates
+        console.log('Conversation metadata updated, reloading conversations...')
+        loadConversations()
+      }
+    )
+
     // Set user as offline when leaving
     return () => {
       RealtimeService.updatePresence(user.id, 'offline')
       unsubscribePresence()
+      unsubscribeConversationUpdates()
     }
-  }, [user])
+  }, [user, state.activeConversation?.id, loadConversations])
 
   // Load conversations on mount
   useEffect(() => {
@@ -424,6 +561,7 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     loadConversations,
     createConversation,
     createDirectConversation,
+    createJobConversation,
     setActiveConversation,
     markConversationAsRead,
     archiveConversation,
@@ -440,6 +578,7 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     loadConversations,
     createConversation,
     createDirectConversation,
+    createJobConversation,
     setActiveConversation,
     markConversationAsRead,
     archiveConversation,

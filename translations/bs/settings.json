@@ -95,6 +95,69 @@
     "reasonForDeletion": "Razlog za brisanje (opcionalno)",
     "reasonPlaceholder": "Recite nam zašto odlazite..."
   },
+  "privacy": {
+    "title": "Postavke privatnosti",
+    "description": "Kontrolirajte svoju privatnost i postavke dijeljenja podataka",
+    "settingsUpdated": "Postavke privatnosti su uspješno ažurirane",
+    "updateFailed": "Neuspješno ažuriranje postavki privatnosti",
+    "saving": "Spremanje...",
+    "saveSettings": "Spremi postavke",
+    "profileVisibility": {
+      "title": "Vidljivost profila",
+      "label": "Ko može vidjeti vaš profil"
+    },
+    "visibility": {
+      "public": {
+        "label": "Javno",
+        "description": "Svako može vidjeti vaš profil i kontakt informacije"
+      },
+      "verifiedOnly": {
+        "label": "Samo verifikovani korisnici",
+        "description": "Samo verifikovani korisnici mogu vidjeti vaš puni profil"
+      },
+      "private": {
+        "label": "Privatno",
+        "description": "Vaš profil je sakriven od javnog pogleda"
+      }
+    },
+    "profileDetails": {
+      "showSkills": "Prikaži vještine na profilu",
+      "showExperience": "Prikaži iskustvo na profilu",
+      "showLocation": "Prikaži lokaciju na profilu",
+      "showContactInfo": "Prikaži kontakt informacije na profilu"
+    },
+    "applicationPrivacy": {
+      "title": "Privatnost prijava",
+      "label": "Ko može vidjeti vaše prijave za posao",
+      "open": {
+        "label": "Otvorene prijave",
+        "description": "Vaše prijave su vidljive poslodavcima"
+      },
+      "selective": {
+        "label": "Selektivne prijave",
+        "description": "Vi birate koje prijave učiniti vidljivim"
+      },
+      "private": {
+        "label": "Privatne prijave",
+        "description": "Vaše prijave su potpuno privatne"
+      }
+    },
+    "communication": {
+      "title": "Privatnost komunikacije",
+      "allowDirectMessages": "Dozvoli direktne poruke",
+      "directMessagesDescription": "Dozvolite drugim korisnicima da vam šalju direktne poruke",
+      "showOnlineStatus": "Prikaži online status",
+      "onlineStatusDescription": "Dozvolite drugima da vide kada ste online"
+    },
+    "dataAnalytics": {
+      "title": "Podaci i analitika",
+      "dataSharing": "Dijeljenje podataka za poboljšanje usluge",
+      "dataSharingDescription": "Pomozite nam poboljšati naše usluge dijeljenjem anonimnih podataka",
+      "analyticsOptOut": "Isključite analitičko praćenje",
+      "analyticsDescription": "Onemogućite analitiku i praćenje korišćenja"
+    },
+    "privacyImpactWarning": "Ove postavke privatnosti mogu ograničiti vašu vidljivost potencijalnim klijentima i mogućnostima posla."
+  },
   "appearance": {
     "title": "Izgled",
     "description": "Prilagodite izgled i osjećaj vaše kontrolne table",

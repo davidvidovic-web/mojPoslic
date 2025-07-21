@@ -26,23 +26,31 @@ interface MessageAreaProps {
 
 interface TypingIndicatorProps {
   users: TypingUser[];
+  currentUserId: string;
   locale?: 'bs' | 'en';
 }
 
-const TypingIndicator: React.FC<TypingIndicatorProps> = ({ users, locale = 'bs' }) => {
-  if (users.length === 0) return null;
+const TypingIndicator: React.FC<TypingIndicatorProps> = ({ users, currentUserId, locale = 'bs' }) => {
+  // Filter out current user - don't show typing indicator for ourselves
+  const otherUsers = users.filter(user => user.user_id !== currentUserId);
+  
+  if (otherUsers.length === 0) return null;
 
   const typingText = locale === 'bs' ? 'kuca...' : 'typing...';
   
   let displayText = '';
-  if (users.length === 1) {
-    displayText = `${users[0].user_id} ${typingText}`;
-  } else if (users.length === 2) {
-    displayText = `${users[0].user_id} i ${users[1].user_id} ${typingText}`;
+  if (otherUsers.length === 1) {
+    const userName = otherUsers[0].user?.name || otherUsers[0].user_id;
+    displayText = `${userName} ${typingText}`;
+  } else if (otherUsers.length === 2) {
+    const user1Name = otherUsers[0].user?.name || otherUsers[0].user_id;
+    const user2Name = otherUsers[1].user?.name || otherUsers[1].user_id;
+    const andText = locale === 'bs' ? 'i' : 'and';
+    displayText = `${user1Name} ${andText} ${user2Name} ${typingText}`;
   } else {
     displayText = locale === 'bs' 
-      ? `${users.length} korisnika kuca...`
-      : `${users.length} users typing...`;
+      ? `${otherUsers.length} korisnika kuca...`
+      : `${otherUsers.length} users typing...`;
   }
 
   return (
@@ -145,7 +153,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
     const groups: { date: string; messages: Message[] }[] = [];
     
     messages.forEach((message) => {
-      const messageDate = new Date(message.created_at).toDateString();
+      const messageDate = new Date(message.createdAt).toDateString();
       const lastGroup = groups[groups.length - 1];
       
       if (lastGroup && lastGroup.date === messageDate) {
@@ -263,15 +271,15 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
               {/* Messages */}
               <div className="space-y-4">
                 {group.messages.map((message, index) => {
-                  const isOwn = message.sender_id === currentUserId;
+                  const isOwn = message.senderId === currentUserId;
                   const prevMessage = group.messages[index - 1];
                   const nextMessage = group.messages[index + 1];
                   
                   // Show avatar if it's the first message from this sender or different from previous
-                  const showAvatar = !prevMessage || prevMessage.sender_id !== message.sender_id;
+                  const showAvatar = !prevMessage || prevMessage.senderId !== message.senderId;
                   
                   // Show timestamp if it's the last message from this sender or different from next
-                  const showTimestamp = !nextMessage || nextMessage.sender_id !== message.sender_id;
+                  const showTimestamp = !nextMessage || nextMessage.senderId !== message.senderId;
 
                   return (
                     <MessageBubble
@@ -290,7 +298,7 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
           ))}
 
           {/* Typing indicator */}
-          <TypingIndicator users={typingUsers} locale={locale} />
+          <TypingIndicator users={typingUsers} currentUserId={currentUserId} locale={locale} />
         </div>
       </ScrollArea>
 

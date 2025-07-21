@@ -57,6 +57,7 @@ interface ConversationViewProps {
 
 interface ConversationHeaderProps {
   conversation: Conversation;
+  currentUserId: string;
   onBack?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
@@ -68,6 +69,7 @@ interface ConversationHeaderProps {
 
 const ConversationHeader: React.FC<ConversationHeaderProps> = ({
   conversation,
+  currentUserId,
   onBack,
   onArchive,
   onDelete,
@@ -82,19 +84,45 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
     }
     
     if (conversation.type === 'job_related') {
-      return t('jobChat');
+      // Use job title if available, otherwise fallback to generic text
+      return conversation.jobTitle || t('jobChat');
     }
     
     if (conversation.type === 'group') {
       return t('groupChat');
     }
     
+    // Add safety check for participants
+    if (!conversation.participants || conversation.participants.length === 0) {
+      return t('unknown');
+    }
+    
     // For direct conversations, show the other participant's name
     const otherParticipant = conversation.participants.find(
-      p => p.user_id !== conversation.participants[0]?.user_id
+      p => p.user_id !== currentUserId
     );
     
-    return otherParticipant?.user.name || t('unknown');
+    return otherParticipant?.user?.name || t('unknown');
+  };
+
+  const renderConversationTitle = () => {
+    const title = getConversationTitle();
+    
+    // If it's a job-related conversation and we have a job_id, make it a link
+    if (conversation.type === 'job_related' && conversation.job_id) {
+      return (
+        <a 
+          href={`/jobs/${conversation.job_id}`}
+          className="font-semibold text-foreground dark:text-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {title}
+        </a>
+      );
+    }
+    
+    return <h2 className="font-semibold text-foreground dark:text-foreground">{title}</h2>;
   };
 
   const getParticipantCount = () => {
@@ -137,7 +165,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({
           )}
           
           <div>
-            <h2 className="font-semibold text-foreground dark:text-foreground">{getConversationTitle()}</h2>
+            {renderConversationTitle()}
             <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
               {conversation.type === 'group' && (
                 <span>{getParticipantCount()} {t('actions.participants')}</span>
@@ -312,6 +340,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           <ConversationList
             conversations={conversations}
             selectedConversationId={selectedConversation?.id}
+            currentUserId={currentUserId}
             onSelectConversation={handleSelectConversation}
             loading={loading.conversations}
             locale={locale}
@@ -322,9 +351,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     }
 
     return (
-      <div className={cn("h-full bg-background dark:bg-background flex flex-col", className)}>
+      <div className={cn("h-full bg-background dark:bg-background flex flex-col min-h-0", className)}>
         <ConversationHeader
           conversation={selectedConversation}
+          currentUserId={currentUserId}
           onBack={handleBackToList}
           onArchive={handleArchive}
           onDelete={handleDelete}
@@ -341,12 +371,14 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           onLoadMore={onLoadMoreMessages}
           onAttachmentClick={onAttachmentClick}
           typingUsers={typingUsers}
-          className="flex-1"
+          className="flex-1 min-h-0 overflow-hidden"
         />
-        <MessageInput
-          onSendMessage={onSendMessage}
-          onTyping={onTyping}
-        />
+        <div className="flex-shrink-0 border-t bg-background">
+          <MessageInput
+            onSendMessage={onSendMessage}
+            onTyping={onTyping}
+          />
+        </div>
       </div>
     );
   }
@@ -371,6 +403,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         <ConversationList
           conversations={conversations}
           selectedConversationId={selectedConversation?.id}
+          currentUserId={currentUserId}
           onSelectConversation={onSelectConversation}
           loading={loading.conversations}
           locale={locale}
@@ -379,11 +412,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {selectedConversation ? (
           <>
             <ConversationHeader
               conversation={selectedConversation}
+              currentUserId={currentUserId}
               onArchive={handleArchive}
               onDelete={handleDelete}
               onLeave={handleLeave}
@@ -399,12 +433,14 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
               onLoadMore={onLoadMoreMessages}
               onAttachmentClick={onAttachmentClick}
               typingUsers={typingUsers}
-              className="flex-1"
+              className="flex-1 min-h-0 overflow-hidden"
             />
-            <MessageInput
-              onSendMessage={onSendMessage}
-              onTyping={onTyping}
-            />
+            <div className="flex-shrink-0 border-t bg-background">
+              <MessageInput
+                onSendMessage={onSendMessage}
+                onTyping={onTyping}
+              />
+            </div>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">

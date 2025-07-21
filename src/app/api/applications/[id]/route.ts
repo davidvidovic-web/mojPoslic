@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 import { ApplicationStatus } from '@/types/application'
 import { getCityById, getCategoryById } from '@/lib/job-helpers'
+import { MessagingIntegrationService } from '@/lib/messaging/messaging-integration'
 
 const prisma = new PrismaClient()
 
@@ -242,6 +243,39 @@ export async function PATCH(
             }
           }
         })
+      }
+    }
+
+    // Create conversation and send welcome message for shortlisted applications
+    if (status === ApplicationStatus.SHORTLISTED) {
+      try {
+        await MessagingIntegrationService.createJobConversationWithWelcome(
+          application.job.id,
+          user.id, // client ID
+          application.user.id, // tasker/applicant ID
+          application.job.title,
+          'SHORTLISTED'
+        )
+      } catch (error) {
+        console.error('Failed to create conversation for shortlisted application:', error)
+        // Continue with response even if conversation creation fails
+      }
+    }
+
+    // Handle other status changes with messaging
+    if (status && ['INTERVIEW_SCHEDULED', 'SELECTED'].includes(status)) {
+      try {
+        await MessagingIntegrationService.handleApplicationStatusChange(
+          id,
+          status,
+          user.id,
+          application.user.id,
+          application.job.id,
+          application.job.title
+        )
+      } catch (error) {
+        console.error('Failed to handle status change messaging:', error)
+        // Continue with response even if messaging fails
       }
     }
 

@@ -6,7 +6,7 @@ import { bs, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { Conversation } from '@/types/messaging';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +15,7 @@ import { Pin, Archive, Users, Briefcase, Paperclip, ImageIcon } from 'lucide-rea
 interface ConversationListProps {
   conversations: Conversation[];
   selectedConversationId?: string;
+  currentUserId: string;
   onSelectConversation: (conversation: Conversation) => void;
   loading?: boolean;
   locale?: 'bs' | 'en';
@@ -23,6 +24,7 @@ interface ConversationListProps {
 
 interface ConversationItemProps {
   conversation: Conversation;
+  currentUserId: string;
   isSelected: boolean;
   onClick: () => void;
   locale?: 'bs' | 'en';
@@ -30,6 +32,7 @@ interface ConversationItemProps {
 
 const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
+  currentUserId,
   isSelected,
   onClick,
   locale = 'bs',
@@ -70,8 +73,13 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     }
     
     // For direct conversations, show the other participant's name
+    // Add safety check for participants
+    if (!conversation.participants || conversation.participants.length === 0) {
+      return t('unknown');
+    }
+    
     const otherParticipant = conversation.participants.find(
-      p => p.user_id !== conversation.participants[0]?.user_id
+      p => p.user_id !== currentUserId
     );
     
     return otherParticipant?.user.name || t('unknown');
@@ -95,8 +103,17 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     }
     
     // For direct conversations, show the other participant's avatar
+    // Add safety check for participants
+    if (!conversation.participants || conversation.participants.length === 0) {
+      return (
+        <Avatar className="w-10 h-10">
+          <AvatarFallback>?</AvatarFallback>
+        </Avatar>
+      )
+    }
+    
     const otherParticipant = conversation.participants.find(
-      p => p.user_id !== conversation.participants[0]?.user_id
+      p => p.user_id !== currentUserId
     );
     
     return (
@@ -115,30 +132,39 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
   const getLastMessagePreview = () => {
     if (!conversation.last_message) {
-      return t('noMessages');
+      return t('messages.noMessages');
     }
     
     const message = conversation.last_message;
+    const isCurrentUser = message.senderId === currentUserId;
+    const senderName = isCurrentUser ? (locale === 'bs' ? 'Vi' : 'You') : message.sender?.name || 'User';
     
-    if (message.message_type === 'file') {
+    if (message.messageType === 'file') {
       return (
         <span className="flex items-center gap-1">
           <Paperclip className="w-3 h-3" />
-          {t('file')}
+          <span className="font-medium">{senderName}:</span>
+          {t('attachments.file')}
         </span>
       );
     }
     
-    if (message.message_type === 'image') {
+    if (message.messageType === 'image') {
       return (
         <span className="flex items-center gap-1">
           <ImageIcon className="w-3 h-3" />
-          {t('image')}
+          <span className="font-medium">{senderName}:</span>
+          {t('attachments.image')}
         </span>
       );
     }
     
-    return message.content || (locale === 'bs' ? 'Poruka' : 'Message');
+    const content = message.content || (locale === 'bs' ? 'Poruka' : 'Message');
+    return (
+      <span>
+        <span className="font-medium">{senderName}:</span> {content}
+      </span>
+    );
   };
 
   return (
@@ -213,6 +239,7 @@ const ConversationItemSkeleton: React.FC = () => (
 export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   selectedConversationId,
+  currentUserId,
   onSelectConversation,
   loading = false,
   locale = 'bs',
@@ -252,6 +279,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           <ConversationItem
             key={conversation.id}
             conversation={conversation}
+            currentUserId={currentUserId}
             isSelected={selectedConversationId === conversation.id}
             onClick={() => onSelectConversation(conversation)}
             locale={locale}

@@ -32,6 +32,7 @@ declare module "@auth/core/jwt" {
     role?: string | null
     phone?: string | null
     profileSetupCompleted?: boolean
+    lastUpdated?: number
   }
 }
 
@@ -121,31 +122,39 @@ const config: NextAuthConfig = {
   },
   session: {
     strategy: "jwt" as const,
-    maxAge: 30 * 60, // 30 minutes (shorter for faster token refresh)
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   jwt: {
-    maxAge: 30 * 60, // 30 minutes 
+    maxAge: 30 * 24 * 60 * 60, // 30 days 
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // If user object is provided (during sign-in), update token
       if (user) {
-        console.log('JWT Callback: Initial token setup with user:', {
-          id: user.id,
-          role: user.role,
-          profileSetupCompleted: user.profileSetupCompleted
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.log('JWT Callback: Initial token setup with user:', {
+            id: user.id,
+            role: user.role,
+            profileSetupCompleted: user.profileSetupCompleted
+          })
+        }
         token.role = user.role
         token.id = user.id!
         token.phone = user.phone
         token.profileSetupCompleted = user.profileSetupCompleted
+        token.lastUpdated = Date.now()
         return token
       }
       
-      // Always refresh user data from database when token is accessed
-      // This ensures we have the latest role and profile completion status
-      if (token.id) {
-        console.log('JWT Callback: Refreshing token data for user:', token.id)
+      // Only refresh from database if:
+      // 1. Token doesn't have lastUpdated timestamp (old token)
+      // 2. It's been more than 5 minutes since last update
+      // 3. The trigger is 'update' (forced refresh)
+      const shouldRefresh = !token.lastUpdated || 
+                           (Date.now() - (token.lastUpdated as number)) > 5 * 60 * 1000 ||
+                           trigger === 'update'
+      
+      if (token.id && shouldRefresh) {
         try {
           const { PrismaClient } = await import('@prisma/client')
           const prisma = new PrismaClient()
@@ -160,29 +169,30 @@ const config: NextAuthConfig = {
           })
           
           if (dbUser) {
-            const oldRole = token.role
-            const oldProfileSetup = token.profileSetupCompleted
+            const hasChanges = token.role !== dbUser.role || 
+                             token.profileSetupCompleted !== dbUser.profileSetupCompleted
             
             // Force update the token properties
             token.role = dbUser.role
             token.profileSetupCompleted = dbUser.profileSetupCompleted
             token.phone = dbUser.phone
+            token.lastUpdated = Date.now()
             
-            console.log('JWT Callback: Token updated with fresh data:', {
-              id: token.id,
-              oldRole,
-              newRole: token.role,
-              oldProfileSetup,
-              newProfileSetup: token.profileSetupCompleted,
-              tokenRoleAfterUpdate: token.role
-            })
-          } else {
-            console.log('JWT Callback: User not found in database:', token.id)
+            // Only log significant changes, not every refresh
+            if (hasChanges) {
+              console.log('JWT Callback: Token updated with changes from database:', {
+                id: token.id,
+                role: token.role,
+                profileSetupCompleted: token.profileSetupCompleted
+              })
+            }
           }
           
           await prisma.$disconnect()
         } catch (error) {
-          console.error('JWT Callback: Error refreshing user data:', error)
+          if (process.env.NODE_ENV === 'development') {
+            console.error('JWT Callback: Error refreshing user data:', error)
+          }
         }
       }
       

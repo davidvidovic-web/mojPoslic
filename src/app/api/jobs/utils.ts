@@ -44,6 +44,7 @@ export async function getUserBasicInfo(userId: string) {
       id: true,
       name: true,
       email: true,
+      phone: true,
       role: true
     }
   })

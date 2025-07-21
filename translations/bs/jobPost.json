@@ -1,6 +1,7 @@
 {
   "title": "Objavi posao",
   "dialogDescription": "Kreiraj novi oglas za posao da pronađeš kvalificirane kandidate",
+  "editDialogDescription": "Ažuriraj detalje svog oglasa za posao",
   "steps": {
     "basic": "Osnovne info",
     "details": "Detalji posla",

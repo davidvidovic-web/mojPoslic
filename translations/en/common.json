@@ -42,6 +42,15 @@
     "saving": "Saving...",
     "submitting": "Submitting..."
   },
+  "messaging": {
+    "conversationCreated": "Conversation created successfully",
+    "cannotMessage": "You cannot message this user",
+    "openMessageFailed": "Failed to open message",
+    "errors": {
+      "notAuthenticated": "Please log in to send messages",
+      "conversationFailed": "Failed to create conversation"
+    }
+  },
   "locationPicker": {
     "helpText": "Search for a specific address or click on the map to select a precise location within the selected city",
     "findMyLocation": "Find My Location",

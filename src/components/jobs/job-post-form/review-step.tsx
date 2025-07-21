@@ -408,6 +408,13 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
               <Mail className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{formData.email || user?.email}</span>
             </div>
+            {formData.contact_email && formData.contact_email !== (formData.email || user?.email) && (
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">{formData.contact_email}</span>
+                <span className="text-xs text-muted-foreground">({t('review.alternateContact')})</span>
+              </div>
+            )}
             {user?.phone && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
@@ -425,6 +432,20 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
                 >
                   {formData.website}
                 </a>
+              </div>
+            )}
+            {formData.application_url && (
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <a 
+                  href={formData.application_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline"
+                >
+                  {formData.application_url}
+                </a>
+                <span className="text-xs text-muted-foreground">({t('review.applicationUrl')})</span>
               </div>
             )}
           </CardContent>

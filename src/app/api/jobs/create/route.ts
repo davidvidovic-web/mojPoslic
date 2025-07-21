@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     else {
       // Load cities and find by numeric ID, then get the key
       const cities = staticDataManager.getCities()
-      const cityById = cities.find(c => c.id === Number(city_id))
+      const cityById = cities.find(c => Number(c.id) === Number(city_id))
       if (cityById) {
         city = getCityByKey(cityById.key)
       }
