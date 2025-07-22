@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { X, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 
 interface SkillExperience {
   skill: string
@@ -27,6 +28,7 @@ export default function ProfileSetupPage() {
   const t = useTranslations('profile')
   const tErrors = useTranslations('errors')
   const { user, loading, refreshUser } = useAuth()
+  const { update } = useSession()
   const router = useRouter()
   
   const [formData, setFormData] = useState(() => ({
@@ -123,11 +125,20 @@ export default function ProfileSetupPage() {
         throw new Error('Failed to update profile')
       }
 
+      // Show success message immediately
+      toast.success(t('setup.errors.profileSetupCompleted'))
+      
+      // Update NextAuth session to trigger JWT refresh
+      await update()
+      
       // Refresh user context to get updated profileSetupCompleted status
       await refreshUser()
       
-      toast.success(t('setup.errors.profileSetupCompleted'))
-      router.push('/dashboard')
+      // Wait a bit longer to ensure database and auth state are synced
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Use window.location.href for a complete page reload to ensure fresh token
+      window.location.href = '/dashboard'
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error(tErrors('failedToUpdate.profile'))

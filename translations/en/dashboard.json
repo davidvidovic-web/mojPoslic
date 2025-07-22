@@ -37,7 +37,17 @@
     "averageHireTime": "Average Hire Time",
     "days": "days",
     "allTimePosts": "All-time posts",
-    "perJobPosting": "per job posting"
+    "perJobPosting": "per job posting",
+    "active": "active",
+    "premiumListings": "Premium listings",
+    "avgApplications": "Avg Applications",
+    "perJob": "Per job",
+    "allTime": "All time",
+    "needsAttention": "Needs attention",
+    "approved": "Approved",
+    "acceptedApplications": "Accepted",
+    "declined": "Declined",
+    "rejectedApplications": "Rejected"
   },
   "sections": {
     "recentJobs": "Recent Jobs",
@@ -65,7 +75,8 @@
     "finances": "Finances",
     "integrations": "Integrations",
     "analytics": "Analytics",
-    "statistics": "Statistics"
+    "statistics": "Statistics",
+    "myJobs": "My Jobs"
   },
   "taglines": {
     "client": "Post jobs and find the perfect candidates",
@@ -322,6 +333,17 @@
       "recentMessages": "Recent Messages",
       "noMessages": "No messages yet",
       "composeMessage": "Compose Message"
+    },
+    "jobs": {
+      "title": "My Jobs",
+      "description": "Manage your job postings and track applications",
+      "postNew": "Post New Job",
+      "yourJobs": "Your Job Postings"
+    },
+    "applications": {
+      "title": "Job Applications",
+      "description": "Review and manage applications for your jobs",
+      "list": "Recent Applications"
     }
   },
   "applications": {
@@ -335,7 +357,23 @@
       "accepted": "Accepted",
       "completed": "Completed",
       "rejected": "Rejected"
-    }
+    },
+    "empty": {
+      "title": "No applications found",
+      "filtered": "No applications match your current filters. Try adjusting your search or filter criteria.",
+      "none": "You haven't received any job applications yet. Applications will appear here once taskers apply to your jobs."
+    },
+    "viewProfile": "View Profile"
+  },
+  "search": {
+    "applications": "Search applications, taskers, or jobs..."
+  },
+  "filter": {
+    "allStatuses": "All Statuses",
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "reviewed": "Reviewed"
   },
   "connections": {
     "title": "Connections",

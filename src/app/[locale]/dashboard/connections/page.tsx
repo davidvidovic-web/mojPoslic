@@ -1,31 +1,22 @@
 'use client'
 
-import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
-import { ConnectionsSection } from '@/components/dashboard/connections-section'
-import { ConnectionsFullHistory } from '@/components/dashboard/connections/connections-full-history'
-import { useTranslations } from 'next-intl'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function ConnectionsPage() {
-  const t = useTranslations('dashboard.connections')
+export default function ConnectionsRedirect() {
+  const router = useRouter()
+  
+  useEffect(() => {
+    // Redirect to dashboard since connections is now part of the overview
+    router.replace('/dashboard')
+  }, [router])
   
   return (
-    <DashboardLayout 
-      title={t('title')}
-      subtitle={t('subtitle')}
-      activeTab="connections"
-    >
-      {/* Responsive grid layout - stacked on mobile, side by side on desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left column - Connections Section (same as overview dashboard) */}
-        <div className="lg:sticky lg:top-8 lg:self-start">
-          <ConnectionsSection />
-        </div>
-        
-        {/* Right column - Full Connections History */}
-        <div>
-          <ConnectionsFullHistory />
-        </div>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Redirecting to dashboard...</p>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

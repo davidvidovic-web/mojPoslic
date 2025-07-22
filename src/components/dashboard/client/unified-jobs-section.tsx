@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { JobsListSection } from './jobs-list-section'
-import { DashboardApplicationManager } from '@/components/dashboard/dashboard-application-manager'
+import { ClientApplicationManager } from './client-application-manager'
 import { 
   Briefcase, 
   Users, 
@@ -207,7 +207,11 @@ export function UnifiedJobsSection({
                 )}
               </div>
               
-              <DashboardApplicationManager />
+              <ClientApplicationManager 
+                showOnlyActive={true}
+                title=""
+                description=""
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

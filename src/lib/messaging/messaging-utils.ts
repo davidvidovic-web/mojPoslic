@@ -18,9 +18,9 @@ export function useMessagingUtils() {
     if (userId) {
       // For now, just go to messages. In the future, we could pass the userId
       // as a query parameter to auto-start a conversation
-      router.push(`/dashboard/messages?startConversation=${userId}`);
+      router.push(`/dashboard?startConversation=${userId}`);
     } else {
-      router.push('/dashboard/messages');
+      router.push('/dashboard');
     }
   }, [router]);
 
@@ -35,7 +35,7 @@ export function useMessagingUtils() {
       params.set('userName', userName);
     }
     
-    router.push(`/dashboard/messages?${params.toString()}`);
+    router.push(`/dashboard?${params.toString()}`);
   }, [router]);
 
   return {
@@ -54,7 +54,7 @@ export function createMessageUserLink(userId: string, userName?: string): string
     params.set('userName', userName);
   }
   
-  return `/dashboard/messages?${params.toString()}`;
+  return `/dashboard?${params.toString()}`;
 }
 
 /**

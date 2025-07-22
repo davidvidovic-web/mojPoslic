@@ -75,11 +75,15 @@ export default async function middleware(request: NextRequest) {
     let userRole = token?.role;
     let profileSetupCompleted = token?.profileSetupCompleted;
     
-    // Only fetch fresh data if token data seems outdated or missing critical info
-    // This reduces unnecessary API calls by trusting the token when it has complete data
+    // Always fetch fresh data for critical path checks to avoid race conditions
+    // This is especially important after profile updates or role changes
+    const isCriticalPath = finalPath === '/dashboard' || finalPath.startsWith('/dashboard/') ||
+                          finalPath === '/profile-setup' || finalPath === '/role-selection';
+    
     const needsFreshData = token?.id && (
+      isCriticalPath || // Always check for critical paths
       (!token.role && (finalPath === '/role-selection' || finalPath === '/dashboard' || finalPath.startsWith('/dashboard/'))) ||
-      (token.role && token.profileSetupCompleted === undefined && (finalPath === '/profile-setup' || finalPath === '/dashboard' || finalPath.startsWith('/dashboard/')))
+      (token.role && token.profileSetupCompleted === undefined)
     );
 
     if (needsFreshData) {
@@ -96,9 +100,17 @@ export default async function middleware(request: NextRequest) {
           const { user: dbUser } = await response.json();
           userRole = dbUser.role;
           profileSetupCompleted = dbUser.profileSetupCompleted;
-          // Only log in development or when there's a discrepancy
-          if (process.env.NODE_ENV === 'development' || token.role !== dbUser.role) {
-            console.log('Middleware: Fetched fresh user data - token was outdated');
+          
+          // Log when we get fresh data that differs from token
+          if (process.env.NODE_ENV === 'development') {
+            if (token.role !== dbUser.role || token.profileSetupCompleted !== dbUser.profileSetupCompleted) {
+              console.log('Middleware: Fresh data differs from token:', {
+                tokenRole: token.role,
+                dbRole: dbUser.role,
+                tokenProfileComplete: token.profileSetupCompleted,
+                dbProfileComplete: dbUser.profileSetupCompleted
+              });
+            }
           }
         } else {
           userRole = token?.role;
@@ -172,11 +184,28 @@ export default async function middleware(request: NextRequest) {
       if (!profileSetupCompleted) {
         if (process.env.NODE_ENV === 'development') {
           console.log('Dashboard access denied: Profile not completed, redirecting to profile setup');
+          console.log('Debug - userRole:', userRole, 'profileSetupCompleted:', profileSetupCompleted);
         }
+        
+        // Check for potential redirect loop - if user was just on profile-setup, wait a bit
+        const referer = request.headers.get('referer');
+        if (referer && referer.includes('/profile-setup')) {
+          // Add a small delay cookie to prevent immediate redirect loops
+          const response = NextResponse.redirect(new URL('/profile-setup', request.url));
+          response.cookies.set('profile-setup-delay', 'true', { 
+            maxAge: 10, // 10 seconds
+            httpOnly: true 
+          });
+          return response;
+        }
+        
         const profileSetupUrl = new URL('/profile-setup', request.url);
         return NextResponse.redirect(profileSetupUrl);
       }
       // User is fully set up, allow dashboard access
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Dashboard access granted: User fully set up');
+      }
       return cleanedResponse;
     }
     

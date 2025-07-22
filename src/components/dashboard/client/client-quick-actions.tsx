@@ -33,22 +33,21 @@ export function ClientQuickActions() {
           </div>
         </Button>
         
-        <Link href="/dashboard/jobs" className="block">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start gap-3 h-12 hover:bg-green-50 dark:hover:bg-green-950/50 hover:text-foreground dark:hover:text-foreground"
-          >
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40">
-              <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="text-left">
-              <div className="font-medium">{t('dashboard.client.quickActions.manageApplications')}</div>
-              <div className="text-xs text-muted-foreground">{t('dashboard.client.quickActions.manageApplicationsDesc')}</div>
-            </div>
-          </Button>
-        </Link>
+        <Button 
+          variant="outline" 
+          className="w-full justify-start gap-3 h-12 hover:bg-green-50 dark:hover:bg-green-950/50 hover:text-foreground dark:hover:text-foreground"
+          onClick={() => window.location.href = '/dashboard'}
+        >
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40">
+            <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+          </div>
+          <div className="text-left">
+            <div className="font-medium">{t('dashboard.client.quickActions.manageApplications')}</div>
+            <div className="text-xs text-muted-foreground">{t('dashboard.client.quickActions.manageApplicationsDesc')}</div>
+          </div>
+        </Button>
         
-        <Link href="/dashboard/messages" className="block">
+        <Link href="/dashboard" className="block">
           <Button 
             variant="outline" 
             className="w-full justify-start gap-3 h-12 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-foreground dark:hover:text-foreground"

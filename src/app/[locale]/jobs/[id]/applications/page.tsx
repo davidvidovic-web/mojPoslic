@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { ApplicationManager } from '@/components/dashboard/simple-application-manager'
+import { ApplicationStatus } from '@prisma/client'
+import ApplicationManager from '@/components/dashboard/application-manager'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -150,14 +151,45 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
     })
 
     // Refetch data to ensure consistency
-    setTimeout(() => {
-      if (jobId) {
-        fetch(`/api/jobs/${jobId}/applications`)
-          .then(res => res.json())
-          .then(data => setApplicationsData(data))
-          .catch(console.error)
+    refreshApplications()
+  }
+
+  const handleBulkStatusUpdate = async (applicationIds: string[], status: ApplicationStatus) => {
+    // Optimistically update the local state
+    setApplicationsData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        applications: prev.applications.map(app =>
+          applicationIds.includes(app.id) ? { ...app, status } : app
+        )
       }
-    }, 1000)
+    })
+
+    // Here you would typically make an API call to update the applications
+    // For now, we'll just refetch to ensure consistency
+    refreshApplications()
+  }
+
+  const refreshApplications = async () => {
+    console.log('refreshApplications called with jobId:', jobId)
+    if (!jobId) return
+    
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/applications`)
+      console.log('Refresh API response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Refresh API response data:', data)
+        setApplicationsData(data)
+        console.log('Applications data updated')
+      } else {
+        console.error('Refresh API failed with status:', response.status)
+      }
+    } catch (error) {
+      console.error('Error refreshing applications:', error)
+    }
   }
 
   const getStatusStats = () => {
@@ -355,10 +387,20 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
         )}
 
         {/* Applications Manager */}
-        <ApplicationManager
-          applications={applicationsData.applications}
-          onApplicationUpdate={handleApplicationUpdate}
-        />
+        {jobId && jobDetails && applicationsData && (
+          <ApplicationManager
+            jobTitle={jobDetails.title}
+            applications={applicationsData.applications.map(app => ({
+              ...app,
+              appliedAt: app.appliedAt || app.createdAt,
+              status: app.status as ApplicationStatus
+            }))}
+            onApplicationUpdate={(applicationId: string, status: ApplicationStatus) => 
+              handleApplicationUpdate(applicationId, status)
+            }
+            onBulkStatusUpdate={handleBulkStatusUpdate}
+          />
+        )}
       </div>
     </div>
   )

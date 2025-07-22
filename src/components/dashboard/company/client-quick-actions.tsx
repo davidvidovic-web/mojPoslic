@@ -34,7 +34,7 @@ export function ClientQuickActions({ onPostNewJob }: ClientQuickActionsProps) {
           Manage Applications
         </Button>
         
-        <Link href="/dashboard/messages">
+        <Link href="/dashboard">
           <Button variant="outline" className="w-full justify-start" size="lg">
             <MessageSquare className="h-4 w-4 mr-2" />
             Message Center

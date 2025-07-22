@@ -111,7 +111,7 @@ export function useJobApplicationMessaging() {
       }
 
       // Open messaging interface
-      const messagingUrl = `/dashboard/messages?user=${targetUserId}`
+      const messagingUrl = `/dashboard?user=${targetUserId}`
       window.open(messagingUrl, '_blank')
     } catch (error) {
       console.error('Error opening direct message:', error)
@@ -129,7 +129,7 @@ export function useJobApplicationMessaging() {
     }
 
     // Open messaging interface with job context
-    const messagingUrl = `/dashboard/messages?job=${jobId}&user=${applicantId}`
+    const messagingUrl = `/dashboard?job=${jobId}&user=${applicantId}`
     window.open(messagingUrl, '_blank')
   }, [user?.id, t])
 

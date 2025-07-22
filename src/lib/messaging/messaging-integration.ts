@@ -329,6 +329,7 @@ export class MessagingIntegrationService {
       SHORTLISTED: `Pozdrav! Vaša prijava za posao "${jobTitle}" je pregledana i shortlistovana. Želimo razgovarati s vama o ovoj prilici. Kako ste?`,
       INTERVIEW_SCHEDULED: `Pozdrav! Zakazali smo intervju za poziciju "${jobTitle}". Molimo potvrdite da li vam odgovara predloženo vrijeme.`,
       SELECTED: `Čestitamo! Odabrani ste za poziciju "${jobTitle}". Kontaktiraćemo vas s daljim instrukcijama uskoro.`,
+      ACCEPTED: `🎉 Čestitamo! Oficijalno ste prihvaćeni za posao "${jobTitle}"! Posao je sada zaključan za vas. Uskoro ćemo vas kontaktirati sa svim detaljima o početku rada.`,
       DEFAULT: `Pozdrav! Želimo razgovarati s vama o poslu "${jobTitle}". Javite se ako imate pitanja.`
     }
 
@@ -343,6 +344,7 @@ export class MessagingIntegrationService {
       SHORTLISTED: `Ažuriranje: Vaša prijava za "${jobTitle}" je shortlistovana.`,
       INTERVIEW_SCHEDULED: `Ažuriranje: Zakazan je intervju za poziciju "${jobTitle}".`,
       SELECTED: `Čestitamo! Odabrani ste za poziciju "${jobTitle}".`,
+      ACCEPTED: `🎉 Čestitamo! Oficijalno ste prihvaćeni za posao "${jobTitle}"! Posao je sada vaš.`,
       REJECTED: feedback ? `Ažuriranje prijave: ${feedback}` : null
     }
 

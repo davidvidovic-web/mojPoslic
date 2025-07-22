@@ -228,8 +228,13 @@ model JobAssignment {
   contractStatus        ContractStatus @default(PENDING)
   assignedAt            DateTime       @default(now()) @map("assigned_at")
   startDate             DateTime?      @map("start_date")
+  workCompletedAt       DateTime?      @map("work_completed_at")      // When tasker marked as finished
+  clientConfirmedAt     DateTime?      @map("client_confirmed_at")    // When client confirmed completion
+  completedAt           DateTime?      @map("completed_at")           // When both agreed it's finished
   agreedSalary          Int?           @map("agreed_salary")
   notes                 String?
+  completionNotes       String?        @map("completion_notes")       // Tasker's notes when marking complete
+  clientNotes           String?        @map("client_notes")           // Client's notes when confirming
   createdAt             DateTime       @default(now()) @map("created_at")
   updatedAt             DateTime       @updatedAt @map("updated_at")
   job                   JobListing     @relation(fields: [jobId], references: [id])
@@ -420,7 +425,9 @@ enum ContractStatus {
   PENDING
   ACCEPTED
   DECLINED
-  COMPLETED
+  WORK_COMPLETED     // Tasker marked work as finished
+  CONFIRMED_COMPLETED // Client confirmed the work is finished
+  COMPLETED          // Both parties agreed, job fully completed
 }
 
 enum ConnectionAction {

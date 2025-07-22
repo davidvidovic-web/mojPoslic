@@ -75,6 +75,8 @@ export async function PATCH(
     }
 
     // Set status and timestamp based on action
+    console.log('Processing application update:', { action, status, applicationId, jobId })
+    
     switch (action) {
       case 'REVIEW':
         updateData.status = 'REVIEWED'
@@ -92,6 +94,7 @@ export async function PATCH(
         if (feedback) updateData.feedback = feedback
         break
       case 'SELECT':
+        console.log('Processing SELECT action - accepting tasker')
         updateData.status = 'SELECTED'
         updateData.selectedAt = now
         if (!application.reviewedAt) updateData.reviewedAt = now
@@ -124,53 +127,99 @@ export async function PATCH(
     }
 
     // Update application in transaction
-    const updatedApplication = await prisma.$transaction(async (tx) => {
-      // If selecting this candidate, optionally reject others
-      if (action === 'SELECT' || status === 'SELECTED') {
-        // This could be made optional based on job settings
-        await tx.application.updateMany({
+    let updatedApplication
+    try {
+      updatedApplication = await prisma.$transaction(async (tx) => {
+        // If selecting this candidate, optionally reject others
+        if (action === 'SELECT' || status === 'SELECTED') {
+          console.log('Creating job assignment and rejecting other applications...')
+          
+          // Check if job is already assigned to prevent double assignment
+          const existingAssignment = await tx.jobAssignment.findUnique({
+            where: { jobId: jobId }
+          })
+
+          if (existingAssignment) {
+            console.log('Existing assignment found:', existingAssignment)
+            throw new Error('Job is already assigned to another tasker')
+          }
+
+          // Reject other applications
+          console.log('Rejecting other applications...')
+          const rejectedResult = await tx.application.updateMany({
+            where: {
+              jobId: jobId,
+              id: { not: applicationId },
+              status: { not: 'REJECTED' }
+            },
+            data: {
+              status: 'REJECTED',
+              rejectedAt: now,
+              feedback: 'Position has been filled'
+            }
+          })
+          console.log('Rejected applications count:', rejectedResult.count)
+
+          // Create JobAssignment record when selecting a candidate
+          console.log('About to create JobAssignment with data:', {
+            jobId,
+            selectedApplicationId: applicationId,
+            contractStatus: 'PENDING',
+            assignedAt: now
+          })
+          
+          const jobAssignment = await tx.jobAssignment.create({
+            data: {
+              jobId: jobId,
+              selectedApplicationId: applicationId,
+              contractStatus: 'PENDING',
+              assignedAt: now
+            }
+          })
+
+          console.log('JobAssignment created successfully:', jobAssignment)
+        }
+
+        // Update the application
+        console.log('Updating application with data:', updateData)
+        return tx.application.update({
           where: {
-            jobId: jobId,
-            id: { not: applicationId },
-            status: { not: 'REJECTED' }
+            id: applicationId
           },
-          data: {
-            status: 'REJECTED',
-            rejectedAt: now,
-            feedback: 'Position has been filled'
+          data: updateData,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                phone: true,
+                location: true,
+                bio: true,
+                skills: true,
+                experience: true
+              }
+            },
+            job: {
+              select: {
+                id: true,
+                title: true,
+                company: true
+              }
+            }
           }
         })
-      }
-
-      // Update the application
-      return tx.application.update({
-        where: {
-          id: applicationId
-        },
-        data: updateData,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatarUrl: true,
-              phone: true,
-              location: true,
-              bio: true,
-              skills: true,
-              experience: true
-            }
-          },
-          job: {
-            select: {
-              id: true,
-              title: true,
-              company: true
-            }
-          }
-        }
       })
+    } catch (transactionError) {
+      console.error('Transaction failed:', transactionError)
+      throw transactionError
+    }
+
+    console.log('Transaction completed. Updated application:', {
+      id: updatedApplication.id,
+      status: updatedApplication.status,
+      selectedAt: updatedApplication.selectedAt
     })
 
     // Create conversation and send welcome message for shortlisted applications

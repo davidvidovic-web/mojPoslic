@@ -52,6 +52,14 @@ export async function GET() {
             status: true,
             postedById: true
           }
+        },
+        // Include job assignment data for selected applications
+        assignment: {
+          select: {
+            id: true,
+            contractStatus: true,
+            notes: true
+          }
         }
       },
       orderBy: {

@@ -5,27 +5,17 @@ import { useAuth } from '@/contexts/auth-context'
 import { Job } from '@/types/job'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
-import { AppliedJobsSection } from '@/components/dashboard/tasker/applied-jobs-section'
+import { TaskerApplicationManager } from '@/components/dashboard/tasker/tasker-application-manager'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { useTranslations } from 'next-intl'
-
-// Local interface that matches the API response format
-interface JobApplicationResponse {
-  id: string
-  job_id: string
-  appliedAt: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
-  job: Job
-  message?: string
-  feedback?: string
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function JobsPage() {
   const { user } = useAuth()
   const t = useTranslations('dashboard.jobs')
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
-  const [applications, setApplications] = useState<JobApplicationResponse[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -33,10 +23,9 @@ export default function JobsPage() {
       if (!user) return
 
       try {
-        const [savedResponse, recommendedResponse, applicationsResponse] = await Promise.all([
+        const [savedResponse, recommendedResponse] = await Promise.all([
           fetch(`/api/user/saved-jobs?userId=${user.id}`),
-          fetch('/api/jobs/recommended'),
-          fetch('/api/tasker/applications')
+          fetch('/api/jobs/recommended')
         ])
 
         if (savedResponse.ok) {
@@ -47,11 +36,6 @@ export default function JobsPage() {
         if (recommendedResponse.ok) {
           const recommendedData = await recommendedResponse.json()
           setRecommendedJobs(recommendedData.jobs || [])
-        }
-
-        if (applicationsResponse.ok) {
-          const applicationsData = await applicationsResponse.json()
-          setApplications(applicationsData || [])
         }
       } catch (error) {
         console.error('Error fetching jobs:', error)
@@ -83,10 +67,78 @@ export default function JobsPage() {
       subtitle={t('subtitle')}
       userRole={user?.role}
     >
-      <div className="space-y-8 max-w-4xl">
-        <AppliedJobsSection applications={applications} />
-        <SavedJobsSection savedJobs={savedJobs} />
-        <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+      <div className="space-y-8 max-w-6xl">
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="active">Active Applications</TabsTrigger>
+            <TabsTrigger value="history">Application History</TabsTrigger>
+            <TabsTrigger value="discover">Discover Jobs</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="active" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Applications</CardTitle>
+                <CardDescription>
+                  Track your ongoing job applications and manage active work assignments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TaskerApplicationManager 
+                  showOnlyHistorical={false}
+                  title=""
+                  description=""
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Application History</CardTitle>
+                <CardDescription>
+                  View your past applications, completed work, and rejected applications
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TaskerApplicationManager 
+                  showOnlyHistorical={true}
+                  title=""
+                  description=""
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="discover" className="space-y-6">
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Saved Jobs</CardTitle>
+                  <CardDescription>
+                    Jobs you&apos;ve bookmarked for later application
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SavedJobsSection savedJobs={savedJobs} />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recommended for You</CardTitle>
+                  <CardDescription>
+                    Jobs matched to your skills and preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   )

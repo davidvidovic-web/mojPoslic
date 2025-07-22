@@ -2,20 +2,13 @@
 
 import React from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { useRouter, usePathname } from 'next/navigation'
 import { getTimeBasedGreetingWithIcon } from '@/lib/localized-greetings'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslations } from 'next-intl'
 import { DashboardFooter } from '@/components/core/global-footer'
 import { 
   Sunrise, 
   Sun, 
-  Moon,
-  LayoutDashboard,
-  Briefcase,
-  MessageSquare,
-  Zap
+  Moon
 } from 'lucide-react'
 
 // Helper function to get full name display
@@ -28,57 +21,24 @@ const getFullNameDisplay = (name?: string | null): string => {
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  activeTab?: string
+  sidebar?: React.ReactNode
   title?: string
   subtitle?: string
   userRole?: 'client' | 'tasker' | 'company' | 'admin'
   userName?: string | null
-  isDialogOpen?: boolean
-  setIsDialogOpen?: (open: boolean) => void
-  onJobPosted?: () => void
 }
 
 export function DashboardLayout({ 
   children, 
-  activeTab, 
+  sidebar,
   title,
   subtitle,
   userRole = 'tasker' 
 }: DashboardLayoutProps) {
   const { user } = useAuth()
-  const router = useRouter()
-  const pathname = usePathname()
   const t = useTranslations('dashboard')
   const tGreetings = useTranslations('greetings')
 
-  // Determine active tab based on pathname if not provided
-  const currentTab = activeTab || (() => {
-    if (pathname?.includes('/dashboard/messages')) return 'messages'
-    if (pathname?.includes('/dashboard/jobs')) return 'jobs'
-    if (pathname?.includes('/dashboard/connections')) return 'connections'
-    return 'overview'
-  })()
-
-  // Navigate to section
-  const navigateToSection = (section: string) => {
-    switch (section) {
-      case 'overview':
-        router.push('/dashboard')
-        break
-      case 'jobs':
-        router.push('/dashboard/jobs')
-        break
-      case 'messages':
-        router.push('/dashboard/messages')
-        break
-      case 'connections':
-        router.push('/dashboard/connections')
-        break
-      default:
-        router.push('/dashboard')
-    }
-  }
-  
   // Get time-based greeting with icon
   const { greetingKey, iconName } = getTimeBasedGreetingWithIcon()
   const greeting = tGreetings(greetingKey)
@@ -150,76 +110,20 @@ export function DashboardLayout({
             </div>
           </div>
         </div>
-        {/* Navigation */}
-        <div className="space-y-6">
-          {/* Section Selector - Dropdown on mobile, Tabs on tablet+ */}
-          <div className="block md:hidden">
-            <div className="bg-card border rounded-lg p-4">
-              <div className="flex items-center gap-4">
-                <label htmlFor="section-select" className="text-sm font-medium text-foreground whitespace-nowrap">
-                  {t('navigation.viewSection')}
-                </label>
-                <Select value={currentTab} onValueChange={navigateToSection}>
-                  <SelectTrigger className="flex-1" id="section-select">
-                    <SelectValue placeholder={t('navigation.selectSection')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="overview">
-                      <div className="flex items-center gap-2">
-                        <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                        {t('navigation.overview')}
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="jobs">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4 text-green-600" />
-                        {t('navigation.jobs')}
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="messages">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-purple-600" />
-                        {t('navigation.messages')}
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="connections">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-yellow-600" />
-                        {t('navigation.connections')}
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          {/* Tabs for tablet and desktop */}
-          <div className="hidden md:block">
-            <Tabs value={currentTab} onValueChange={navigateToSection} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                  <span>{t('navigation.overview')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="jobs" className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-green-600" />
-                  <span>{t('navigation.jobs')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="messages" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-purple-600" />
-                  <span>{t('navigation.messages')}</span>
-                </TabsTrigger>
-                <TabsTrigger value="connections" className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-yellow-600" />
-                  <span>{t('navigation.connections')}</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          {/* Content */}
-          <div>
+
+        {/* Content with Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
             {children}
           </div>
+          
+          {/* Sidebar */}
+          {sidebar && (
+            <div className="lg:col-span-1">
+              {sidebar}
+            </div>
+          )}
         </div>
       </div>
       

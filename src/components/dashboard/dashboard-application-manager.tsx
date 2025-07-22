@@ -20,7 +20,8 @@ import {
   CheckCircle,
   XCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ThumbsUp
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -50,7 +51,7 @@ interface JobApplication {
   id: string
   job_id: string
   user_id: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'ACCEPTED' | 'REJECTED'
+  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'ACCEPTED' | 'REJECTED'
   cover_letter: string | null
   resume_url: string | null
   application_date: string
@@ -61,6 +62,15 @@ interface JobApplication {
   appliedAt: string
   user: User
   job: Job
+  jobAssignment?: {
+    id: string
+    contractStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'WORK_COMPLETED' | 'CONFIRMED_COMPLETED' | 'COMPLETED'
+    workCompletedAt?: string
+    clientConfirmedAt?: string
+    completedAt?: string
+    completionNotes?: string
+    clientNotes?: string
+  }
 }
 
 export function DashboardApplicationManager() {
@@ -91,7 +101,18 @@ export function DashboardApplicationManager() {
         }
 
         const data = await response.json()
-        setApplications(data.applications || [])
+        
+        // Map the applications and include job assignment data
+        const mappedApplications = data.applications.map((app: any) => ({
+          ...app,
+          jobAssignment: app.assignment ? {
+            id: app.assignment.id,
+            contractStatus: app.assignment.contractStatus,
+            notes: app.assignment.notes
+          } : null
+        }))
+        
+        setApplications(mappedApplications || [])
       } catch (error) {
         console.error('Error fetching applications:', error)
         toast.error(tErrors('failedToLoad.applications'))
@@ -118,7 +139,12 @@ export function DashboardApplicationManager() {
 
     // Filter by status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(app => app.status === statusFilter)
+      filtered = filtered.filter(app => {
+        if (statusFilter === 'SELECTED') {
+          return app.status === 'SELECTED' || app.status === 'ACCEPTED'
+        }
+        return app.status === statusFilter
+      })
     }
 
     // Filter by job
@@ -161,13 +187,19 @@ export function DashboardApplicationManager() {
       REVIEWED: filteredAndSortedApplications.filter(app => app.status === 'REVIEWED'),
       SHORTLISTED: filteredAndSortedApplications.filter(app => app.status === 'SHORTLISTED'),
       INTERVIEW_SCHEDULED: filteredAndSortedApplications.filter(app => app.status === 'INTERVIEW_SCHEDULED'),
-      ACCEPTED: filteredAndSortedApplications.filter(app => app.status === 'ACCEPTED'),
+      SELECTED: filteredAndSortedApplications.filter(app => app.status === 'SELECTED' || app.status === 'ACCEPTED'),
       REJECTED: filteredAndSortedApplications.filter(app => app.status === 'REJECTED')
     }
     return groups
   }, [filteredAndSortedApplications])
 
   const handleApplicationUpdate = async (applicationId: string, newStatus: string, feedback?: string) => {
+    console.log('=== handleApplicationUpdate DEBUG ===')
+    console.log('applicationId:', applicationId)
+    console.log('newStatus:', newStatus)
+    console.log('feedback:', feedback)
+    console.log('=== END DEBUG ===')
+    
     try {
       const response = await fetch(`/api/applications/${applicationId}`, {
         method: 'PATCH',
@@ -180,16 +212,30 @@ export function DashboardApplicationManager() {
         }),
       })
 
+      console.log('Fetch completed')
+      console.log('Response status:', response.status)
+      console.log('Response OK:', response.ok)
+
       if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API error response:', errorData)
+        if (response.status === 409) {
+          toast.error('Job is already assigned to another tasker')
+          return
+        }
         throw new Error('Failed to update application')
       }
 
-      await response.json()
+      const responseData = await response.json()
+      console.log('API success response:', responseData)
+      
+      // Map ACCEPTED to SELECTED for display purposes
+      const statusForUpdate = newStatus === 'ACCEPTED' ? 'SELECTED' : newStatus
       
       setApplications(prev => 
         prev.map(app => 
           app.id === applicationId 
-            ? { ...app, status: newStatus as JobApplication['status'], client_feedback: feedback || null }
+            ? { ...app, status: statusForUpdate as JobApplication['status'], client_feedback: feedback || null }
             : app
         )
       )
@@ -198,10 +244,16 @@ export function DashboardApplicationManager() {
       addNotification({
         type: 'success',
         title: 'Application Updated',
-        message: `Application ${newStatus.toLowerCase().replace('_', ' ')} successfully`
+        message: newStatus === 'ACCEPTED' 
+          ? 'Tasker accepted successfully! Job is now assigned.' 
+          : `Application ${newStatus.toLowerCase().replace('_', ' ')} successfully`
       })
 
-      toast.success(`Application ${newStatus.toLowerCase()}`)
+      toast.success(
+        newStatus === 'ACCEPTED' 
+          ? 'Tasker accepted successfully! Job is now assigned.' 
+          : `Application ${newStatus.toLowerCase()}`
+      )
     } catch (error) {
       console.error('Error updating application:', error)
       toast.error(tErrors('failedToUpdate.application'))
@@ -251,6 +303,41 @@ export function DashboardApplicationManager() {
     }
   }
 
+  const handleConfirmCompletion = async (applicationId: string, jobAssignmentId?: string) => {
+    if (!jobAssignmentId) {
+      toast.error('Job assignment not found')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/job-assignments/${jobAssignmentId}/confirm-completion`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientNotes: '' // Could be expanded to include notes
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to confirm work completion')
+      }
+
+      const data = await response.json()
+      
+      toast.success('Work completion confirmed! The job is now completed.')
+      
+      // Refresh applications to get updated status
+      // This would need to be implemented based on your data fetching strategy
+      
+    } catch (error) {
+      console.error('Error confirming work completion:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to confirm work completion')
+    }
+  }
+
   const toggleApplicationExpansion = (applicationId: string) => {
     setExpandedApplications(prev => {
       const newSet = new Set(prev)
@@ -269,6 +356,7 @@ export function DashboardApplicationManager() {
       case 'REVIEWED': return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'SHORTLISTED': return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'INTERVIEW_SCHEDULED': return 'bg-indigo-100 text-indigo-800 border-indigo-200'
+      case 'SELECTED': 
       case 'ACCEPTED': return 'bg-green-100 text-green-800 border-green-200'
       case 'REJECTED': return 'bg-red-100 text-red-800 border-red-200'
       default: return 'bg-gray-100 text-gray-800 border-gray-200'
@@ -309,7 +397,7 @@ export function DashboardApplicationManager() {
                     {application.user.name || t('noNameProvided')}
                   </h3>
                   <Badge className={`ml-2 ${getStatusColor(application.status)}`}>
-                    {application.status.replace('_', ' ')}
+                    {application.status === 'ACCEPTED' ? 'SELECTED' : application.status.replace('_', ' ')}
                   </Badge>
                 </div>
                 
@@ -382,14 +470,14 @@ export function DashboardApplicationManager() {
                 </Button>
                 
                 {/* Message button for shortlisted applications */}
-                {(application.status === 'SHORTLISTED' || application.status === 'INTERVIEW_SCHEDULED' || application.status === 'ACCEPTED') && (
+                {(application.status === 'SHORTLISTED' || application.status === 'INTERVIEW_SCHEDULED' || application.status === 'SELECTED' || application.status === 'ACCEPTED') && (
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-blue-600 hover:text-blue-700"
                     onClick={() => {
                       // Navigate to messaging page for this job/applicant
-                      window.open(`/dashboard/messages?job=${application.job.id}&user=${application.user.id}`, '_blank')
+                      window.open(`/dashboard?job=${application.job.id}&user=${application.user.id}`, '_blank')
                     }}
                   >
                     <Users className="h-4 w-4 mr-1" />
@@ -401,7 +489,7 @@ export function DashboardApplicationManager() {
                   size="sm"
                   variant="outline"
                   onClick={() => handleApplicationUpdate(application.id, 'INTERVIEW_SCHEDULED')}
-                  disabled={application.status === 'INTERVIEW_SCHEDULED'}
+                  disabled={application.status === 'INTERVIEW_SCHEDULED' || application.status === 'SELECTED' || application.status === 'ACCEPTED'}
                 >
                   <Clock className="h-4 w-4 mr-1" />
                   {t('scheduleInterview')}
@@ -412,7 +500,7 @@ export function DashboardApplicationManager() {
                   variant="outline"
                   className="text-green-600 hover:text-green-700"
                   onClick={() => handleApplicationUpdate(application.id, 'ACCEPTED')}
-                  disabled={application.status === 'ACCEPTED'}
+                  disabled={application.status === 'SELECTED' || application.status === 'ACCEPTED'}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   {t('accept')}
@@ -423,11 +511,50 @@ export function DashboardApplicationManager() {
                   variant="outline"
                   className="text-red-600 hover:text-red-700"
                   onClick={() => handleApplicationUpdate(application.id, 'REJECTED')}
-                  disabled={application.status === 'REJECTED'}
+                  disabled={application.status === 'REJECTED' || application.status === 'SELECTED' || application.status === 'ACCEPTED'}
                 >
                   <XCircle className="h-4 w-4 mr-1" />
                   {t('reject')}
                 </Button>
+
+                {/* Job Completion Workflow Buttons */}
+                {application.status === 'SELECTED' || application.status === 'ACCEPTED' ? (
+                  <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-300">
+                    {/* For accepted applications, show completion workflow */}
+                    {application.jobAssignment ? (
+                      <>
+                        {/* Client can confirm completion when tasker marks work complete */}
+                        {user?.role === 'client' && application.jobAssignment.contractStatus === 'WORK_COMPLETED' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 hover:text-green-700"
+                            onClick={() => handleConfirmCompletion(application.id, application.jobAssignment?.id)}
+                          >
+                            <ThumbsUp className="h-4 w-4 mr-1" />
+                            Confirm Complete
+                          </Button>
+                        )}
+
+                        {/* Show completion status */}
+                        {application.jobAssignment.contractStatus === 'WORK_COMPLETED' && (
+                          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            Awaiting Confirmation
+                          </Badge>
+                        )}
+                        {application.jobAssignment.contractStatus === 'COMPLETED' && (
+                          <Badge className="bg-green-100 text-green-800 border-green-200">
+                            Completed
+                          </Badge>
+                        )}
+                      </>
+                    ) : (
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                        Job Assigned
+                      </Badge>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </div>
           )}
@@ -486,7 +613,7 @@ export function DashboardApplicationManager() {
               <SelectItem value="REVIEWED">{t('status.reviewed')}</SelectItem>
               <SelectItem value="SHORTLISTED">{t('status.shortlisted')}</SelectItem>
               <SelectItem value="INTERVIEW_SCHEDULED">{t('status.interview')}</SelectItem>
-              <SelectItem value="ACCEPTED">{t('status.accepted')}</SelectItem>
+              <SelectItem value="SELECTED">{t('status.selected')}</SelectItem>
               <SelectItem value="REJECTED">{t('status.rejected')}</SelectItem>
             </SelectContent>
           </Select>
@@ -560,7 +687,7 @@ export function DashboardApplicationManager() {
         <TabsList className="grid w-full grid-cols-6">
           {Object.entries(applicationsByStatus).map(([status, apps]) => (
             <TabsTrigger key={status} value={status} className="relative">
-              {status.replace('_', ' ')}
+              {status === 'SELECTED' ? 'SELECTED' : status.replace('_', ' ')}
               {apps.length > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 w-5 text-xs p-0 flex items-center justify-center">
                   {apps.length}

@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Users, CheckCircle, XCircle, Clock, Eye, MessageCircle } from 'lucide-react'
@@ -92,17 +91,18 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="pending">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="pending">
-              {tCommon('pending')} ({pendingApplications.length})
-            </TabsTrigger>
-            <TabsTrigger value="reviewed">
-              {tCommon('reviewed')} ({reviewedApplications.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pending" className="space-y-4">
+        <div className="space-y-8">
+          {/* Pending Applications Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-yellow-600/20 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {tCommon('pending')} ({pendingApplications.length})
+              </h3>
+            </div>
+            
             {pendingApplications.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -146,9 +146,19 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                 ))}
               </div>
             )}
-          </TabsContent>
+          </div>
 
-                    <TabsContent value="reviewed" className="space-y-4">
+          {/* Reviewed Applications Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-600/20 flex items-center justify-center">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {tCommon('reviewed')} ({reviewedApplications.length})
+              </h3>
+            </div>
+            
             {reviewedApplications.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -192,8 +202,8 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                 ))}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

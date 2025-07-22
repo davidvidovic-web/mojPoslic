@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useTranslations } from 'next-intl'
 import { Job } from '@/types/job'
-import { AppliedJobsSection } from './tasker/applied-jobs-section'
+import { TaskerApplicationManager } from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { TaskerQuickActions } from './tasker/tasker-quick-actions'
-import { ConnectionsSection } from './connections-section'
+import { ConnectionsWidget } from './connections/connections-widget'
+import { ConnectionsFullHistory } from './connections/connections-full-history'
+import { MessagingDialog } from './messaging/messaging-dialog'
 import { DashboardLayout } from './dashboard-layout'
+import { JobCompletionCard } from './job-completion-card'
 import { Badge } from '@/components/ui/badge'
-import { Star } from 'lucide-react'
+import { Star, Briefcase, History } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface JobApplication {
@@ -34,6 +37,21 @@ interface ApplicationStats {
   totalEarnings: number
 }
 
+interface JobAssignment {
+  assignmentId: string
+  jobId: string
+  title: string
+  company?: string
+  contractStatus: string
+  assignedAt: string
+  client: {
+    id: string
+    name: string
+    email: string
+  }
+  agreedSalary?: number
+}
+
 export function TaskerDashboard() {
   const { user } = useAuth()
   
@@ -41,8 +59,8 @@ export function TaskerDashboard() {
   const tDashboard = useTranslations('dashboard')
   const tErrors = useTranslations('errors')
   
-  const [applications, setApplications] = useState<JobApplication[]>([])
   const [shortlistedApplications, setShortlistedApplications] = useState<JobApplication[]>([])
+  const [activeJobs, setActiveJobs] = useState<JobAssignment[]>([])
   const [stats, setStats] = useState<ApplicationStats>({
     total: 0,
     pending: 0,
@@ -65,10 +83,15 @@ export function TaskerDashboard() {
           headers: { 'Content-Type': 'application/json' },
         })
         
+        // Fetch active job assignments
+        const activeJobsResponse = await fetch('/api/tasker/active-jobs', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        })
+        
         // Handle applications data
         if (applicationsResponse.ok) {
           const applicationsData = await applicationsResponse.json()
-          setApplications(applicationsData || [])
           
           // Filter shortlisted applications
           const shortlisted = (applicationsData || []).filter((app: JobApplication) => 
@@ -76,49 +99,29 @@ export function TaskerDashboard() {
           )
           setShortlistedApplications(shortlisted)
           
-          // TODO: Add notification for new shortlisted applications when notification store is available
-          // const newShortlisted = shortlisted.filter((app: JobApplication) => 
-          //   !shortlistedApplications.some(existing => existing.id === app.id)
-          // )
-          
-          // newShortlisted.forEach((app: JobApplication) => {
-          //   addNotification({
-          //     type: 'success',
-          //     title: 'You\'ve been shortlisted!',
-          //     message: `Great news! You've been shortlisted for "${app.job.title}" at ${app.job.company}`,
-          //     action: {
-          //       label: 'View Details',
-          //       onClick: () => router.push(`/jobs/${app.job.id}`)
-          //     }
-          //   })
-          // })
-          
           // Calculate stats from applications
           const apps = applicationsData || []
           
-          // Calculate total earnings from completed jobs
-          const completedApps = apps.filter((app: JobApplication) => app.status === 'SELECTED')
-          const totalEarnings = completedApps.reduce((sum: number, app: JobApplication) => {
-            // Extract salary from completed job applications
-            if (app.job.salaryMin && app.job.salaryMax) {
-              // Use average of min and max salary
-              return sum + (app.job.salaryMin + app.job.salaryMax) / 2
-            } else if (app.job.salaryMin) {
-              return sum + app.job.salaryMin
-            }
-            return sum
-          }, 0)
+          // Note: Don't count SELECTED applications as completed - they are just accepted
+          // Completed jobs should be counted from JobAssignments with COMPLETED status
+          const totalEarnings = 0 // TODO: Calculate from actually completed job assignments
           
           const newStats: ApplicationStats = {
             total: apps.length,
             pending: apps.filter((app: JobApplication) => app.status === 'PENDING').length,
             shortlisted: apps.filter((app: JobApplication) => app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED').length,
-            accepted: apps.filter((app: JobApplication) => ['SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED'].includes(app.status)).length,
-            completed: apps.filter((app: JobApplication) => app.status === 'SELECTED').length,
+            accepted: apps.filter((app: JobApplication) => app.status === 'SELECTED').length, // This is now "accepted" not "completed"
+            completed: 0, // TODO: Get from completed job assignments API
             rejected: apps.filter((app: JobApplication) => app.status === 'REJECTED').length,
             totalEarnings: Math.round(totalEarnings)
           }
           setStats(newStats)
+        }
+        
+        // Handle active jobs data
+        if (activeJobsResponse.ok) {
+          const activeJobsData = await activeJobsResponse.json()
+          setActiveJobs(activeJobsData.activeJobs || [])
         }
 
       } catch (error) {
@@ -144,7 +147,39 @@ export function TaskerDashboard() {
   }
 
   return (
-    <DashboardLayout userRole="tasker" userName={user?.name}>
+    <DashboardLayout 
+      userRole="tasker" 
+      userName={user?.name}
+      sidebar={
+        <div className="space-y-6">
+          {/* Messages Section - Prominent and First */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">Messages</h3>
+              </div>
+              <MessagingDialog />
+            </div>
+            <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
+              Communicate with clients and manage your conversations in real-time.
+            </p>
+          </div>
+          
+          {/* Quick Actions for desktop */}
+          <div className="hidden lg:block">
+            <TaskerQuickActions />
+          </div>
+          
+          {/* Connections Widget */}
+          <ConnectionsWidget />
+        </div>
+      }
+    >
       {/* Quick Stats - collapsed on mobile */}
       <div className="hidden md:block mb-8">
         <TaskerQuickStats stats={stats} />
@@ -158,9 +193,65 @@ export function TaskerDashboard() {
             <TaskerQuickActions />
           </div>
           
+          {/* Active Jobs - Jobs in progress that can be marked complete */}
+          {activeJobs.length > 0 && (
+            <div className="mb-8">
+              <div className="bg-card border rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                    <Briefcase className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Active Jobs</h2>
+                    <p className="text-sm text-muted-foreground">
+                      You have {activeJobs.length} job{activeJobs.length !== 1 ? 's' : ''} in progress
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {activeJobs.map((job) => (
+                    <JobCompletionCard
+                      key={job.assignmentId}
+                      jobAssignment={{
+                        id: job.assignmentId,
+                        contractStatus: job.contractStatus,
+                        job: {
+                          id: job.jobId,
+                          title: job.title,
+                          company: job.company,
+                          postedBy: {
+                            id: job.client.id,
+                            name: job.client.name,
+                            email: job.client.email
+                          }
+                        },
+                        selectedApplication: {
+                          user: {
+                            id: job.client.id,
+                            name: job.client.name,
+                            email: job.client.email
+                          }
+                        }
+                      }}
+                      userRole="tasker"
+                      onUpdate={() => {
+                        // Refresh data when job is updated
+                        window.location.reload()
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Applied Jobs - first/second on mobile */}
           <div className="mb-8">
-            <AppliedJobsSection applications={applications.slice(0, 5)} />
+            <TaskerApplicationManager 
+              showOnlyHistorical={false}
+              title="Recent Applications"
+              description="Your latest job applications and their status"
+            />
           </div>
           
           {/* Shortlisted Jobs - second/third on mobile */}
@@ -200,15 +291,26 @@ export function TaskerDashboard() {
               </div>
             </div>
           )}
+          
+          {/* Connections History Section */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
+                <History className="h-4 w-4 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {tDashboard('connections.fullHistory') || 'Connection History'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  View your complete connections transaction history
+                </p>
+              </div>
+            </div>
+            <ConnectionsFullHistory />
+          </div>
         </div>
         
-        {/* Right Column - Quick Actions & Connections for desktop */}
-        <div className="hidden lg:block space-y-8">
-          <TaskerQuickActions />
-          
-          {/* Connections */}
-          <ConnectionsSection />
-        </div>
       </div>
     </DashboardLayout>
   )

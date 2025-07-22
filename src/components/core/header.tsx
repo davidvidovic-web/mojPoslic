@@ -221,8 +221,8 @@ export const Header = React.memo(function Header() {
                     </Link>
 
                     <Link
-                      href="/dashboard/messages"
-                      className={getMobileMenuItemClass('/dashboard/messages')}
+                      href="/dashboard"
+                      className={getMobileMenuItemClass('/dashboard')}
                       onClick={handleCloseMobileMenu}
                     >
                       <MessageSquare className="mr-4 h-6 w-6" />
@@ -416,8 +416,8 @@ export const Header = React.memo(function Header() {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link
-                              href="/dashboard/messages"
-                              className={getMenuItemClass('/dashboard/messages')}
+                              href="/dashboard"
+                              className={getMenuItemClass('/dashboard')}
                             >
                               <MessageSquare className="mr-2 h-6 w-6" />
                               {tNavigation('messages')}

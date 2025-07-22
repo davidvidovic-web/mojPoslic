@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Briefcase, Users, MessageSquare, Calendar } from 'lucide-react'
 import { Job } from '@/types/job'
 import { useTranslations } from 'next-intl'
@@ -20,58 +19,74 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
   ).length
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('dashboard.stats.activeJobs')}</CardTitle>
-          <Briefcase className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{activeJobs}</div>
-          <p className="text-xs text-muted-foreground">
-            {t('dashboard.stats.currentlyHiring')}
-          </p>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+            <Briefcase className="h-6 w-6 text-blue-600" />
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{activeJobs}</div>
+          </div>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+          {t('dashboard.stats.activeJobs')}
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t('dashboard.stats.currentlyHiring')}
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('dashboard.stats.totalApplications')}</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalApplications}</div>
-          <p className="text-xs text-muted-foreground">
-            {t('dashboard.stats.acrossAllJobs')}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+            <Users className="h-6 w-6 text-green-600" />
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{totalApplications}</div>
+          </div>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+          {t('dashboard.stats.totalApplications')}
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t('dashboard.stats.acrossAllJobs')}
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('dashboard.stats.newMessages')}</CardTitle>
-          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">0</div>
-          <p className="text-xs text-muted-foreground">
-            {t('dashboard.stats.fromApplicants')}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
+            <MessageSquare className="h-6 w-6 text-purple-600" />
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">0</div>
+          </div>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+          {t('dashboard.stats.newMessages')}
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t('dashboard.stats.fromApplicants')}
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('dashboard.stats.thisMonth')}</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{thisMonthJobs}</div>
-          <p className="text-xs text-muted-foreground">
-            {t('dashboard.stats.jobsPosted')}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
+            <Calendar className="h-6 w-6 text-orange-600" />
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{thisMonthJobs}</div>
+          </div>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+          {t('dashboard.stats.thisMonth')}
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {t('dashboard.stats.jobsPosted')}
+        </p>
+      </div>
     </div>
   )
 }

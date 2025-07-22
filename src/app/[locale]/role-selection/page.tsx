@@ -91,16 +91,17 @@ export default function RoleSelectionPage() {
         // Show immediate success feedback
         toast.success(t('welcomeMessage', { role: t(`${selectedRole}.title`) }))
         
-        // Update NextAuth session to trigger JWT refresh (in background)
-        update()
+        // Update NextAuth session to trigger JWT refresh
+        await update()
         
-        // Refresh user context (in background)
-        refreshUser()
+        // Refresh user context
+        await refreshUser()
         
-        // Quick redirect for better UX
-        setTimeout(() => {
-          window.location.replace('/profile-setup')
-        }, 300) // Even faster - 300ms
+        // Wait longer to ensure auth state is properly synced
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Redirect to profile setup
+        window.location.replace('/profile-setup')
       } else {
         const errorData = await response.json()
         toast.error(errorData.error || t('updateRoleFailed'))

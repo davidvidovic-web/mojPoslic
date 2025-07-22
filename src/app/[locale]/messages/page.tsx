@@ -11,8 +11,8 @@ export default function MessagesRedirectPage() {
     // Redirect to dashboard messages with all query parameters preserved
     const queryString = searchParams.toString()
     const redirectUrl = queryString 
-      ? `/dashboard/messages?${queryString}`
-      : '/dashboard/messages'
+      ? `/dashboard?${queryString}`
+      : '/dashboard'
     
     router.replace(redirectUrl)
   }, [router, searchParams])
