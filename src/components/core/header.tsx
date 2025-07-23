@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 import { useAuth } from "@/contexts/auth-context";
 import { useDialogStore } from "@/stores/dialog-store";
+import { useOptimizedMessaging } from "@/hooks/use-optimized-messaging";
 import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
@@ -42,6 +43,11 @@ export const Header = React.memo(function Header() {
     openMessagingDialog
   } = useDialogStore();
   const { loading, user, signOut } = useAuth();
+  const { 
+    totalUnreadCount, 
+    isLoading: isMessagingLoading, 
+    hasNotifications
+  } = useOptimizedMessaging();
   const pathname = usePathname();
   
   // Scroll detection state
@@ -356,19 +362,21 @@ export const Header = React.memo(function Header() {
                   </div>
                 ) : (
                   <>
-                    {/* Optimized Notifications */}
-                    <OptimizedNotificationCenter />
-
-                    {/* Messages Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="relative h-9 w-9 rounded-full"
-                      title={tBreadcrumb('messages')}
-                      onClick={openMessagingDialog}
-                    >
-                      <MessageSquare className="h-7 w-7" />
-                    </Button>
+                    {/* Messaging Button - Show OptimizedNotificationCenter if there are notifications, otherwise show regular button */}
+                    {(totalUnreadCount > 0 || hasNotifications) ? (
+                      <OptimizedNotificationCenter />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="relative h-9 w-9 rounded-full"
+                        title={tBreadcrumb('messages')}
+                        onClick={openMessagingDialog}
+                        disabled={isMessagingLoading}
+                      >
+                        <MessageSquare className="h-7 w-7" />
+                      </Button>
+                    )}
 
                     {/* Desktop Menu */}
                     <div className="hidden md:block">

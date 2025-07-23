@@ -10,6 +10,7 @@ import { MessageAttachment, Conversation } from '@/types/messaging'
 import { useTranslations } from 'next-intl'
 import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 import { useOptimizedConversations } from '@/hooks/use-optimized-conversations'
+import { cn } from '@/lib/utils'
 
 function MessagingDialogContent() {
   const { user } = useAuth()
@@ -94,15 +95,26 @@ function MessagingDialogContent() {
         closeMessagingDialog()
       }
     }}>
-      <DialogContent className="sm:max-w-[95vw] lg:max-w-[98vw] xl:max-w-[98vw] 2xl:max-w-[95vw] sm:h-[80vh] md:h-[85vh] lg:h-[90vh] p-0 gap-0 max-w-full w-full h-full sm:w-auto sm:h-auto flex flex-col">
-        <DialogHeader className="px-3 py-1 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2 h-8">
-            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-950/30 rounded-full flex items-center justify-center">
-              <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+      <DialogContent className={cn(
+        // Mobile: 100% viewport coverage
+        "w-full h-full max-w-none max-h-none",
+        "fixed inset-0 translate-x-0 translate-y-0",
+        "rounded-none",
+        // Desktop: Larger dialog with more space
+        "sm:w-[90vw] sm:h-[85vh] sm:max-w-[800px] sm:max-h-[700px]",
+        "sm:fixed sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]",
+        "sm:rounded-lg",
+        // Keep existing flex layout
+        "p-0 gap-0 flex flex-col"
+      )}>
+        <DialogHeader className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex-shrink-0">
+          <DialogTitle className="flex items-center justify-center gap-2 h-10 relative">
+            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-950/30 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.486 2 2 6.262 2 11.5c0 1.91.57 3.759 1.65 5.35L2.184 22l5.432-1.348C9.346 21.542 10.65 22 12 22c5.514 0 10-4.262 10-9.5S17.514 2 12 2z"/>
               </svg>
             </div>
-            <span className="text-base font-semibold">{t('title')}</span>
+            <span className="text-lg font-semibold">{t('title')}</span>
             {unreadCount > 0 && (
               <Badge className="bg-red-500 hover:bg-red-600 text-white border-0 rounded-full px-2 py-1 text-xs min-w-[20px] h-5 flex items-center justify-center">
                 {unreadCount}

@@ -172,8 +172,13 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   return (
     <div
       className={cn(
-        "flex items-center gap-4 p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800/50",
-        isSelected ? "bg-blue-50 dark:bg-blue-950/20 border-r-4 border-blue-500" : ""
+        // NEW: Improved hover and selected states
+        "flex items-center gap-3 p-3 cursor-pointer transition-all duration-200",
+        "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        "border-l-4 border-transparent", // Space for selection indicator
+        isSelected 
+          ? "bg-blue-50 dark:bg-blue-950/20 border-l-blue-500 shadow-sm" 
+          : "hover:border-l-gray-200"
       )}
       onClick={onClick}
     >

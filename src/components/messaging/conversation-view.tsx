@@ -18,7 +18,6 @@ import {
   Archive, 
   Search,
   ArrowLeft,
-  Settings,
   MessageCircle
 } from 'lucide-react';
 import {
@@ -347,14 +346,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     if (showConversationList || !selectedConversation) {
       return (
         <div className={cn("h-full bg-background dark:bg-background", className)}>
-          <div className="flex items-center justify-between p-4 border-b">
-            <h1 className="text-lg font-semibold">
-              {t('title')}
-            </h1>
-            <Button variant="ghost" size="sm" className="p-2">
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
           <ConversationList
             conversations={conversations}
             selectedConversationId={selectedConversation?.id}
@@ -402,39 +393,21 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   }
 
   return (
-    <div className={cn("h-full bg-gray-50 dark:bg-gray-900 flex", className)}>
-      {/* Conversation List - Meta Messenger Style */}
+    <div className={cn(
+      // Mobile: full screen, Desktop: side-by-side with conversation list
+      "h-full bg-gray-50 dark:bg-gray-900 flex",
+      "flex-row", // Always side by side (conversations hidden on mobile)
+      className
+    )}>
+      {/* Conversation List - Simplified */}
       <div className={cn(
         "border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-950",
-        isMobile ? "w-full" : "w-80 lg:w-96"
+        // Show/hide based on state and device
+        isMobile 
+          ? (showConversationList ? "w-full" : "hidden")
+          : "w-96 lg:w-[400px]", // Larger on desktop
+        "flex-shrink-0" // Prevent sidebar from shrinking
       )}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Chats
-          </h1>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-              <Search className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </Button>
-            <Button variant="ghost" size="sm" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-              <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Search Bar */}
-        <div className="p-3 border-b border-gray-200 dark:border-gray-800">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search Messenger"
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-full text-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        
         <ConversationList
           conversations={conversations}
           selectedConversationId={selectedConversation?.id}
@@ -449,8 +422,8 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       {/* Main Chat Area */}
       <div className={cn(
         "flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-950",
-        isMobile && selectedConversation ? "w-full" : "",
-        isMobile && !selectedConversation ? "hidden" : ""
+        // Show chat when: there's a conversation AND (not mobile OR not showing conversation list)
+        selectedConversation && (!isMobile || !showConversationList) ? "w-full" : "hidden"
       )}>
         {selectedConversation ? (
           <>

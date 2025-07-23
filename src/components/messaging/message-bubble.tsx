@@ -178,10 +178,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         
         <div
           className={cn(
-            "rounded-[var(--radius)] px-3 py-2 max-w-xs break-words",
+            // NEW: Improved message bubble styling
+            "rounded-2xl px-3 py-2 max-w-xs break-words",
+            "shadow-sm", // Add subtle shadow
             isOwn
-              ? "bg-primary dark:bg-primary text-primary-foreground dark:text-primary-foreground"
-              : "bg-muted dark:bg-muted text-foreground dark:text-foreground"
+              ? "bg-blue-500 text-white rounded-br-md" // Less rounded bottom-right
+              : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md"
           )}
         >
           {message.content && (

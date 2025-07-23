@@ -120,10 +120,11 @@
       overflow-y: scroll;
     }
     
-    /* Compensate for scrollbar when body overflow is hidden */
-    body[style*="overflow: hidden"] {
-      padding-right: var(--scrollbar-width);
-      margin-right: calc(var(--scrollbar-width) * -1);
+    /* Remove all padding and margins when dialogs are open to prevent layout shift */
+    html body[style*="overflow: hidden"],
+    html body[data-scroll-locked] {
+      margin: 0 !important;
+      padding: 0 !important;
     }
   }
 }
