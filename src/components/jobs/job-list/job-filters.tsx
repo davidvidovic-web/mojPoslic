@@ -44,7 +44,7 @@ export function JobFilters({
                           (subcategoryFilter && subcategoryFilter !== "all")
 
   return (
-    <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
+    <div className="bg-card rounded-[calc(var(--radius)*1.5)] p-6 shadow-sm border-border/40">
       {/* Desktop Layout - All Inline */}
       <div className="hidden lg:block">
         <div className="flex gap-4 items-center">

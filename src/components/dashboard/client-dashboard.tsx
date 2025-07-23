@@ -11,12 +11,15 @@ import { ClientJobsManager } from './client/client-jobs-manager'
 import { ClientApplicationsManager } from './client/client-applications-manager'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
-import { MessagingDialog } from './messaging/messaging-dialog'
 import { DashboardLayout } from './dashboard-layout'
-import { Briefcase, Users, History } from 'lucide-react'
+import { Briefcase, Users, History, ChevronDown, ChevronUp } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
+import { useMessaging } from '@/contexts/messaging-context'
 import { Job } from '@/types/job'
 import { ApplicationStatus } from '@/types/application'
 export function ClientDashboard() {
@@ -27,6 +30,9 @@ export function ClientDashboard() {
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   
+  // State for collapsible connection history
+  const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
+  
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobs()
   const deleteJobMutation = useDeleteJob()
@@ -36,15 +42,17 @@ export function ClientDashboard() {
   const jobIds = jobs.map(job => job.id)
   const { data: applicationCounts = {} } = useMultipleJobApplicantCounts(jobIds)
   
-  // Get all applications for the client's jobs
-  const { data: allApplications = [], isLoading: applicationsLoading } = useClientApplications(jobIds)
-  
-  // Zustand stores for UI state
+  // Fetch applications for all client jobs
+  const { data: allApplications = [], isLoading: applicationsLoading } = useClientApplications(jobIds, jobs)  // Zustand stores for UI state
   const {
     isJobPostDialogOpen,
     openJobPostDialog,
     closeJobPostDialog,
+    openMessagingDialog,
   } = useDialogStore()
+  
+  // Messaging context for creating conversations
+  const { createJobConversation, setActiveConversation } = useMessaging()
   
   const handleJobPosted = () => {
     closeJobPostDialog()
@@ -106,9 +114,48 @@ export function ClientDashboard() {
     }
   }
 
-  const handleMessageApplicant = () => {
-    // TODO: Implement messaging functionality
-    toast.info('Messaging feature coming soon!')
+  const handleMessageApplicant = async (applicationId: string, userId: string) => {
+    try {
+      console.log('Starting to create conversation for:', { applicationId, userId })
+      
+      // Find the application to get job details
+      const application = allApplications.find(app => app.id === applicationId)
+      if (!application) {
+        toast.error('Application not found')
+        return
+      }
+
+      if (!application.job) {
+        toast.error('Job information not found')
+        return
+      }
+
+      console.log('Creating job conversation with:', {
+        jobId: application.job.id,
+        userId,
+        jobTitle: application.job.title
+      })
+
+      // Create a job-related conversation
+      const conversation = await createJobConversation(
+        application.job.id,
+        userId,
+        application.job.title
+      )
+
+      console.log('Created conversation:', conversation)
+
+      // Set the newly created conversation as active
+      setActiveConversation(conversation)
+
+      // Open the messaging dialog
+      openMessagingDialog()
+
+      toast.success('Conversation started successfully!')
+    } catch (error) {
+      console.error('Error creating conversation:', error)
+      toast.error('Failed to start conversation. Please try again.')
+    }
   }
 
   const handleViewProfile = () => {
@@ -142,82 +189,98 @@ export function ClientDashboard() {
       userRole="client"
       sidebar={
         <div className="space-y-6">
-          {/* Messages Section - Prominent and First */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center">
-                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Messages</h3>
-              </div>
-              <MessagingDialog />
-            </div>
-            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-              Communicate with job applicants and manage your conversations in real-time.
-            </p>
-          </div>
-          
           {/* Connections Widget */}
           <ConnectionsWidget />
         </div>
       }
     >
-      <div className="space-y-8">
+      <div className="space-y-12 lg:space-y-20">
         {/* Jobs Section */}
-        <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
-              <Briefcase className="h-4 w-4 text-primary" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
+                <Briefcase className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                  {t('dashboard.tabs.myJobs') || 'My Jobs'}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  {t('dashboard.client.jobs.description') || 'Manage your job postings and track applications'}
+                </p>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t('dashboard.tabs.myJobs') || 'My Jobs'}
-            </h2>
-          </div>
-          <ClientJobsManager
-            jobs={jobs}
-            applicationCounts={applicationCounts}
-            onEdit={handleEditJob}
-            onDelete={handleDeleteJob}
-            onFeature={() => {}} // TODO: Implement feature job functionality
-            onPostNewJob={openJobPostDialog}
-            loading={isLoading}
-          />
-        </div>
+            <ClientJobsManager
+              jobs={jobs}
+              applicationCounts={applicationCounts}
+              onEdit={handleEditJob}
+              onDelete={handleDeleteJob}
+              onFeature={() => {}} // TODO: Implement feature job functionality
+              onPostNewJob={openJobPostDialog}
+              loading={isLoading}
+            />
+          </CardContent>
+        </Card>
 
         {/* Applications Section */}
-        <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/20 flex items-center justify-center">
-              <Users className="h-4 w-4 text-blue-600" />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/20 flex items-center justify-center">
+                <Users className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                  {t('dashboard.tabs.applications') || 'Applications'}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  {t('dashboard.client.applications.description') || 'Review and manage applications for your jobs'}
+                </p>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t('dashboard.tabs.applications') || 'Applications'}
-            </h2>
-          </div>
-          <ClientApplicationsManager
-            applications={allApplications}
-            onUpdateApplicationStatus={handleUpdateApplicationStatus}
-            onMessageApplicant={handleMessageApplicant}
-            onViewProfile={handleViewProfile}
-            loading={applicationsLoading}
-          />
-        </div>
+            <ClientApplicationsManager
+              applications={allApplications}
+              onUpdateApplicationStatus={handleUpdateApplicationStatus}
+              onMessageApplicant={handleMessageApplicant}
+              onViewProfile={handleViewProfile}
+              loading={applicationsLoading}
+            />
+          </CardContent>
+        </Card>
 
-        {/* Connections History Section */}
-        <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
-              <History className="h-4 w-4 text-purple-600" />
+        {/* Collapsible Connections History Section */}
+        <Card>
+          <Collapsible open={isConnectionHistoryOpen} onOpenChange={setIsConnectionHistoryOpen}>
+            <div>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
+                      <History className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      {t('dashboard.connections.fullHistory') || 'Connection History'}
+                    </h2>
+                  </div>
+                  {isConnectionHistoryOpen ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-6 pb-6">
+                  <ConnectionsFullHistory />
+                </div>
+              </CollapsibleContent>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t('dashboard.connections.fullHistory') || 'Connection History'}
-            </h2>
-          </div>
-          <ConnectionsFullHistory />
-        </div>
+          </Collapsible>
+        </Card>
       </div>
 
       {/* Post New Job Dialog - No trigger needed since it's controlled */}

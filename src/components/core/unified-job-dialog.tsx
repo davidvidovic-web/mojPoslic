@@ -44,6 +44,7 @@ interface UnifiedJobDialogProps {
   isEditMode?: boolean;
   initialData?: Partial<Job>;
   jobId?: string;
+  mobileIconOnly?: boolean; // New prop for mobile-only icon display
 }
 
 export function UnifiedJobDialog({
@@ -54,9 +55,10 @@ export function UnifiedJobDialog({
   triggerText,
   onTriggerClick,
   children,
-  isEditMode, // TODO: Pass to MultiStepJobForm when edit mode is implemented
-  initialData, // TODO: Pass to MultiStepJobForm when edit mode is implemented
-  jobId // TODO: Pass to MultiStepJobForm when edit mode is implemented
+  isEditMode, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Pass to MultiStepJobForm when edit mode is implemented
+  initialData, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Pass to MultiStepJobForm when edit mode is implemented
+  jobId, // eslint-disable-line @typescript-eslint/no-unused-vars -- TODO: Pass to MultiStepJobForm when edit mode is implemented
+  mobileIconOnly = false
 }: UnifiedJobDialogProps) {
   const t = useTranslations('jobPost')
   
@@ -73,8 +75,12 @@ export function UnifiedJobDialog({
         className="bg-foreground hover:bg-foreground/80 text-background font-bold border-0 transition-all duration-200"
         onClick={onTriggerClick}
       >
-        <Plus className="h-4 w-4 mr-2" />
-        {triggerText}
+        <Plus className={`h-4 w-4 ${mobileIconOnly ? '' : 'mr-2'}`} />
+        {mobileIconOnly ? (
+          <span className="hidden sm:inline ml-2">{triggerText}</span>
+        ) : (
+          triggerText
+        )}
       </Button>
     </DialogTrigger>
   ) : null

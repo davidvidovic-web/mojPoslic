@@ -8,7 +8,7 @@ export function JobCardListSkeleton() {
         <div className="space-y-5">
           {/* Header Section */}
           <div className="flex items-start gap-4">
-            <Skeleton className="w-14 h-14 rounded-2xl" />
+            <Skeleton className="w-14 h-14 rounded-[var(--radius)]" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-6 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
@@ -23,20 +23,20 @@ export function JobCardListSkeleton() {
           
           {/* Information Pills */}
           <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-8 w-20 rounded-xl" />
-            <Skeleton className="h-8 w-24 rounded-xl" />
-            <Skeleton className="h-8 w-16 rounded-xl" />
+            <Skeleton className="h-8 w-20 rounded-[var(--radius)]" />
+            <Skeleton className="h-8 w-24 rounded-[var(--radius)]" />
+            <Skeleton className="h-8 w-16 rounded-[var(--radius)]" />
           </div>
           
           {/* Badge Section */}
           <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-6 w-16 rounded-lg" />
-            <Skeleton className="h-6 w-20 rounded-lg" />
-            <Skeleton className="h-6 w-24 rounded-lg" />
+            <Skeleton className="h-6 w-16 rounded-[var(--radius)]" />
+            <Skeleton className="h-6 w-20 rounded-[var(--radius)]" />
+            <Skeleton className="h-6 w-24 rounded-[var(--radius)]" />
           </div>
           
           {/* Apply Button */}
-          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-[var(--radius)]" />
         </div>
       </CardContent>
     </Card>
@@ -51,13 +51,13 @@ export function JobCardSkeleton() {
           {/* Header with company info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Skeleton className="w-10 h-10 rounded-2xl" />
+              <Skeleton className="w-10 h-10 rounded-[var(--radius)]" />
               <div className="space-y-1">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-3 w-16" />
               </div>
             </div>
-            <Skeleton className="w-9 h-9 rounded-xl" />
+            <Skeleton className="w-9 h-9 rounded-[var(--radius)]" />
           </div>
           
           {/* Job Title */}
@@ -65,9 +65,9 @@ export function JobCardSkeleton() {
           
           {/* Information Pills */}
           <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-8 w-20 rounded-xl" />
-            <Skeleton className="h-8 w-24 rounded-xl" />
-            <Skeleton className="h-8 w-16 rounded-xl" />
+            <Skeleton className="h-8 w-20 rounded-[var(--radius)]" />
+            <Skeleton className="h-8 w-24 rounded-[var(--radius)]" />
+            <Skeleton className="h-8 w-16 rounded-[var(--radius)]" />
           </div>
           
           {/* Description */}
@@ -79,9 +79,9 @@ export function JobCardSkeleton() {
           
           {/* Tags */}
           <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-6 w-16 rounded-lg" />
-            <Skeleton className="h-6 w-20 rounded-lg" />
-            <Skeleton className="h-6 w-24 rounded-lg" />
+            <Skeleton className="h-6 w-16 rounded-[var(--radius)]" />
+            <Skeleton className="h-6 w-20 rounded-[var(--radius)]" />
+            <Skeleton className="h-6 w-24 rounded-[var(--radius)]" />
           </div>
         </div>
       </CardContent>

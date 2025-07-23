@@ -152,7 +152,7 @@ export function UserManagementTab({ users, currentUserId }: UserManagementTabPro
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
                   <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center w-fit">
                     {getRoleIcon(user.role)}
-                    <span className="ml-1">{getRoleDisplayName(user.role as 'admin' | 'client' | 'tasker' | 'company')}</span>
+                    <span className="ml-1">{getRoleDisplayName(user.role)}</span>
                   </Badge>
                   
                   <div className="flex items-center gap-2 w-full sm:w-auto">

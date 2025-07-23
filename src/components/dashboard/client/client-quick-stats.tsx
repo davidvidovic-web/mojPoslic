@@ -20,9 +20,9 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
             <Briefcase className="h-6 w-6 text-blue-600" />
           </div>
           <div className="text-right">
@@ -37,9 +37,9 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
             <Users className="h-6 w-6 text-green-600" />
           </div>
           <div className="text-right">
@@ -54,9 +54,9 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
             <MessageSquare className="h-6 w-6 text-purple-600" />
           </div>
           <div className="text-right">
@@ -71,9 +71,9 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
             <Calendar className="h-6 w-6 text-orange-600" />
           </div>
           <div className="text-right">

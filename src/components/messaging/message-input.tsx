@@ -234,7 +234,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               return (
                 <div
                   key={attachment.id}
-                  className="relative flex items-center gap-2 bg-background dark:bg-background rounded-lg p-2 border max-w-xs"
+                  className="relative flex items-center gap-2 bg-background dark:bg-background rounded-[var(--radius)] p-2 border max-w-xs"
                 >
                   {attachment.preview ? (
                     /* eslint-disable-next-line @next/next/no-img-element */

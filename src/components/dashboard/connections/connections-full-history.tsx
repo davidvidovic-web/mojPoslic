@@ -179,7 +179,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-[var(--radius)] border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium">{t('totalReceived')}</span>
@@ -187,7 +187,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
             <p className="text-lg font-bold text-blue-600 dark:text-blue-400">+{totalReceived}</p>
           </div>
           
-          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
+          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-[var(--radius)] border border-emerald-200 dark:border-emerald-800">
             <div className="flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-emerald-600" />
               <span className="text-sm font-medium">{t('totalBought')}</span>
@@ -195,7 +195,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
             <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{totalBought}</p>
           </div>
           
-          <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-[var(--radius)] border border-red-200 dark:border-red-800">
             <div className="flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium">{t('totalSpent')}</span>
@@ -258,7 +258,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
               {filteredHistory.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-[var(--radius)] bg-muted/50 hover:bg-muted/70 transition-colors"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">

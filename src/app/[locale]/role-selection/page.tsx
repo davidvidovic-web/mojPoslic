@@ -98,7 +98,7 @@ export default function RoleSelectionPage() {
         await refreshUser()
         
         // Wait longer to ensure auth state is properly synced
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 1500))
         
         // Redirect to profile setup
         window.location.replace('/profile-setup')

@@ -1,9 +1,6 @@
 {
   "welcome": "Welcome to your dashboard",
   "welcomeDefault": "Welcome",
-  "quickActions": {
-    "title": "Quick Actions"
-  },
   "actions": {
     "postJob": "Post Job"
   },
@@ -81,7 +78,6 @@
   "taglines": {
     "client": "Post jobs and find the perfect candidates",
     "tasker": "Find your next opportunity",
-    "company": "Manage your workforce efficiently",
     "admin": "System administration and monitoring"
   },
   "roles": {
@@ -97,19 +93,16 @@
   },
   "header": {
     "subtitle": {
-      "company": "Find top talent for your projects",
       "admin": "System management and oversight",
       "tasker": "Ready to take on new challenges",
       "client": "Find top talent for your projects"
     },
     "actionText": {
-      "company": "Post Jobs & Manage",
       "admin": "Monitor & Manage", 
       "tasker": "Quick Apply & Track",
       "client": "Post Jobs & Manage"
     },
     "status": {
-      "company": "Hiring dashboard active",
       "admin": "Admin panel active",
       "tasker": "Job seeking active",
       "client": "Hiring dashboard active"
@@ -132,7 +125,6 @@
     "admin": "Loading admin dashboard...",
     "client": "Loading client dashboard...",
     "tasker": "Loading tasker dashboard...",
-    "company": "Loading company dashboard...",
     "jobs": "Loading jobs..."
   },
   "jobCard": {
@@ -160,41 +152,6 @@
     "negotiable": "Negotiable",
     "more": "more"
   },
-  "company": {
-    "quickActions": {
-      "title": "Quick Actions",
-      "postNewJob": "Post New Job",
-      "postNewJobDesc": "Create job listing",
-      "manageTeam": "Manage Team",
-      "manageTeamDesc": "Add team members",
-      "companySettings": "Company Settings",
-      "companySettingsDesc": "Manage settings",
-      "promoteJobs": "Promote Jobs",
-      "promoteJobsDesc": "Boost visibility",
-      "enterpriseHub": "Enterprise Hub",
-      "enterpriseHubDesc": "Advanced tools",
-      "enterpriseTip": "Enterprise Tip",
-      "enterpriseTipText": "Featured job postings receive 3x more qualified applications and faster hiring results."
-    },
-    "messages": {
-      "title": "Messages",
-      "unreadMessages": "Unread Messages",
-      "fromCandidatesAndTeam": "From candidates and team",
-      "activeConversations": "Active Conversations",
-      "ongoingDiscussions": "Ongoing discussions",
-      "recentMessages": "Recent Messages",
-      "noMessages": "No messages yet",
-      "composeMessage": "Compose Message"
-    },
-    "applications": {
-      "title": "Applications",
-      "comingSoon": "Coming soon"
-    },
-    "analytics": {
-      "title": "Analytics",
-      "comingSoon": "Coming soon"
-    }
-  },
   "finances": {
     "totalSpent": "Total Spent",
     "totalProjectPayments": "Total project payments",
@@ -203,16 +160,6 @@
     "awaitingCompletion": "Awaiting completion"
   },
   "tasker": {
-    "quickActions": {
-      "findJobs": "Find Jobs",
-      "findJobsDesc": "Search available jobs",
-      "updateProfile": "Update Profile",
-      "updateProfileDesc": "Edit your profile",
-      "learningCenter": "Learning Center",
-      "learningCenterDesc": "Skill development resources",
-      "proTip": "Pro Tip",
-      "proTipMessage": "Complete your profile and add skills to get better job recommendations!"
-    },
     "quickStats": {
       "title": "Quick Stats",
       "activeJobs": "Active Jobs",
@@ -313,17 +260,6 @@
     }
   },
   "client": {
-    "quickActions": {
-      "postJobDesc": "Post new job",
-      "browseTaskers": "Browse Taskers",
-      "browseTaskersDesc": "Find qualified candidates",
-      "manageApplications": "Manage Applications",
-      "manageApplicationsDesc": "Review and respond to applications",
-      "messageCenter": "Message Center",
-      "messageCenterDesc": "Communicate with candidates",
-      "viewAnalytics": "View Analytics",
-      "accountSettings": "Account Settings"
-    },
     "messages": {
       "title": "Messages",
       "unreadMessages": "Unread Messages",
@@ -349,7 +285,19 @@
   "applications": {
     "title": "Applications",
     "noApplications": "No applications",
-    "noApplicationsDescription": "You haven't submitted any applications yet",
+    "noApplicationsDescription": "You haven't submitted any application yet",
+    "message": "Message",
+    "accept": "Accept",
+    "reject": "Reject",
+    "viewProfile": "View Profile",
+    "appliedFor": "Applied for:",
+    "anonymousTasker": "Anonymous Tasker",
+    "unknownJob": "Unknown Job",
+    "unknownTime": "Unknown time",
+    "filterByStatus": "Filter by status",
+    "application": "application",
+    "applications": "applications",
+    "unknown": "Unknown",
     "tabs": {
       "all": "All",
       "pending": "Pending",
@@ -363,7 +311,14 @@
       "filtered": "No applications match your current filters. Try adjusting your search or filter criteria.",
       "none": "You haven't received any job applications yet. Applications will appear here once taskers apply to your jobs."
     },
-    "viewProfile": "View Profile"
+    "status": {
+      "pending": "Pending",
+      "selected": "Selected",
+      "rejected": "Rejected",
+      "reviewed": "Reviewed",
+      "shortlisted": "Shortlisted",
+      "withdrawn": "Withdrawn"
+    }
   },
   "search": {
     "applications": "Search applications, taskers, or jobs..."
@@ -413,18 +368,15 @@
     "connections": "connections",
     "taskerInfo": "Connections are used to apply for professional jobs only. Quick jobs don't require connections.",
     "clientInfo": "Connections are used to post more than 1 job daily. Quick jobs cost 3 connections.",
-    "companyInfo": "Connections are used to post jobs.",
     "monthlyRefreshInfo": "You receive 10 connections automatically on the 1st of each month.",
     "nextRefresh": "Next refresh: {date}",
     "lastRefresh": "Last refresh: {date}",
     "needMoreConnections": "Need more connections?",
     "purchaseAdditionalTasker": "Purchase additional connects to continue applying for professional jobs.",
     "purchaseAdditionalClient": "Purchase additional connects to post multiple jobs daily.",
-    "purchaseAdditionalCompany": "Purchase additional connects to continue posting jobs.",
     "lowConnectionsWarning": "Low connections!",
     "lowConnectionsTasker": "Low connections! You need connections to apply for professional jobs.",
     "lowConnectionsClient": "Low connections! You need connections to post multiple jobs daily. Quick jobs require 3 connections each.",
-    "lowConnectionsCompany": "Low connections! You need connections to post jobs on the platform.",
     "sharingReward": "We can always give you connects for sharing our website, send customer support proof of sharing and we will grant you connects.",
     "purchase": "Purchase",
     "bonus": "Bonus",
@@ -455,6 +407,27 @@
   "jobs": {
     "title": "Jobs",
     "subtitle": "Manage your applications, saved jobs, and find new opportunities",
-    "loading": "Loading jobs..."
+    "loading": "Loading jobs...",
+    "tabs": {
+      "active": "Active Applications",
+      "history": "Application History", 
+      "discover": "Discover Jobs"
+    },
+    "activeApplications": {
+      "title": "Active Applications",
+      "description": "Track your ongoing job applications and manage active work assignments"
+    },
+    "applicationHistory": {
+      "title": "Application History",
+      "description": "View your past applications, completed work, and rejected applications"
+    },
+    "savedJobs": {
+      "title": "Saved Jobs",
+      "description": "Jobs you've bookmarked for later application"
+    },
+    "recommendedJobs": {
+      "title": "Recommended for You", 
+      "description": "Jobs matched to your skills and preferences"
+    }
   }
 }

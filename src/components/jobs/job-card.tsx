@@ -242,7 +242,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             {/* Company Avatar */}
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
+            <div className="w-10 h-10 rounded-[var(--radius)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
               <span className="text-sm font-semibold text-primary">
                 {job.company ? job.company.charAt(0).toUpperCase() : 'J'}
               </span>
@@ -265,7 +265,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
                 size="sm"
                 onClick={handleSaveToggle}
                 disabled={isSaving}
-                className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 transition-colors opacity-60 group-hover:opacity-100"
+                className="h-9 w-9 p-0 rounded-[var(--radius)] hover:bg-primary/10 transition-colors opacity-60 group-hover:opacity-100"
               >
                 {isJobSaved ? (
                   <BookmarkCheck className="h-4 w-4 text-primary" />
@@ -276,7 +276,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
             )}
             {/* Application count for owners */}
             {isOwner && applicationCount !== null && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-xl">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-[var(--radius)]">
                 <Users className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-medium text-primary">{applicationCount}</span>
               </div>
@@ -292,14 +292,14 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
         {/* Key Information Pills */}
         <div className="flex flex-wrap gap-2 mb-4">
           {/* Location */}
-          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
             <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">{job.city?.name || t('jobTypes.remote')}</span>
           </div>
           
           {/* Payment */}
           {formatSalary(job) && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl">
+            <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
               <DollarSign className="h-3.5 w-3.5 text-green-600" />
               <span className="text-sm font-medium text-green-600">{formatSalary(job)}</span>
             </div>
@@ -307,7 +307,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
 
           {/* Duration */}
           {job.duration && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-[var(--radius)]">
               <Clock className="h-3.5 w-3.5 text-blue-600" />
               <span className="text-sm text-blue-600">{getTranslatedDuration(job.duration)}</span>
             </div>
@@ -334,24 +334,24 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
         {/* Tags and Badges */}
         <div className="flex flex-wrap gap-2">
           {job.is_featured && (
-            <Badge className="bg-yellow-500 hover:bg-yellow-600 text-yellow-50 text-xs px-2.5 py-1 rounded-lg border-0">
+            <Badge className="bg-yellow-500 hover:bg-yellow-600 text-yellow-50 text-xs px-2.5 py-1 rounded-[var(--radius)] border-0">
               <Star className="h-3 w-3 fill-current mr-1" />
               {t('featured')}
             </Badge>
           )}
           
-          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20">
+          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20">
             {getTranslatedJobType(job.type)}
           </Badge>
 
           {job.category && (
-            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-lg border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
             </Badge>
           )}
 
           {job.transportation && (
-            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700">
+            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-200 dark:border-gray-700">
               <Car className="h-3 w-3 mr-1.5" />
               {getTranslatedTransportation(
                 job.transportation,
@@ -364,7 +364,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
         {/* Application count for non-owners */}
         {!isOwner && applicationCount !== null && (
           <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center">
               <Users className="h-3.5 w-3.5 text-primary" />
             </div>
             <span className="text-xs text-muted-foreground">

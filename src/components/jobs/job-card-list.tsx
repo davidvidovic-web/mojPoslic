@@ -87,7 +87,7 @@ export function JobCardList({ job }: JobCardListProps) {
         {/* Header Section */}
         <div className="flex items-start gap-4 mb-5">
           {/* Company Avatar */}
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10 shrink-0">
+          <div className="w-14 h-14 rounded-[var(--radius)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10 shrink-0">
             <span className="text-lg font-bold text-primary">
               {formatClientName(job.company).charAt(0).toUpperCase()}
             </span>
@@ -114,19 +114,19 @@ export function JobCardList({ job }: JobCardListProps) {
         
         {/* Key Information Pills */}
         <div className="flex flex-wrap gap-2 mb-5">
-          <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-sm">
             <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">{job.city?.name || tCommon('jobTypes.remote')}</span>
           </div>
           
           {formatSalary(job) && (
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-sm">
               <DollarSign className="h-3.5 w-3.5 text-green-600" />
               <span className="text-sm font-medium text-green-600">{formatSalary(job)}</span>
             </div>
           )}
           
-          <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-sm">
             <Calendar className="h-3.5 w-3.5 text-blue-600" />
             <span className="text-sm text-blue-600">{job.posted_at ? formatDate(job.posted_at) : ''}</span>
           </div>
@@ -134,18 +134,18 @@ export function JobCardList({ job }: JobCardListProps) {
         
         {/* Tags and Badges */}
         <div className="flex flex-wrap gap-2 mb-5">
-          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20">
+          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20">
             {formatJobType(job.type)}
           </Badge>
           
           {job.category && (
-            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-lg border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
             </Badge>
           )}
           
           {job.transportation && (
-            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700">
+            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-200 dark:border-gray-700">
               <Car className="h-3 w-3 mr-1.5" />
               {formatTransportation(job.transportation, job.transportation_amount)}
             </Badge>
@@ -158,7 +158,7 @@ export function JobCardList({ job }: JobCardListProps) {
             <Button 
               onClick={handleApply}
               size="sm"
-              className="w-full rounded-xl bg-primary hover:bg-primary/90"
+              className="w-full rounded-sm bg-primary hover:bg-primary/90"
             >
               View Details
               <ExternalLink className="h-3.5 w-3.5 ml-2" />
@@ -167,7 +167,7 @@ export function JobCardList({ job }: JobCardListProps) {
             <Button 
               onClick={handleApply}
               size="sm"
-              className="w-full rounded-xl bg-primary hover:bg-primary/90"
+              className="w-full rounded-sm bg-primary hover:bg-primary/90"
             >
               {t('viewDetailsAndApply')}
               <ExternalLink className="h-3.5 w-3.5 ml-2" />

@@ -29,7 +29,7 @@ export function TransportationSection({ formData, onChange }: TransportationSect
         </h3>
         
         <div 
-          className="p-4 bg-secondary/50 rounded-lg cursor-pointer hover:bg-secondary/70 transition-colors"
+          className="p-4 bg-secondary/50 rounded-[var(--radius)] cursor-pointer hover:bg-secondary/70 transition-colors"
           onClick={() => setShowTips(!showTips)}
         >
           <div className="flex items-center justify-between">

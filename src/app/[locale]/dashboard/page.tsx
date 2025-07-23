@@ -3,7 +3,6 @@
 import { useAuth } from '@/contexts/auth-context'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
 import { ClientDashboard } from '@/components/dashboard/client-dashboard'
-import { CompanyDashboard } from '@/components/dashboard/company-dashboard'
 import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
 import { RoleGuard } from '@/components/auth/role-guard'
 import { Card, CardContent } from '@/components/ui/card'
@@ -64,8 +63,6 @@ function DashboardContent({ user, loading }: DashboardContentProps) {
     switch (dashboardView) {
       case 'client':
         return <ClientDashboard />
-      case 'company':
-        return <CompanyDashboard />
       case 'tasker':
         return <TaskerDashboard />
       case 'admin':
@@ -78,8 +75,6 @@ function DashboardContent({ user, loading }: DashboardContentProps) {
   switch (user.role) {
     case 'client':
       return <ClientDashboard />
-    case 'company':
-      return <CompanyDashboard />
     case 'tasker':
       return <TaskerDashboard />
     default:

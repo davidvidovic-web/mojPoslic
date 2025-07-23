@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { createSupabaseAdmin } from '@/lib/supabase-nextauth-integration'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
+  const prisma = new PrismaClient()
+  
   try {
     // Get the current session
     const session = await auth()
@@ -14,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { messageId } = params
+    const { messageId } = await params
     const supabase = createSupabaseAdmin()
 
     // Step 1: Get the message from Supabase
@@ -80,5 +82,7 @@ export async function GET(
   } catch (error) {
     console.error('Error in GET /api/messages/[messageId]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

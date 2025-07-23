@@ -94,7 +94,7 @@ const SiteStats = () => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
-        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-blue-100 dark:bg-blue-900">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-[calc(var(--radius)*1.5)] bg-blue-100 dark:bg-blue-900">
           <Briefcase className="h-7 w-7 text-blue-600 dark:text-blue-400" />
         </div>
         <div className="text-3xl font-bold flex items-center justify-center">
@@ -104,7 +104,7 @@ const SiteStats = () => {
       </div>
 
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
-        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-purple-100 dark:bg-purple-900">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-[calc(var(--radius)*1.5)] bg-purple-100 dark:bg-purple-900">
           <Building2 className="h-7 w-7 text-purple-600 dark:text-purple-400" />
         </div>
         <div className="text-3xl font-bold flex items-center justify-center">
@@ -116,7 +116,7 @@ const SiteStats = () => {
       </div>
 
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
-        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-orange-100 dark:bg-orange-900">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-[calc(var(--radius)*1.5)] bg-orange-100 dark:bg-orange-900">
           <Users className="h-7 w-7 text-orange-600 dark:text-orange-400" />
         </div>
         <div className="text-3xl font-bold flex items-center justify-center">
@@ -126,7 +126,7 @@ const SiteStats = () => {
       </div>
 
       <div className="space-y-3 text-center p-6 rounded-lg bg-background/50 backdrop-blur-sm border">
-        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-xl bg-blue-100 dark:bg-blue-900">
+        <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-[calc(var(--radius)*1.5)] bg-blue-100 dark:bg-blue-900">
           <CheckCircle className="h-7 w-7 text-blue-600 dark:text-blue-400" />
         </div>
         <div className="text-3xl font-bold flex items-center justify-center">

@@ -4,7 +4,7 @@ import { PrivacyService } from '@/lib/messaging/privacy-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await auth()
@@ -15,7 +15,7 @@ export async function GET(
       )
     }
 
-    const { userId } = params
+    const { userId } = await params
 
     // Can't message yourself
     if (session.user.id === userId) {

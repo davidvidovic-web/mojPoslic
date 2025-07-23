@@ -146,12 +146,12 @@ const config: NextAuthConfig = {
         return token
       }
       
-      // Only refresh from database if:
+      // Refresh from database if:
       // 1. Token doesn't have lastUpdated timestamp (old token)
-      // 2. It's been more than 5 minutes since last update
-      // 3. The trigger is 'update' (forced refresh)
+      // 2. It's been more than 2 minutes since last update (reduced from 5 minutes)
+      // 3. The trigger is 'update' (forced refresh from client)
       const shouldRefresh = !token.lastUpdated || 
-                           (Date.now() - (token.lastUpdated as number)) > 5 * 60 * 1000 ||
+                           (Date.now() - (token.lastUpdated as number)) > 2 * 60 * 1000 ||
                            trigger === 'update'
       
       if (token.id && shouldRefresh) {
@@ -170,20 +170,22 @@ const config: NextAuthConfig = {
           
           if (dbUser) {
             const hasChanges = token.role !== dbUser.role || 
-                             token.profileSetupCompleted !== dbUser.profileSetupCompleted
+                             token.profileSetupCompleted !== dbUser.profileSetupCompleted ||
+                             token.phone !== dbUser.phone
             
-            // Force update the token properties
+            // Always update the token properties with fresh data
             token.role = dbUser.role
             token.profileSetupCompleted = dbUser.profileSetupCompleted
             token.phone = dbUser.phone
             token.lastUpdated = Date.now()
             
-            // Only log significant changes, not every refresh
-            if (hasChanges) {
+            // Log significant changes during development
+            if (hasChanges && process.env.NODE_ENV === 'development') {
               console.log('JWT Callback: Token updated with changes from database:', {
                 id: token.id,
                 role: token.role,
-                profileSetupCompleted: token.profileSetupCompleted
+                profileSetupCompleted: token.profileSetupCompleted,
+                trigger: trigger
               })
             }
           }

@@ -9,6 +9,7 @@ import { useDialogStore } from "@/stores/dialog-store";
 import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
+import { MessagingDialog } from "@/components/dashboard/messaging/messaging-dialog";
 import { Button } from "@/components/ui/button";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
@@ -18,10 +19,8 @@ import {
   User,
   Settings,
   LayoutDashboard,
-  Briefcase,
-  MessageSquare,
-  Zap,
   UserPlus,
+  MessageSquare,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,7 +37,8 @@ export const Header = React.memo(function Header() {
     closeJobPostDialog, 
     isMobileMenuOpen, 
     toggleMobileMenu,
-    closeMobileMenu
+    closeMobileMenu,
+    openMessagingDialog
   } = useDialogStore();
   const { loading, user, signOut } = useAuth();
   const pathname = usePathname();
@@ -121,7 +121,7 @@ export const Header = React.memo(function Header() {
 
   const getMobileMenuItemClass = useCallback((href: string) => {
     const baseClass = "flex items-center py-4 text-lg font-medium transition-colors";
-    const activeClass = "bg-primary text-primary-foreground rounded-lg px-2 -mx-2";
+    const activeClass = "bg-primary text-primary-foreground rounded-[var(--radius)] px-2 -mx-2";
     const inactiveClass = "hover:text-primary";
     return isActiveMenuItem(href) ? `${baseClass} ${activeClass}` : `${baseClass} ${inactiveClass}`;
   }, [isActiveMenuItem]);
@@ -157,13 +157,13 @@ export const Header = React.memo(function Header() {
 
   // Memoized header classes
   const headerClasses = useMemo(() => `
-    ${isScrolled ? 'fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-[calc(100%-4rem)] max-w-[1400px] mx-auto rounded-lg px-6 py-3' : 'relative w-full'} 
+    ${isScrolled ? 'fixed top-3 sm:top-6 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-[calc(100%-4rem)] max-w-[1400px] mx-auto rounded-[var(--radius)] px-4 sm:px-6 py-2 sm:py-3' : 'relative w-full'} 
     ${isScrolled ? 'bg-white/10 dark:bg-black/10 backdrop-blur-xl supports-[backdrop-filter]:bg-white/5 dark:supports-[backdrop-filter]:bg-black/5 shadow-2xl border border-white/20 dark:border-white/10' : 'bg-transparent border-b border-transparent'} 
     transition-[top,background-color,backdrop-filter,border-color,box-shadow] duration-500 ease-in-out
   `, [isScrolled]);
 
   const placeholderClasses = useMemo(() => `
-    transition-[height] duration-500 ease-in-out ${isScrolled ? 'h-[100px]' : 'h-0'}
+    transition-[height] duration-500 ease-in-out ${isScrolled ? 'h-[80px] sm:h-[100px]' : 'h-0'}
   `, [isScrolled]);
   return (
     <>
@@ -209,33 +209,6 @@ export const Header = React.memo(function Header() {
                     >
                       <LayoutDashboard className="mr-4 h-6 w-6" />
                       {tNavigation('dashboard')}
-                    </Link>
-
-                    <Link
-                      href="/dashboard/jobs"
-                      className={getMobileMenuItemClass('/dashboard/jobs')}
-                      onClick={handleCloseMobileMenu}
-                    >
-                      <Briefcase className="mr-4 h-6 w-6" />
-                      {tNavigation('jobs')}
-                    </Link>
-
-                    <Link
-                      href="/dashboard"
-                      className={getMobileMenuItemClass('/dashboard')}
-                      onClick={handleCloseMobileMenu}
-                    >
-                      <MessageSquare className="mr-4 h-6 w-6" />
-                      {tNavigation('messages')}
-                    </Link>
-
-                    <Link
-                      href="/dashboard/connections"
-                      className={getMobileMenuItemClass('/dashboard/connections')}
-                      onClick={handleCloseMobileMenu}
-                    >
-                      <Zap className="mr-4 h-6 w-6" />
-                      {tNavigation('connections')}
                     </Link>
 
                     <Link
@@ -321,6 +294,7 @@ export const Header = React.memo(function Header() {
                     triggerText={tHeader('postJob')}
                     dialogTitle={tHeader('postJobDialog')}
                     onTriggerClick={handlePostJobClick}
+                    mobileIconOnly={true}
                   />
                 )}
 
@@ -378,6 +352,17 @@ export const Header = React.memo(function Header() {
                     {/* Optimized Notifications */}
                     <OptimizedNotificationCenter />
 
+                    {/* Messages Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="relative h-9 w-9 rounded-full"
+                      title={tNavigation('breadcrumb.messages')}
+                      onClick={openMessagingDialog}
+                    >
+                      <MessageSquare className="h-7 w-7" />
+                    </Button>
+
                     {/* Desktop Menu */}
                     <div className="hidden md:block">
                       <DropdownMenu>
@@ -402,34 +387,6 @@ export const Header = React.memo(function Header() {
                             >
                               <LayoutDashboard className="mr-2 h-6 w-6" />
                               {tNavigation('dashboard')}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/dashboard/jobs"
-                              className={getMenuItemClass('/dashboard/jobs')}
-                            >
-                              <Briefcase className="mr-2 h-6 w-6" />
-                              {tNavigation('jobs')}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/dashboard"
-                              className={getMenuItemClass('/dashboard')}
-                            >
-                              <MessageSquare className="mr-2 h-6 w-6" />
-                              {tNavigation('messages')}
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/dashboard/connections"
-                              className={getMenuItemClass('/dashboard/connections')}
-                            >
-                              <Zap className="mr-2 h-6 w-6" />
-                              {tNavigation('connections')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -469,6 +426,9 @@ export const Header = React.memo(function Header() {
         </div>
       </div>
     </header>
+    
+    {/* Messaging Dialog */}
+    {user && <MessagingDialog />}
     </>
   );
 });

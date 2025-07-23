@@ -210,7 +210,13 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   const user: AuthUser | null = useMemo(() => {
     if (!session?.user) return null
     
-    // If we haven't fetched database data yet, but we have a session, return minimal user until DB data loads
+    // If we haven't fetched database data yet AND we're currently loading, don't return partial user data
+    // This prevents race conditions during onboarding flow
+    if (!dataFetched && loading) {
+      return null // Force loading state until we have complete data
+    }
+    
+    // If we haven't fetched database data yet, but we're not loading, return minimal user from session
     if (!dataFetched) {
       return {
         id: session.user.id,
@@ -252,6 +258,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
   }, [
     session?.user,
     dataFetched,
+    loading, // Add loading dependency to prevent returning partial data during loading
     dbUser?.name,
     dbUser?.username,
     dbUser?.bio,
@@ -278,7 +285,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
 
   const contextValue: AuthContextType = useMemo(() => ({
     user,
-    loading: status === 'loading', // Remove database loading from UI blocking
+    loading: status === 'loading' || Boolean(session?.user?.id && !dataFetched && loading), // Wait for initial data fetch
     hasRole,
     isAdmin,
     isClient,
@@ -289,7 +296,10 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
     updateLanguagePreference,
   }), [
     user,
-    status, // Removed dataFetched dependency for better UX
+    status,
+    session?.user?.id,
+    dataFetched,
+    loading, // Include database loading state
     hasRole,
     isAdmin,
     isClient,

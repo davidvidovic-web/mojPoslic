@@ -222,7 +222,7 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
             </div>
           ) : (
             paginatedHistory.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={entry.id} className="flex items-center justify-between p-4 border rounded-[var(--radius)]">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium">{entry.user.name || 'Unknown User'}</h4>

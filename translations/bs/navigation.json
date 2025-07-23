@@ -1,10 +1,7 @@
 {
   "main": {
     "home": "Početna",
-    "jobs": "Poslovi",
     "dashboard": "Kontrolna tabla",
-    "messages": "Poruke",
-    "connections": "Konekcije",
     "settings": "Postavke",
     "profile": "Profil",
     "applications": "Prijave",
@@ -16,8 +13,7 @@
   "dashboard": {
     "overview": "Pregled",
     "stats": "Statistika",
-    "recent": "Nedavna aktivnost",
-    "quickActions": "Brze akcije"
+    "recent": "Nedavna aktivnost"
   },
   "breadcrumb": {
     "home": "Početna",

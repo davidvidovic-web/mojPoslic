@@ -95,7 +95,7 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
           {/* Pending Applications Section */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-yellow-600/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-yellow-500/10 to-yellow-600/20 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-yellow-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -151,7 +151,7 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
           {/* Reviewed Applications Section */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-600/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-green-500/10 to-green-600/20 flex items-center justify-center">
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

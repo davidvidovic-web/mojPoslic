@@ -3,22 +3,16 @@
 import React, { useState, useMemo } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useTranslations } from 'next-intl'
-import { useNotificationStore } from '@/stores/notification-store'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { toast } from 'sonner'
 import {
   Search,
   Users,
-  Star,
-  Clock,
-  CheckCircle,
-  XCircle,
   ChevronDown,
   ChevronUp,
   ThumbsUp
@@ -85,12 +79,9 @@ export function ClientApplicationManager({
   description = "Manage applications to your job postings"
 }: ClientApplicationManagerProps) {
   const { user } = useAuth()
-  const { addNotification } = useNotificationStore()
-  const t = useTranslations('admin.applications')
   const tErrors = useTranslations('errors')
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedApplications, setSelectedApplications] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [jobFilter, setJobFilter] = useState<string>('all')
@@ -113,14 +104,15 @@ export function ClientApplicationManager({
         const data = await response.json()
         
         // Map the response to include proper typing
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- API response may have different property names
         const mappedApplications = data.applications.map((app: any) => ({
           ...app,
-          job_id: app.jobId || app.job_id,
-          user_id: app.userId || app.user_id,
-          application_date: app.appliedAt || app.application_date,
-          cover_letter: app.message || app.cover_letter,
-          client_notes: app.clientNotes || app.client_notes,
-          client_feedback: app.feedback || app.client_feedback
+          job_id: app.job_id || app.jobId,
+          user_id: app.user_id || app.userId,
+          application_date: app.application_date || app.appliedAt,
+          cover_letter: app.cover_letter || app.message,
+          client_notes: app.client_notes || app.clientNotes,
+          client_feedback: app.client_feedback || app.feedback
         }))
 
         // Filter for active applications if requested
@@ -165,7 +157,7 @@ export function ClientApplicationManager({
         throw new Error(errorData.error || 'Failed to confirm work completion')
       }
 
-      const data = await response.json()
+      await response.json()
       
       toast.success('Work completion confirmed! The job is now completed.')
       
@@ -180,7 +172,7 @@ export function ClientApplicationManager({
 
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
-    let filtered = applications.filter(app => {
+    const filtered = applications.filter(app => {
       const matchesSearch = searchTerm === '' || 
         app.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||

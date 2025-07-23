@@ -28,7 +28,7 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
     <Card>
       <CardHeader>
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-xl bg-muted border flex items-center justify-center font-bold text-xl">
+          <div className="w-16 h-16 rounded-[calc(var(--radius)*1.5)] bg-muted border flex items-center justify-center font-bold text-xl">
             {formatClientName(job.company).charAt(0).toUpperCase()}
           </div>
           <div className="flex-1">

@@ -8,6 +8,7 @@ interface OptimizedJobPostDialogProps {
   triggerText: string;
   dialogTitle?: string; // Optional since we handle it in UnifiedJobDialog
   onTriggerClick: () => void;
+  mobileIconOnly?: boolean;
 }
 
 export function OptimizedJobPostDialog({
@@ -15,7 +16,8 @@ export function OptimizedJobPostDialog({
   onOpenChange,
   onJobPosted,
   triggerText,
-  onTriggerClick
+  onTriggerClick,
+  mobileIconOnly = false
 }: OptimizedJobPostDialogProps) {
   return (
     <UnifiedJobDialog
@@ -25,6 +27,7 @@ export function OptimizedJobPostDialog({
       triggerText={triggerText}
       onTriggerClick={onTriggerClick}
       isEditMode={false}
+      mobileIconOnly={mobileIconOnly}
     />
   );
 }

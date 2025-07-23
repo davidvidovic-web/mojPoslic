@@ -49,21 +49,22 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
   // List view layout
   if (viewMode === 'list') {
     return (
-      <div className="group cursor-pointer border-0 bg-white dark:bg-gray-950 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden rounded-2xl p-6">
+      <div className="group cursor-pointer border-0 bg-white dark:bg-gray-950 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden rounded-[var(--radius)] p-5">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="relative flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
-                <span className="text-sm font-semibold text-primary">
-                  {job.company ? job.company.charAt(0).toUpperCase() : 'J'}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {getRelativeTimeString(job.posted_at || job.createdAt)}
-                </span>
+            <div className="flex items-start justify-start mb-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className="px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
+                  {formatJobType(job.type)}
+                </Badge>
+                {job.city && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                    <MapPin className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">{job.city.name}</span>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -73,13 +74,6 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
               </Link>
             </h3>
             
-            {job.city && (
-              <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl w-fit">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{job.city.name}</span>
-              </div>
-            )}
-            
             <div 
               className="text-sm text-muted-foreground line-clamp-2 leading-relaxed"
               dangerouslySetInnerHTML={{ 
@@ -88,29 +82,31 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
             />
           </div>
           
-          <div className="flex flex-col justify-between md:items-end gap-4 md:min-w-[200px]">
+          <div className="flex flex-col justify-between md:items-end gap-4 md:min-w-[200px] h-full">
             <div className="flex flex-wrap gap-2 items-center">
-              <Badge className="px-2.5 py-1 rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
-                {formatJobType(job.type)}
-              </Badge>
               {job.is_featured && (
-                <Badge className="bg-yellow-500 text-yellow-50 px-2.5 py-1 rounded-lg border-0 text-xs">
+                <Badge className="bg-yellow-500 text-yellow-50 px-2.5 py-1 rounded-[var(--radius)] border-0 text-xs">
                   <Star className="h-3 w-3 fill-current mr-1" />
                   {t('card.featured')}
                 </Badge>
               )}
               {hasApplied && (
-                <Badge className="bg-green-500 text-green-50 px-2.5 py-1 rounded-lg border-0 text-xs">
+                <Badge className="bg-green-500 text-green-50 px-2.5 py-1 rounded-[var(--radius)] border-0 text-xs">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   {t('card.applied')}
                 </Badge>
               )}
             </div>
-            <Button asChild variant={hasApplied ? "outline" : "default"} className="rounded-xl">
-              <Link href={`/jobs/${job.id}`}>
-                {hasApplied ? t('card.viewApplication') : t('card.viewJob')}
-              </Link>
-            </Button>
+            <div className="flex flex-col justify-between h-full gap-4 items-end">
+              <span className="text-xs text-muted-foreground">
+                {getRelativeTimeString(job.posted_at || job.createdAt)}
+              </span>
+              <Button asChild variant={hasApplied ? "outline" : "default"} className="rounded-[var(--radius)] mt-auto">
+                <Link href={`/jobs/${job.id}`}>
+                  {hasApplied ? t('card.viewApplication') : t('card.viewJob')}
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -119,24 +115,30 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
   
   // Grid view layout (default)
   return (
-    <div className="group cursor-pointer border-0 bg-white dark:bg-gray-950 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden rounded-2xl p-6 flex flex-col h-full">
+    <div className="group cursor-pointer border-0 bg-white dark:bg-gray-950 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden rounded-[var(--radius)] p-5 flex flex-col h-full">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <div className="relative flex-1 flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
-              <span className="text-sm font-semibold text-primary">
-                {job.company ? job.company.charAt(0).toUpperCase() : 'J'}
-              </span>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {getRelativeTimeString(job.posted_at || job.createdAt)}
-            </span>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge className="px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
+              {formatJobType(job.type)}
+            </Badge>
+            {job.city && (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                <MapPin className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{job.city.name}</span>
+              </div>
+            )}
           </div>
-          
+          <span className="text-xs text-muted-foreground flex-shrink-0">
+            {getRelativeTimeString(job.posted_at || job.createdAt)}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-end mb-3">
           {hasApplied && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-950/30 rounded-xl">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-xs font-medium text-green-700 dark:text-green-400">Applied</span>
             </div>
@@ -149,13 +151,6 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
           </Link>
         </h3>
         
-        {job.city && (
-          <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl w-fit">
-            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{job.city.name}</span>
-          </div>
-        )}
-        
         <div 
           className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3 leading-relaxed"
           dangerouslySetInnerHTML={{ 
@@ -164,18 +159,15 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
         />
         
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge className="px-2.5 py-1 rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
-            {formatJobType(job.type)}
-          </Badge>
           {job.is_featured && (
-            <Badge className="bg-yellow-500 text-yellow-50 px-2.5 py-1 rounded-lg border-0 text-xs">
+            <Badge className="bg-yellow-500 text-yellow-50 px-2.5 py-1 rounded-[var(--radius)] border-0 text-xs">
               <Star className="h-3 w-3 fill-current mr-1" />
               {t('card.featured')}
             </Badge>
           )}
         </div>
         
-        <Button asChild className="w-full mt-auto rounded-xl" variant={hasApplied ? "outline" : "default"}>
+        <Button asChild className="w-full mt-auto rounded-[var(--radius)]" variant={hasApplied ? "outline" : "default"}>
           <Link href={`/jobs/${job.id}`}>
             {hasApplied ? t('card.viewApplication') : t('card.viewDetails')}
           </Link>

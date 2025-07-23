@@ -33,9 +33,9 @@ export function TaskerQuickStats({ stats }: Omit<TaskerQuickStatsProps, 'applica
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       {/* Total Applications */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
             <Briefcase className="h-6 w-6 text-blue-600" />
           </div>
           <div className="text-right">
@@ -53,9 +53,9 @@ export function TaskerQuickStats({ stats }: Omit<TaskerQuickStatsProps, 'applica
       </div>
 
       {/* Shortlisted */}
-      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 rounded-2xl border border-yellow-200 dark:border-yellow-800 p-6 hover:shadow-lg hover:shadow-yellow-500/10 transition-all duration-300">
+      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 rounded-[calc(var(--radius)*1.5)] border border-yellow-200 dark:border-yellow-800 p-6 hover:shadow-lg hover:shadow-yellow-500/10 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-yellow-100 dark:bg-yellow-950/40 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-yellow-100 dark:bg-yellow-950/40 flex items-center justify-center">
             <Star className="h-6 w-6 text-yellow-600" />
           </div>
           <div className="text-right">
@@ -73,9 +73,9 @@ export function TaskerQuickStats({ stats }: Omit<TaskerQuickStatsProps, 'applica
       </div>
 
       {/* Active Applications */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
             <Clock className="h-6 w-6 text-orange-600" />
           </div>
           <div className="text-right">
@@ -93,9 +93,9 @@ export function TaskerQuickStats({ stats }: Omit<TaskerQuickStatsProps, 'applica
       </div>
 
       {/* Completed Jobs */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
             <CheckCircle className="h-6 w-6 text-green-600" />
           </div>
           <div className="text-right">
@@ -113,9 +113,9 @@ export function TaskerQuickStats({ stats }: Omit<TaskerQuickStatsProps, 'applica
       </div>
 
       {/* Total Earnings */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
             <DollarSign className="h-6 w-6 text-emerald-600" />
           </div>
           <div className="text-right">

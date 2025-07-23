@@ -36,6 +36,7 @@ type MessagingAction =
   | { type: 'SET_CONVERSATIONS'; payload: Conversation[] }
   | { type: 'ADD_CONVERSATION'; payload: Conversation }
   | { type: 'UPDATE_CONVERSATION'; payload: Conversation }
+  | { type: 'UPDATE_CONVERSATION_UNREAD'; payload: { conversationId: string; unreadCount: number } }
   | { type: 'SET_ACTIVE_CONVERSATION'; payload: Conversation | null }
   | { type: 'SET_MESSAGES'; payload: Message[] }
   | { type: 'PREPEND_MESSAGES'; payload: Message[] }
@@ -122,6 +123,8 @@ function messagingReducer(state: MessagingState, action: MessagingAction): Messa
       }
     
     case 'UPDATE_CONVERSATION':
+      console.log('UPDATE_CONVERSATION action:', action.payload)
+      console.log('UPDATE_CONVERSATION payload keys:', Object.keys(action.payload))
       return {
         ...state,
         conversations: state.conversations.map(conv =>
@@ -129,6 +132,19 @@ function messagingReducer(state: MessagingState, action: MessagingAction): Messa
         ),
         activeConversation: state.activeConversation?.id === action.payload.id 
           ? action.payload 
+          : state.activeConversation
+      }
+    
+    case 'UPDATE_CONVERSATION_UNREAD':
+      return {
+        ...state,
+        conversations: state.conversations.map(conv =>
+          conv.id === action.payload.conversationId 
+            ? { ...conv, unread_count: action.payload.unreadCount }
+            : conv
+        ),
+        activeConversation: state.activeConversation?.id === action.payload.conversationId 
+          ? { ...state.activeConversation, unread_count: action.payload.unreadCount }
           : state.activeConversation
       }
     
@@ -198,17 +214,32 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
 
     try {
+      console.log('Loading conversations for user:', user.id)
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
 
       const response = await fetch('/api/conversations')
       const result = await response.json()
       
+      console.log('Conversations API response:', result)
+      
       if (!result.success) {
         throw new Error(result.error)
       }
       
       const conversations = result.data
+      console.log('Loaded conversations:', conversations)
+      
+      // Debug logging for conversation structure
+      if (conversations && conversations.length > 0) {
+        console.log('First conversation structure:', conversations[0])
+        console.log('First conversation keys:', Object.keys(conversations[0]))
+        console.log('First conversation type:', conversations[0].type)
+        console.log('First conversation title:', conversations[0].title)
+        console.log('First conversation jobTitle:', conversations[0].jobTitle)
+        console.log('First conversation participants:', conversations[0].participants)
+      }
+      
       dispatch({ type: 'SET_CONVERSATIONS', payload: conversations })
     } catch (error) {
       console.error('Error loading conversations:', error)
@@ -276,6 +307,8 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
 
       const { conversation } = await response.json()
       
+      console.log('Job conversation created:', conversation)
+      
       // Add to conversations if it's new
       dispatch({ type: 'ADD_CONVERSATION', payload: conversation })
       
@@ -289,6 +322,14 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
 
   // Set active conversation
   const setActiveConversation = useCallback((conversation: Conversation | null) => {
+    console.log('Setting active conversation:', conversation)
+    if (conversation) {
+      console.log('Active conversation keys:', Object.keys(conversation))
+      console.log('Active conversation type:', conversation.type)
+      console.log('Active conversation title:', conversation.title)
+      console.log('Active conversation jobTitle:', conversation.jobTitle)
+      console.log('Active conversation participants:', conversation.participants)
+    }
     dispatch({ type: 'SET_ACTIVE_CONVERSATION', payload: conversation })
   }, [])
 
@@ -410,13 +451,13 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
     try {
       await ConversationService.markAsRead(conversationId, user.id)
       
-      // Update local unread count by updating the specific conversation
+      // Update local unread count by finding and updating the specific conversation
       dispatch({ 
-        type: 'UPDATE_CONVERSATION', 
+        type: 'UPDATE_CONVERSATION_UNREAD', 
         payload: { 
-          id: conversationId, 
-          unread_count: 0 
-        } as Conversation
+          conversationId, 
+          unreadCount: 0 
+        }
       })
     } catch (error) {
       console.error('Error marking conversation as read:', error)

@@ -63,13 +63,6 @@
       "findWorkers": "Find Workers",
       "free": "Free"
     },
-    "company": {
-      "title": "Company",
-      "about": "About",
-      "careers": "Careers",
-      "contact": "Contact",
-      "privacy": "Privacy"
-    },
     "services": {
       "title": "Services",
       "jobPosting": "Job Posting",

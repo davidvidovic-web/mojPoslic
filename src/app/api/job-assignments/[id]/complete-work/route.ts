@@ -65,9 +65,7 @@ export async function POST(
     }
 
     // Check if work is already completed or confirmed
-    // @ts-expect-error - New enum values not yet reflected in types
     if (jobAssignment.contractStatus === 'WORK_COMPLETED' || 
-        // @ts-expect-error
         jobAssignment.contractStatus === 'CONFIRMED_COMPLETED' || 
         jobAssignment.contractStatus === 'COMPLETED') {
       return NextResponse.json({ error: 'Work has already been marked as completed' }, { status: 400 })
@@ -77,11 +75,8 @@ export async function POST(
     const updatedAssignment = await prisma.jobAssignment.update({
       where: { id },
       data: {
-        // @ts-expect-error - New enum values and fields not yet reflected in types
         contractStatus: 'WORK_COMPLETED',
-        // @ts-expect-error
         workCompletedAt: new Date(),
-        // @ts-expect-error
         completionNotes: completionNotes || null
       },
       include: {

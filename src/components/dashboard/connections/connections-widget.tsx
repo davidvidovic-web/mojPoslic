@@ -54,9 +54,9 @@ export function ConnectionsWidget() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+      <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-[calc(var(--radius)*1.5)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
             <Zap className="h-5 w-5 text-yellow-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -71,9 +71,9 @@ export function ConnectionsWidget() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+    <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-2xl bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-[calc(var(--radius)*1.5)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
           <Zap className="h-5 w-5 text-yellow-600" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

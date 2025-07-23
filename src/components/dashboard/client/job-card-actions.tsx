@@ -6,7 +6,7 @@ import { Trash2, Star, Edit } from 'lucide-react'
 interface JobCardActionsProps {
   onDelete: () => void
   onEdit?: () => void
-  onFeature?: () => void
+  onFeature?: (isFeatured: boolean) => void
   isFeatured?: boolean
 }
 
@@ -36,7 +36,7 @@ export function JobCardActions({
         <Button 
           variant={isFeatured ? "default" : "outline"}
           size="sm"
-          onClick={onFeature}
+          onClick={() => onFeature(!isFeatured)}
           title={isFeatured ? "Remove from featured" : "Feature this job"}
           className="h-8 w-8 p-0"
         >

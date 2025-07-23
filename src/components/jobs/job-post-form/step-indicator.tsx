@@ -112,7 +112,7 @@ export function StepIndicator({ currentStep, stepValidations = {}, onStepClick, 
               onClick={() => isClickable && onStepClick?.(step.id)}
               disabled={!isClickable}
               className={cn(
-                "flex flex-col items-center text-center space-y-2 flex-1 py-3 px-2 rounded-lg transition-colors min-h-[80px]",
+                "flex flex-col items-center text-center space-y-2 flex-1 py-3 px-2 rounded-[var(--radius)] transition-colors min-h-[80px]",
                 isCurrent && "bg-primary/10",
                 hasValidationIssue && "bg-destructive/5",
                 isClickable ? "hover:bg-secondary cursor-pointer" : "cursor-not-allowed opacity-50"
@@ -152,7 +152,7 @@ export function StepIndicator({ currentStep, stepValidations = {}, onStepClick, 
 
       {/* Mobile Current Step Display */}
       <div className="md:hidden mb-4">
-        <div className="flex items-center space-x-3 p-3 bg-secondary/50 rounded-lg">
+        <div className="flex items-center space-x-3 p-3 bg-secondary/50 rounded-[var(--radius)]">
           <div className="flex-shrink-0">{getStepIcon(JOB_FORM_STEPS[currentIndex].icon)}</div>
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm truncate">{JOB_FORM_STEPS[currentIndex].title}</div>

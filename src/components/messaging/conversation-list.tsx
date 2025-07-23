@@ -6,8 +6,7 @@ import { bs, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { Conversation } from '@/types/messaging';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Avatar } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Pin, Archive, Users, Briefcase, Paperclip, ImageIcon } from 'lucide-react';
@@ -88,27 +87,26 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   const getConversationAvatar = () => {
     if (conversation.type === 'job_related') {
       return (
-        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
-          <Briefcase className="w-5 h-5 text-blue-600" />
+        <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+          <Briefcase className="w-6 h-6 text-white" />
         </div>
       );
     }
     
     if (conversation.type === 'group') {
       return (
-        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-          <Users className="w-5 h-5 text-green-600" />
+        <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+          <Users className="w-6 h-6 text-white" />
         </div>
       );
     }
     
     // For direct conversations, show the other participant's avatar
-    // Add safety check for participants
     if (!conversation.participants || conversation.participants.length === 0) {
       return (
-        <Avatar className="w-10 h-10">
-          <AvatarFallback>?</AvatarFallback>
-        </Avatar>
+        <div className="w-14 h-14 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+          <span className="text-white font-semibold text-lg">?</span>
+        </div>
       )
     }
     
@@ -117,16 +115,20 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     );
     
     return (
-      <Avatar className="w-10 h-10">
-        {otherParticipant?.user.avatar_url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={otherParticipant.user.avatar_url} alt={otherParticipant.user.name} />
-        ) : (
-          <div className="w-full h-full bg-muted dark:bg-muted flex items-center justify-center text-muted-foreground dark:text-muted-foreground text-sm">
-            {otherParticipant?.user.name?.charAt(0).toUpperCase() || '?'}
-          </div>
-        )}
-      </Avatar>
+      <div className="relative">
+        <Avatar className="w-14 h-14">
+          {otherParticipant?.user.avatar_url ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={otherParticipant.user.avatar_url} alt={otherParticipant.user.name} className="w-full h-full object-cover rounded-full" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
+              {otherParticipant?.user.name?.charAt(0).toUpperCase() || '?'}
+            </div>
+          )}
+        </Avatar>
+        {/* Online indicator */}
+        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full"></div>
+      </div>
     );
   };
 
@@ -170,16 +172,16 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-accent dark:hover:bg-accent border-l-2",
-        isSelected ? "bg-accent dark:bg-accent border-l-primary" : "border-l-transparent"
+        "flex items-center gap-4 p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800/50",
+        isSelected ? "bg-blue-50 dark:bg-blue-950/20 border-r-4 border-blue-500" : ""
       )}
       onClick={onClick}
     >
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         {getConversationAvatar()}
         {conversation.archived && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-muted-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center">
-            <Archive className="w-2 h-2 text-white" />
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-600 rounded-full flex items-center justify-center">
+            <Archive className="w-3 h-3 text-white" />
           </div>
         )}
       </div>
@@ -187,35 +189,37 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <h3 className={cn(
-            "font-medium text-sm truncate",
+            "font-medium text-base truncate text-gray-900 dark:text-gray-100",
             conversation.unread_count > 0 ? "font-semibold" : ""
           )}>
             {getConversationTitle()}
           </h3>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {conversation.last_message_at && (
-              <span className="text-xs text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {formatLastMessageTime(conversation.last_message_at)}
               </span>
             )}
             {conversation.type === 'job_related' && (
-              <Pin className="w-3 h-3 text-blue-500" />
+              <Pin className="w-4 h-4 text-blue-500" />
             )}
           </div>
         </div>
         
         <div className="flex items-center justify-between">
           <p className={cn(
-            "text-xs text-gray-600 truncate",
-            conversation.unread_count > 0 ? "font-medium text-gray-900" : ""
+            "text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]",
+            conversation.unread_count > 0 ? "font-medium text-gray-900 dark:text-gray-100" : ""
           )}>
             {getLastMessagePreview()}
           </p>
           
           {conversation.unread_count > 0 && (
-            <Badge variant="destructive" className="text-xs px-1.5 py-0.5 min-w-[18px] h-5">
-              {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
-            </Badge>
+            <div className="flex-shrink-0 ml-2">
+              <div className="bg-blue-500 text-white text-xs font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -224,14 +228,14 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 };
 
 const ConversationItemSkeleton: React.FC = () => (
-  <div className="flex items-center gap-3 p-3">
-    <Skeleton className="w-10 h-10 rounded-full" />
+  <div className="flex items-center gap-4 p-4">
+    <Skeleton className="w-14 h-14 rounded-full" />
     <div className="flex-1 space-y-2">
       <div className="flex items-center justify-between">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-3 w-12" />
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-4 w-16" />
       </div>
-      <Skeleton className="h-3 w-32" />
+      <Skeleton className="h-4 w-40" />
     </div>
   </div>
 );

@@ -1,10 +1,7 @@
 {
   "main": {
     "home": "Home",
-    "jobs": "Jobs",
     "dashboard": "Dashboard",
-    "messages": "Messages",
-    "connections": "Connections",
     "settings": "Settings",
     "profile": "Profile",
     "applications": "Applications",
@@ -21,8 +18,7 @@
   "dashboard": {
     "overview": "Overview",
     "stats": "Statistics",
-    "recent": "Recent Activity",
-    "quickActions": "Quick Actions"
+    "recent": "Recent Activity"
   },
   "breadcrumb": {
     "home": "Home",

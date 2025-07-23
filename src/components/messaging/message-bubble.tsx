@@ -104,7 +104,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       return (
         <div
           key={attachment.id}
-          className="relative max-w-xs cursor-pointer rounded-lg overflow-hidden"
+          className="relative max-w-xs cursor-pointer rounded-[var(--radius)] overflow-hidden"
           onClick={() => onAttachmentClick?.(attachment)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -125,7 +125,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       <div
         key={attachment.id}
         className={cn(
-          "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-accent dark:hover:bg-accent",
+          "flex items-center gap-3 p-3 rounded-[var(--radius)] border cursor-pointer transition-colors hover:bg-accent dark:hover:bg-accent",
           isOwn ? "bg-background dark:bg-background" : "bg-muted dark:bg-muted"
         )}
         onClick={() => onAttachmentClick?.(attachment)}
@@ -178,7 +178,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         
         <div
           className={cn(
-            "rounded-lg px-3 py-2 max-w-xs break-words",
+            "rounded-[var(--radius)] px-3 py-2 max-w-xs break-words",
             isOwn
               ? "bg-primary dark:bg-primary text-primary-foreground dark:text-primary-foreground"
               : "bg-muted dark:bg-muted text-foreground dark:text-foreground"

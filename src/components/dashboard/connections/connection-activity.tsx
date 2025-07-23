@@ -62,7 +62,7 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
             {recentHistory.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-muted/50"
               >
                 <div className="flex-1">
                   <p className="text-sm font-medium">{entry.actionLabel}</p>

@@ -65,6 +65,7 @@ export function TaskerApplicationManager({
   const tErrors = useTranslations('errors')
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'company'>('newest')
@@ -77,21 +78,26 @@ export function TaskerApplicationManager({
 
       try {
         setLoading(true)
+        setError(null)
         const response = await fetch('/api/tasker/applications')
         
         if (!response.ok) {
-          throw new Error('Failed to fetch applications')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
         }
 
         const data = await response.json()
         
+        // Ensure data is an array, even if empty
+        const applicationsArray = Array.isArray(data) ? data : []
+        
         // Filter applications based on props
         const filteredApplications = showOnlyHistorical 
-          ? data.filter((app: JobApplication) => 
+          ? applicationsArray.filter((app: JobApplication) => 
               ['REJECTED', 'WITHDRAWN'].includes(app.status) || 
               (app.status === 'SELECTED' && hasCompletedWork(app))
             )
-          : data.filter((app: JobApplication) => 
+          : applicationsArray.filter((app: JobApplication) => 
               ['PENDING', 'REVIEWED', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED'].includes(app.status) &&
               !hasCompletedWork(app)
             )
@@ -99,6 +105,7 @@ export function TaskerApplicationManager({
         setApplications(filteredApplications)
       } catch (error) {
         console.error('Error fetching applications:', error)
+        setError('Failed to load applications')
         toast.error(tErrors('failedToLoad.applications'))
       } finally {
         setLoading(false)
@@ -203,6 +210,28 @@ export function TaskerApplicationManager({
       return `From ${job.salaryMin.toLocaleString()} BAM`
     }
     return 'Salary not specified'
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="text-center py-16 px-6">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto mb-4">
+          <XCircle className="h-8 w-8 text-red-500" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Error Loading Applications</h3>
+        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+          {error}
+        </p>
+        <Button 
+          variant="outline"
+          className="rounded-xl" 
+          onClick={() => window.location.reload()}
+        >
+          Try Again
+        </Button>
+      </div>
+    )
   }
 
   if (loading) {

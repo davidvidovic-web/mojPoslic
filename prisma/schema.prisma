@@ -8,66 +8,65 @@ datasource db {
 }
 
 model User {
-  id                          String              @id @default(cuid())
-  email                       String              @unique
-  username                    String?             @unique
+  id                          String                  @id @default(cuid())
+  email                       String                  @unique
+  username                    String?                 @unique
   name                        String
   password                    String?
   role                        UserRole?
-  emailVerified               Boolean             @default(false) @map("email_verified")
-  profileSetupCompleted       Boolean             @default(false) @map("profile_setup_completed")
-  avatarUrl                   String?             @map("avatar_url")
-  companyName                 String?             @map("company_name")
+  emailVerified               Boolean                 @default(false) @map("email_verified")
+  profileSetupCompleted       Boolean                 @default(false) @map("profile_setup_completed")
+  avatarUrl                   String?                 @map("avatar_url")
+  companyName                 String?                 @map("company_name")
   position                    String?
   bio                         String?
   skills                      String?
   experience                  String?
-  preferredJobTypes           String              @default("") @map("preferred_job_types")
+  preferredJobTypes           String                  @default("") @map("preferred_job_types")
   phone                       String?
   website                     String?
   location                    String?
-  connections                 Int                 @default(10)
-  connectionsLastRefresh      DateTime?           @map("connections_last_refresh")
-  createdAt                   DateTime            @default(now()) @map("created_at")
-  updatedAt                   DateTime            @updatedAt @map("updated_at")
-  preferredLanguage           String?             @default("bs") @map("preferred_language")
+  connections                 Int                     @default(10)
+  connectionsLastRefresh      DateTime?               @map("connections_last_refresh")
+  createdAt                   DateTime                @default(now()) @map("created_at")
+  updatedAt                   DateTime                @updatedAt @map("updated_at")
+  preferredLanguage           String?                 @default("bs") @map("preferred_language")
+  deletionRequest             AccountDeletionRequest?
   accounts                    Account[]
   applications                Application[]
   connectionHistory           ConnectionHistory[]
-  conversationsAsParticipant1 Conversation[]      @relation("ConversationsAsParticipant1")
-  conversationsAsParticipant2 Conversation[]      @relation("ConversationsAsParticipant2")
-  postedJobs                  JobListing[]        @relation("JobPoster")
+  conversationsAsParticipant1 Conversation[]          @relation("ConversationsAsParticipant1")
+  conversationsAsParticipant2 Conversation[]          @relation("ConversationsAsParticipant2")
+  postedJobs                  JobListing[]            @relation("JobPoster")
   jobViews                    JobView[]
-  messagesSent                Message[]           @relation("MessagesSent")
+  messagesSent                Message[]               @relation("MessagesSent")
   notifications               Notification[]
-  reviewsReceived             Review[]            @relation("ReviewsReceived")
-  reviewsGiven                Review[]            @relation("ReviewsGiven")
+  reviewsReceived             Review[]                @relation("ReviewsReceived")
+  reviewsGiven                Review[]                @relation("ReviewsGiven")
   savedJobs                   SavedJob[]
   sessions                    Session[]
   stripeTransactions          StripeTransaction[]
-  deletionRequest             AccountDeletionRequest?
   privacySettings             UserPrivacySettings?
 
   @@map("users")
 }
 
 model UserPrivacySettings {
-  id                    String  @id @default(cuid())
-  userId                String  @unique @map("user_id")
-  profileVisibility     String  @default("public") @map("profile_visibility") // public, verified_only, private
-  showSkills            Boolean @default(true) @map("show_skills")
-  showExperience        Boolean @default(true) @map("show_experience")
-  showContactInfo       Boolean @default(false) @map("show_contact_info")
-  showLocation          Boolean @default(true) @map("show_location")
-  applicationPrivacy    String  @default("open") @map("application_privacy") // open, selective, private
-  allowDirectMessages   Boolean @default(true) @map("allow_direct_messages")
-  showOnlineStatus      Boolean @default(true) @map("show_online_status")
-  dataSharing           Boolean @default(false) @map("data_sharing")
-  analyticsOptOut       Boolean @default(false) @map("analytics_opt_out")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  
-  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String   @id @default(cuid())
+  userId              String   @unique @map("user_id")
+  profileVisibility   String   @default("public") @map("profile_visibility")
+  showSkills          Boolean  @default(true) @map("show_skills")
+  showExperience      Boolean  @default(true) @map("show_experience")
+  showContactInfo     Boolean  @default(false) @map("show_contact_info")
+  showLocation        Boolean  @default(true) @map("show_location")
+  applicationPrivacy  String   @default("open") @map("application_privacy")
+  allowDirectMessages Boolean  @default(true) @map("allow_direct_messages")
+  showOnlineStatus    Boolean  @default(true) @map("show_online_status")
+  dataSharing         Boolean  @default(false) @map("data_sharing")
+  analyticsOptOut     Boolean  @default(false) @map("analytics_opt_out")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_privacy_settings")
 }
@@ -111,12 +110,12 @@ model VerificationToken {
 }
 
 model PendingRegistration {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  hashedPassword  String   @map("hashed_password")
-  verificationCode String  @map("verification_code")
-  expires         DateTime
-  createdAt       DateTime @default(now()) @map("created_at")
+  id               String   @id @default(cuid())
+  email            String   @unique
+  hashedPassword   String   @map("hashed_password")
+  verificationCode String   @map("verification_code")
+  expires          DateTime
+  createdAt        DateTime @default(now()) @map("created_at")
 
   @@map("pending_registrations")
 }
@@ -136,17 +135,17 @@ model AccountDeletionRequest {
 }
 
 model City {
-  id          String       @id @default(cuid())
-  key         String       @unique
-  nameBS      String       @map("name_bs")
-  nameEN      String       @map("name_en")
-  latitude    Float?       @map("latitude")
-  longitude   Float?       @map("longitude")
-  isSpecial   Boolean      @default(false) @map("is_special")
-  sortOrder   Int          @map("sort_order")
-  isActive    Boolean      @default(true) @map("is_active")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  key       String   @unique
+  nameBS    String   @map("name_bs")
+  nameEN    String   @map("name_en")
+  latitude  Float?   @map("latitude")
+  longitude Float?   @map("longitude")
+  isSpecial Boolean  @default(false) @map("is_special")
+  sortOrder Int      @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("cities")
 }
@@ -228,13 +227,13 @@ model JobAssignment {
   contractStatus        ContractStatus @default(PENDING)
   assignedAt            DateTime       @default(now()) @map("assigned_at")
   startDate             DateTime?      @map("start_date")
-  workCompletedAt       DateTime?      @map("work_completed_at")      // When tasker marked as finished
-  clientConfirmedAt     DateTime?      @map("client_confirmed_at")    // When client confirmed completion
-  completedAt           DateTime?      @map("completed_at")           // When both agreed it's finished
+  workCompletedAt       DateTime?      @map("work_completed_at")
+  clientConfirmedAt     DateTime?      @map("client_confirmed_at")
+  completedAt           DateTime?      @map("completed_at")
   agreedSalary          Int?           @map("agreed_salary")
   notes                 String?
-  completionNotes       String?        @map("completion_notes")       // Tasker's notes when marking complete
-  clientNotes           String?        @map("client_notes")           // Client's notes when confirming
+  completionNotes       String?        @map("completion_notes")
+  clientNotes           String?        @map("client_notes")
   createdAt             DateTime       @default(now()) @map("created_at")
   updatedAt             DateTime       @updatedAt @map("updated_at")
   job                   JobListing     @relation(fields: [jobId], references: [id])
@@ -256,21 +255,21 @@ model SavedJob {
 }
 
 model Category {
-  id          String       @id @default(cuid())
-  key         String       @unique
-  nameBS      String       @map("name_bs")
-  nameEN      String       @map("name_en")
+  id          String     @id @default(cuid())
+  key         String     @unique
+  nameBS      String     @map("name_bs")
+  nameEN      String     @map("name_en")
   description String?
   icon        String?
   color       String?
-  parentId    String?      @map("parent_id")
-  sortOrder   Int          @default(0) @map("sort_order")
-  isActive    Boolean      @default(true) @map("is_active")
-  isPopular   Boolean      @default(false) @map("is_popular")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
-  parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[]   @relation("CategoryHierarchy")
+  parentId    String?    @map("parent_id")
+  sortOrder   Int        @default(0) @map("sort_order")
+  isActive    Boolean    @default(true) @map("is_active")
+  isPopular   Boolean    @default(false) @map("is_popular")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
 
   @@map("categories")
 }
@@ -425,9 +424,9 @@ enum ContractStatus {
   PENDING
   ACCEPTED
   DECLINED
-  WORK_COMPLETED     // Tasker marked work as finished
-  CONFIRMED_COMPLETED // Client confirmed the work is finished
-  COMPLETED          // Both parties agreed, job fully completed
+  WORK_COMPLETED
+  CONFIRMED_COMPLETED
+  COMPLETED
 }
 
 enum ConnectionAction {

@@ -18,7 +18,7 @@ const getFullNameDisplay = (name?: string | null): string => {
 
 interface UnifiedDashboardHeaderProps {
   userName?: string | null
-  userRole: 'tasker' | 'client' | 'company' | 'admin'
+  userRole: 'tasker' | 'client' | 'admin'
   customTagline?: string
   customStatusMessage?: string
   variant?: 'default' | 'admin'
@@ -98,27 +98,6 @@ export function UnifiedDashboardHeader({
           ),
           statusText: 'Quick Post & Hire'
         }
-      case 'company':
-        return {
-          gradientFrom: 'from-purple-50',
-          gradientTo: 'to-violet-50',
-          gradientFromDark: 'dark:from-purple-950/30',
-          gradientToDark: 'dark:to-violet-950/30',
-          borderColor: 'border-purple-100',
-          borderColorDark: 'dark:border-purple-900/30',
-          textColor: 'text-purple-600',
-          textColorDark: 'dark:text-purple-300',
-          nameColor: 'text-purple-900',
-          nameColorDark: 'dark:text-purple-100',
-          taglineKey: 'taglines.company',
-          statusKey: 'status.companyActive',
-          statusIcon: (
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          ),
-          statusText: 'Team Management & Growth'
-        }
       case 'admin':
         return {
           gradientFrom: 'from-red-50',
@@ -166,7 +145,7 @@ export function UnifiedDashboardHeader({
   if (variant === 'admin') {
     return (
       <div className="mb-6 sm:mb-8">
-        <div className={`bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo} ${config.gradientFromDark} ${config.gradientToDark} rounded-lg p-4 sm:p-6 border ${config.borderColor} ${config.borderColorDark}`}>
+        <div className={`bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo} ${config.gradientFromDark} ${config.gradientToDark} rounded-[var(--radius)] p-4 sm:p-6 border ${config.borderColor} ${config.borderColorDark}`}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex-1">
               <div className="space-y-2">
@@ -196,7 +175,7 @@ export function UnifiedDashboardHeader({
   // Default variant with full features
   return (
     <div className="mb-8">
-      <div className={`bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo} ${config.gradientFromDark} ${config.gradientToDark} rounded-lg p-6 border ${config.borderColor} ${config.borderColorDark}`}>
+      <div className={`bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo} ${config.gradientFromDark} ${config.gradientToDark} rounded-[var(--radius)] p-6 border ${config.borderColor} ${config.borderColorDark}`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
           <div className="flex-1">
             <div className="space-y-2">

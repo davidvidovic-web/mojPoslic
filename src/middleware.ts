@@ -48,11 +48,6 @@ export default async function middleware(request: NextRequest) {
     '/profile-setup'
   ];
   
-  // Define protected paths that require full authentication + role + profile setup
-  const protectedPaths = [
-    '/dashboard'
-  ];
-  
   // Skip auth checks for public paths
   if (publicPaths.includes(finalPath)) {
     return cleanedResponse;
@@ -80,8 +75,12 @@ export default async function middleware(request: NextRequest) {
     const isCriticalPath = finalPath === '/dashboard' || finalPath.startsWith('/dashboard/') ||
                           finalPath === '/profile-setup' || finalPath === '/role-selection';
     
+    // Check if token is potentially stale (older than 1 minute for critical paths)
+    const tokenAge = token?.lastUpdated ? Date.now() - (token.lastUpdated as number) : Infinity;
+    const isTokenStale = tokenAge > 60 * 1000; // 1 minute for critical paths
+    
     const needsFreshData = token?.id && (
-      isCriticalPath || // Always check for critical paths
+      (isCriticalPath && isTokenStale) || // Check critical paths with stale tokens
       (!token.role && (finalPath === '/role-selection' || finalPath === '/dashboard' || finalPath.startsWith('/dashboard/'))) ||
       (token.role && token.profileSetupCompleted === undefined)
     );
@@ -101,14 +100,15 @@ export default async function middleware(request: NextRequest) {
           userRole = dbUser.role;
           profileSetupCompleted = dbUser.profileSetupCompleted;
           
-          // Log when we get fresh data that differs from token
+          // Log when we get fresh data that differs from token (only in development)
           if (process.env.NODE_ENV === 'development') {
             if (token.role !== dbUser.role || token.profileSetupCompleted !== dbUser.profileSetupCompleted) {
               console.log('Middleware: Fresh data differs from token:', {
                 tokenRole: token.role,
                 dbRole: dbUser.role,
                 tokenProfileComplete: token.profileSetupCompleted,
-                dbProfileComplete: dbUser.profileSetupCompleted
+                dbProfileComplete: dbUser.profileSetupCompleted,
+                tokenAge: Math.round(tokenAge / 1000) + 's'
               });
             }
           }
@@ -187,13 +187,23 @@ export default async function middleware(request: NextRequest) {
           console.log('Debug - userRole:', userRole, 'profileSetupCompleted:', profileSetupCompleted);
         }
         
-        // Check for potential redirect loop - if user was just on profile-setup, wait a bit
+        // Check for potential redirect loop - if user was just on profile-setup
         const referer = request.headers.get('referer');
         if (referer && referer.includes('/profile-setup')) {
-          // Add a small delay cookie to prevent immediate redirect loops
+          // Check if we have a recent redirect cookie to prevent loops
+          const recentRedirect = request.cookies.get('profile-setup-redirect');
+          if (recentRedirect) {
+            // Allow access to prevent infinite loop, but log the issue
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Dashboard access: Preventing redirect loop, allowing access');
+            }
+            return cleanedResponse;
+          }
+          
+          // Set a temporary cookie and redirect
           const response = NextResponse.redirect(new URL('/profile-setup', request.url));
-          response.cookies.set('profile-setup-delay', 'true', { 
-            maxAge: 10, // 10 seconds
+          response.cookies.set('profile-setup-redirect', 'true', { 
+            maxAge: 30, // 30 seconds
             httpOnly: true 
           });
           return response;
@@ -206,7 +216,11 @@ export default async function middleware(request: NextRequest) {
       if (process.env.NODE_ENV === 'development') {
         console.log('Dashboard access granted: User fully set up');
       }
-      return cleanedResponse;
+      
+      // Clear any redirect prevention cookies on successful access
+      const response = cleanedResponse;
+      response.cookies.delete('profile-setup-redirect');
+      return response;
     }
     
     // If user has completed everything (role + profile), redirect them away from onboarding pages

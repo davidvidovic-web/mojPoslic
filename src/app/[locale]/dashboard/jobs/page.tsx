@@ -49,7 +49,7 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout activeTab="jobs" title={t('title')} subtitle={t('loading')}>
+      <DashboardLayout title={t('title')} subtitle={t('loading')}>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -62,7 +62,6 @@ export default function JobsPage() {
 
   return (
     <DashboardLayout 
-      activeTab="jobs" 
       title={t('title')} 
       subtitle={t('subtitle')}
       userRole={user?.role}
@@ -70,17 +69,17 @@ export default function JobsPage() {
       <div className="space-y-8 max-w-6xl">
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Active Applications</TabsTrigger>
-            <TabsTrigger value="history">Application History</TabsTrigger>
-            <TabsTrigger value="discover">Discover Jobs</TabsTrigger>
+            <TabsTrigger value="active">{t('tabs.active')}</TabsTrigger>
+            <TabsTrigger value="history">{t('tabs.history')}</TabsTrigger>
+            <TabsTrigger value="discover">{t('tabs.discover')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Active Applications</CardTitle>
+                <CardTitle>{t('activeApplications.title')}</CardTitle>
                 <CardDescription>
-                  Track your ongoing job applications and manage active work assignments
+                  {t('activeApplications.description')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -96,9 +95,9 @@ export default function JobsPage() {
           <TabsContent value="history" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Application History</CardTitle>
+                <CardTitle>{t('applicationHistory.title')}</CardTitle>
                 <CardDescription>
-                  View your past applications, completed work, and rejected applications
+                  {t('applicationHistory.description')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -115,9 +114,9 @@ export default function JobsPage() {
             <div className="grid gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Saved Jobs</CardTitle>
+                  <CardTitle>{t('savedJobs.title')}</CardTitle>
                   <CardDescription>
-                    Jobs you&apos;ve bookmarked for later application
+                    {t('savedJobs.description')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -127,9 +126,9 @@ export default function JobsPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recommended for You</CardTitle>
+                  <CardTitle>{t('recommendedJobs.title')}</CardTitle>
                   <CardDescription>
-                    Jobs matched to your skills and preferences
+                    {t('recommendedJobs.description')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -65,7 +65,6 @@ export async function POST(
     }
 
     // Check if work has been marked as completed by tasker
-    // @ts-ignore - New enum values not yet reflected in types
     if (jobAssignment.contractStatus !== 'WORK_COMPLETED') {
       return NextResponse.json({ error: 'Work must be marked as completed by the tasker first' }, { status: 400 })
     }
@@ -74,13 +73,9 @@ export async function POST(
     const updatedAssignment = await prisma.jobAssignment.update({
       where: { id },
       data: {
-        // @ts-ignore - New enum values and fields not yet reflected in types
         contractStatus: 'COMPLETED',
-        // @ts-ignore
         clientConfirmedAt: new Date(),
-        // @ts-ignore
         completedAt: new Date(),
-        // @ts-ignore
         clientNotes: clientNotes || null
       },
       include: {

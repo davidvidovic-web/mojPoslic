@@ -103,9 +103,9 @@ export class MessagingIntegrationService {
       
       await MessageService.sendMessage(
         {
-          conversation_id: conversation.id,
+          conversationId: conversation.id,
           content: welcomeMessage,
-          message_type: 'system'
+          messageType: 'system'
         },
         clientId // Sent by client
       )
@@ -159,12 +159,12 @@ export class MessagingIntegrationService {
       // Send message using Supabase real-time messaging
       const message = await MessageService.sendMessage(
         {
-          conversation_id: conversationId,
+          conversationId: conversationId,
           content,
-          message_type: messageType,
-          attachment_url: attachmentUrl,
-          attachment_filename: attachmentFilename,
-          attachment_size: attachmentSize
+          messageType: messageType,
+          attachmentUrl: attachmentUrl,
+          attachmentFilename: attachmentFilename,
+          attachmentSize: attachmentSize
         },
         senderId
       )
@@ -207,7 +207,7 @@ export class MessagingIntegrationService {
   static async getFilteredConversations(userId: string) {
     try {
       // Get all conversations for user using Supabase
-      const conversations = await ConversationService.getUserConversations(userId)
+      const conversations = await ConversationService.getConversations()
 
       // Filter based on privacy settings
       const filteredConversations = await Promise.all(
@@ -303,9 +303,9 @@ export class MessagingIntegrationService {
         if (statusMessage) {
           await MessageService.sendMessage(
             {
-              conversation_id: conversation.id,
+              conversationId: conversation.id,
               content: statusMessage,
-              message_type: 'system'
+              messageType: 'system'
             },
             clientId
           )

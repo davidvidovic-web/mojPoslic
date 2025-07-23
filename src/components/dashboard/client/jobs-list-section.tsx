@@ -25,10 +25,10 @@ export function JobsListSection({
     return (
       <div className="space-y-6">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 animate-pulse">
+          <div key={i} className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 animate-pulse">
             <div className="space-y-4">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+                <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -46,7 +46,7 @@ export function JobsListSection({
   if (jobs.length === 0) {
     return (
       <div className="text-center py-16 px-6">
-        <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 rounded-lg bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center mx-auto mb-4">
           <Briefcase className="h-8 w-8 text-gray-400" />
         </div>
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No jobs posted yet</h3>

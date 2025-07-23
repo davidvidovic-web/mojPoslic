@@ -6,25 +6,6 @@ import type {
 } from '@/types/messaging'
 
 // Internal types for database responses
-type ConversationWithParticipants = {
-  id: string
-  type: string
-  title: string | null
-  job_id: string | null
-  created_at: string
-  updated_at: string
-  last_message_at: string | null
-  archived: boolean
-  conversation_participants: Array<{
-    id: string
-    user_id: string
-    role: string
-    last_read_at: string
-    joined_at: string
-    left_at: string | null
-  }>
-}
-
 type ParticipantWithUser = {
   id: string
   conversation_id: string

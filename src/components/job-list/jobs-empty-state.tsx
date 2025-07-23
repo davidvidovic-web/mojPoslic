@@ -19,7 +19,7 @@ export function JobsEmptyState({
   const { clearJobFilters } = useFilterStore()
 
   return (
-    <div className="text-center py-12 bg-muted/30 rounded-xl border border-border/40">
+    <div className="text-center py-12 bg-muted/30 rounded-[calc(var(--radius)*1.5)] border border-border/40">
       <div className="text-muted-foreground">
         <p className="text-lg font-medium">{message || t('noJobsFound')}</p>
         <p className="mt-1">{subMessage || t('tryAdjustingFilters')}</p>

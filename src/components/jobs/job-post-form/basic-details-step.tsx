@@ -198,7 +198,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
         )}
 
         {selectedParentCategory && availableSubcategories.length === 0 && (
-          <div className="p-3 bg-secondary/50 rounded-lg">
+          <div className="p-3 bg-secondary/50 rounded-[var(--radius)]">
             <p className="text-sm text-muted-foreground">
               {t('messages.categorySelectedNoSubcategories')}
             </p>

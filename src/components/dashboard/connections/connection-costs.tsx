@@ -15,7 +15,7 @@ export function ConnectionCosts({ userRole = 'tasker' }: ConnectionCostsProps) {
   const renderTaskerCosts = () => (
     <>
       {/* Info message for taskers */}
-      <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+      <div className="p-3 rounded-[var(--radius)] bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
         <p className="text-sm text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
           <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
           {t('taskerInfo')}
@@ -34,7 +34,7 @@ export function ConnectionCosts({ userRole = 'tasker' }: ConnectionCostsProps) {
   const renderClientCosts = () => (
     <>
       {/* Info message for clients */}
-      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+      <div className="p-3 rounded-[var(--radius)] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
         <p className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
           <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
           {t('clientInfo')}
@@ -53,7 +53,7 @@ export function ConnectionCosts({ userRole = 'tasker' }: ConnectionCostsProps) {
   const renderCompanyCosts = () => (
     <>
       {/* Info message for companies */}
-      <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+      <div className="p-3 rounded-[var(--radius)] bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
         <p className="text-sm text-purple-700 dark:text-purple-300 flex items-start gap-2">
           <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
           {t('companyInfo')}

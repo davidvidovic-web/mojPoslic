@@ -6,13 +6,13 @@ import { useTranslations } from 'next-intl'
 import { Job } from '@/types/job'
 import { TaskerApplicationManager } from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
-import { TaskerQuickActions } from './tasker/tasker-quick-actions'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { MessagingDialog } from './messaging/messaging-dialog'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { Star, Briefcase, History } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -153,10 +153,10 @@ export function TaskerDashboard() {
       sidebar={
         <div className="space-y-6">
           {/* Messages Section - Prominent and First */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-[calc(var(--radius)*1.5)] p-6 border border-green-200 dark:border-green-800">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-green-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
@@ -170,11 +170,6 @@ export function TaskerDashboard() {
             </p>
           </div>
           
-          {/* Quick Actions for desktop */}
-          <div className="hidden lg:block">
-            <TaskerQuickActions />
-          </div>
-          
           {/* Connections Widget */}
           <ConnectionsWidget />
         </div>
@@ -186,12 +181,8 @@ export function TaskerDashboard() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Mobile: Quick Actions first, then content */}
+        {/* Mobile: Content */}
         <div className="lg:col-span-2">
-          {/* Quick Actions - prioritized for mobile */}
-          <div className="block lg:hidden mb-8">
-            <TaskerQuickActions />
-          </div>
           
           {/* Active Jobs - Jobs in progress that can be marked complete */}
           {activeJobs.length > 0 && (
@@ -247,11 +238,15 @@ export function TaskerDashboard() {
           
           {/* Applied Jobs - first/second on mobile */}
           <div className="mb-8">
-            <TaskerApplicationManager 
-              showOnlyHistorical={false}
-              title="Recent Applications"
-              description="Your latest job applications and their status"
-            />
+            <Card>
+              <CardContent className="p-6">
+                <TaskerApplicationManager 
+                  showOnlyHistorical={false}
+                  title="Recent Applications"
+                  description="Your latest job applications and their status"
+                />
+              </CardContent>
+            </Card>
           </div>
           
           {/* Shortlisted Jobs - second/third on mobile */}
@@ -294,20 +289,24 @@ export function TaskerDashboard() {
           
           {/* Connections History Section */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
-                <History className="h-4 w-4 text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {tDashboard('connections.fullHistory') || 'Connection History'}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  View your complete connections transaction history
-                </p>
-              </div>
-            </div>
-            <ConnectionsFullHistory />
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
+                    <History className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      {tDashboard('connections.fullHistory') || 'Connection History'}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      View your complete connections transaction history
+                    </p>
+                  </div>
+                </div>
+                <ConnectionsFullHistory />
+              </CardContent>
+            </Card>
           </div>
         </div>
         

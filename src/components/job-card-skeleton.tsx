@@ -9,7 +9,7 @@ interface JobCardSkeletonProps {
 export function JobCardSkeleton({ viewMode = 'grid' }: JobCardSkeletonProps) {
   if (viewMode === 'list') {
     return (
-      <div className="bg-card rounded-xl p-5 shadow-sm animate-pulse border border-border/40 flex flex-col md:flex-row gap-4">
+      <div className="bg-card rounded-[var(--radius)] p-5 shadow-sm animate-pulse border border-border/40 flex flex-col md:flex-row gap-4">
         <div className="flex-1 space-y-4">
           <Skeleton className="h-5 w-4/5" />
           <Skeleton className="h-4 w-2/3" />
@@ -31,7 +31,7 @@ export function JobCardSkeleton({ viewMode = 'grid' }: JobCardSkeletonProps) {
   }
 
   return (
-    <div className="bg-card rounded-xl p-5 shadow-sm animate-pulse border border-border/40 h-[280px] flex flex-col">
+    <div className="bg-card rounded-[var(--radius)] p-5 shadow-sm animate-pulse border border-border/40 h-[280px] flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-4 w-16" />

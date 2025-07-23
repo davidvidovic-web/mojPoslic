@@ -115,24 +115,24 @@ export class MessageService {
 
           return {
             id: msg.id,
-            conversation_id: msg.conversation_id,
-            sender_id: msg.sender_id,
+            conversationId: msg.conversation_id,
+            senderId: msg.sender_id,
             content: msg.content || undefined,
-            message_type: msg.message_type as 'text' | 'image' | 'file' | 'system',
-            attachment_url: msg.attachment_url || undefined,
-            attachment_filename: msg.attachment_filename || undefined,
-            attachment_size: msg.attachment_size || undefined,
-            reply_to_message_id: msg.reply_to_message_id || undefined,
-            edited_at: msg.edited_at || undefined,
-            deleted_at: msg.deleted_at || undefined,
-            created_at: msg.created_at,
+            messageType: msg.message_type as 'text' | 'image' | 'file' | 'system',
+            attachmentUrl: msg.attachment_url || undefined,
+            attachmentFilename: msg.attachment_filename || undefined,
+            attachmentSize: msg.attachment_size || undefined,
+            replyToMessageId: msg.reply_to_message_id || undefined,
+            editedAt: msg.edited_at || undefined,
+            deletedAt: msg.deleted_at || undefined,
+            createdAt: msg.created_at,
             sender: {
               id: sender.id,
               name: sender.name,
-              avatar_url: sender.avatar_url || undefined,
+              avatarUrl: sender.avatar_url || undefined,
               role: sender.role
             },
-            reply_to: repliedMessage,
+            replyTo: repliedMessage,
             status
           }
         })
@@ -156,14 +156,14 @@ export class MessageService {
       const { data: message, error: messageError } = await supabaseAdmin
         .from('messages')
         .insert({
-          conversation_id: data.conversation_id,
+          conversation_id: data.conversationId,
           sender_id: senderId,
           content: data.content,
-          message_type: data.message_type,
-          attachment_url: data.attachment_url,
-          attachment_filename: data.attachment_filename,
-          attachment_size: data.attachment_size,
-          reply_to_message_id: data.reply_to_message_id
+          message_type: data.messageType,
+          attachment_url: data.attachmentUrl,
+          attachment_filename: data.attachmentFilename,
+          attachment_size: data.attachmentSize,
+          reply_to_message_id: data.replyToMessageId
         })
         .select(`
           id,
@@ -184,7 +184,7 @@ export class MessageService {
       if (messageError) throw messageError
 
       // Create message status for all conversation participants
-      await this.createMessageStatus(message.id, data.conversation_id)
+      await this.createMessageStatus(message.id, data.conversationId)
 
       // Return the complete message
       return await this.getMessageById(message.id)
@@ -313,21 +313,21 @@ export class MessageService {
 
       return (data || []).map((msg: MessageRecord) => ({
         id: msg.id,
-        conversation_id: msg.conversation_id,
-        sender_id: msg.sender_id,
+        conversationId: msg.conversation_id,
+        senderId: msg.sender_id,
         content: msg.content || undefined,
-        message_type: msg.message_type as 'text' | 'image' | 'file' | 'system',
-        attachment_url: msg.attachment_url || undefined,
-        attachment_filename: msg.attachment_filename || undefined,
-        attachment_size: msg.attachment_size || undefined,
-        reply_to_message_id: msg.reply_to_message_id || undefined,
-        edited_at: msg.edited_at || undefined,
-        deleted_at: msg.deleted_at || undefined,
-        created_at: msg.created_at,
+        messageType: msg.message_type as 'text' | 'image' | 'file' | 'system',
+        attachmentUrl: msg.attachment_url || undefined,
+        attachmentFilename: msg.attachment_filename || undefined,
+        attachmentSize: msg.attachment_size || undefined,
+        replyToMessageId: msg.reply_to_message_id || undefined,
+        editedAt: msg.edited_at || undefined,
+        deletedAt: msg.deleted_at || undefined,
+        createdAt: msg.created_at,
         sender: {
           id: msg.sender_id,
           name: 'User',
-          avatar_url: undefined,
+          avatarUrl: undefined,
           role: 'user'
         }
       }))
@@ -382,21 +382,21 @@ export class MessageService {
 
     return {
       id: data.id,
-      conversation_id: data.conversation_id,
-      sender_id: data.sender_id,
+      conversationId: data.conversation_id,
+      senderId: data.sender_id,
       content: data.content || undefined,
-      message_type: data.message_type as 'text' | 'image' | 'file' | 'system',
-      attachment_url: data.attachment_url || undefined,
-      attachment_filename: data.attachment_filename || undefined,
-      attachment_size: data.attachment_size || undefined,
-      reply_to_message_id: data.reply_to_message_id || undefined,
-      edited_at: data.edited_at || undefined,
-      deleted_at: data.deleted_at || undefined,
-      created_at: data.created_at,
+      messageType: data.message_type as 'text' | 'image' | 'file' | 'system',
+      attachmentUrl: data.attachment_url || undefined,
+      attachmentFilename: data.attachment_filename || undefined,
+      attachmentSize: data.attachment_size || undefined,
+      replyToMessageId: data.reply_to_message_id || undefined,
+      editedAt: data.edited_at || undefined,
+      deletedAt: data.deleted_at || undefined,
+      createdAt: data.created_at,
       sender: {
         id: sender.id,
         name: sender.name,
-        avatar_url: sender.avatar_url || undefined,
+        avatarUrl: sender.avatar_url || undefined,
         role: sender.role
       },
       status

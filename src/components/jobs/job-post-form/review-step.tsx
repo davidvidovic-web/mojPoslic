@@ -489,7 +489,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
 
       {/* Error message if date/time has passed */}
       {isDateTimePassed() && (
-        <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+        <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-[var(--radius)]">
           <h4 className="text-sm font-medium mb-2 text-destructive flex items-center gap-1">
             ⚠️ Cannot Submit Job
           </h4>
@@ -504,7 +504,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
 
       {/* Connection deduction notification - show if user has already posted today */}
       {!isDateTimePassed() && todayJobCount >= 1 && formData.type && (
-        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-600 dark:border-blue-400 rounded-lg">
+        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-600 dark:border-blue-400 rounded-[var(--radius)]">
           <h4 className="text-sm font-medium mb-2 text-blue-700 dark:text-blue-400 flex items-center gap-1">
             <Zap className="h-4 w-4" />
             {t('review.connectionCostNotice')}
@@ -525,7 +525,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
 
       {/* Ready to post message - only show if no errors and moved to final position */}
       {!isDateTimePassed() && (
-        <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-600 dark:border-green-400 rounded-lg">
+        <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-600 dark:border-green-400 rounded-[var(--radius)]">
           <h4 className="text-sm font-medium mb-2 text-green-700 dark:text-green-400 flex items-center gap-1">
             <Rocket className="h-4 w-4" />
             {t('review.readyToPost')}

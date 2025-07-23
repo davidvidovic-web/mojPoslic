@@ -134,8 +134,8 @@ export default function ProfileSetupPage() {
       // Refresh user context to get updated profileSetupCompleted status
       await refreshUser()
       
-      // Wait a bit longer to ensure database and auth state are synced
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Wait longer to ensure database, auth state and middleware are synced
+      await new Promise(resolve => setTimeout(resolve, 2500))
       
       // Use window.location.href for a complete page reload to ensure fresh token
       window.location.href = '/dashboard'

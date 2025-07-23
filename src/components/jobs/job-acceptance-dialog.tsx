@@ -30,7 +30,6 @@ import { cn } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useTranslations } from 'next-intl'
 
 const jobAcceptanceSchema = z.object({
   agreedSalary: z.string().optional(),
@@ -63,7 +62,6 @@ export function JobAcceptanceDialog({
   originalStartDate,
   onAcceptanceSuccess
 }: JobAcceptanceDialogProps) {
-  const t = useTranslations('jobs')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const { acceptTasker, isAccepting } = useJobAcceptance()
 
@@ -132,7 +130,7 @@ export function JobAcceptanceDialog({
 
         {showConfirmation ? (
           <div className="space-y-4 py-4">
-            <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-[var(--radius)]">
               <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="font-medium text-yellow-800 dark:text-yellow-300">Important Notice</h4>
@@ -148,7 +146,7 @@ export function JobAcceptanceDialog({
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-2">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-[var(--radius)] space-y-2">
               <h4 className="font-medium">Assignment Summary:</h4>
               <div className="text-sm space-y-1">
                 <p><strong>Tasker:</strong> {taskerName}</p>

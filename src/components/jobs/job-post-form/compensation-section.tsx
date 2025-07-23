@@ -33,7 +33,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
       <h3 className="text-lg font-semibold">{t('title')}</h3>
       
       <div 
-        className="p-4 bg-secondary/50 rounded-lg cursor-pointer hover:bg-secondary/70 transition-colors"
+        className="p-4 bg-secondary/50 rounded-[var(--radius)] cursor-pointer hover:bg-secondary/70 transition-colors"
         onClick={() => setShowTips(!showTips)}
       >
         <div className="flex items-center justify-between">
@@ -83,7 +83,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
         
         {/* Smart payment calculator hint */}
         {formData.duration && (
-          <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-[var(--radius)] border border-blue-200 dark:border-blue-800">
             <div className="flex items-start gap-2">
               <Lightbulb className="h-4 w-4 mt-0.5 text-blue-600" />
               <div>
@@ -206,7 +206,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
 
       {/* Payment calculation display */}
       {formData.salaryType && formData.salaryType !== 'negotiable' && (formData.salaryType === 'hourly' || formData.salaryType === 'daily') && formData.salaryMin && formData.duration && !hasInvalidRange && !hasBelowMinimumPayment && (
-        <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+        <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border border-green-200 dark:border-green-800 rounded-[var(--radius)]">
           <h4 className="text-sm font-medium text-green-800 mb-3 flex items-center gap-1">
             <Wallet className="h-5 w-5" />
             {t('smartPaymentCalculation')}

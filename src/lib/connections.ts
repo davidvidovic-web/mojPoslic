@@ -13,8 +13,6 @@ export function formatConnectionAction(action: string): string {
       return 'Job Application'
     case 'JOB_POST_CLIENT':
       return 'Job Post (Client)'
-    case 'JOB_POST_COMPANY':
-      return 'Job Post (Company)'
     case 'JOB_POST_FREE':
       return 'Job Post (Free)'
     case 'ADMIN_ADJUSTMENT':

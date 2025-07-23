@@ -312,7 +312,7 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
               selectedCityName={selectedCityName}
             />
             {locationValidationError && (
-              <div className={`text-sm p-4 rounded-lg border ${
+              <div className={`text-sm p-4 rounded-[var(--radius)] border ${
                 locationValidationError.includes('Location Mismatch:') 
                   ? 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800' 
                   : 'text-amber-600 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800'

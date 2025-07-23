@@ -12,7 +12,7 @@ export function GoogleJobLocationMap({
   longitude
 }: GoogleJobLocationMapProps) {
   return (
-    <div className="w-full h-[250px] rounded-lg border border-border overflow-hidden">
+    <div className="w-full h-[250px] rounded-[var(--radius)] border border-border overflow-hidden">
       <GoogleMapsWrapper
         center={{ lat: latitude, lng: longitude }}
         zoom={15}

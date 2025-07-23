@@ -219,7 +219,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
 
   return (
     <div className={cn(
-      "fixed bottom-4 right-4 z-50 bg-white border rounded-lg shadow-xl",
+      "fixed bottom-4 right-4 z-50 bg-white border rounded-lg shadow-lg",
       "w-[800px] h-[600px] flex flex-col",
       className
     )}>

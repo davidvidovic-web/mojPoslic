@@ -74,7 +74,7 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
         </>
       )}
 
-      <div className="p-4 bg-secondary/50 rounded-lg">
+      <div className="p-4 bg-secondary/50 rounded-[var(--radius)]">
         <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
           <Mail className="h-4 w-4" />
           Application Process

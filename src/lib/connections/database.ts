@@ -7,7 +7,6 @@ import {
   MONTHLY_CONNECTIONS, 
   INITIAL_CONNECTIONS_TASKER, 
   INITIAL_CONNECTIONS_CLIENT,
-  INITIAL_CONNECTIONS_COMPANY,
   INITIAL_CONNECTIONS_ADMIN
 } from './types'
 import { getConnectionCost, hasEnoughConnections } from './utils'
@@ -150,7 +149,7 @@ export async function spendConnections(
 export async function initializeUserConnections(
   prisma: PrismaClient,
   userId: string,
-  userRole: 'tasker' | 'client' | 'company' | 'admin' = 'client'
+  userRole: 'tasker' | 'client' | 'admin' = 'client'
 ): Promise<boolean> {
   try {
     await prisma.$transaction(async (tx) => {
@@ -166,10 +165,6 @@ export async function initializeUserConnections(
         case 'client':
           initialConnections = INITIAL_CONNECTIONS_CLIENT
           description = 'One-time client connections'
-          break
-        case 'company':
-          initialConnections = INITIAL_CONNECTIONS_COMPANY
-          description = 'One-time company connections'
           break
         case 'admin':
           initialConnections = INITIAL_CONNECTIONS_ADMIN
@@ -212,7 +207,7 @@ export async function initializeUserConnections(
 export async function updateConnectionsForRoleChange(
   prisma: PrismaClient,
   userId: string,
-  newRole: 'tasker' | 'client' | 'company' | 'admin'
+  newRole: 'tasker' | 'client' | 'admin'
 ): Promise<boolean> {
   try {
     await prisma.$transaction(async (tx) => {
@@ -228,10 +223,6 @@ export async function updateConnectionsForRoleChange(
         case 'client':
           newConnections = INITIAL_CONNECTIONS_CLIENT
           description = 'Role changed to client (one-time connections)'
-          break
-        case 'company':
-          newConnections = INITIAL_CONNECTIONS_COMPANY
-          description = 'Role changed to company (one-time connections)'
           break
         case 'admin':
           newConnections = INITIAL_CONNECTIONS_ADMIN

@@ -34,7 +34,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.625rem;
   }
 
   .dark {
@@ -107,6 +107,24 @@
   }
   .border-info {
     border-color: hsl(var(--info));
+  }
+
+  /* Prevent layout shift when dialogs/modals lock scroll */
+  @media (min-width: 768px) {
+    :root {
+      --scrollbar-width: calc(100vw - 100%);
+    }
+    
+    /* Force scrollbar to always be visible */
+    html {
+      overflow-y: scroll;
+    }
+    
+    /* Compensate for scrollbar when body overflow is hidden */
+    body[style*="overflow: hidden"] {
+      padding-right: var(--scrollbar-width);
+      margin-right: calc(var(--scrollbar-width) * -1);
+    }
   }
 }
 

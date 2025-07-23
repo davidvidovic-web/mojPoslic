@@ -51,13 +51,14 @@ export function ClientJobsManager({
         {/* Stats Loading */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 animate-pulse">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
-                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div key={i} className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 animate-pulse">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
               </div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
             </div>
           ))}
         </div>
@@ -77,17 +78,10 @@ export function ClientJobsManager({
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* Header with Post Job Button */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('dashboard.client.jobs.title') || 'My Jobs'}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            {t('dashboard.client.jobs.description') || 'Manage your job postings and track applications'}
-          </p>
-        </div>
-        <Button onClick={onPostNewJob} className="rounded-xl w-fit lg:w-auto">
+        <div></div>
+        <Button onClick={onPostNewJob} className="rounded-sm w-fit lg:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           {t('dashboard.client.jobs.postNew') || 'Post New Job'}
         </Button>
@@ -95,9 +89,9 @@ export function ClientJobsManager({
 
       {/* Quick Statistics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-950 rounded-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-sm bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
               <Briefcase className="h-6 w-6 text-blue-600" />
             </div>
             <div className="text-right">
@@ -112,9 +106,9 @@ export function ClientJobsManager({
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-950 rounded-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-sm bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
               <Users className="h-6 w-6 text-green-600" />
             </div>
             <div className="text-right">
@@ -129,9 +123,9 @@ export function ClientJobsManager({
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-950 rounded-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-sm bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="text-right">
@@ -146,9 +140,9 @@ export function ClientJobsManager({
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-950 rounded-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-sm bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
               <BarChart3 className="h-6 w-6 text-purple-600" />
             </div>
             <div className="text-right">

@@ -153,7 +153,7 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
             <h4 className="font-medium text-gray-900">Confirm Work Completion</h4>
             <p className="text-sm text-gray-600">
               {jobAssignment.selectedApplication.user.name} has marked the work as completed. 
-              Please review and confirm if you're satisfied with the work.
+              Please review and confirm if you&apos;re satisfied with the work.
             </p>
             <Textarea
               placeholder="Add feedback about the completed work (optional)..."
@@ -197,7 +197,7 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
               <span className="font-medium">Work Marked as Completed</span>
             </div>
             <p className="text-sm text-gray-600">
-              Waiting for the client to confirm completion. You'll be notified once they review your work.
+              Waiting for the client to confirm completion. You&apos;ll be notified once they review your work.
             </p>
           </div>
         )}

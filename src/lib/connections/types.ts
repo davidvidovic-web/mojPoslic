@@ -25,7 +25,6 @@ export const MONTHLY_CONNECTIONS = 10
 // Initial connections for different user roles
 export const INITIAL_CONNECTIONS_TASKER = 10 // Monthly refresh eligible
 export const INITIAL_CONNECTIONS_CLIENT = 10 // One-time only
-export const INITIAL_CONNECTIONS_COMPANY = 10 // One-time only
 export const INITIAL_CONNECTIONS_ADMIN = 50 // Admin gets more
 
 // Job application costs (always 4 connections for professional jobs)
@@ -53,11 +52,6 @@ export const CONNECTION_COSTS: Record<string, ConnectionCost> = {
     action: 'JOB_POST_CLIENT',
     cost: 4,
     description: 'Post a client job'
-  },
-  JOB_POST_COMPANY: {
-    action: 'JOB_POST_COMPANY',
-    cost: 6,
-    description: 'Post a company job'
   },
   ADMIN_ADJUSTMENT: {
     action: 'ADMIN_ADJUSTMENT',

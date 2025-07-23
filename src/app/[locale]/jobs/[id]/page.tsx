@@ -223,7 +223,7 @@ export default function JobDetailPage() {
           <div className="flex-1">
             <h1 className="text-4xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
+              <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
                 <span className="text-lg font-bold text-primary">
                   {job.company ? job.company.charAt(0).toUpperCase() : 'C'}
                 </span>
@@ -236,16 +236,16 @@ export default function JobDetailPage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant={getJobTypeBadgeVariant(job.type)} className="px-3 py-1 rounded-xl border-0 bg-primary/10 text-primary">
+              <Badge variant={getJobTypeBadgeVariant(job.type)} className="px-3 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary">
                 {formatJobType(job.type)}
               </Badge>
               {job.is_featured && (
-                <Badge className="bg-yellow-500 text-yellow-50 px-3 py-1 rounded-xl border-0">
+                <Badge className="bg-yellow-500 text-yellow-50 px-3 py-1 rounded-[var(--radius)] border-0">
                   {t('jobs.card.featured')}
                 </Badge>
               )}
               {!isOwner && !hasApplied && (
-                <Button onClick={handleApply} size="default" className="ml-2 rounded-xl">
+                <Button onClick={handleApply} size="default" className="ml-2 rounded-[var(--radius)]">
                   {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
                 </Button>
               )}
@@ -253,7 +253,7 @@ export default function JobDetailPage() {
           </div>
           <div className="flex items-center gap-4">
             {hasApplied && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl">
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm font-medium text-green-700 dark:text-green-400">
                   {t('jobs.form.labels.applied')}
@@ -261,7 +261,7 @@ export default function JobDetailPage() {
               </div>
             )}
             {isOwner && (
-              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-[var(--radius)]">
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
                   {t('jobs.form.labels.yourJob')}
                 </span>
@@ -272,13 +272,13 @@ export default function JobDetailPage() {
 
         {/* Job Meta Information - Enhanced Pills Layout */}
         <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">{job.city?.name || t('common.jobTypes.remote')}</span>
           </div>
           
           {job.category && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/30 rounded-xl">
+            <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/30 rounded-[var(--radius)]">
               <Tag className="h-4 w-4 text-purple-600" />
               <span className="text-sm font-medium text-purple-700 dark:text-purple-400">
                 {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
@@ -287,7 +287,7 @@ export default function JobDetailPage() {
           )}
           
           {formatSalary(job) && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl">
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
               <DollarSign className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)}</span>
             </div>
@@ -298,9 +298,9 @@ export default function JobDetailPage() {
       {/* Job Content - Modern Flat Sections */}
       <div className="space-y-8">
         {/* Description */}
-        <section className="bg-white dark:bg-gray-950 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
+        <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-3 text-foreground">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center">
               <Briefcase className="h-4 w-4 text-primary" />
             </div>
             {t('jobs.content.jobDescription')}
@@ -313,9 +313,9 @@ export default function JobDetailPage() {
 
         {/* Requirements */}
         {job.requirements && (
-          <section className="bg-white dark:bg-gray-950 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-3 text-foreground">
-              <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[var(--radius)] bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
                 <Users className="h-4 w-4 text-orange-600" />
               </div>
               {t('jobs.content.requirements')}
@@ -329,9 +329,9 @@ export default function JobDetailPage() {
 
         {/* Benefits */}
         {job.benefits && (
-          <section className="bg-white dark:bg-gray-950 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-3 text-foreground">
-              <div className="w-8 h-8 rounded-xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-green-600" />
               </div>
               {t('jobs.content.benefits')}
@@ -345,7 +345,7 @@ export default function JobDetailPage() {
 
         {/* Skills & Tags */}
         {job.tags && job.tags.length > 0 && (
-          <section className="bg-white dark:bg-gray-950 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
             <h2 className="text-2xl font-bold mb-4 text-foreground">{t('jobs.content.skillsAndTechnologies')}</h2>
             <div className="flex flex-wrap gap-2">
               {job.tags.map((tag, index) => (
@@ -402,8 +402,8 @@ export default function JobDetailPage() {
               
               {/* Duration */}
               {job.duration && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
                     <Clock className="h-4 w-4 text-green-600" />
                   </div>
                   <div>
@@ -415,8 +415,8 @@ export default function JobDetailPage() {
               
               {/* Expires */}
               {job.expires_at && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-950/30 flex items-center justify-center">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-red-100 dark:bg-red-950/30 flex items-center justify-center">
                     <Calendar className="h-4 w-4 text-red-600" />
                   </div>
                   <div>
@@ -433,8 +433,8 @@ export default function JobDetailPage() {
             <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.location')}</h3>
             <div className="space-y-4">
               {/* Job Location */}
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                <div className="w-8 h-8 rounded-[var(--radius)] bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                   <MapPin className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
@@ -445,8 +445,8 @@ export default function JobDetailPage() {
               
               {/* Address */}
               {job.job_address ? (
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
                     <MapPin className="h-4 w-4 text-green-600" />
                   </div>
                   <div>
@@ -456,8 +456,8 @@ export default function JobDetailPage() {
                 </div>
               ) : (
                 !job.isSelectedTasker && !isOwner && (
-                  <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
-                    <div className="w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+                  <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-[var(--radius)] border border-yellow-200 dark:border-yellow-800">
+                    <div className="w-8 h-8 rounded-[var(--radius)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
                       <MapPin className="h-4 w-4 text-yellow-600" />
                     </div>
                     <div>
@@ -472,7 +472,7 @@ export default function JobDetailPage() {
               {/* Google Map */}
               {job.job_address && (job.isSelectedTasker || isOwner) && (
                 <div className="mt-4">
-                  <div className="w-full h-64 bg-muted rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <div className="w-full h-64 bg-muted rounded-[calc(var(--radius)*1.5)] overflow-hidden border border-gray-200 dark:border-gray-700">
                     {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
                       <iframe
                         width="100%"
@@ -489,7 +489,7 @@ export default function JobDetailPage() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                         <div className="text-center">
-                          <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                          <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
                             <MapPin className="h-6 w-6 text-muted-foreground" />
                           </div>
                           <p className="text-sm text-muted-foreground">Map not available</p>
@@ -504,9 +504,9 @@ export default function JobDetailPage() {
               {/* Map placeholder for non-selected users */}
               {!job.job_address && !job.isSelectedTasker && !isOwner && (
                 <div className="mt-4">
-                  <div className="w-full h-64 bg-yellow-50 dark:bg-yellow-950/20 rounded-2xl overflow-hidden flex items-center justify-center border border-yellow-200 dark:border-yellow-800">
+                  <div className="w-full h-64 bg-yellow-50 dark:bg-yellow-950/20 rounded-[calc(var(--radius)*1.5)] overflow-hidden flex items-center justify-center border border-yellow-200 dark:border-yellow-800">
                     <div className="text-center">
-                      <div className="w-12 h-12 rounded-2xl bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center mx-auto mb-3">
+                      <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center mx-auto mb-3">
                         <MapPin className="h-6 w-6 text-yellow-600" />
                       </div>
                       <p className="text-sm text-yellow-700 dark:text-yellow-400">{t('jobs.privacy.mapHidden')}</p>
@@ -520,9 +520,9 @@ export default function JobDetailPage() {
         </section>
 
         {/* Contact Information */}
-        <section className="bg-white dark:bg-gray-950 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
+        <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-foreground">
-            <div className="w-8 h-8 rounded-xl bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
               <Users className="h-4 w-4 text-green-600" />
             </div>
             {t('jobs.form.labels.contactInformation')}
@@ -616,7 +616,7 @@ export default function JobDetailPage() {
       {/* Application Form Modal/Overlay */}
       {showApplicationForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl thin-scrollbar">
+          <div className="bg-white dark:bg-gray-900 rounded-[var(--radius)] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl thin-scrollbar">
             <div className="p-6">
               <JobApplicationForm
                 jobId={job.id}

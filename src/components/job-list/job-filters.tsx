@@ -66,7 +66,7 @@ export function JobFilters({
   const setSubcategoryFilter = externalSetSubcategoryFilter ?? setJobSubcategoryFilter
 
   return (
-    <div className="bg-card rounded-xl p-6 shadow-sm border-border/40">
+    <div className="bg-card rounded-[calc(var(--radius)*1.5)] p-6 shadow-sm border-border/40">
       {/* Collapsible Filters with Search Included */}
       <div className="flex flex-col gap-4">
         <Collapsible open={isFiltersOpen} onOpenChange={toggleFilters}>
