@@ -15,8 +15,7 @@ import {
   Phone, 
   Video, 
   Users, 
-  Archive, 
-  Search,
+  Archive,
   ArrowLeft,
   MessageCircle
 } from 'lucide-react';
@@ -285,7 +284,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   isMobile = false,
   className,
 }) => {
-  const t = useTranslations('messaging');
   const [showConversationList, setShowConversationList] = useState(!isMobile);
 
   // On mobile, show conversation list when no conversation is selected
