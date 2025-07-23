@@ -73,7 +73,7 @@ function VerifyEmailForm() {
             // Redirect based on whether user needs role selection
             if (data.shouldRedirectToRoleSelection) {
               setTimeout(() => {
-                router.push('/account-type')
+                router.push('/role-selection')
               }, 800)
             } else if (data.shouldRedirectToProfileSetup) {
               setTimeout(() => {

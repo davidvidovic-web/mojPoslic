@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { RoleGuard } from '@/components/auth/role-guard'
+import { OnboardingPageGuard } from '@/components/auth/registration-flow-guard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,11 +24,18 @@ interface SkillExperience {
 }
 
 export default function ProfileSetupPage() {
+  return (
+    <OnboardingPageGuard allowedStates={['needs-profile']}>
+      <ProfileSetupContent />
+    </OnboardingPageGuard>
+  )
+}
+
+function ProfileSetupContent() {
   const t = useTranslations('profile')
   const tErrors = useTranslations('errors')
   const { user, loading, refreshUser } = useAuth()
   const { update } = useSession()
-  const router = useRouter()
   
   const [formData, setFormData] = useState(() => ({
     name: '',
@@ -42,50 +48,19 @@ export default function ProfileSetupPage() {
     website: '',
   }))
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isRedirecting, setIsRedirecting] = useState(false)
-  const redirectAttempted = useRef(false)
 
-  // Check if we've recently redirected (within last 5 seconds)
-  const checkRecentRedirect = () => {
-    const lastRedirect = localStorage.getItem('lastRedirectTime')
-    if (lastRedirect) {
-      const timeDiff = Date.now() - parseInt(lastRedirect)
-      return timeDiff < 5000 // 5 seconds
-    }
-    return false
-  }
-
+  // Populate form with existing user data if available
   useEffect(() => {
-    // Prevent multiple redirect attempts, during loading, or if recently redirected
-    if (redirectAttempted.current || isRedirecting || loading || checkRecentRedirect()) return 
-    
-    if (!user) {
-      redirectAttempted.current = true
-      setIsRedirecting(true)
-      localStorage.setItem('lastRedirectTime', Date.now().toString())
-      router.replace('/auth/register')
-      return
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        username: user.username || '',
+        phone: user.phone || '',
+        // Don't auto-populate other fields - let user enter them fresh
+      }))
     }
-
-    // If user doesn't have a role, redirect to account type selection
-    if (user && !user.role) {
-      redirectAttempted.current = true
-      setIsRedirecting(true)
-      localStorage.setItem('lastRedirectTime', Date.now().toString())
-      router.replace('/account-type')
-      return
-    }
-
-    if (user && user.profileSetupCompleted === true) {
-      redirectAttempted.current = true
-      setIsRedirecting(true)
-      localStorage.setItem('lastRedirectTime', Date.now().toString())
-      router.replace('/dashboard')
-      return
-    }
-
-    // Don't auto-populate name from user data - let tasker enter their own name
-  }, [user, loading, router, isRedirecting])
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -250,8 +225,7 @@ export default function ProfileSetupPage() {
   const roleContent = getRoleContent()
 
   return (
-    <RoleGuard requireRole={true} requireProfileSetup={false}>
-      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
         <div className="w-full max-w-2xl">
           <Card>
             <CardHeader className="text-center">
@@ -427,6 +401,5 @@ export default function ProfileSetupPage() {
         </Card>
       </div>
     </div>
-    </RoleGuard>
   )
 }

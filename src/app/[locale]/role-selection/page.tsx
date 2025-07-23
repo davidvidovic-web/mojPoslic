@@ -9,14 +9,14 @@ import {
   Building2, 
   Briefcase, 
   ArrowRight, 
-  CheckCircle,
-  Target,
-  Lock
+  CheckCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { useTranslations } from 'next-intl'
 import { useSession } from 'next-auth/react'
+import { OnboardingPageGuard } from '@/components/auth/registration-flow-guard'
+import { useRouter } from 'next/navigation'
 
 interface RoleOption {
   id: 'tasker' | 'client' | 'company'
@@ -54,9 +54,18 @@ const roleOptions: RoleOption[] = [
 ]
 
 export default function RoleSelectionPage() {
+  return (
+    <OnboardingPageGuard allowedStates={['needs-role']}>
+      <RoleSelectionContent />
+    </OnboardingPageGuard>
+  )
+}
+
+function RoleSelectionContent() {
   const t = useTranslations('roleSelection')
   const { refreshUser } = useAuth()
   const { update } = useSession()
+  const router = useRouter()
   const [selectedRole, setSelectedRole] = useState<'tasker' | 'client' | 'company' | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -70,7 +79,7 @@ export default function RoleSelectionPage() {
 
   const handleContinue = async () => {
     if (!selectedRole) {
-      toast.error(t('selectRole'))
+      toast.error('Please select your account type')
       return
     }
 
@@ -88,27 +97,17 @@ export default function RoleSelectionPage() {
       })
       
       if (response.ok) {
-        // Show immediate success feedback
-        toast.success(t('welcomeMessage', { role: t(`${selectedRole}.title`) }))
-        
-        // Update NextAuth session to trigger JWT refresh
+        toast.success('Role updated successfully!')
         await update()
-        
-        // Refresh user context
         await refreshUser()
-        
-        // Wait longer to ensure auth state is properly synced
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
-        // Redirect to profile setup
-        window.location.replace('/profile-setup')
+        router.push('/profile-setup')
       } else {
         const errorData = await response.json()
-        toast.error(errorData.error || t('updateRoleFailed'))
+        toast.error(errorData.error || 'Failed to update your role')
       }
     } catch (error) {
       console.error('Error updating role:', error)
-      toast.error(t('updateRoleFailed'))
+      toast.error('Failed to update your role')
     } finally {
       setIsSubmitting(false)
     }
@@ -119,115 +118,82 @@ export default function RoleSelectionPage() {
       <div className="w-full max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Target className="h-8 w-8 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('subtitle')}
+          <h1 className="text-3xl font-bold mb-2">{t('selectRole')}</h1>
+          <p className="text-muted-foreground text-lg">
+            {selectedRole ? t('welcomeMessage', { role: t(`${selectedRole}.title`) }) : t('chooseRole')}
           </p>
         </div>
 
-        {/* Role Selection Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {roleOptions.map((role) => {
-            const isCompanyDisabled = role.id === 'company'
-            return (
-              <Card
-                key={role.id}
-                className={`relative transition-all duration-200 border ${
-                  isCompanyDisabled
-                    ? 'opacity-60 cursor-not-allowed border-border'
-                    : selectedRole === role.id
-                    ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer hover:scale-105'
-                    : 'hover:shadow-md border-border cursor-pointer hover:scale-105'
-                }`}
-                onClick={() => handleRoleSelect(role.id)}
-              >
-                {/* Lock Overlay for Company */}
-                {isCompanyDisabled && (
-                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
-                    <div className="text-center">
-                      <Lock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm font-medium text-muted-foreground">{t('company.badge')}</p>
-                    </div>
-                  </div>
-                )}
+        {/* Role Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {roleOptions.map((role) => (
+            <Card
+              key={role.id}
+              className={`relative transition-all duration-300 ${
+                role.id === 'company'
+                  ? 'opacity-50 cursor-not-allowed'
+                  : selectedRole === role.id
+                  ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer'
+                  : 'hover:shadow-md border-border cursor-pointer'
+              }`}
+              onClick={() => handleRoleSelect(role.id)}
+            >
+              {role.badgeKey && (
+                <Badge 
+                  className="absolute -top-2 left-4 bg-primary text-primary-foreground"
+                  variant="default"
+                >
+                  {t(role.badgeKey)}
+                </Badge>
+              )}
+              
+              {selectedRole === role.id && role.id !== 'company' && (
+                <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
+                  <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                </div>
+              )}
 
-                {role.badgeKey && !isCompanyDisabled && (
-                  <Badge 
-                    className="absolute -top-2 left-4 bg-primary text-primary-foreground"
-                    variant="default"
-                  >
-                    {t(role.badgeKey)}
-                  </Badge>
-                )}
-                
-                {selectedRole === role.id && !isCompanyDisabled && (
-                  <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
-                    <CheckCircle className="h-4 w-4 text-primary-foreground" />
+              <CardHeader className="text-center">
+                <div className="flex justify-center mb-3">
+                  <div className={`p-3 rounded-full transition-colors ${
+                    selectedRole === role.id && role.id !== 'company'
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {role.icon}
                   </div>
-                )}
+                </div>
+                <CardTitle className="text-xl">{t(role.titleKey)}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {t(role.descriptionKey)}
+                </p>
+              </CardHeader>
 
-                <CardHeader className="text-center pb-4">
-                  <div className="flex justify-center mb-3">
-                    <div className={`p-3 rounded-full transition-colors ${
-                      selectedRole === role.id && !isCompanyDisabled 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {role.icon}
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl">{t(role.titleKey)}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {t(role.descriptionKey)}
-                  </p>
-                </CardHeader>
-
-                <CardContent>
-                  <ul className="space-y-2">
-                    {/* Manually map features since t.raw() might not work reliably with arrays */}
-                    {[0, 1, 2, 3, 4].map((index) => {
-                      try {
-                        const featureText = t(`${role.id}.features.${index}`)
-                        // Check if translation exists (if it returns the key itself, translation is missing)
-                        if (featureText === `${role.id}.features.${index}`) {
-                          return null
-                        }
-                        return (
-                          <li key={index} className="flex items-center text-sm text-foreground">
-                            <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
-                            {featureText}
-                          </li>
-                        )
-                      } catch {
-                        return null
-                      }
-                    }).filter(Boolean)}
-                  </ul>
-                </CardContent>
-              </Card>
-            )
-          })}
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  {Object.values(t.raw(role.featuresKey) || {}).map((feature, index: number) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      {String(feature)}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-
         {/* Continue Button */}
         <div className="text-center">
           <Button
             onClick={handleContinue}
             disabled={!selectedRole || isSubmitting}
             size="lg"
-            className="px-8 py-3 text-lg font-medium bg-foreground hover:bg-foreground/90 text-background"
+            className="px-8 py-3 text-lg font-medium"
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background mr-2"></div>
-                {t('settingUpAccount')}
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                {t('updating')}
               </>
             ) : (
               <>

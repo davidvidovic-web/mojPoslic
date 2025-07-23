@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 // Cache directory path - store in public folder for easy access
-const CACHE_DIR = join(process.cwd(), 'public', 'cache')
+const CACHE_DIR = join(process.cwd(), 'public', 'static')
 const CITIES_CACHE_FILE = join(CACHE_DIR, 'cities.json')
 const CATEGORIES_CACHE_FILE = join(CACHE_DIR, 'categories.json')
 const CACHE_METADATA_FILE = join(CACHE_DIR, 'metadata.json')

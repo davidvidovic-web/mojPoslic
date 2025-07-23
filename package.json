@@ -4,10 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate --no-engine && npm run cache:generate && next build",
-    "cache:generate": "node scripts/generate-cache.js",
-    "cache:update": "curl -X POST https://mojposlic.com/api/cache/update",
-    "deploy:cache": "bash scripts/post-deploy.sh",
+    "build": "prisma generate --no-engine && next build",
     "postinstall": "prisma generate --no-engine",
     "start": "next start",
     "lint": "next lint",

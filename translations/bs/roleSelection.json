@@ -2,6 +2,7 @@
   "title": "Odaberite vašu ulogu",
   "subtitle": "Odaberite kako biste željeli koristiti MojPoslic. Možete promijeniti ovo kasnije u postavkama profila.",
   "selectRole": "Molimo odaberite ulogu za nastavak",
+  "chooseRole": "Odaberite ulogu",
   "updateRoleFailed": "Neuspješno ažuriranje uloge. Molimo pokušajte ponovo.",
   "welcomeMessage": "Dobrodošli! Vaša uloga je postavljena na {role}.",
   "tasker": {
@@ -41,6 +42,7 @@
   },
   "continue": "Nastavi kao {role}",
   "continueAsUser": "Nastavi",
+  "updating": "Ažuriranje...",
   "settingUpAccount": "Postavljanje vašeg računa...",
   "canChangeRole": "Možete promijeniti vašu ulogu bilo kada u postavkama profila"
 }

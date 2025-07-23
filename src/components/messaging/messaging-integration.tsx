@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ConversationView } from './conversation-view';
-import { useMessaging } from '@/contexts/messaging-context';
+import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging';
+import { useOptimizedConversations } from '@/hooks/use-optimized-conversations';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 import { Dialog, DialogContent, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, X, Minimize2, Maximize2 } from 'lucide-react';
@@ -66,15 +68,47 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  const {
-    state,
-    setActiveConversation,
-    sendMessage,
-    loadMessages,
-    sendTypingIndicator,
-    archiveConversation,
+  const { 
+    conversations, 
+    totalUnreadCount, 
+    isLoading,
     markConversationAsRead,
-  } = useMessaging();
+    archiveConversation,
+    sendTypingIndicator,
+    getTypingUsers,
+    setMessagingActive,
+    handleIncomingTyping
+  } = useOptimizedMessaging();  const {
+    activeConversation,
+    setActiveConversation,
+    messages,
+    isLoadingMessages,
+    canLoadMore,
+    loadMoreMessages,
+    sendMessage,
+    addRealtimeMessage
+  } = useOptimizedConversations();
+
+  // Set up optimized real-time integration
+  useOptimizedRealtime({
+    onNewMessage: (message) => {
+      console.log('New real-time message received:', message)
+      addRealtimeMessage(message)
+    },
+    onMessageUpdate: (message) => {
+      console.log('Real-time message update received:', message)
+      addRealtimeMessage(message) // This will update existing messages
+    },
+    onTypingIndicator: (conversationId, userId, isTyping, userName) => {
+      handleIncomingTyping(conversationId, userId, isTyping, userName)
+    },
+    onConversationUpdate: (conversationId) => {
+      console.log('Real-time conversation update:', conversationId)
+      // The optimized messaging hook will handle conversation updates
+    },
+    activeConversationId: activeConversation?.id || null,
+    isMessagingActive: open
+  });
 
   // Check if mobile on mount and window resize
   useEffect(() => {
@@ -88,12 +122,17 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Set messaging activity when dialog opens/closes
+  useEffect(() => {
+    setMessagingActive(open);
+  }, [open, setMessagingActive]);
+
   const handleSendMessage = async (content: string, attachments?: File[]) => {
-    if (!state.activeConversation) return;
+    if (!activeConversation) return;
     
     try {
       await sendMessage({
-        conversationId: state.activeConversation.id,
+        conversationId: activeConversation.id,
         content,
         messageType: attachments && attachments.length > 0 ? 'file' : 'text',
       });
@@ -103,7 +142,9 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
   };
 
   const handleTyping = (isTyping: boolean) => {
-    sendTypingIndicator(isTyping);
+    if (activeConversation) {
+      sendTypingIndicator(activeConversation.id, isTyping);
+    }
   };
 
   const handleAttachmentClick = (attachment: MessageAttachment) => {
@@ -112,35 +153,25 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
   };
 
   const handleLoadMoreMessages = () => {
-    if (state.activeConversation) {
-      const oldestMessage = state.messages[0];
-      if (oldestMessage) {
-        loadMessages(state.activeConversation.id, oldestMessage.createdAt);
-      }
+    if (activeConversation && canLoadMore) {
+      loadMoreMessages();
     }
   };
 
   const handleSelectConversation = (conversation: Conversation) => {
     setActiveConversation(conversation);
     if (conversation) {
-      loadMessages(conversation.id);
       markConversationAsRead(conversation.id);
     }
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
-    // For now, just archive it
     try {
       await archiveConversation(conversationId);
     } catch (error) {
-      console.error('Failed to delete conversation:', error);
+      console.error('Failed to archive conversation:', error);
     }
   };
-
-  const totalUnreadCount = state.conversations.reduce(
-    (total, conv) => total + conv.unread_count, 
-    0
-  );
 
   if (isMobile) {
     return (
@@ -150,24 +181,24 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
             Messaging interface for conversations and messages
           </DialogDescription>
           <ConversationView
-            conversations={state.conversations}
-            selectedConversation={state.activeConversation}
-            messages={state.messages}
+            conversations={conversations}
+            selectedConversation={activeConversation}
+            messages={messages}
             currentUserId={currentUserId}
             onSelectConversation={handleSelectConversation}
             onSendMessage={handleSendMessage}
             onLoadMoreMessages={handleLoadMoreMessages}
             onTyping={handleTyping}
             onAttachmentClick={handleAttachmentClick}
-            onArchiveConversation={archiveConversation}
+            onArchiveConversation={handleDeleteConversation}
             onDeleteConversation={handleDeleteConversation}
             onLeaveConversation={handleDeleteConversation}
-            typingUsers={state.typingUsers}
+            typingUsers={getTypingUsers(activeConversation?.id || '')} // Get typing users for active conversation
             loading={{
-              conversations: state.isLoading,
-              messages: state.isLoadingMessages,
+              conversations: isLoading,
+              messages: isLoadingMessages,
             }}
-            hasMoreMessages={state.messages.length > 0}
+            hasMoreMessages={canLoadMore}
             isMobile={true}
             className="h-full"
           />
@@ -259,26 +290,26 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         <ConversationView
-          conversations={state.conversations}
-          selectedConversation={state.activeConversation}
-          messages={state.messages}
+          conversations={conversations}
+          selectedConversation={activeConversation}
+          messages={messages}
           currentUserId={currentUserId}
           onSelectConversation={handleSelectConversation}
           onSendMessage={handleSendMessage}
           onLoadMoreMessages={handleLoadMoreMessages}
           onTyping={handleTyping}
           onAttachmentClick={handleAttachmentClick}
-          onArchiveConversation={archiveConversation}
+          onArchiveConversation={handleDeleteConversation}
           onDeleteConversation={handleDeleteConversation}
           onLeaveConversation={handleDeleteConversation}
-          typingUsers={state.typingUsers}
+          typingUsers={[]} // TODO: Implement typing users in optimized hooks
           loading={{
-            conversations: state.isLoading,
-            messages: state.isLoadingMessages,
+            conversations: isLoading,
+            messages: isLoadingMessages,
           }}
-                      hasMoreMessages={state.messages.length > 0}
-            isMobile={false}
-            className="h-full"
+          hasMoreMessages={canLoadMore}
+          isMobile={false}
+          className="h-full"
         />
       </div>
     </div>
@@ -298,12 +329,7 @@ export const MessagingIntegration: React.FC<MessagingIntegrationProps> = ({
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { state } = useMessaging();
-
-  const totalUnreadCount = state.conversations.reduce(
-    (total, conv) => total + conv.unread_count, 
-    0
-  );
+  const { totalUnreadCount } = useOptimizedMessaging();
 
   return (
     <>

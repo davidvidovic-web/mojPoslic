@@ -13,6 +13,7 @@ import { MessagingDialog } from "@/components/dashboard/messaging/messaging-dial
 import { Button } from "@/components/ui/button";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
+import { LanguageSwitcher } from "@/components/common/language-switcher";
 import {
   LogIn,
   LogOut,
@@ -66,6 +67,7 @@ export const Header = React.memo(function Header() {
   const tAuth = useTranslations('auth');
   const tHeader = useTranslations('header');
   const tNavigation = useTranslations('navigation.main');
+  const tBreadcrumb = useTranslations('navigation.breadcrumb');
 
   // Throttled scroll handler for better performance
   const handleScroll = useCallback(() => {
@@ -301,6 +303,11 @@ export const Header = React.memo(function Header() {
                 {/* Auth.js Authentication Components */}
                 {!user ? (
                   <div className="flex items-center gap-2">
+                    {/* Language Switcher - visible on all screen sizes */}
+                    <div className="flex items-center">
+                      <LanguageSwitcher />
+                    </div>
+                    
                     {/* Desktop: Full buttons with text and icons */}
                     <div className="hidden sm:flex items-center gap-2">
                       <Link href="/auth/signin">
@@ -322,9 +329,19 @@ export const Header = React.memo(function Header() {
                       </Link>
                     </div>
                     
-                    {/* Mobile: Both buttons with icons and text */}
+                    {/* Mobile: Register icon first, then Login full button */}
                     <div className="flex sm:hidden items-center gap-2">
-                      {/* Login - Icon + Text */}
+                      {/* Register - Icon Only */}
+                      <Link href="/auth/register">
+                        <Button
+                          size="sm"
+                          className="bg-foreground hover:bg-foreground/80 text-background font-bold transition-all duration-200 h-9 w-9 p-0"
+                          title={tHeader('auth.register')}
+                        >
+                          <UserPlus className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      {/* Login - Full Button (last item) */}
                       <Link href="/auth/signin">
                         <Button
                           variant="outline"
@@ -333,16 +350,6 @@ export const Header = React.memo(function Header() {
                         >
                           <LogIn className="h-4 w-4 mr-1.5" />
                           {tHeader('auth.signIn')}
-                        </Button>
-                      </Link>
-                      {/* Register - Icon + Text */}
-                      <Link href="/auth/register">
-                        <Button
-                          size="sm"
-                          className="bg-foreground hover:bg-foreground/80 text-background font-bold transition-all duration-200 h-9 px-2 text-sm"
-                        >
-                          <UserPlus className="h-4 w-4 mr-1.5" />
-                          {tHeader('auth.register')}
                         </Button>
                       </Link>
                     </div>
@@ -357,7 +364,7 @@ export const Header = React.memo(function Header() {
                       variant="ghost"
                       size="sm"
                       className="relative h-9 w-9 rounded-full"
-                      title={tNavigation('breadcrumb.messages')}
+                      title={tBreadcrumb('messages')}
                       onClick={openMessagingDialog}
                     >
                       <MessageSquare className="h-7 w-7" />

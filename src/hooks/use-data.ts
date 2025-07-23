@@ -61,6 +61,7 @@ export function useCategories() {
       }
       return result.getSubcategories(parentId)
     },
+    getAllSubcategories: result.getAllSubcategories,
   }
 }
 
@@ -92,6 +93,7 @@ export function useData() {
     },
     getMainCategories: staticData.getMainCategories,
     getSubcategories: staticData.getSubcategories,
+    getAllSubcategories: staticData.getAllSubcategories,
     getPopularCategories: staticData.getPopularCategories,
     
     // Refresh functions

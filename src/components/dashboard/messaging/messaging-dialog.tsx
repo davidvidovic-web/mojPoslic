@@ -3,16 +3,27 @@
 import React from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
-import { MessagingProvider, useMessaging } from '@/contexts/messaging-context'
 import { ConversationView } from '@/components/messaging/conversation-view'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { MessageAttachment, Conversation } from '@/types/messaging'
 import { useTranslations } from 'next-intl'
+import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
+import { useOptimizedConversations } from '@/hooks/use-optimized-conversations'
 
 function MessagingDialogContent() {
   const { user } = useAuth()
   const { isMessagingDialogOpen, closeMessagingDialog } = useDialogStore()
+  const { setMessagingActive, conversations, totalUnreadCount } = useOptimizedMessaging()
+  const {
+    activeConversation,
+    setActiveConversation,
+    messages,
+    isLoadingMessages,
+    canLoadMore,
+    loadMoreMessages,
+    sendMessage
+  } = useOptimizedConversations()
   const t = useTranslations('messaging')
   const [isMobile, setIsMobile] = React.useState(false)
   
@@ -26,31 +37,18 @@ function MessagingDialogContent() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-  
-  const {
-    state,
-    setActiveConversation,
-    sendMessage,
-    loadMessages,
-    sendTypingIndicator,
-    archiveConversation,
-    markConversationAsRead,
-    loadConversations,
-  } = useMessaging()
 
-  // Load conversations when dialog opens
+  // Notify optimized messaging when dialog opens/closes
   React.useEffect(() => {
-    if (isMessagingDialogOpen && user) {
-      loadConversations()
-    }
-  }, [isMessagingDialogOpen, user, loadConversations])
+    setMessagingActive(isMessagingDialogOpen)
+  }, [isMessagingDialogOpen, setMessagingActive])
 
   const handleSendMessage = async (content: string, attachments?: File[]) => {
-    if (!state.activeConversation) return
+    if (!activeConversation) return
     
     try {
       await sendMessage({
-        conversationId: state.activeConversation.id,
+        conversationId: activeConversation.id,
         content,
         messageType: attachments && attachments.length > 0 ? 'file' : 'text',
       })
@@ -61,18 +59,16 @@ function MessagingDialogContent() {
 
   const handleSelectConversation = (conversation: Conversation) => {
     setActiveConversation(conversation)
-    markConversationAsRead(conversation.id)
-    // Load messages immediately when conversation is selected
-    loadMessages(conversation.id)
   }
 
   const handleTyping = (isTyping: boolean) => {
-    sendTypingIndicator(isTyping)
+    // TODO: Implement optimized typing indicator
+    console.log('Typing:', isTyping)
   }
 
   const handleLoadMoreMessages = () => {
-    if (state.activeConversation) {
-      loadMessages(state.activeConversation.id)
+    if (canLoadMore) {
+      loadMoreMessages()
     }
   }
 
@@ -83,13 +79,12 @@ function MessagingDialogContent() {
   }
 
   const handleArchiveConversation = (conversationId: string) => {
-    archiveConversation(conversationId)
+    // TODO: Implement archive with optimized system
+    console.log('Archive conversation:', conversationId)
   }
 
-  // Calculate total unread count
-  const unreadCount = state.conversations.reduce((total, conversation) => {
-    return total + (conversation.unread_count || 0)
-  }, 0)
+  // Use total unread count from optimized messaging
+  const unreadCount = totalUnreadCount
 
   if (!user) return null
 
@@ -120,9 +115,9 @@ function MessagingDialogContent() {
         </DialogHeader>
         <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 overflow-hidden">
           <ConversationView
-            conversations={state.conversations}
-            selectedConversation={state.activeConversation}
-            messages={state.messages}
+            conversations={conversations}
+            selectedConversation={activeConversation}
+            messages={messages}
             currentUserId={user.id}
             onSelectConversation={handleSelectConversation}
             onSendMessage={handleSendMessage}
@@ -130,12 +125,12 @@ function MessagingDialogContent() {
             onTyping={handleTyping}
             onAttachmentClick={handleAttachmentClick}
             onArchiveConversation={handleArchiveConversation}
-            typingUsers={state.typingUsers}
+            typingUsers={[]} // TODO: Implement with optimized system
             loading={{
-              conversations: state.isLoading,
-              messages: state.isLoadingMessages,
+              conversations: false, // Handled by optimized messaging
+              messages: isLoadingMessages,
             }}
-            hasMoreMessages={state.hasMoreMessages}
+            hasMoreMessages={canLoadMore}
             locale="en"
             className="h-full"
             isMobile={isMobile}
@@ -147,9 +142,5 @@ function MessagingDialogContent() {
 }
 
 export function MessagingDialog() {
-  return (
-    <MessagingProvider>
-      <MessagingDialogContent />
-    </MessagingProvider>
-  )
+  return <MessagingDialogContent />
 }

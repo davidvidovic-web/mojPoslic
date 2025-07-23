@@ -27,7 +27,7 @@ export function CategoriesFilter({
   showSubcategories = false,
   stackOnMobile = false
 }: CategoriesFilterProps) {
-  const { categories, isLoading, getCategoriesByParent } = useCategories()
+  const { isLoading, getCategoriesByParent, getAllSubcategories, getCategoryByKey } = useCategories()
   const t = useTranslations('filters')
   const locale = useLocale()
   
@@ -36,10 +36,13 @@ export function CategoriesFilter({
   // Get only main categories (no parent)
   const mainCategories = getCategoriesByParent(undefined)
   
-  // Get ALL subcategories from all main categories
-  const allSubcategories = Array.isArray(categories) 
-    ? categories.filter(cat => cat.parent_id) 
-    : []
+  // Get subcategories based on selected category or all subcategories
+  const relevantSubcategories = value && value !== 'all' 
+    ? (() => {
+        const selectedCategory = getCategoryByKey(value)
+        return selectedCategory ? getCategoriesByParent(selectedCategory.id) : []
+      })()
+    : getAllSubcategories() // Get all subcategories when no parent is selected
 
   // Helper function to get category name based on locale
   const getCategoryName = (category: {
@@ -70,12 +73,7 @@ export function CategoriesFilter({
           
           {Array.isArray(mainCategories) && mainCategories.map((category) => (
             <SelectItem key={category.id} value={category.key}>
-              <span className="flex items-center gap-2">
-                {getCategoryName(category)}
-                {category.is_popular && (
-                  <span className="text-xs bg-secondary text-secondary-foreground px-1 rounded">{t('popular')}</span>
-                )}
-              </span>
+              {getCategoryName(category)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -93,7 +91,7 @@ export function CategoriesFilter({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('allSubcategories')}</SelectItem>
-            {Array.isArray(allSubcategories) && allSubcategories.map((subcategory) => (
+            {Array.isArray(relevantSubcategories) && relevantSubcategories.map((subcategory) => (
               <SelectItem key={subcategory.id} value={subcategory.key}>
                 {getCategoryName(subcategory)}
               </SelectItem>

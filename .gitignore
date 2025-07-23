@@ -31,8 +31,8 @@
 *.pem
 
 # cache files (but keep directory structure)
-/public/cache/*.json
-/public/cache/metadata.json
+/public/static/*.json
+/public/static/metadata.json
 
 # debug
 npm-debug.log*

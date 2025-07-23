@@ -1,9 +1,9 @@
 # Vercel ignore file
 # Ensure these files/folders are NOT ignored (include them in deployment)
 
-# Do NOT ignore public/cache/ directory and its contents
-!public/cache/
-!public/cache/**
+# Do NOT ignore public/static/ directory and its contents
+!public/static/
+!public/static/**
 
 # Standard ignores (keep these)
 node_modules/

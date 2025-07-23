@@ -74,6 +74,7 @@ export function useStaticCategories(): UseStaticDataResult<Category[]> & {
   getCategoryByKey: (key: string) => Category | undefined
   getMainCategories: () => Category[]
   getSubcategories: (parentId: string) => Category[]
+  getAllSubcategories: () => Category[]
   getPopularCategories: () => Category[]
 } {
   const [categories, setCategories] = useState<Category[]>([])
@@ -114,6 +115,7 @@ export function useStaticCategories(): UseStaticDataResult<Category[]> & {
     getCategoryByKey: staticDataManager.getCategoryByKey.bind(staticDataManager),
     getMainCategories: staticDataManager.getMainCategories.bind(staticDataManager),
     getSubcategories: staticDataManager.getSubcategories.bind(staticDataManager),
+    getAllSubcategories: staticDataManager.getAllSubcategories.bind(staticDataManager),
     getPopularCategories: staticDataManager.getPopularCategories.bind(staticDataManager),
   }
 }
@@ -149,6 +151,7 @@ export function useStaticData() {
     getCategoryByKey: categories.getCategoryByKey,
     getMainCategories: categories.getMainCategories,
     getSubcategories: categories.getSubcategories,
+    getAllSubcategories: categories.getAllSubcategories,
     getPopularCategories: categories.getPopularCategories,
     
     // Cache stats

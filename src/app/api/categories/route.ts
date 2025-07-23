@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
-const CATEGORIES_CACHE_FILE = join(process.cwd(), 'public', 'cache', 'categories.json')
+const CATEGORIES_CACHE_FILE = join(process.cwd(), 'public', 'static', 'categories.json')
 
 interface FlatCategory {
   id: string

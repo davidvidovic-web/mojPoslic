@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
-const CITIES_CACHE_FILE = join(process.cwd(), 'public', 'cache', 'cities.json')
+const CITIES_CACHE_FILE = join(process.cwd(), 'public', 'static', 'cities.json')
 
 export async function GET() {
   try {

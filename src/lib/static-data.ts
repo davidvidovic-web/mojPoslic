@@ -64,40 +64,20 @@ class StaticDataManager {
       const isServer = typeof window === 'undefined'
       
       if (isServer) {
-        // Server-side: use absolute URLs or fallback to localhost
-        const baseUrl = process.env.VERCEL_URL 
-          ? `https://${process.env.VERCEL_URL}`
-          : process.env.NEXTAUTH_URL 
-          ? process.env.NEXTAUTH_URL
-          : 'http://localhost:3000'
-        
-        const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
-          fetch(`${baseUrl}/cache/cities.json`),
-          fetch(`${baseUrl}/cache/categories.json`),
-          fetch(`${baseUrl}/cache/metadata.json`).catch(() => null) // metadata is optional
-        ])
-        
-        if (!citiesRes.ok) {
-          throw new Error(`Failed to load cities: ${citiesRes.status} ${citiesRes.statusText}`)
-        }
-        if (!categoriesRes.ok) {
-          throw new Error(`Failed to load categories: ${categoriesRes.status} ${categoriesRes.statusText}`)
-        }
-        
-        const [citiesData, categoriesData, metadataData] = await Promise.all([
-          citiesRes.json() as Promise<CitiesResponse>,
-          categoriesRes.json() as Promise<CategoriesResponse>,
-          metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
-        ])
-        
-        return {
-          cities: citiesData.cities,
-          categories: this.processCategories(categoriesData.categories),
-          lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
-          version: metadataData?.version || '1.0.0'
+        // Server-side: use API route to access filesystem data
+        try {
+          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+          const response = await fetch(`${baseUrl}/api/static-data`)
+          if (response.ok) {
+            return await response.json()
+          }
+          throw new Error(`Server static data API failed: ${response.status}`)
+        } catch (error) {
+          console.error('Server-side API load failed, falling back to client-side fetch:', error)
+          return this.loadDataFromFetch()
         }
       } else {
-        // Client-side: use relative URLs
+        // Client-side: use fetch only
         return this.loadDataFromFetch()
       }
     } catch (error) {
@@ -106,44 +86,16 @@ class StaticDataManager {
     }
   }
 
-  /**
-   * Load data from filesystem (server-side only) - kept for potential future use
-   */
-  private async loadDataFromFileSystem(): Promise<StaticDataCache> {
-    // Use eval to prevent webpack from analyzing the import during build
-    const fs = await eval('import("fs")')
-    const path = await eval('import("path")')
-    
-    const publicDir = path.join(process.cwd(), 'public')
-    
-    const [citiesData, categoriesData, metadataData] = await Promise.all([
-      fs.promises.readFile(path.join(publicDir, 'cache', 'cities.json'), 'utf8')
-        .then((data: string) => JSON.parse(data) as CitiesResponse),
-      fs.promises.readFile(path.join(publicDir, 'cache', 'categories.json'), 'utf8')
-        .then((data: string) => JSON.parse(data) as CategoriesResponse),
-      fs.promises.readFile(path.join(publicDir, 'cache', 'metadata.json'), 'utf8')
-        .then((data: string) => JSON.parse(data) as CacheMetadata)
-        .catch(() => null) // metadata is optional
-    ])
-    
-    return {
-      cities: citiesData.cities,
-      categories: this.processCategories(categoriesData.categories),
-      lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
-      version: metadataData?.version || '1.0.0'
-    }
-  }
-
-  /**
+    /**
    * Load data from fetch (client-side only)
    */
   private async loadDataFromFetch(): Promise<StaticDataCache> {
     // Try to load from cache files first, then fallback to API endpoints
     try {
       const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
-        fetch('/cache/cities.json'),
-        fetch('/cache/categories.json'),
-        fetch('/cache/metadata.json').catch(() => null) // metadata is optional
+        fetch('/static/cities.json'),
+        fetch('/static/categories.json'),
+        fetch('/static/metadata.json').catch(() => null) // metadata is optional
       ])
       
       if (citiesRes.ok && categoriesRes.ok) {
@@ -167,8 +119,19 @@ class StaticDataManager {
     // Fallback to API endpoints
     console.log('Loading static data from API endpoints...')
     const [citiesRes, categoriesRes] = await Promise.all([
-      fetch('/api/cities'),
-      fetch('/api/categories')
+      fetch('/api/cities', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add cache control headers to avoid stale responses
+        cache: 'no-store'
+      }),
+      fetch('/api/categories', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store'
+      })
     ])
     
     if (!citiesRes.ok) {
@@ -320,6 +283,28 @@ class StaticDataManager {
   getSubcategories(parentId: string): Category[] {
     const parent = this.getCategoryById(parentId)
     return parent?.children || []
+  }
+
+  /**
+   * Get all subcategories from all main categories (flattened)
+   */
+  getAllSubcategories(): Category[] {
+    if (!this.cache?.categories) return []
+    
+    const allSubcategories: Category[] = []
+    
+    const collectSubcategories = (categories: Category[]) => {
+      categories.forEach(category => {
+        if (category.children && category.children.length > 0) {
+          allSubcategories.push(...category.children)
+          // Recursively collect nested subcategories if any
+          collectSubcategories(category.children)
+        }
+      })
+    }
+    
+    collectSubcategories(this.cache.categories)
+    return allSubcategories
   }
 
   getPopularCategories(): Category[] {

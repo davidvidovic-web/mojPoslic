@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
-import { useMessaging } from '@/contexts/messaging-context'
+import { useOptimizedJobMessaging } from '@/hooks/use-optimized-job-messaging'
 import { Job } from '@/types/job'
 import { ApplicationStatus } from '@/types/application'
 export function ClientDashboard() {
@@ -51,8 +51,8 @@ export function ClientDashboard() {
     openMessagingDialog,
   } = useDialogStore()
   
-  // Messaging context for creating conversations
-  const { createJobConversation, setActiveConversation } = useMessaging()
+  // Optimized messaging for job conversations
+  const { startJobMessaging } = useOptimizedJobMessaging()
   
   const handleJobPosted = () => {
     closeJobPostDialog()
@@ -136,17 +136,12 @@ export function ClientDashboard() {
         jobTitle: application.job.title
       })
 
-      // Create a job-related conversation
-      const conversation = await createJobConversation(
+      // Start job messaging with optimized system
+      await startJobMessaging(
         application.job.id,
         userId,
         application.job.title
       )
-
-      console.log('Created conversation:', conversation)
-
-      // Set the newly created conversation as active
-      setActiveConversation(conversation)
 
       // Open the messaging dialog
       openMessagingDialog()

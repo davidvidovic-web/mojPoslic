@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
 import { ClientDashboard } from '@/components/dashboard/client-dashboard'
 import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
-import { RoleGuard } from '@/components/auth/role-guard'
+import { RegistrationFlowGuard } from '@/components/auth/registration-flow-guard'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { UserRole } from '@prisma/client'
@@ -117,7 +117,7 @@ export default function DashboardPage() {
   }
   
   return (
-    <RoleGuard requireRole={true} requireProfileSetup={true}>
+    <RegistrationFlowGuard>
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -128,6 +128,6 @@ export default function DashboardPage() {
       }>
         <DashboardContent user={user} loading={false} />
       </Suspense>
-    </RoleGuard>
+    </RegistrationFlowGuard>
   )
 }

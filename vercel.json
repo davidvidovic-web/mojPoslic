@@ -19,7 +19,7 @@
   ],
   "headers": [
     {
-      "source": "/cache/(.*)",
+      "source": "/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -27,6 +27,5 @@
         }
       ]
     }
-  ],
-  "buildOutputDirectory": ".next"
+  ]
 }
