@@ -49,13 +49,7 @@ export async function GET(
         reply_to_message_id,
         edited_at,
         deleted_at,
-        created_at,
-        updated_at,
-        sender:sender_id (
-          id,
-          name,
-          avatar_url
-        )
+        created_at
       `)
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: false })
@@ -96,8 +90,8 @@ export async function GET(
       editedAt: msg.edited_at,
       deletedAt: msg.deleted_at,
       createdAt: msg.created_at,
-      updatedAt: msg.updated_at,
-      sender: msg.sender
+      // Note: sender info would need to be fetched separately from your User model
+      sender: null
     })) || []
 
     // Determine if there are more messages

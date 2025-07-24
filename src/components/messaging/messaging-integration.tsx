@@ -92,19 +92,10 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
   // Set up optimized real-time integration
   useOptimizedRealtime({
     onNewMessage: (message) => {
-      console.log('New real-time message received:', message)
       addRealtimeMessage(message)
-    },
-    onMessageUpdate: (message) => {
-      console.log('Real-time message update received:', message)
-      addRealtimeMessage(message) // This will update existing messages
     },
     onTypingIndicator: (conversationId, userId, isTyping, userName) => {
       handleIncomingTyping(conversationId, userId, isTyping, userName)
-    },
-    onConversationUpdate: (conversationId) => {
-      console.log('Real-time conversation update:', conversationId)
-      // The optimized messaging hook will handle conversation updates
     },
     activeConversationId: activeConversation?.id || null,
     isMessagingActive: open

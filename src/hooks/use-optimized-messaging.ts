@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { RealtimeService } from '@/lib/messaging/realtime-service'
 import { PerformanceMonitor } from '@/lib/messaging/performance-monitor'
 import type { Conversation, Message, TypingUser } from '@/types/messaging'
 
@@ -185,26 +184,10 @@ export function useOptimizedMessaging() {
   const setupRealtimeSubscriptions = useCallback(() => {
     if (!user || realtimeUnsubscribeRef.current) return
 
-    // Subscribe to conversation updates for this user
-    const unsubscribe = RealtimeService.subscribeToConversationUpdates(
-      'global', // Listen globally for user's conversations
-      () => {
-        // Queue a notification for processing
-        notificationQueueRef.current.push({
-          type: 'conversation_updated',
-          conversationId: 'global',
-          timestamp: new Date()
-        })
-        
-        // Process immediately if messaging is active, otherwise queue for later
-        if (isMessagingActiveRef.current) {
-          processNotificationQueue()
-        }
-      }
-    )
-
-    realtimeUnsubscribeRef.current = unsubscribe
-  }, [user, processNotificationQueue])
+    console.log('Real-time conversation subscriptions disabled - using optimized realtime hook instead')
+    // TODO: Move conversation-level subscriptions to use-optimized-realtime hook if needed
+    
+  }, [user])
 
   // Intelligent background sync based on page visibility
   const setupBackgroundSync = useCallback(() => {
@@ -384,8 +367,8 @@ export function useOptimizedMessaging() {
         return prev
       })
 
-      // Send to real-time service (this would integrate with RealtimeService)
-      RealtimeService.sendTypingIndicator(conversationId, user.id, isTyping)
+      // Send to real-time service (disabled - using optimized realtime hook instead)
+      console.log('Typing indicator sending disabled - implement in optimized realtime hook if needed')
 
     } catch (error) {
       console.error('Error sending typing indicator:', error)

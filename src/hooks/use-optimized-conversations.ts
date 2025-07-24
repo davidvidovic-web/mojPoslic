@@ -74,7 +74,6 @@ export function useOptimizedConversations() {
 
     // Check cache first (only for initial load, not load more)
     if (!loadMore && isCacheFresh(conversationId)) {
-      console.log(`Using cached messages for conversation ${conversationId}`)
       return
     }
 
@@ -117,7 +116,7 @@ export function useOptimizedConversations() {
       }
 
       const { messages, pagination } = await response.json()
-
+      
       // Update cache
       setConversationCache(prev => {
         const existingMessages = loadMore ? (prev[conversationId]?.messages || []) : []
@@ -137,7 +136,6 @@ export function useOptimizedConversations() {
 
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log(`Message loading cancelled for conversation ${conversationId}`)
         return
       }
 
@@ -207,7 +205,13 @@ export function useOptimizedConversations() {
         throw new Error(`Failed to send message: ${response.status}`)
       }
 
-      const { message: sentMessage } = await response.json()
+      const responseData = await response.json()
+      
+      if (!responseData.success) {
+        throw new Error(responseData.error || 'Failed to send message')
+      }
+
+      const sentMessage = responseData.data
 
       // Replace temp message with real message
       setConversationCache(prev => ({

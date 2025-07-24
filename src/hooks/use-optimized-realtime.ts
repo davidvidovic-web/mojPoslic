@@ -2,16 +2,39 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { RealtimeService } from '@/lib/messaging/realtime-service'
+import { authenticatedSupabase } from '@/lib/messaging/supabase'
+import { useSupabaseAuth } from '@/hooks/use-supabase-auth'
 import type { Message } from '@/types/messaging'
+import type { RealtimeChannel } from '@supabase/supabase-js'
+
+interface PostgresChangesPayload {
+  new: {
+    id: string
+    conversation_id: string
+    sender_id: string
+    content?: string
+    message_type?: 'text' | 'image' | 'file' | 'system'
+    attachment_url?: string
+    attachment_filename?: string
+    attachment_size?: number
+    reply_to_message_id?: string
+    edited_at?: string
+    deleted_at?: string
+    created_at: string
+  }
+}
 
 interface OptimizedRealtimeConfig {
   onNewMessage?: (message: Message) => void
-  onMessageUpdate?: (message: Message) => void
   onTypingIndicator?: (conversationId: string, userId: string, isTyping: boolean, userName?: string) => void
-  onConversationUpdate?: (conversationId: string) => void
   activeConversationId?: string | null
   isMessagingActive?: boolean
+}
+
+interface RetryState {
+  count: number
+  lastAttempt: number
+  maxRetries: number
 }
 
 /**
@@ -19,168 +42,184 @@ interface OptimizedRealtimeConfig {
  * - Only subscribes to active conversation messages
  * - Batches conversation updates
  * - Automatically manages connection lifecycle
+ * - Includes robust retry logic for connection failures
+ * - Integrated with NextAuth JWT authentication
  */
 export function useOptimizedRealtime({
   onNewMessage,
-  onMessageUpdate,
-  onTypingIndicator,
-  onConversationUpdate,
   activeConversationId,
   isMessagingActive = true
 }: OptimizedRealtimeConfig) {
   const { user } = useAuth()
-  const activeSubscriptionRef = useRef<(() => void) | null>(null)
-  const globalSubscriptionRef = useRef<(() => void) | null>(null)
-  const typingSubscriptionRef = useRef<(() => void) | null>(null)
+  const { isAuthenticated } = useSupabaseAuth() // Sync NextAuth with Supabase
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const lastActiveConversationRef = useRef<string | null>(null)
+  const isSubscribingRef = useRef(false)
+  const retryStateRef = useRef<RetryState>({
+    count: 0,
+    lastAttempt: 0,
+    maxRetries: 5
+  })
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Cleanup function for all subscriptions
   const cleanupSubscriptions = useCallback(() => {
-    if (activeSubscriptionRef.current) {
-      activeSubscriptionRef.current()
-      activeSubscriptionRef.current = null
+    // Clear any pending retries
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
     }
-    if (globalSubscriptionRef.current) {
-      globalSubscriptionRef.current()
-      globalSubscriptionRef.current = null
+    
+    if (channelRef.current) {
+      authenticatedSupabase.removeChannel(channelRef.current)
+      channelRef.current = null
     }
-    if (typingSubscriptionRef.current) {
-      typingSubscriptionRef.current()
-      typingSubscriptionRef.current = null
+    
+    lastActiveConversationRef.current = null
+    isSubscribingRef.current = false
+    
+    // Reset retry state
+    retryStateRef.current = {
+      count: 0,
+      lastAttempt: 0,
+      maxRetries: 5
     }
   }, [])
 
-  // Setup global conversation updates subscription (lightweight)
-  const setupGlobalSubscription = useCallback(() => {
-    if (!user || !isMessagingActive || globalSubscriptionRef.current) return
-
-    console.log('Setting up global conversation subscription')
-    const unsubscribe = RealtimeService.subscribeToConversationUpdates(
-      'global',
-      (conversation: Record<string, unknown>) => {
-        // Extract conversation ID from the updated conversation object
-        const conversationId = conversation.id as string
-        if (conversationId && onConversationUpdate) {
-          onConversationUpdate(conversationId)
-        }
-      }
-    )
-
-    globalSubscriptionRef.current = unsubscribe
-  }, [user, isMessagingActive, onConversationUpdate])
-
   // Setup active conversation message subscription
-  const setupActiveConversationSubscription = useCallback(() => {
-    if (!user || !activeConversationId || !isMessagingActive) return
-
-    // Don't re-subscribe to the same conversation
-    if (lastActiveConversationRef.current === activeConversationId) return
-
-    console.log(`Setting up message subscription for conversation: ${activeConversationId}`)
-
-    // Clean up previous active subscription
-    if (activeSubscriptionRef.current) {
-      activeSubscriptionRef.current()
-      activeSubscriptionRef.current = null
+  const setupActiveConversationSubscription = useCallback(async () => {
+    if (!user || !activeConversationId || !isMessagingActive || !onNewMessage || !isAuthenticated) {
+      return
     }
 
-    // Subscribe to new messages and updates for active conversation only
-    const unsubscribe = RealtimeService.subscribeToMessages(
-      activeConversationId,
-      (message: Message) => {
-        console.log('Real-time new message received:', message)
-        if (onNewMessage) {
-          onNewMessage(message)
-        }
-      },
-      (message: Message) => {
-        console.log('Real-time message update received:', message)
-        if (onMessageUpdate) {
-          onMessageUpdate(message)
-        }
-      }
-    )
-
-    activeSubscriptionRef.current = unsubscribe
-    lastActiveConversationRef.current = activeConversationId
-  }, [user, activeConversationId, isMessagingActive, onNewMessage, onMessageUpdate])
-
-  // Setup typing indicators subscription for active conversation
-  const setupTypingSubscription = useCallback(() => {
-    if (!user || !activeConversationId || !isMessagingActive || !onTypingIndicator) return
-
-    console.log(`Setting up typing subscription for conversation: ${activeConversationId}`)
-
-    // Clean up previous typing subscription
-    if (typingSubscriptionRef.current) {
-      typingSubscriptionRef.current()
-      typingSubscriptionRef.current = null
+    // Prevent duplicate subscriptions
+    if (
+      lastActiveConversationRef.current === activeConversationId && 
+      channelRef.current && 
+      !isSubscribingRef.current
+    ) {
+      return
     }
 
-    // Subscribe to typing indicators for active conversation
-    const unsubscribe = RealtimeService.subscribeToTyping(
-      activeConversationId,
-      (typingUsers) => {
-        // Process each typing user in the array
-        typingUsers.forEach(typingData => {
-          const userId = typingData.user_id
-          const isTyping = typingData.is_typing
-          const userName = typingData.user?.name || 'Unknown User'
-          
-          if (userId && userId !== user.id) {
-            onTypingIndicator(activeConversationId, userId, isTyping, userName)
+    if (isSubscribingRef.current) {
+      return
+    }
+
+    isSubscribingRef.current = true
+
+    // Clean up previous subscription
+    if (channelRef.current) {
+      authenticatedSupabase.removeChannel(channelRef.current)
+      channelRef.current = null
+    }
+
+    try {
+      // Create a simpler channel name
+      const channelName = `conversation-${activeConversationId}`
+      
+      // Subscribe to new messages directly with authenticated Supabase
+      const channel = authenticatedSupabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${activeConversationId}`
+          },
+          (payload: PostgresChangesPayload) => {
+            try {
+              // Create a basic message from the payload
+              const basicMessage: Message = {
+                id: payload.new.id,
+                conversationId: payload.new.conversation_id,
+                senderId: payload.new.sender_id,
+                content: payload.new.content || undefined,
+                messageType: payload.new.message_type || 'text',
+                attachmentUrl: payload.new.attachment_url || undefined,
+                attachmentFilename: payload.new.attachment_filename || undefined,
+                attachmentSize: payload.new.attachment_size || undefined,
+                replyToMessageId: payload.new.reply_to_message_id || undefined,
+                editedAt: payload.new.edited_at || undefined,
+                deletedAt: payload.new.deleted_at || undefined,
+                createdAt: payload.new.created_at,
+                sender: undefined // Will be missing but at least message shows
+              }
+              
+              if (onNewMessage) {
+                onNewMessage(basicMessage)
+              }
+            } catch (error) {
+              console.error('Error processing real-time message:', error)
+            }
+          }
+        )
+        .subscribe((status: string, error?: Error) => {
+          if (error) {
+            isSubscribingRef.current = false
+          }
+          if (status === 'SUBSCRIBED') {
+            isSubscribingRef.current = false
+            // Reset retry count on successful connection
+            retryStateRef.current.count = 0
+          }
+          if (status === 'CHANNEL_ERROR') {
+            isSubscribingRef.current = false
+            
+            // Clean up the failed channel
+            if (channelRef.current) {
+              authenticatedSupabase.removeChannel(channelRef.current)
+              channelRef.current = null
+            }
+            
+            // Attempt retry with backoff if we haven't exceeded max retries
+            const retry = retryStateRef.current
+            if (retry.count < retry.maxRetries) {
+              const delay = Math.min(1000 * Math.pow(2, retry.count), 16000)
+              
+              retryTimeoutRef.current = setTimeout(() => {
+                retry.count++
+                retry.lastAttempt = Date.now()
+                
+                // Reset subscription state and try again
+                lastActiveConversationRef.current = null
+                setupActiveConversationSubscription()
+              }, delay)
+            }
+          }
+          if (status === 'CLOSED') {
+            isSubscribingRef.current = false
           }
         })
-      }
-    )
 
-    typingSubscriptionRef.current = unsubscribe
-  }, [user, activeConversationId, isMessagingActive, onTypingIndicator])
+      channelRef.current = channel
+      lastActiveConversationRef.current = activeConversationId
+    } catch {
+      isSubscribingRef.current = false
+    }
+  }, [user, activeConversationId, isMessagingActive, onNewMessage, isAuthenticated])
 
-  // Effect to manage global subscription
+  // Effect to manage active conversation subscriptions with debouncing
   useEffect(() => {
-    if (isMessagingActive) {
-      setupGlobalSubscription()
-    } else {
-      if (globalSubscriptionRef.current) {
-        globalSubscriptionRef.current()
-        globalSubscriptionRef.current = null
+    // Add a longer delay to prevent rapid re-subscriptions
+    const timeout = setTimeout(() => {
+      if (activeConversationId && isMessagingActive && user && onNewMessage && isAuthenticated) {
+        setupActiveConversationSubscription()
+      } else {
+        cleanupSubscriptions()
       }
-    }
+    }, 500) // 500ms delay
 
-    return () => {
-      if (globalSubscriptionRef.current) {
-        globalSubscriptionRef.current()
-        globalSubscriptionRef.current = null
-      }
-    }
-  }, [isMessagingActive, setupGlobalSubscription])
-
-  // Effect to manage active conversation subscriptions
-  useEffect(() => {
-    if (activeConversationId && isMessagingActive) {
-      setupActiveConversationSubscription()
-      setupTypingSubscription()
-    } else {
-      // Clean up active conversation subscriptions when no active conversation
-      if (activeSubscriptionRef.current) {
-        activeSubscriptionRef.current()
-        activeSubscriptionRef.current = null
-      }
-      if (typingSubscriptionRef.current) {
-        typingSubscriptionRef.current()
-        typingSubscriptionRef.current = null
-      }
-      lastActiveConversationRef.current = null
-    }
-  }, [activeConversationId, isMessagingActive, setupActiveConversationSubscription, setupTypingSubscription])
+    return () => clearTimeout(timeout)
+  }, [setupActiveConversationSubscription, activeConversationId, isMessagingActive, user, onNewMessage, isAuthenticated, cleanupSubscriptions])
 
   // Effect to handle user changes
   useEffect(() => {
-    if (!user) {
+    if (!user || !isAuthenticated) {
       cleanupSubscriptions()
     }
-  }, [user, cleanupSubscriptions])
+  }, [user, isAuthenticated, cleanupSubscriptions])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -190,9 +229,8 @@ export function useOptimizedRealtime({
   }, [cleanupSubscriptions])
 
   return {
-    isConnected: Boolean(globalSubscriptionRef.current),
-    hasActiveSubscription: Boolean(activeSubscriptionRef.current),
-    hasTypingSubscription: Boolean(typingSubscriptionRef.current),
+    isConnected: Boolean(channelRef.current),
+    hasActiveSubscription: Boolean(channelRef.current),
     cleanup: cleanupSubscriptions
   }
 }

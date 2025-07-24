@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, RealtimeChannel, RealtimeChannelOptions } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -19,6 +19,61 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
   },
 })
+
+// Enhanced client with NextAuth JWT integration
+export class AuthenticatedSupabaseClient {
+  private client: ReturnType<typeof createClient>
+  private currentToken: string | null = null
+
+  constructor() {
+    this.client = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    })
+  }
+
+  // Set the NextAuth JWT for real-time authentication
+  setAuthToken(token: string | null) {
+    if (token && token !== this.currentToken) {
+      this.currentToken = token
+      this.client.realtime.setAuth(token)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔐 Supabase real-time auth token updated')
+      }
+    } else if (!token && this.currentToken) {
+      this.currentToken = null
+      this.client.realtime.setAuth(null)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔐 Supabase real-time auth token cleared')
+      }
+    }
+  }
+
+  // Get the underlying Supabase client
+  getClient() {
+    return this.client
+  }
+
+  // Channel method for real-time subscriptions
+  channel(name: string, options?: RealtimeChannelOptions) {
+    return this.client.channel(name, options)
+  }
+
+  // Remove channel method
+  removeChannel(channel: RealtimeChannel) {
+    return this.client.removeChannel(channel)
+  }
+}
+
+// Create a singleton instance
+export const authenticatedSupabase = new AuthenticatedSupabaseClient()
 
 // Function to create an authenticated Supabase client with a user token
 export function createAuthenticatedSupabaseClient(accessToken?: string) {

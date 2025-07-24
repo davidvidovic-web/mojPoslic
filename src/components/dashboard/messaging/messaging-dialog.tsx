@@ -10,6 +10,7 @@ import { MessageAttachment, Conversation } from '@/types/messaging'
 import { useTranslations } from 'next-intl'
 import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 import { useOptimizedConversations } from '@/hooks/use-optimized-conversations'
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime'
 import { cn } from '@/lib/utils'
 
 function MessagingDialogContent() {
@@ -23,7 +24,8 @@ function MessagingDialogContent() {
     isLoadingMessages,
     canLoadMore,
     loadMoreMessages,
-    sendMessage
+    sendMessage,
+    addRealtimeMessage
   } = useOptimizedConversations()
   const t = useTranslations('messaging')
   const [isMobile, setIsMobile] = React.useState(false)
@@ -43,6 +45,15 @@ function MessagingDialogContent() {
   React.useEffect(() => {
     setMessagingActive(isMessagingDialogOpen)
   }, [isMessagingDialogOpen, setMessagingActive])
+
+  // Set up real-time messaging
+  useOptimizedRealtime({
+    onNewMessage: (message) => {
+      addRealtimeMessage(message)
+    },
+    activeConversationId: activeConversation?.id || null,
+    isMessagingActive: isMessagingDialogOpen
+  })
 
   const handleSendMessage = async (content: string, attachments?: File[]) => {
     if (!activeConversation) return
@@ -64,7 +75,6 @@ function MessagingDialogContent() {
 
   const handleTyping = (isTyping: boolean) => {
     // TODO: Implement optimized typing indicator
-    console.log('Typing:', isTyping)
   }
 
   const handleLoadMoreMessages = () => {
@@ -79,9 +89,8 @@ function MessagingDialogContent() {
     }
   }
 
-  const handleArchiveConversation = (conversationId: string) => {
+  const handleArchiveConversation = () => {
     // TODO: Implement archive with optimized system
-    console.log('Archive conversation:', conversationId)
   }
 
   // Use total unread count from optimized messaging

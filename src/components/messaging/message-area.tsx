@@ -152,7 +152,19 @@ export const MessageArea: React.FC<MessageAreaProps> = ({
   const groupedMessages = React.useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
     
-    messages.forEach((message) => {
+    messages.forEach((message, index) => {
+      // Skip null/undefined messages
+      if (!message) {
+        console.warn('Null/undefined message at index:', index);
+        return;
+      }
+      
+      // Skip messages without createdAt (shouldn't happen but safety check)
+      if (!message.createdAt) {
+        console.warn('Message missing createdAt:', message);
+        return;
+      }
+      
       const messageDate = new Date(message.createdAt).toDateString();
       const lastGroup = groups[groups.length - 1];
       

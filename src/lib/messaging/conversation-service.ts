@@ -139,8 +139,6 @@ export class ConversationService {
    */
   static async createConversation(data: CreateConversationData, createdBy: string): Promise<Conversation> {
     try {
-      console.log('Creating conversation with data:', { data, createdBy });
-
       // Start a transaction
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
@@ -152,8 +150,6 @@ export class ConversationService {
         .select()
         .single()
 
-      console.log('Conversation insert result:', { conversation, convError });
-
       if (convError) throw convError
 
       // Add participants
@@ -163,19 +159,14 @@ export class ConversationService {
         role: userId === createdBy ? 'admin' : 'member'
       }))
 
-      console.log('Inserting participants:', participantInserts);
-
       const { error: participantsError } = await supabase
         .from('conversation_participants')
         .insert(participantInserts)
-
-      console.log('Participants insert result:', { participantsError });
 
       if (participantsError) throw participantsError
 
       // Return the created conversation with participants
       const fullConversation = await this.getConversationById(conversation.id)
-      console.log('Final conversation:', fullConversation);
       
       return fullConversation
     } catch (error) {
