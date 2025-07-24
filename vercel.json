@@ -17,6 +17,12 @@
       "schedule": "0 2 * * *"
     }
   ],
+  "rewrites": [
+    {
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
+    }
+  ],
   "headers": [
     {
       "source": "/static/(.*)",
@@ -24,6 +30,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=1800, s-maxage=1800"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json"
         }
       ]
     }

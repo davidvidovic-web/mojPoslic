@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { jobId, applicantId, jobTitle } = await request.json()
+    const { jobId, otherUserId, jobTitle } = await request.json()
 
-    if (!jobId || !applicantId || !jobTitle) {
+    if (!jobId || !otherUserId || !jobTitle) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: jobId, otherUserId, jobTitle' },
         { status: 400 }
       )
     }
@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
     // Create or get existing conversation
     const conversation = await MessagingIntegrationService.createJobConversationWithWelcome(
       jobId,
-      applicantId,
-      session.user.id,
+      session.user.id, // current user (client/job poster)
+      otherUserId,     // other user (tasker/applicant)
       jobTitle
     )
 

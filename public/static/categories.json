@@ -1,0 +1,631 @@
+{
+  "lastUpdated": "2025-07-20T18:45:00.000Z",
+  "version": "2.0.0",
+  "totalCount": 13,
+  "categories": [
+    {
+      "id": "1",
+      "key": "majstorski-radovi",
+      "name_bs": "Majstorski radovi i popravke",
+      "name_en": "Handyman work and repairs",
+      "name": "Handyman work and repairs",
+      "description": "All types of handyman services and home repairs",
+      "icon": "🔨",
+      "parent_id": null,
+      "sort_order": 1,
+      "is_active": true,
+      "is_popular": true,
+      "subcategories": [
+        {
+          "id": "1-1",
+          "key": "popravke-u-kuci",
+          "name_bs": "Popravke u kući",
+          "name_en": "Home repairs",
+          "name": "Home repairs",
+          "description": "General home repairs",
+          "parent_id": "1",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "1-2",
+          "key": "sastavljanje-namestaja",
+          "name_bs": "Sastavljanje nameštaja",
+          "name_en": "Furniture assembly",
+          "name": "Furniture assembly",
+          "description": "Assembly of furniture and installations",
+          "parent_id": "1",
+          "sort_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "1-3",
+          "key": "postavljanje-tv",
+          "name_bs": "Postavljanje TV-a i tehnike",
+          "name_en": "TV and tech installation",
+          "name": "TV and tech installation",
+          "description": "Installation of TVs and electronic equipment",
+          "parent_id": "1",
+          "sort_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "1-4",
+          "key": "klima-uređaji",
+          "name_bs": "Instalacija i servis klima uređaja",
+          "name_en": "AC installation and service",
+          "name": "AC installation and service",
+          "description": "Air conditioning installation and repair",
+          "parent_id": "1",
+          "sort_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "1-5",
+          "key": "molerski-radovi",
+          "name_bs": "Molerski radovi",
+          "name_en": "Painting work",
+          "name": "Painting work",
+          "description": "Professional painting services",
+          "parent_id": "1",
+          "sort_order": 5,
+          "is_active": true
+        },
+        {
+          "id": "1-6",
+          "key": "vodoinstalaterske",
+          "name_bs": "Vodoinstalaterske usluge",
+          "name_en": "Plumbing services",
+          "name": "Plumbing services",
+          "description": "Water pipes and plumbing repairs",
+          "parent_id": "1",
+          "sort_order": 6,
+          "is_active": true
+        },
+        {
+          "id": "1-7",
+          "key": "police-ormani",
+          "name_bs": "Postavljanje polica i ormana",
+          "name_en": "Shelves and cabinets installation",
+          "name": "Shelves and cabinets installation",
+          "description": "Installation of shelves and cabinet systems",
+          "parent_id": "1",
+          "sort_order": 7,
+          "is_active": true
+        },
+        {
+          "id": "1-8",
+          "key": "osvetljenje",
+          "name_bs": "Instalacija osvetljenja",
+          "name_en": "Lighting installation",
+          "name": "Lighting installation",
+          "description": "Installation of lighting fixtures",
+          "parent_id": "1",
+          "sort_order": 8,
+          "is_active": true
+        },
+        {
+          "id": "1-9",
+          "key": "elektricarske",
+          "name_bs": "Električarske usluge",
+          "name_en": "Electrical services",
+          "name": "Electrical services",
+          "description": "Electrical work and repairs",
+          "parent_id": "1",
+          "sort_order": 9,
+          "is_active": true
+        },
+        {
+          "id": "1-10",
+          "key": "stolarske",
+          "name_bs": "Stolarske usluge",
+          "name_en": "Carpentry services",
+          "name": "Carpentry services",
+          "description": "Professional carpentry work",
+          "parent_id": "1",
+          "sort_order": 10,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "key": "selidbe-transport",
+      "name_bs": "Selidbe i transport",
+      "name_en": "Moving and transport",
+      "name": "Moving and transport",
+      "description": "Moving services and transportation",
+      "icon": "🚚",
+      "parent_id": null,
+      "sort_order": 2,
+      "is_active": true,
+      "is_popular": true,
+      "subcategories": [
+        {
+          "id": "2-1",
+          "key": "kompletne-selidbe",
+          "name_bs": "Kompletne usluge selidbe",
+          "name_en": "Complete moving services",
+          "name": "Complete moving services",
+          "description": "Full service moving assistance",
+          "parent_id": "2",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "2-2",
+          "key": "pakovanje",
+          "name_bs": "Pakovanje i raspakivanje",
+          "name_en": "Packing and unpacking",
+          "name": "Packing and unpacking",
+          "description": "Professional packing services",
+          "parent_id": "2",
+          "sort_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "2-3",
+          "key": "tesk-namestaj",
+          "name_bs": "Selidba teškog nameštaja",
+          "name_en": "Heavy furniture moving",
+          "name": "Heavy furniture moving",
+          "description": "Moving of heavy furniture and appliances",
+          "parent_id": "2",
+          "sort_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "2-4",
+          "key": "bela-tehnika",
+          "name_bs": "Selidba bele tehnike",
+          "name_en": "Appliance moving",
+          "name": "Appliance moving",
+          "description": "Moving of household appliances",
+          "parent_id": "2",
+          "sort_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "2-5",
+          "key": "pojedinacni-predmeti",
+          "name_bs": "Prenošenje pojedinačnih predmeta",
+          "name_en": "Single item moving",
+          "name": "Single item moving",
+          "description": "Moving individual items",
+          "parent_id": "2",
+          "sort_order": 5,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "key": "ciscenje-odrzavanje",
+      "name_bs": "Čišćenje i održavanje",
+      "name_en": "Cleaning and maintenance",
+      "name": "Cleaning and maintenance",
+      "description": "Professional cleaning services",
+      "icon": "🧽",
+      "parent_id": null,
+      "sort_order": 3,
+      "is_active": true,
+      "is_popular": true,
+      "subcategories": [
+        {
+          "id": "3-1",
+          "key": "redovno-ciscenje",
+          "name_bs": "Redovno čišćenje kuće/stana",
+          "name_en": "Regular house/apartment cleaning",
+          "name": "Regular house/apartment cleaning",
+          "description": "Regular cleaning services",
+          "parent_id": "3",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "3-2",
+          "key": "dubinsko-ciscenje",
+          "name_bs": "Dubinsko čišćenje",
+          "name_en": "Deep cleaning",
+          "name": "Deep cleaning",
+          "description": "Thorough deep cleaning services",
+          "parent_id": "3",
+          "sort_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "3-3",
+          "key": "useljenje-iseljenje",
+          "name_bs": "Čišćenje prilikom useljenja/iseljenja",
+          "name_en": "Move-in/move-out cleaning",
+          "name": "Move-in/move-out cleaning",
+          "description": "Cleaning for moving situations",
+          "parent_id": "3",
+          "sort_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "3-4",
+          "key": "nakon-renoviranja",
+          "name_bs": "Čišćenje nakon renoviranja",
+          "name_en": "Post-renovation cleaning",
+          "name": "Post-renovation cleaning",
+          "description": "Cleaning after renovation work",
+          "parent_id": "3",
+          "sort_order": 4,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "key": "bastenske-usluge",
+      "name_bs": "Baštenske usluge i dvorište",
+      "name_en": "Garden services and yard work",
+      "name": "Garden services and yard work",
+      "description": "Garden and yard maintenance services",
+      "icon": "🌱",
+      "parent_id": null,
+      "sort_order": 4,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "4-1",
+          "key": "uredjenje-baste",
+          "name_bs": "Uređenje i održavanje bašte",
+          "name_en": "Garden design and maintenance",
+          "name": "Garden design and maintenance",
+          "description": "Complete garden services",
+          "parent_id": "4",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "4-2",
+          "key": "kosenje-travnjaka",
+          "name_bs": "Košenje travnjaka",
+          "name_en": "Lawn mowing",
+          "name": "Lawn mowing",
+          "description": "Lawn care and mowing services",
+          "parent_id": "4",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "key": "dostava-kupovina",
+      "name_bs": "Dostava i kupovina",
+      "name_en": "Delivery and shopping",
+      "name": "Delivery and shopping",
+      "description": "Delivery and shopping services",
+      "icon": "📦",
+      "parent_id": null,
+      "sort_order": 5,
+      "is_active": true,
+      "is_popular": true,
+      "subcategories": [
+        {
+          "id": "5-1",
+          "key": "hrana-namirnice",
+          "name_bs": "Dostava hrane i namirnica",
+          "name_en": "Food and grocery delivery",
+          "name": "Food and grocery delivery",
+          "description": "Food and grocery delivery services",
+          "parent_id": "5",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "5-2",
+          "key": "lekovi",
+          "name_bs": "Dostava lekova",
+          "name_en": "Medicine delivery",
+          "name": "Medicine delivery",
+          "description": "Pharmaceutical delivery services",
+          "parent_id": "5",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "key": "licna-nega",
+      "name_bs": "Lična nega i wellness",
+      "name_en": "Personal care and wellness",
+      "name": "Personal care and wellness",
+      "description": "Personal care and wellness services",
+      "icon": "💅",
+      "parent_id": null,
+      "sort_order": 6,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "6-1",
+          "key": "friziranje",
+          "name_bs": "Friziranje kod kuće",
+          "name_en": "Home hairdressing",
+          "name": "Home hairdressing",
+          "description": "Professional hairdressing at home",
+          "parent_id": "6",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "6-2",
+          "key": "manikir-pedikir",
+          "name_bs": "Manikir i pedikir",
+          "name_en": "Manicure and pedicure",
+          "name": "Manicure and pedicure",
+          "description": "Nail care services",
+          "parent_id": "6",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "key": "cuvanje-edukacija",
+      "name_bs": "Čuvanje i edukacija",
+      "name_en": "Childcare and education",
+      "name": "Childcare and education",
+      "description": "Childcare and educational services",
+      "icon": "👶",
+      "parent_id": null,
+      "sort_order": 7,
+      "is_active": true,
+      "is_popular": true,
+      "subcategories": [
+        {
+          "id": "7-1",
+          "key": "cuvanje-dece",
+          "name_bs": "Čuvanje dece (bejbisiting)",
+          "name_en": "Childcare (babysitting)",
+          "name": "Childcare (babysitting)",
+          "description": "Professional childcare services",
+          "parent_id": "7",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "7-2",
+          "key": "privatni-casovi",
+          "name_bs": "Privatni časovi (svi predmeti)",
+          "name_en": "Private lessons (all subjects)",
+          "name": "Private lessons (all subjects)",
+          "description": "Private tutoring services",
+          "parent_id": "7",
+          "sort_order": 4,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "key": "kreativne-usluge",
+      "name_bs": "Kreativne i dizajnerske usluge",
+      "name_en": "Creative and design services",
+      "name": "Creative and design services",
+      "description": "Creative and design services",
+      "icon": "🎨",
+      "parent_id": null,
+      "sort_order": 8,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "8-1",
+          "key": "graficki-dizajn",
+          "name_bs": "Grafički dizajn",
+          "name_en": "Graphic design",
+          "name": "Graphic design",
+          "description": "Professional graphic design services",
+          "parent_id": "8",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "8-2",
+          "key": "web-dizajn",
+          "name_bs": "Web dizajn",
+          "name_en": "Web design",
+          "name": "Web design",
+          "description": "Website design services",
+          "parent_id": "8",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "key": "it-tehnologije",
+      "name_bs": "IT i tehnološke usluge",
+      "name_en": "IT and technology services",
+      "name": "IT and technology services",
+      "description": "Information technology services",
+      "icon": "💻",
+      "parent_id": null,
+      "sort_order": 9,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "9-1",
+          "key": "web-sajtovi",
+          "name_bs": "Izrada web sajtova",
+          "name_en": "Website development",
+          "name": "Website development",
+          "description": "Professional website development",
+          "parent_id": "9",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "9-2",
+          "key": "aplikacije",
+          "name_bs": "Programiranje aplikacija",
+          "name_en": "Application programming",
+          "name": "Application programming",
+          "description": "Mobile and desktop application development",
+          "parent_id": "9",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "key": "dogadjaji-zabava",
+      "name_bs": "Događaji i zabava",
+      "name_en": "Events and entertainment",
+      "name": "Events and entertainment",
+      "description": "Event organization and entertainment services",
+      "icon": "🎉",
+      "parent_id": null,
+      "sort_order": 10,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "10-1",
+          "key": "rodjendan",
+          "name_bs": "Organizacija rođendana",
+          "name_en": "Birthday party organization",
+          "name": "Birthday party organization",
+          "description": "Birthday party planning and organization",
+          "parent_id": "10",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "10-2",
+          "key": "svadbe",
+          "name_bs": "Organizacija svadbi",
+          "name_en": "Wedding organization",
+          "name": "Wedding organization",
+          "description": "Wedding planning and coordination",
+          "parent_id": "10",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "key": "prevoz-logistika",
+      "name_bs": "Prevoz i logistika",
+      "name_en": "Transport and logistics",
+      "name": "Transport and logistics",
+      "description": "Transportation and logistics services",
+      "icon": "🚗",
+      "parent_id": null,
+      "sort_order": 11,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "11-1",
+          "key": "taksi",
+          "name_bs": "Taksi usluge",
+          "name_en": "Taxi services",
+          "name": "Taxi services",
+          "description": "Professional taxi transportation",
+          "parent_id": "11",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "11-2",
+          "key": "aerodrom",
+          "name_bs": "Aerodromski transfer",
+          "name_en": "Airport transfer",
+          "name": "Airport transfer",
+          "description": "Airport transportation services",
+          "parent_id": "11",
+          "sort_order": 3,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "key": "poslovne-usluge",
+      "name_bs": "Poslovne usluge",
+      "name_en": "Business services",
+      "name": "Business services",
+      "description": "Professional business services",
+      "icon": "💼",
+      "parent_id": null,
+      "sort_order": 12,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "12-1",
+          "key": "racunovodstvo",
+          "name_bs": "Računovodstvene usluge",
+          "name_en": "Accounting services",
+          "name": "Accounting services",
+          "description": "Professional accounting and bookkeeping",
+          "parent_id": "12",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "12-2",
+          "key": "prevodi",
+          "name_bs": "Prevodi dokumenata",
+          "name_en": "Document translation",
+          "name": "Document translation",
+          "description": "Professional translation services",
+          "parent_id": "12",
+          "sort_order": 3,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "key": "zdravlje-lepota",
+      "name_bs": "Zdravlje i lepota",
+      "name_en": "Health and beauty",
+      "name": "Health and beauty",
+      "description": "Health and beauty services",
+      "icon": "💄",
+      "parent_id": null,
+      "sort_order": 13,
+      "is_active": true,
+      "is_popular": false,
+      "subcategories": [
+        {
+          "id": "13-1",
+          "key": "mobilni-frizer",
+          "name_bs": "Mobilni frizer",
+          "name_en": "Mobile hairdresser",
+          "name": "Mobile hairdresser",
+          "description": "Mobile hairdressing services",
+          "parent_id": "13",
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "13-2",
+          "key": "kozmeticarske",
+          "name_bs": "Kozmetičarske usluge",
+          "name_en": "Cosmetic services",
+          "name": "Cosmetic services",
+          "description": "Professional cosmetic treatments",
+          "parent_id": "13",
+          "sort_order": 2,
+          "is_active": true
+        }
+      ]
+    }
+  ]
+}

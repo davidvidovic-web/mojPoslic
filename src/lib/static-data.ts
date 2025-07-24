@@ -90,7 +90,7 @@ class StaticDataManager {
    * Load data from fetch (client-side only)
    */
   private async loadDataFromFetch(): Promise<StaticDataCache> {
-    // Try to load from cache files first, then fallback to API endpoints
+    // Try to load from static files first, then fallback to API endpoints
     try {
       const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
         fetch('/static/cities.json'),
@@ -113,7 +113,33 @@ class StaticDataManager {
         }
       }
     } catch (cacheError) {
-      console.warn('Failed to load from cache files, falling back to API:', cacheError)
+      console.warn('Failed to load from static files, trying API routes:', cacheError)
+    }
+    
+    // Fallback to API routes
+    try {
+      const [citiesRes, categoriesRes, metadataRes] = await Promise.all([
+        fetch('/api/static/cities'),
+        fetch('/api/static/categories'),
+        fetch('/api/static/metadata').catch(() => null) // metadata is optional
+      ])
+      
+      if (citiesRes.ok && categoriesRes.ok) {
+        const [citiesData, categoriesData, metadataData] = await Promise.all([
+          citiesRes.json() as Promise<CitiesResponse>,
+          categoriesRes.json() as Promise<CategoriesResponse>,
+          metadataRes?.json().catch(() => null) as Promise<CacheMetadata | null>
+        ])
+        
+        return {
+          cities: citiesData.cities,
+          categories: this.processCategories(categoriesData.categories),
+          lastUpdated: metadataData?.lastUpdated || new Date().toISOString(),
+          version: metadataData?.version || '1.0.0'
+        }
+      }
+    } catch (apiError) {
+      console.warn('Failed to load from API routes, falling back to main API:', apiError)
     }
     
     // Fallback to API endpoints

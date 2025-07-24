@@ -30,9 +30,8 @@
 .DS_Store
 *.pem
 
-# cache files (but keep directory structure)
-/public/static/*.json
-/public/static/metadata.json
+# cache files (but keep static data files)
+/public/cache/
 
 # debug
 npm-debug.log*
