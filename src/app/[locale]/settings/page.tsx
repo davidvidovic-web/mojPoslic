@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ProfileSettingsCard } from '@/components/settings/profile-settings-card'
@@ -21,7 +21,7 @@ interface DeletionRequest {
 export default function SettingsPage() {
   const tSettings = useTranslations('settings')
   const tCommon = useTranslations('common')
-  const { user, loading } = useAuth()
+  const { user, loading } = useSupabaseAuth()
   const router = useRouter()
   const [deletionRequest, setDeletionRequest] = useState<DeletionRequest | null>(null)
 

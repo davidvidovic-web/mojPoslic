@@ -7,8 +7,11 @@ export const routing = defineRouting({
   // Used when no locale matches - Bosnian is the main language
   defaultLocale: 'bs',
 
-  // Disable path-based routing - use domain-based only
+  // Always use domain-based routing (no path prefixes)
   localePrefix: 'never',
+
+  // Enable locale detection for proper domain fallback
+  localeDetection: true,
 
   // Domain-based routing configuration
   domains: [

@@ -11,7 +11,7 @@ import { ReviewStep } from './review-step'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useCallback } from 'react'
 
 interface JobFormBaseProps {
@@ -33,7 +33,7 @@ export function JobFormBase({
 }: JobFormBaseProps) {
   const t = useTranslations('jobPost.validation')
   const tNav = useTranslations('jobPost.form.navigation')
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const {
     currentStep,
     setCurrentStep,

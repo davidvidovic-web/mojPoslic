@@ -1,55 +1,34 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
-const prisma = new PrismaClient()
-
-export async function GET() {
-  
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0]
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Count jobs created today
+    const { count, error } = await supabase
+      .from('job_listings')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', `${today}T00:00:00.000Z`)
+      .lt('created_at', `${today}T23:59:59.999Z`)
+    
+    if (error) {
+      console.error('Error fetching today job count:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch today job count' },
+        { status: 500 }
+      )
     }
-
-    // Get the user
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Get today's date range (start and end of day)
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const startOfDay = new Date(today.getTime())
-    const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000) // Add 24 hours
-
-
-    // Count jobs posted today by this user
-    const todayJobCount = await prisma.jobListing.count({
-      where: {
-        postedById: user.id,
-        createdAt: {
-          gte: startOfDay,
-          lt: endOfDay
-        }
-      }
-    })
-
 
     return NextResponse.json({ 
-      count: todayJobCount,
-      willCostConnections: todayJobCount >= 1, // First job free, subsequent cost connections
-      connectionCost: todayJobCount >= 1 ? 3 : 0
+      count: count || 0,
+      date: today
     })
   } catch (error) {
-    console.error('Error getting today job count:', error)
+    console.error('Error in today-count API:', error)
     return NextResponse.json(
-      { error: 'Failed to get today job count' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

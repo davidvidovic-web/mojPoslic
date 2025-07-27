@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { ApplicationStatus } from '@prisma/client'
 import ApplicationManager from '@/components/dashboard/application-manager'
 import { Card, CardContent } from '@/components/ui/card'
@@ -68,7 +68,7 @@ interface ManageApplicationsPageProps {
 }
 
 export default function ManageApplicationsPage({ params }: ManageApplicationsPageProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const router = useRouter()
   const t = useTranslations()
   const [jobId, setJobId] = useState<string | null>(null)

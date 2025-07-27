@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
 import { ClientDashboard } from '@/components/dashboard/client-dashboard'
 import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
@@ -11,7 +11,7 @@ import { UserRole } from '@prisma/client'
 import { useEffect, Suspense } from 'react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
-import type { AuthUser } from '@/contexts/auth-context';
+import type { AuthUser } from '@/contexts/supabase-auth-context';
 
 type DashboardContentProps = {
   user: AuthUser | null;
@@ -94,7 +94,7 @@ function DashboardContent({ user, loading }: DashboardContentProps) {
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
-  const { user, loading } = useAuth();
+  const { user, loading } = useSupabaseAuth();
   
   // Determine the appropriate loading message based on user role
   const getLoadingMessage = () => {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
-import { useApplyToJob } from '@/hooks/use-applications'
+import { useCreateApplicationMutation } from '@/hooks/queries/useJobs'
 import { Send, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -26,7 +26,7 @@ export function JobApplicationForm({
   const t = useTranslations('jobApplication')
   const [message, setMessage] = useState('')
 
-  const applyMutation = useApplyToJob()
+  const applyMutation = useCreateApplicationMutation()
 
   // Helper function to strip HTML tags for character count
   const getTextLength = (html: string) => {
@@ -59,9 +59,10 @@ export function JobApplicationForm({
       // Reset form
       setMessage('')
       
+      toast.success('Application submitted successfully!')
       onSuccess?.()
     } catch (error) {
-      // Error is handled by the mutation
+      // Error is handled by the mutation and shown via toast
       console.error('Application error:', error)
     }
   }

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Check, FileText, Search, MapPin, DollarSign, Mail, CheckCircle, AlertCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 function getStepIcon(iconName: string, size: 'sm' | 'md' = 'md') {
   const iconMap = {
@@ -33,7 +33,7 @@ interface StepIndicatorProps {
 export function StepIndicator({ currentStep, stepValidations = {}, onStepClick, formData, canClickStep }: StepIndicatorProps) {
   const t = useTranslations('jobPost.form.steps')
   const tNavigation = useTranslations('jobPost.form.navigation')
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   
   // Calculate progress based on completed required fields
   const calculateFieldProgress = (): number => {

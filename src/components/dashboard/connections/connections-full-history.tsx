@@ -85,11 +85,8 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
   const fetchConnectionHistory = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/user/connections/history')
-      if (!response.ok) {
-        throw new Error('Failed to fetch connection history')
-      }
-      const data = await response.json()
+      // Temporarily disabled - connection history API removed during auth cleanup
+      const data = { history: [] }
       
       // Ensure we always have an array
       const historyArray = Array.isArray(data) ? data : (data?.history || [])

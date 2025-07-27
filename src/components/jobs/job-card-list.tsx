@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Car } from "lucide-react"
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
-import { useAuth } from "@/contexts/auth-context"
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 interface JobCardListProps {
   job: Job
@@ -16,7 +16,7 @@ interface JobCardListProps {
 
 export function JobCardList({ job }: JobCardListProps) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const tCommon = useTranslations('common')
   const t = useTranslations('jobApplication')
   const locale = useLocale()

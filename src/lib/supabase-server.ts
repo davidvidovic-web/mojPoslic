@@ -1,65 +1,167 @@
-import { createClient } from '@supabase/supabase-js'
-import { auth } from './auth'
+import { createServerClient } from '@supabase/ssr'
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { Database } from './database.types'
 
-// Ensure this file is only used on server-side
-if (typeof window !== 'undefined') {
-  throw new Error('supabase-server.ts can only be used on server-side')
+// Server-side auth helper for App Router
+export const createServerSupabaseClient = async () => {
+  const cookieStore = await cookies()
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  )
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
-}
-
-// Create authenticated Supabase client by using admin client with user context
-export async function createAuthenticatedSupabaseClient() {
-  const session = await auth()
-  
-  if (!session?.user?.id) {
-    // Return unauthenticated client for unauthenticated users
-    return createClient(supabaseUrl, supabaseAnonKey)
-  }
-
-  // For now, use admin client for all operations
-  // TODO: Implement proper RLS policies or custom JWT when Supabase is configured properly
-  return createSupabaseAdmin()
-}
-
-// For API routes where you already have user context
-export function createServerSupabaseClient(userId: string) {
-  if (!userId) {
-    return createClient(supabaseUrl, supabaseAnonKey)
-  }
-
-  // For now, use admin client for authenticated operations
-  // TODO: Implement proper JWT authentication when Supabase JWT secret is available
-  return createSupabaseAdmin()
-}
-
-// Admin client for operations that need to bypass RLS
-export function createSupabaseAdmin() {
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  
-  if (!supabaseServiceKey) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
-  }
-  
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+// Middleware helper for auth
+export const updateSession = async (request: NextRequest) => {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
     },
   })
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  // Safely try to get user session, don't throw if it fails
+  try {
+    await supabase.auth.getUser()
+  } catch (error) {
+    // Ignore auth errors in middleware - this is normal for unauthenticated users
+    // or when coming from email verification links
+    console.log('Auth session update skipped:', error instanceof Error ? error.message : 'Unknown error')
+  }
+
+  return response
 }
 
-// Helper to get user context from NextAuth session
-export async function getUserContext() {
-  const session = await auth()
-  return {
-    userId: session?.user?.id,
-    userRole: session?.user?.role || 'authenticated',
-    isAuthenticated: !!session?.user?.id,
+// Helper to get current user on server
+export const getCurrentUser = async () => {
+  const supabase = await createServerSupabaseClient()
+  
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error || !user) {
+      return null
+    }
+
+    // Get additional user data from our users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (userError) {
+      console.error('Error fetching user data:', userError)
+      return user
+    }
+
+    return {
+      ...user,
+      userData,
+    }
+  } catch (error) {
+    console.error('Error getting current user:', error)
+    return null
   }
+}
+
+// Helper to require authentication
+export const requireAuth = async () => {
+  const user = await getCurrentUser()
+  
+  if (!user) {
+    throw new Error('Authentication required')
+  }
+  
+  return user
+}
+
+// Helper to check user role
+export const checkUserRole = async (requiredRole: 'admin' | 'business_owner' | 'client') => {
+  const user = await getCurrentUser()
+  
+  if (!user?.userData) {
+    throw new Error('Authentication required')
+  }
+  
+  if (user.userData.role !== requiredRole && user.userData.role !== 'admin') {
+    throw new Error('Insufficient permissions')
+  }
+  
+  return user
 }

@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
-import { Job } from '@/types/job'
+import { ApplicationStatus } from '@/types/application'
 import { TaskerApplicationManager } from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { ConnectionsWidget } from './connections/connections-widget'
@@ -14,18 +13,9 @@ import { JobCompletionCard } from './job-completion-card'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Star, Briefcase, History } from 'lucide-react'
-import { toast } from 'sonner'
-
-interface JobApplication {
-  id: string
-  job_id: string
-  appliedAt: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
-  job: Job
-  clientNotes?: string
-  shortlistedAt?: string
-  interviewDate?: string
-}
+import { useApplications } from '@/hooks/use-applications'
+import { useJobAcceptanceManager } from '@/hooks/useQueryManagers'
+import type { ActiveJob } from '@/hooks/use-job-acceptance'
 
 interface ApplicationStats {
   total: number
@@ -37,103 +27,34 @@ interface ApplicationStats {
   totalEarnings: number
 }
 
-interface JobAssignment {
-  assignmentId: string
-  jobId: string
-  title: string
-  company?: string
-  contractStatus: string
-  assignedAt: string
-  client: {
-    id: string
-    name: string
-    email: string
-  }
-  agreedSalary?: number
-}
-
 export function TaskerDashboard() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   
   // Translation hooks
   const tDashboard = useTranslations('dashboard')
-  const tErrors = useTranslations('errors')
   
-  const [shortlistedApplications, setShortlistedApplications] = useState<JobApplication[]>([])
-  const [activeJobs, setActiveJobs] = useState<JobAssignment[]>([])
-  const [stats, setStats] = useState<ApplicationStats>({
-    total: 0,
-    pending: 0,
-    shortlisted: 0,
-    accepted: 0,
-    completed: 0,
-    rejected: 0,
-    totalEarnings: 0
-  })
-  const [loading, setLoading] = useState(true)
+  // Use Supabase hooks instead of manual fetch calls
+  const { data: applications = [], isLoading: applicationsLoading } = useApplications()
+  const { activeJobs, isLoading: isLoadingActiveJobs } = useJobAcceptanceManager(user?.id)
   
-  useEffect(() => {
-    const fetchTaskerData = async () => {
-      if (!user) return
-      
-      try {
-        // Fetch applications data
-        const applicationsResponse = await fetch('/api/tasker/applications', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        })
-        
-        // Fetch active job assignments
-        const activeJobsResponse = await fetch('/api/tasker/active-jobs', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        })
-        
-        // Handle applications data
-        if (applicationsResponse.ok) {
-          const applicationsData = await applicationsResponse.json()
-          
-          // Filter shortlisted applications
-          const shortlisted = (applicationsData || []).filter((app: JobApplication) => 
-            app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED'
-          )
-          setShortlistedApplications(shortlisted)
-          
-          // Calculate stats from applications
-          const apps = applicationsData || []
-          
-          // Note: Don't count SELECTED applications as completed - they are just accepted
-          // Completed jobs should be counted from JobAssignments with COMPLETED status
-          const totalEarnings = 0 // TODO: Calculate from actually completed job assignments
-          
-          const newStats: ApplicationStats = {
-            total: apps.length,
-            pending: apps.filter((app: JobApplication) => app.status === 'PENDING').length,
-            shortlisted: apps.filter((app: JobApplication) => app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED').length,
-            accepted: apps.filter((app: JobApplication) => app.status === 'SELECTED').length, // This is now "accepted" not "completed"
-            completed: 0, // TODO: Get from completed job assignments API
-            rejected: apps.filter((app: JobApplication) => app.status === 'REJECTED').length,
-            totalEarnings: Math.round(totalEarnings)
-          }
-          setStats(newStats)
-        }
-        
-        // Handle active jobs data
-        if (activeJobsResponse.ok) {
-          const activeJobsData = await activeJobsResponse.json()
-          setActiveJobs(activeJobsData.activeJobs || [])
-        }
+  // Calculate derived data from hook data
+  const shortlistedApplications = applications.filter(app => 
+    app.status === ApplicationStatus.SHORTLISTED
+  )
+  
+  const stats: ApplicationStats = {
+    total: applications.length,
+    pending: applications.filter(app => app.status === ApplicationStatus.PENDING).length,
+    shortlisted: applications.filter(app => app.status === ApplicationStatus.SHORTLISTED).length,
+    accepted: applications.filter(app => app.status === ApplicationStatus.SELECTED).length,
+    completed: 0, // TODO: Get from completed job assignments
+    rejected: applications.filter(app => app.status === ApplicationStatus.REJECTED).length,
+    totalEarnings: 0 // TODO: Calculate from completed assignments
+  }
+  
+  const loading = applicationsLoading || isLoadingActiveJobs
 
-      } catch (error) {
-        console.error('Error fetching tasker data:', error)
-        toast.error(tErrors('failedToLoad.dashboardData'))
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    fetchTaskerData()
-  }, [user, tErrors])
+  // TanStack Query automatically fetches data, no manual fetch needed
 
   if (loading) {
     return (
@@ -200,7 +121,7 @@ export function TaskerDashboard() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {activeJobs.map((job) => (
+                  {activeJobs.map((job: ActiveJob) => (
                     <JobCompletionCard
                       key={job.assignmentId}
                       jobAssignment={{
@@ -212,15 +133,15 @@ export function TaskerDashboard() {
                           company: job.company,
                           postedBy: {
                             id: job.client.id,
-                            name: job.client.name,
-                            email: job.client.email
+                            name: job.client.name || '',
+                            email: job.client.email || ''
                           }
                         },
                         selectedApplication: {
                           user: {
                             id: job.client.id,
-                            name: job.client.name,
-                            email: job.client.email
+                            name: job.client.name || '',
+                            email: job.client.email || ''
                           }
                         }
                       }}
@@ -270,10 +191,10 @@ export function TaskerDashboard() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-                            {application.job.title}
+                            {application.job?.title || 'Untitled Job'}
                           </h3>
                           <p className="text-gray-600 dark:text-gray-400 font-medium">
-                            {application.job.company}
+                            {application.job?.company || 'Unknown Company'}
                           </p>
                         </div>
                         <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">

@@ -111,5 +111,45 @@
       "feedback": "Feedback",
       "about": "About"
     }
+  },
+  "avatar": {
+    "title": "Profile Picture",
+    "upload": "Upload Picture",
+    "change": "Change Picture",
+    "remove": "Remove Picture",
+    "uploading": "Uploading...",
+    "success": "Picture uploaded successfully",
+    "error": "Error uploading picture",
+    "instructions": "Upload a profile picture. Square images up to 5MB are recommended.",
+    "uploadSuccess": "Profile picture uploaded successfully",
+    "removeSuccess": "Profile picture removed successfully",
+    "errors": {
+      "invalidFileType": "Invalid file type. Please upload an image.",
+      "fileTooLarge": "File too large. Maximum size is 5MB.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "removeFailed": "Failed to remove picture. Please try again.",
+      "notAuthenticated": "Not authenticated. Please sign in."
+    }
+  },
+  "resume": {
+    "title": "Resume / CV",
+    "upload": "Upload Resume",
+    "uploadTitle": "Upload Resume",
+    "change": "Change Resume",
+    "remove": "Remove Resume",
+    "uploading": "Uploading...",
+    "success": "Resume uploaded successfully",
+    "error": "Error uploading resume",
+    "download": "Download Resume",
+    "instructions": "Upload your resume in PDF format. Maximum file size is 10MB.",
+    "uploadSuccess": "Resume uploaded successfully",
+    "removeSuccess": "Resume removed successfully",
+    "errors": {
+      "invalidFileType": "Invalid file type. Please upload a PDF file.",
+      "fileTooLarge": "File too large. Maximum size is 10MB.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "removeFailed": "Failed to remove resume. Please try again.",
+      "notAuthenticated": "Not authenticated. Please sign in."
+    }
   }
 } 

@@ -1,6 +1,15 @@
-import { useState, useCallback } from 'react'
+// Legacy compatibility layer - redirects to new Supabase-based hooks
+// This file maintains backward compatibility while we migrate components
+
+import { useCallback } from 'react'
 import { useNotificationStore } from '@/stores/notification-store'
 import { toast } from 'sonner'
+import { 
+  useActiveJobsQuery, 
+  useAcceptTaskerMutation,
+  type ActiveJob 
+} from './queries/useJobs'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 
 export interface JobAcceptanceData {
   agreedSalary?: number
@@ -8,73 +17,30 @@ export interface JobAcceptanceData {
   notes?: string
 }
 
-export interface ActiveJob {
-  assignmentId: string
-  jobId: string
-  title: string
-  company: string
-  description: string
-  salary?: string
-  salaryType?: string
-  salaryMin?: number
-  salaryMax?: number
-  agreedSalary?: number
-  startDate?: string
-  startTime?: string
-  duration?: string
-  jobAddress?: string
-  contractStatus: string
-  assignedAt: string
-  appliedAt: string
-  selectedAt?: string
-  applicationMessage?: string
-  notes?: string
-  client: {
-    id: string
-    name?: string
-    email?: string
-    companyName?: string
-  }
-}
+// Re-export the ActiveJob type for compatibility
+export type { ActiveJob }
 
 export function useJobAcceptance() {
-  const [isAccepting, setIsAccepting] = useState(false)
-  const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([])
-  const [isLoadingActiveJobs, setIsLoadingActiveJobs] = useState(false)
+  const { user } = useSupabaseAuth()
   const { addNotification } = useNotificationStore()
+  
+  // Use new Supabase-based hooks
+  const activeJobsQuery = useActiveJobsQuery(user?.id)
+  const acceptTaskerMutation = useAcceptTaskerMutation()
 
   /**
-   * Accept a tasker for a job
+   * Accept a tasker for a job - now uses Supabase mutation
    */
   const acceptTasker = useCallback(async (
     jobId: string,
     applicationId: string,
     acceptanceData: JobAcceptanceData = {}
   ) => {
-    console.log('useJobAcceptance: acceptTasker called', { jobId, applicationId, acceptanceData })
-    setIsAccepting(true)
     try {
-      const url = `/api/jobs/${jobId}/applications/${applicationId}/accept`
-      console.log('Making POST request to:', url)
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(acceptanceData),
+      const result = await acceptTaskerMutation.mutateAsync({
+        applicationId,
+        acceptanceData
       })
-
-      console.log('API response status:', response.status)
-
-      if (!response.ok) {
-        const error = await response.json()
-        console.error('API error response:', error)
-        throw new Error(error.error || 'Failed to accept tasker')
-      }
-
-      const result = await response.json()
-      console.log('API success response:', result)
       
       toast.success('Tasker accepted successfully! Job is now locked.')
       
@@ -82,7 +48,7 @@ export function useJobAcceptance() {
       addNotification({
         type: 'success',
         title: 'Tasker Accepted',
-        message: `You have successfully accepted a tasker for "${result.application.job.title}". The job is now locked.`
+        message: `You have successfully accepted a tasker for "${result.job?.title}". The job is now locked.`
       })
 
       return result
@@ -91,51 +57,37 @@ export function useJobAcceptance() {
       const errorMessage = error instanceof Error ? error.message : 'Failed to accept tasker'
       toast.error(errorMessage)
       throw error
-    } finally {
-      setIsAccepting(false)
     }
-  }, [addNotification])
+  }, [acceptTaskerMutation, addNotification])
 
   /**
-   * Fetch active jobs for tasker
+   * Fetch active jobs - now uses React Query
    */
   const fetchActiveJobs = useCallback(async () => {
-    setIsLoadingActiveJobs(true)
     try {
-      const response = await fetch('/api/tasker/active-jobs')
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to fetch active jobs')
-      }
-
-      const result = await response.json()
-      setActiveJobs(result.activeJobs || [])
-      return result.activeJobs || []
+      await activeJobsQuery.refetch()
+      return activeJobsQuery.data || []
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch active jobs'
       console.error('Error fetching active jobs:', error)
       toast.error(errorMessage)
-      setActiveJobs([])
       return []
-    } finally {
-      setIsLoadingActiveJobs(false)
     }
-  }, [])
+  }, [activeJobsQuery])
 
   /**
    * Check if user has any active jobs
    */
   const hasActiveJobs = useCallback(() => {
-    return activeJobs.length > 0
-  }, [activeJobs])
+    return (activeJobsQuery.data || []).length > 0
+  }, [activeJobsQuery.data])
 
   /**
    * Get active job by ID
    */
   const getActiveJob = useCallback((jobId: string) => {
-    return activeJobs.find(job => job.jobId === jobId)
-  }, [activeJobs])
+    return (activeJobsQuery.data || []).find(job => job.jobId === jobId)
+  }, [activeJobsQuery.data])
 
   /**
    * Simulate receiving job acceptance notification for tasker
@@ -160,10 +112,10 @@ export function useJobAcceptance() {
   }, [addNotification])
 
   return {
-    // States
-    isAccepting,
-    activeJobs,
-    isLoadingActiveJobs,
+    // States - now derived from React Query
+    isAccepting: acceptTaskerMutation.isPending,
+    activeJobs: activeJobsQuery.data || [],
+    isLoadingActiveJobs: activeJobsQuery.isLoading,
 
     // Actions
     acceptTasker,

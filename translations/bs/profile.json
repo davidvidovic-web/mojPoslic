@@ -113,5 +113,45 @@
       "feedback": "Povratne informacije",
       "about": "O aplikaciji"
     }
+  },
+  "avatar": {
+    "title": "Slika profila",
+    "upload": "Otpremi sliku",
+    "change": "Promijeni sliku",
+    "remove": "Ukloni sliku",
+    "uploading": "Otpremanje...",
+    "success": "Slika je uspješno otpremljena",
+    "error": "Greška pri otpremanju slike",
+    "instructions": "Otpremite sliku profila. Preporučuje se kvadratna slika veličine do 5MB.",
+    "uploadSuccess": "Slika profila je uspješno otpremljena",
+    "removeSuccess": "Slika profila je uspješno uklonjena",
+    "errors": {
+      "invalidFileType": "Neispravna vrsta fajla. Molimo otpremite sliku.",
+      "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 5MB.",
+      "uploadFailed": "Greška pri otpremanju. Molimo pokušajte ponovo.",
+      "removeFailed": "Greška pri uklanjanju slike. Molimo pokušajte ponovo.",
+      "notAuthenticated": "Niste prijavljeni. Molimo prijavite se."
+    }
+  },
+  "resume": {
+    "title": "CV / Životopis",
+    "upload": "Otpremi CV",
+    "uploadTitle": "Otpremi CV",
+    "change": "Promijeni CV",
+    "remove": "Ukloni CV",
+    "uploading": "Otpremanje...",
+    "success": "CV je uspješno otpremljen",
+    "error": "Greška pri otpremanju CV-a",
+    "download": "Preuzmi CV",
+    "instructions": "Otpremite vaš CV u PDF formatu. Maksimalna veličina fajla je 10MB.",
+    "uploadSuccess": "CV je uspješno otpremljen",
+    "removeSuccess": "CV je uspješno uklonjen",
+    "errors": {
+      "invalidFileType": "Neispravna vrsta fajla. Molimo otpremite PDF fajl.",
+      "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 10MB.",
+      "uploadFailed": "Greška pri otpremanju. Molimo pokušajte ponovo.",
+      "removeFailed": "Greška pri uklanjanju CV-a. Molimo pokušajte ponovo.",
+      "notAuthenticated": "Niste prijavljeni. Molimo prijavite se."
+    }
   }
 } 

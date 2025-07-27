@@ -1,10 +1,9 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { enrichJobsWithStaticData } from '@/lib/job-helpers'
-import type { JobListing } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
-  const prisma = new PrismaClient()
+  const supabase = await createServerSupabaseClient()
   
   try {
     const { searchParams } = new URL(request.url)
@@ -15,87 +14,107 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const type = searchParams.get('type')
     
-    // Build where clause based on filters
-    const where: {
-      isActive: boolean
-      OR?: Array<{
-        title?: { contains: string; mode: 'insensitive' }
-        company?: { contains: string; mode: 'insensitive' }
-        description?: { contains: string; mode: 'insensitive' }
-      }>
-      cityId?: string
-      categoryId?: string
-      type?: 'quick_job' | 'full_time' | 'part_time' | 'remote'
-    } = {
-      isActive: true
-    }
-    
-    // Search filter - search in title, company, description
+    // Build query
+    let query = supabase
+      .from('job_listings')
+      .select(`
+        id,
+        title,
+        description,
+        job_type,
+        salary_amount,
+        salary_min,
+        salary_max,
+        salary_type,
+        is_salary_negotiable,
+        currency,
+        city_id,
+        category_id,
+        subcategory_id,
+        created_at,
+        application_deadline,
+        exact_location,
+        latitude,
+        longitude,
+        application_url,
+        contact_info,
+        is_featured,
+        is_active,
+        posted_by_id,
+        requirements,
+        benefits,
+        is_urgent
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
+    // Search filter - search in title and description
     if (search && search.trim() !== '') {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { company: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ]
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
     }
-    
+
     // City filter
     if (city && city !== 'all') {
-      where.cityId = city
+      query = query.eq('city_id', city)
     }
-    
+
     // Category filter
     if (category && category !== 'all') {
-      where.categoryId = category
+      query = query.eq('category_id', category)
     }
-    
+
     // Job type filter
     if (type && type !== 'all') {
-      const typeMap: { [key: string]: string } = {
-        'quick_job': 'quick_job',
-        'full_time': 'full_time', 
-        'part_time': 'part_time',
-        'remote': 'remote'
-      }
-      const mappedType = typeMap[type] || type
-      if (['quick_job', 'full_time', 'part_time', 'remote'].includes(mappedType)) {
-        where.type = mappedType as 'quick_job' | 'full_time' | 'part_time' | 'remote'
+      const validTypes = ['quick_job', 'full_time', 'part_time', 'remote']
+      if (validTypes.includes(type)) {
+        query = query.eq('job_type', type as 'quick_job' | 'full_time' | 'part_time' | 'remote')
       }
     }
-    
-    // Get filtered job data with timeout
-    const jobsPromise = prisma.jobListing.findMany({
-      where,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
 
-    // Add timeout to prevent hanging requests
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Database timeout')), 8000) // 8 second timeout
-    })
+    const { data: jobs, error } = await query
 
-    const jobs = await Promise.race([jobsPromise, timeoutPromise]) as JobListing[]
+    if (error) {
+      console.error('Error fetching jobs:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch jobs', details: error.message },
+        { status: 500 }
+      )
+    }
 
     if (!jobs || !Array.isArray(jobs)) {
       return NextResponse.json({ error: 'No jobs found' }, { status: 404 })
     }
 
-    // Transform jobs with static data instead of manual DB joins
-    const baseJobs = jobs.map((job: JobListing) => ({
-      ...job,
-      posted_at: job.createdAt.toISOString(),
-      start_date: job.startDate ? job.startDate.toISOString() : null,
-      job_address: job.jobAddress,
-      job_latitude: job.jobLatitude, 
-      job_longitude: job.jobLongitude,
-      application_url: job.applicationUrl,
-      contact_email: job.contactEmail,
-      expires_at: job.expiresAt ? job.expiresAt.toISOString() : null,
-      city_id: job.cityId,
-      category_id: job.categoryId,
-      is_featured: job.isFeatured, // Explicitly map isFeatured to is_featured
+    // Transform jobs to match expected structure
+    const baseJobs = jobs.map((job) => ({
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      company: '', // Will be enriched from user data
+      salary: job.salary_amount?.toString() || '',
+      salaryType: job.salary_type || '',
+      type: job.job_type,
+      cityId: job.city_id,
+      categoryId: job.category_id,
+      posted_at: job.created_at,
+      start_date: null,
+      job_address: job.exact_location,
+      job_latitude: job.latitude,
+      job_longitude: job.longitude,
+      application_url: job.application_url,
+      contact_email: job.contact_info,
+      expires_at: job.application_deadline,
+      is_featured: job.is_featured || false,
+      is_active: job.is_active || false,
+      user_id: job.posted_by_id,
+      requirements: job.requirements,
+      benefits: job.benefits,
+      is_urgent: job.is_urgent || false,
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+      is_salary_negotiable: job.is_salary_negotiable || false,
+      currency: job.currency,
+      subcategory_id: job.subcategory_id
     }))
 
     // Enrich with static city and category data
@@ -105,16 +124,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching jobs:', error)
     
-    // Return more specific error for timeouts
-    if (error instanceof Error && error.message === 'Database timeout') {
-      return NextResponse.json({ error: 'Database temporarily unavailable' }, { status: 503 })
-    }
-    
     return NextResponse.json(
       { error: 'Failed to fetch jobs', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

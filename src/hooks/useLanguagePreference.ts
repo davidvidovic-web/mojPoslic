@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useAuth } from '@/contexts/auth-context';
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useLocale } from 'next-intl';
 
 export function useLanguagePreference() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const currentLocale = useLocale();
 
   useEffect(() => {

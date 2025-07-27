@@ -18,7 +18,7 @@ interface ConnectionPackage {
 export default function AdminPackagesPage() {
   const t = useTranslations()
   const { data: session, status } = useSession()
-  const { isAdmin } = useAuth()
+  const { isAdmin } = useSupabaseAuth()
   const router = useRouter()
   const [packages, setPackages] = useState<ConnectionPackage[]>([])
   const [loading, setLoading] = useState(true)

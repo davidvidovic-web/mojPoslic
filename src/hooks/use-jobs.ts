@@ -1,227 +1,232 @@
 /**
- * TanStack Query hooks for job data management
- * Replaces the legacy jobs-context.tsx
+ * Optimized Jobs Data Hooks  
+ * Uses cached data from optimized database structure for better performance
+ * Replaces TanStack Query with custom hooks for simplified data management
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Job, CreateJobData, JobFilters } from '@/types/job'
-import { toast } from 'sonner'
+'use client'
 
-// Query Keys
-export const jobKeys = {
-  all: ['jobs'] as const,
-  lists: () => [...jobKeys.all, 'list'] as const,
-  list: (filters: JobFilters) => [...jobKeys.lists(), filters] as const,
-  details: () => [...jobKeys.all, 'detail'] as const,
-  detail: (id: string) => [...jobKeys.details(), id] as const,
-  user: (userId: string) => [...jobKeys.all, 'user', userId] as const,
-  applications: (jobId: string) => [...jobKeys.all, 'applications', jobId] as const,
+import { useState, useEffect, useCallback } from 'react'
+import { Job, JobFilters } from '@/types/job'
+
+interface JobsState {
+  jobs: Job[]
+  loading: boolean
+  error: string | null
+  totalCount: number
 }
 
-// API Functions
-async function fetchJobs(filters?: JobFilters): Promise<Job[]> {
-  const params = new URLSearchParams()
-  
-  if (filters?.search) params.append('search', filters.search)
-  if (filters?.city) params.append('city', filters.city)
-  if (filters?.category) params.append('category', filters.category)
-  if (filters?.type) params.append('type', filters.type)
-  if (filters?.subcategory) params.append('subcategory', filters.subcategory)
-  
-  const response = await fetch(`/api/jobs?${params}`)
-  if (!response.ok) throw new Error('Failed to fetch jobs')
-  return response.json()
-}
-
-async function fetchJob(id: string): Promise<Job> {
-  const response = await fetch(`/api/jobs/${id}`)
-  if (!response.ok) throw new Error('Failed to fetch job')
-  return response.json()
-}
-
-async function fetchUserJobs(): Promise<Job[]> {
-  const response = await fetch(`/api/jobs/my-jobs`)
-  if (!response.ok) throw new Error('Failed to fetch user jobs')
-  return response.json()
-}
-
-async function createJob(data: CreateJobData): Promise<Job> {
-  const response = await fetch('/api/jobs', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+/**
+ * Hook for fetching jobs with filters - uses cached data for better performance
+ */
+export function useJobs(filters: JobFilters = {}) {
+  const [state, setState] = useState<JobsState>({
+    jobs: [],
+    loading: true,
+    error: null,
+    totalCount: 0
   })
-  if (!response.ok) throw new Error('Failed to create job')
-  return response.json()
-}
 
-async function updateJob(id: string, data: Partial<CreateJobData>): Promise<Job> {
-  const response = await fetch(`/api/jobs/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!response.ok) throw new Error('Failed to update job')
-  return response.json()
-}
+  const fetchJobs = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }))
 
-async function deleteJob(id: string): Promise<void> {
-  const response = await fetch(`/api/jobs/${id}`, { method: 'DELETE' })
-  if (!response.ok) throw new Error('Failed to delete job')
-}
+      // Build query parameters
+      const params = new URLSearchParams()
+      if (filters.search) params.append('search', filters.search)
+      if (filters.city && filters.city !== 'all') params.append('city', filters.city)
+      if (filters.category && filters.category !== 'all') params.append('category', filters.category)
+      if (filters.type && filters.type !== 'all') params.append('type', filters.type)
+      if (filters.subcategory) params.append('subcategory', filters.subcategory)
 
-async function featureJob(id: string, is_featured: boolean): Promise<Job> {
-  const response = await fetch(`/api/jobs/${id}/feature`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ is_featured }),
-  })
-  if (!response.ok) throw new Error('Failed to update job featured status')
-  return response.json()
-}
-
-// Query Hooks
-export function useJobs(filters?: JobFilters) {
-  return useQuery({
-    queryKey: jobKeys.list(filters || {}),
-    queryFn: () => fetchJobs(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (cacheTime renamed to gcTime in v5)
-  })
-}
-
-export function useJob(id: string) {
-  return useQuery({
-    queryKey: jobKeys.detail(id),
-    queryFn: () => fetchJob(id),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true, // Keep job details fresh
-  })
-}
-
-export function useUserJobs() {
-  return useQuery({
-    queryKey: jobKeys.user('current'),
-    queryFn: () => fetchUserJobs(),
-    staleTime: 2 * 60 * 1000, // 2 minutes for user's own jobs
-  })
-}
-
-// Mutation Hooks
-export function useCreateJob() {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: createJob,
-    onMutate: async (newJob) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: jobKeys.lists() })
+      const response = await fetch(`/api/jobs?${params.toString()}`)
       
-      // Optimistically update the cache
-      const previousJobs = queryClient.getQueryData(jobKeys.lists())
-      queryClient.setQueryData(jobKeys.lists(), (old: Job[] = []) => [
-        { ...newJob, id: 'temp-' + Date.now() } as Job,
-        ...old
-      ])
-      
-      return { previousJobs }
-    },
-    onSuccess: (newJob) => {
-      // Invalidate and refetch all job lists
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() })
-      
-      // Add the new job to cache
-      queryClient.setQueryData(jobKeys.detail(newJob.id), newJob)
-      
-      toast.success('Job posted successfully!')
-    },
-    onError: (error, newJob, context) => {
-      // Rollback optimistic update
-      if (context?.previousJobs) {
-        queryClient.setQueryData(jobKeys.lists(), context.previousJobs)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch jobs: ${response.statusText}`)
       }
-      
-      toast.error('Failed to post job. Please try again.')
-      console.error('Job creation error:', error)
-    },
-  })
+
+      const jobs: Job[] = await response.json()
+
+      setState({
+        jobs,
+        loading: false,
+        error: null,
+        totalCount: jobs.length
+      })
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch jobs'
+      }))
+    }
+  }, [filters.search, filters.city, filters.category, filters.type, filters.subcategory])
+
+  const refetch = useCallback(() => {
+    fetchJobs()
+  }, [fetchJobs])
+
+  useEffect(() => {
+    fetchJobs()
+  }, [fetchJobs])
+
+  return {
+    ...state,
+    refetch
+  }
 }
 
-export function useUpdateJob() {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateJobData> }) =>
-      updateJob(id, data),
-    onSuccess: (updatedJob) => {
-      // Update the specific job in cache
-      queryClient.setQueryData(jobKeys.detail(updatedJob.id), updatedJob)
-      
-      // Invalidate job lists to reflect changes
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() })
-      
-      toast.success('Job updated successfully!')
-    },
-    onError: (error) => {
-      toast.error('Failed to update job. Please try again.')
-      console.error('Job update error:', error)
-    },
-  })
+/**
+ * Hook for a specific job by ID
+ */
+export function useJob(jobId: string | undefined) {
+  const [job, setJob] = useState<Job | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchJob = async () => {
+      if (!jobId) {
+        setJob(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetch(`/api/jobs/${jobId}`)
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Job not found')
+          }
+          throw new Error(`Failed to fetch job: ${response.statusText}`)
+        }
+
+        const jobData: Job = await response.json()
+        setJob(jobData)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch job')
+        setJob(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchJob()
+  }, [jobId])
+
+  return { job, loading, error }
 }
 
-export function useDeleteJob() {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: deleteJob,
-    onSuccess: (_, deletedJobId) => {
-      // Remove from all caches
-      queryClient.removeQueries({ queryKey: jobKeys.detail(deletedJobId) })
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() })
-      
-      toast.success('Job deleted successfully!')
-    },
-    onError: (error) => {
-      toast.error('Failed to delete job. Please try again.')
-      console.error('Job deletion error:', error)
-    },
-  })
+/**
+ * Hook for featured jobs
+ */
+export function useFeaturedJobs() {
+  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchFeaturedJobs = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetch('/api/jobs?featured=true')
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch featured jobs: ${response.statusText}`)
+        }
+
+        const jobs: Job[] = await response.json()
+        setFeaturedJobs(jobs.filter(job => job.is_featured))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch featured jobs')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedJobs()
+  }, [])
+
+  return { featuredJobs, loading, error }
 }
 
-export function useFeatureJob() {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: ({ id, is_featured }: { id: string; is_featured: boolean }) =>
-      featureJob(id, is_featured),
-    onSuccess: (featuredJob) => {
-      // Update the specific job in cache
-      queryClient.setQueryData(jobKeys.detail(featuredJob.id), featuredJob)
-      
-      // Invalidate job lists to reflect changes
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: jobKeys.user('current') })
-      
-      toast.success(`Job ${featuredJob.is_featured ? 'featured' : 'unfeatured'} successfully!`)
-    },
-    onError: (error) => {
-      toast.error('Failed to update job featured status. Please try again.')
-      console.error('Job feature update error:', error)
-    },
-  })
+/**
+ * Hook for recent jobs
+ */
+export function useRecentJobs(limit: number = 10) {
+  const [recentJobs, setRecentJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchRecentJobs = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetch(`/api/jobs?limit=${limit}`)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch recent jobs: ${response.statusText}`)
+        }
+
+        const jobs: Job[] = await response.json()
+        setRecentJobs(jobs.slice(0, limit))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch recent jobs')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRecentJobs()
+  }, [limit])
+
+  return { recentJobs, loading, error }
 }
 
-// Helper hook for job applications count
-export function useJobApplicationsCount(jobId: string) {
-  return useQuery({
-    queryKey: jobKeys.applications(jobId),
-    queryFn: async () => {
-      const response = await fetch(`/api/jobs/${jobId}/applications/count`)
-      if (!response.ok) throw new Error('Failed to fetch applications count')
-      return response.json()
-    },
-    enabled: !!jobId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  })
+/**
+ * Hook for user's jobs
+ */
+export function useUserJobs(userId?: string) {
+  const [userJobs, setUserJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchUserJobs = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const endpoint = userId ? `/api/users/${userId}/jobs` : '/api/jobs/my-jobs'
+        const response = await fetch(endpoint)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user jobs: ${response.statusText}`)
+        }
+
+        const jobs: Job[] = await response.json()
+        setUserJobs(jobs)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch user jobs')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserJobs()
+  }, [userId])
+
+  return { userJobs, loading, error }
 }
+
+// Legacy exports for backward compatibility
+export const useJobsList = useJobs
+export const useJobDetail = useJob

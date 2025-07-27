@@ -1,4 +1,5 @@
-import { createClient, RealtimeChannel, RealtimeChannelOptions } from '@supabase/supabase-js'
+import { RealtimeChannel, RealtimeChannelOptions } from '@supabase/supabase-js'
+import { supabase as mainSupabase } from '@/lib/supabase'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -7,36 +8,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Default unauthenticated client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-})
+// Use the main supabase client instead of creating a new one
+export const supabase = mainSupabase
 
 // Enhanced client with NextAuth JWT integration
 export class AuthenticatedSupabaseClient {
-  private client: ReturnType<typeof createClient>
+  private client: typeof mainSupabase
   private currentToken: string | null = null
 
   constructor() {
-    this.client = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-    })
+    this.client = mainSupabase
   }
 
   // Set the NextAuth JWT for real-time authentication
@@ -77,30 +58,11 @@ export const authenticatedSupabase = new AuthenticatedSupabaseClient()
 
 // Function to create an authenticated Supabase client with a user token
 export function createAuthenticatedSupabaseClient(accessToken?: string) {
-  const client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10,
-      },
-    },
-    global: {
-      headers: accessToken ? {
-        Authorization: `Bearer ${accessToken}`,
-      } : {},
-    },
-  })
-
-  // If we have an access token, set the session
   if (accessToken) {
-    // Note: We can't actually set the session without the refresh token,
-    // but we can pass the access token in headers for RLS policies
+    // Set the auth token on the main client instead of creating a new one
+    mainSupabase.realtime.setAuth(accessToken)
   }
-
-  return client
+  return mainSupabase
 }
 
 // Type definitions for our database

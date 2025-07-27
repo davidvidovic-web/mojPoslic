@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Zap, UserPlus, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/contexts/auth-context';
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
 
 export default function Home() {
   const t = useTranslations('homepage');
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   
   return (
     <>

@@ -34,7 +34,13 @@ export const queryClient = new QueryClient({
     mutations: {
       // Global mutation error handling
       onError: (error) => {
-        console.error('Mutation error:', error)
+        // Enhanced error logging with more details
+        console.error('Mutation error:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          error: error,
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString()
+        })
       },
     },
   },

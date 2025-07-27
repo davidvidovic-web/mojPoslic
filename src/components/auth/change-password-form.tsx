@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PasswordStrengthIndicator, usePasswordValidation } from '@/components/auth/password-strength-indicator'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { toast } from 'sonner'
 import { Eye, EyeOff, Lock, Shield } from 'lucide-react'
 
 export function ChangePasswordForm() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const t = useTranslations('auth.changePassword')
   const tAuth = useTranslations('auth')
   const tErrors = useTranslations('errors.auth')

@@ -1,21 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Eye, Users } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { useUserJobsQuery } from '@/hooks/queries/useJobs'
+import { useMultipleJobApplicantCounts } from '@/hooks/use-applications'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { Job } from '@/types/job'
 
-interface Job {
-  id: string
-  title: string
-  company: string
-  type: string
-  status: string
-  createdAt: string
+// Extended job interface with application statistics
+interface JobWithApplicationStats extends Job {
   applicationCount?: number
   newApplicationsCount?: number
   shortlistedCount?: number
@@ -23,60 +20,33 @@ interface Job {
 }
 
 export function ClientJobsList() {
-  const { user } = useAuth()
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
+  const { user } = useSupabaseAuth()
+  
+  // Use Supabase-powered hooks instead of manual fetch
+  const { data: jobs = [], isLoading: loading } = useUserJobsQuery(user?.id || '')
+  
+  // Get application counts for all jobs
+  const jobIds = jobs.map(job => job.id)
+  const { data: applicationCounts = {} } = useMultipleJobApplicantCounts(jobIds)
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      if (!user) return
+  // Map jobs with application statistics
+  const jobsWithStats: JobWithApplicationStats[] = jobs.map(job => ({
+    ...job,
+    applicationCount: applicationCounts[job.id] || 0,
+    // For now, we'll use simple counts. Later we can enhance this with detailed breakdowns
+    newApplicationsCount: 0,
+    shortlistedCount: 0,
+    selectedCount: 0,
+  }))
 
-      try {
-        // Fetch user's posted jobs
-        const response = await fetch(`/api/user/jobs?userId=${user.id}`)
-        
-        if (response.ok) {
-          const jobsData = await response.json()
-          
-          // Fetch application counts for each job
-          const jobsWithCounts = await Promise.all(
-            jobsData.map(async (job: Job) => {
-              try {
-                const countResponse = await fetch(`/api/jobs/${job.id}/applications/count`)
-                if (countResponse.ok) {
-                  const countData = await countResponse.json()
-                  return { ...job, ...countData }
-                }
-                return job
-              } catch (error) {
-                console.error(`Error fetching count for job ${job.id}:`, error)
-                return job
-              }
-            })
-          )
-          
-          setJobs(jobsWithCounts)
-        }
-      } catch (error) {
-        console.error('Error fetching jobs:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchJobs()
-  }, [user])
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500/10 text-green-600 border border-green-500/20">Active</Badge>
-      case 'closed':
-        return <Badge className="bg-gray-500/10 text-gray-600 border border-gray-500/20">Closed</Badge>
-      case 'draft':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border border-yellow-500/20">Draft</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  const getStatusBadge = (job: Job) => {
+    // Map the database status to display status
+    const isActive = job?.is_active ?? true
+    
+    if (isActive) {
+      return <Badge className="bg-green-500/10 text-green-600 border border-green-500/20">Active</Badge>
+    } else {
+      return <Badge className="bg-gray-500/10 text-gray-600 border border-gray-500/20">Inactive</Badge>
     }
   }
 
@@ -126,12 +96,12 @@ export function ClientJobsList() {
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
           Your Job Postings
-          <Badge variant="secondary">{jobs.length}</Badge>
+          <Badge variant="secondary">{jobsWithStats.length}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {jobs.map((job) => (
+          {jobsWithStats.map((job) => (
             <div
               key={job.id}
               className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -140,7 +110,7 @@ export function ClientJobsList() {
                 <div className="flex-1">
                   <h4 className="font-semibold text-lg mb-1">{job.title}</h4>
                   <div className="flex items-center gap-2 mb-2">
-                    {getStatusBadge(job.status)}
+                    {getStatusBadge(job)}
                     <Badge variant="outline">{job.type}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">

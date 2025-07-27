@@ -1,9 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useUserJobs, useDeleteJob, jobKeys } from '@/hooks/use-jobs'
+import { useUserJobsQuery, useDeleteJobMutation } from '@/hooks/queries/useJobs'
+import { queryKeys } from '@/lib/query-keys'
 import { useMultipleJobApplicantCounts, useUpdateApplication } from '@/hooks/use-applications'
 import { useClientApplications } from '@/hooks/use-client-applications'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
 import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { JobEditDialog } from '@/components/core/job-edit-dialog'
@@ -32,10 +34,11 @@ export function ClientDashboard() {
   
   // State for collapsible connection history
   const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
+  const { user } = useSupabaseAuth()
   
   // TanStack Query hooks for job data
-  const { data: jobs = [], isLoading } = useUserJobs()
-  const deleteJobMutation = useDeleteJob()
+  const { data: jobs = [], isLoading } = useUserJobsQuery(user?.id || '')
+  const deleteJobMutation = useDeleteJobMutation()
   const updateApplicationMutation = useUpdateApplication()
   
   // Get real applicant counts for user's jobs
@@ -57,7 +60,7 @@ export function ClientDashboard() {
   const handleJobPosted = () => {
     closeJobPostDialog()
     // Explicitly invalidate and refetch job-related queries for immediate refresh
-    queryClient.invalidateQueries({ queryKey: jobKeys.user('current') })
+    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.byUser(user?.id || '') })
     queryClient.invalidateQueries({ queryKey: ['jobs'] })
     // Show success message
     toast.success(t('jobs.success.jobPosted'))
@@ -67,7 +70,7 @@ export function ClientDashboard() {
     setIsEditDialogOpen(false)
     setEditingJob(null)
     // Explicitly invalidate and refetch job-related queries for immediate refresh
-    queryClient.invalidateQueries({ queryKey: jobKeys.user('current') })
+    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.byUser(user?.id || '') })
     queryClient.invalidateQueries({ queryKey: ['jobs'] })
     // Show success message
     toast.success(t('jobs.success.jobUpdated') || 'Job updated successfully')

@@ -24,7 +24,7 @@ import {
   getJobTypeBadgeVariant,
   formatTimeAgo,
 } from "@/lib/job-utils";
-import { useAuth } from "@/contexts/auth-context";
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
 import { toast } from "sonner";
 import { useTranslations, useLocale } from 'next-intl';
 
@@ -36,7 +36,7 @@ interface JobCardProps {
 
 export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const t = useTranslations('jobCard');
   const locale = useLocale();
   const [applicationCount, setApplicationCount] = useState<number | null>(null);

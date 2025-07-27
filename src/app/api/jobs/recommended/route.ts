@@ -1,253 +1,148 @@
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-import { enrichJobsWithStaticData } from '@/lib/job-helpers'
+import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function GET() {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const supabase = await createServerSupabaseClient()
+
+    // Get current user from Supabase Auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const prisma = new PrismaClient()
+    // Get user profile to understand their preferences
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('preferred_job_types, skills, location')
+      .eq('id', user.id)
+      .single()
 
-    try {
-      // Get user profile information for better recommendations
-      const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        location: true, // User's city/location for location-based recommendations
-        skills: true, // User's skills for category/skill matching
-        preferredJobTypes: true // User's preferred job types
-      }
-    })
-
-    // Fetch jobs that the user hasn't applied to
-    const userApplications = await prisma.application.findMany({
-      where: {
-        userId: session.user.id
-      },
-      select: {
-        jobId: true
-      }
-    })
-
-    const appliedJobIds = userApplications.map(app => app.jobId)
-
-    // Extract user's location and skills for better matching
-    const userLocation = user?.location?.toLowerCase().trim()
-    const userSkills = user?.skills?.toLowerCase().split(',').map(s => s.trim()).filter(s => s.length > 0) || []
-    const userPreferredTypes = user?.preferredJobTypes?.toLowerCase().split(',').map(s => s.trim()).filter(s => s.length > 0) || []
-    
-    // Build recommendation query - prioritize jobs from user's city and categories
-    const whereConditions = {
-      AND: [
-        {
-          id: {
-            notIn: appliedJobIds
-          }
-        },
-        {
-          isActive: true
-        },
-        {
-          postedById: {
-            not: session.user.id // Don't recommend user's own jobs
-          }
-        }
-      ]
+    if (profileError) {
+      console.error("User profile fetch error:", profileError);
+      // Continue without user preferences
     }
 
-    const recommendedJobs = await prisma.jobListing.findMany({
-      where: whereConditions,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: 50 // Get more initially to filter and rank better
-    })
+    // Build query for recommended jobs
+    let query = supabase
+      .from('job_listings')
+      .select(`
+        id,
+        title,
+        description,
+        salary_min,
+        salary_max,
+        salary_currency,
+        job_type,
+        location,
+        remote_allowed,
+        category,
+        status,
+        created_at,
+        deadline,
+        posted_by,
+        users!job_listings_posted_by_fkey (
+          name,
+          company_name
+        )
+      `)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: false })
 
-    const postedByUsers = await prisma.user.findMany({
-      where: {
-        id: { in: recommendedJobs.map((job: { postedById: string }) => job.postedById) }
-      },
-      select: {
-        id: true,
-        name: true,
-        companyName: true,
-        avatarUrl: true
-      }
-    })
-
-    // First enrich with static data, then add user info and scoring
-    const enrichedJobs = await enrichJobsWithStaticData(recommendedJobs)
-    
-    // Transform jobs with user info and score them
-    const scoredJobs = enrichedJobs.map(enrichedJob => {
-      const postedBy = postedByUsers.find((u: { id: string }) => u.id === enrichedJob.postedById)
-      
-      const transformedJob = {
-        ...enrichedJob,
-        postedBy,
-        _count: { applications: 0 } // We'll calculate this separately if needed
-      }
-      
-      const jobData = enrichedJob as unknown as { 
-        title: string
-        description: string
-        requirements?: string
-        type: string
-        createdAt: Date
-      } // Cast to access all job properties
-      
-      let score = 0
-      
-      // PRIORITY 1: City/Location matching (highest priority - 200 points)
-      if (userLocation && transformedJob.city) {
-        const jobLocation = (transformedJob.city.name_en || transformedJob.city.name_bs).toLowerCase().trim()
-        // Exact city match gets full points
-        if (jobLocation === userLocation) {
-          score += 200
-        }
-        // Partial city match gets reduced points
-        else if (jobLocation.includes(userLocation) || userLocation.includes(jobLocation)) {
-          score += 100
-        }
-      }
-      
-      // PRIORITY 2: Category matching based on skills (150 points max)
-      if (transformedJob.category && userSkills.length > 0) {
-        const categoryName = (transformedJob.category.name_en || transformedJob.category.name_bs).toLowerCase()
-        let categoryScore = 0
-        
-        userSkills.forEach((skill: string) => {
-          if (skill && categoryName.includes(skill)) {
-            categoryScore += 30 // Up to 30 points per skill match in category
-          }
-        })
-        
-        // Bonus for exact category matches in common categories
-        const commonCategories = ['development', 'design', 'writing', 'marketing', 'sales', 'admin', 'customer service']
-        const categoryKey = transformedJob.category.key?.toLowerCase() || ''
-        
-        commonCategories.forEach(commonCat => {
-          if (categoryKey.includes(commonCat)) {
-            userSkills.forEach((skill: string) => {
-              if (skill.includes(commonCat)) {
-                categoryScore += 50 // Bonus for category alignment
-              }
-            })
-          }
-        })
-        
-        score += Math.min(categoryScore, 150) // Cap category score at 150
-      }
-      
-      // PRIORITY 3: Skills matching in job content (100 points max)
-      if (userSkills.length > 0) {
-        const jobText = `${jobData.title} ${jobData.description} ${jobData.requirements || ''}`.toLowerCase()
-        let skillScore = 0
-        
-        userSkills.forEach((skill: string) => {
-          if (skill && jobText.includes(skill)) {
-            skillScore += 25 // 25 points per skill match in job content
-          }
-        })
-        
-        score += Math.min(skillScore, 100) // Cap skill score at 100
-      }
-      
-      // PRIORITY 4: Job type matching (50 points)
-      if (userPreferredTypes.length > 0) {
-        const jobType = jobData.type?.toLowerCase() || ''
-        userPreferredTypes.forEach((preferredType: string) => {
-          if (preferredType && jobType.includes(preferredType.replace('_', ' ').replace('-', ' '))) {
-            score += 50
-          }
-        })
-      }
-      
-      // PRIORITY 5: Recency bonus (25 points max)
-      const daysSincePosted = Math.floor((Date.now() - new Date(jobData.createdAt).getTime()) / (1000 * 60 * 60 * 24))
-      if (daysSincePosted <= 7) {
-        score += Math.max(0, 25 - (daysSincePosted * 3)) // Decreasing points for older jobs
-      }
-      
-      // FALLBACK: If no location/skills match, still give some base score for diversity
-      if (score === 0) {
-        score = 10 + Math.random() * 5 // Small random score to provide variety
-      }
-      
-      return { job: transformedJob, score }
-    })
-
-    // Sort by score (highest first) and take top recommendations with some variety
-    const sortedJobs = scoredJobs.sort((a, b) => b.score - a.score)
-    
-    // Get top recommendations but ensure city/category diversity
-    type JobType = typeof scoredJobs[0]['job']
-    const topRecommendations: JobType[] = []
-    const usedCities = new Set<string>()
-    const usedCategories = new Set<string>()
-    
-    // First pass: Get high-scoring jobs from user's city and categories
-    for (const item of sortedJobs) {
-      if (topRecommendations.length >= 3) break
-      
-      const cityKey = item.job.city?.key || 'unknown'
-      const categoryKey = item.job.category?.key || 'unknown'
-      
-      // Prioritize jobs from user's city if we have location info
-      if (userLocation && item.job.city) {
-        const jobLocation = (item.job.city.name_en || item.job.city.name_bs).toLowerCase().trim()
-        if (jobLocation === userLocation || jobLocation.includes(userLocation)) {
-          topRecommendations.push(item.job)
-          usedCities.add(cityKey)
-          usedCategories.add(categoryKey)
-          continue
-        }
-      }
-      
-      // Add jobs with good scores and category diversity
-      if (item.score > 100 && !usedCategories.has(categoryKey)) {
-        topRecommendations.push(item.job)
-        usedCities.add(cityKey)
-        usedCategories.add(categoryKey)
-      }
-    }
-    
-    // Second pass: Fill remaining slots with best available jobs
-    for (const item of sortedJobs) {
-      if (topRecommendations.length >= 3) break
-      
-      const cityKey = item.job.city?.key || 'unknown'
-      const categoryKey = item.job.category?.key || 'unknown'
-      
-      // Avoid duplicates
-      if (!topRecommendations.find(job => job.id === item.job.id)) {
-        topRecommendations.push(item.job)
-        usedCities.add(cityKey)
-        usedCategories.add(categoryKey)
-      }
+    // If user has preferred job types, filter by them
+    if (userProfile?.preferred_job_types) {
+      const preferredTypes = userProfile.preferred_job_types.split(', ');
+      query = query.in('job_type', preferredTypes)
     }
 
-    return NextResponse.json({
-      jobs: topRecommendations.slice(0, 3) // Ensure we return exactly 3 jobs
-    })
-    } catch (error) {
-      console.error('Error fetching recommended jobs:', error)
+    // Limit to recent jobs
+    const { data: jobs, error: jobsError } = await query.limit(10)
+
+    if (jobsError) {
+      console.error("Recommended jobs fetch error:", jobsError);
       return NextResponse.json(
-        { error: 'Internal server error' },
+        { error: "Failed to fetch recommended jobs" },
         { status: 500 }
-      )
-    } finally {
-      await prisma.$disconnect()
+      );
     }
+
+    // If we have user skills, we could add simple text matching
+    let scoredJobs = (jobs || []).map(job => ({
+      ...job,
+      score: 1 // Basic score, could be enhanced with skill matching
+    }))
+
+    // Enhanced scoring based on user preferences
+    if (userProfile?.skills) {
+      const userSkills = userProfile.skills.toLowerCase().split(',').map(s => s.trim())
+      
+      scoredJobs = scoredJobs.map(job => {
+        let score = 1
+        
+        // Check if job description mentions user skills
+        const jobText = (job.title + ' ' + job.description).toLowerCase()
+        const skillMatches = userSkills.filter(skill => 
+          skill.length > 2 && jobText.includes(skill)
+        ).length
+        
+        score += skillMatches * 0.5
+        
+        // Prefer jobs in same location
+        if (userProfile.location && job.location === userProfile.location) {
+          score += 0.3
+        }
+        
+        // Prefer remote jobs if no location match
+        if (job.remote_allowed && (!userProfile.location || job.location !== userProfile.location)) {
+          score += 0.2
+        }
+        
+        return { ...job, score }
+      })
+    }
+
+    // Sort by score and take top recommendations
+    const recommendedJobs = scoredJobs
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(job => ({
+        id: job.id,
+        title: job.title,
+        description: job.description,
+        salaryMin: job.salary_min,
+        salaryMax: job.salary_max,
+        salaryCurrency: job.salary_currency,
+        jobType: job.job_type,
+        location: job.location,
+        remoteAllowed: job.remote_allowed,
+        category: job.category,
+        status: job.status,
+        createdAt: job.created_at,
+        deadline: job.deadline,
+        postedBy: job.posted_by,
+        postedByUser: job.users ? {
+          name: job.users.name,
+          companyName: job.users.company_name
+        } : null,
+        recommendationScore: job.score
+      }))
+
+    return NextResponse.json({ 
+      jobs: recommendedJobs,
+      total: recommendedJobs.length,
+      basedOn: {
+        preferredJobTypes: userProfile?.preferred_job_types?.split(', ') || [],
+        skills: userProfile?.skills || null,
+        location: userProfile?.location || null
+      }
+    });
+
   } catch (error) {
-    console.error('Authentication error:', error)
+    console.error("Get recommended jobs error:", error);
     return NextResponse.json(
-      { error: 'Authentication failed' },
-      { status: 401 }
-    )
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

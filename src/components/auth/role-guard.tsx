@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -17,7 +17,7 @@ export function RoleGuard({
   requireProfileSetup = false,
   fallbackPath 
 }: RoleGuardProps) {
-  const { user, loading } = useAuth()
+  const { user, loading } = useSupabaseAuth()
   const router = useRouter()
   const [redirecting, setRedirecting] = useState(false)
 

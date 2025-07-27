@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { getTimeBasedGreetingWithIcon } from '@/lib/localized-greetings'
 import { useTranslations } from 'next-intl'
 import { DashboardFooter } from '@/components/core/global-footer'
@@ -35,7 +35,7 @@ export function DashboardLayout({
   subtitle,
   userRole = 'tasker' 
 }: DashboardLayoutProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const t = useTranslations('dashboard')
   const tGreetings = useTranslations('greetings')
 

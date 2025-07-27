@@ -9,13 +9,13 @@ import { History, ChevronDown, ChevronUp } from 'lucide-react'
 interface ConnectionHistoryEntry {
   id: string
   action: string
-  actionLabel: string
-  amount: number
-  description: string | null
-  jobId: string | null
+  connectionsBefore: number
+  connectionsAfter: number
+  amountChanged: number
+  reason?: string
   createdAt: string
-  isPositive: boolean
-  isNegative: boolean
+  adminId?: string
+  jobId?: string
 }
 
 interface ConnectionActivityProps {
@@ -65,16 +65,16 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
                 className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-muted/50"
               >
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{entry.actionLabel}</p>
-                  {entry.description && (
-                    <p className="text-xs text-muted-foreground">{entry.description}</p>
+                  <p className="text-sm font-medium">{entry.action}</p>
+                  {entry.reason && (
+                    <p className="text-xs text-muted-foreground">{entry.reason}</p>
                   )}
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-medium ${
-                    entry.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                    entry.amountChanged > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                   }`}>
-                    {entry.isPositive ? '+' : '-'}{entry.amount}
+                    {entry.amountChanged > 0 ? '+' : ''}{entry.amountChanged}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(entry.createdAt).toLocaleDateString()}

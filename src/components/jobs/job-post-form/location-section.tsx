@@ -9,7 +9,7 @@ import { CreateJobData } from '@/types/job'
 import { validateLocationInCity, cleanMapAddress } from '@/lib/location-utils'
 import { CITY_COORDINATES } from '@/lib/city-coordinates'
 import { MapPin as MapPinIcon } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from '@/hooks/use-data'
 import { useTranslations } from 'next-intl'
 
@@ -20,7 +20,7 @@ interface LocationSectionProps {
 }
 
 export function LocationSection({ formData, onChange, onLocationValidationChange }: LocationSectionProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const { cities } = useData()
   const t = useTranslations('jobPost.types.location')
   const [hasSpecificLocation, setHasSpecificLocation] = useState(!!formData.job_address)

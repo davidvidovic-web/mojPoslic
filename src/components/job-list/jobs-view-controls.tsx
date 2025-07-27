@@ -3,17 +3,15 @@
 import { Button } from "@/components/ui/button"
 import { Grid2X2, List, RefreshCcw, XCircle } from "lucide-react"
 import { useFilterStore } from "@/stores/filter-store"
-import { useQueryClient } from "@tanstack/react-query"
-import { jobKeys } from "@/hooks/use-jobs"
 import { useTranslations } from 'next-intl'
 
 interface JobsViewControlsProps {
   onRefresh?: () => void;
+  refreshJobs?: () => void; // New prop for job refresh function
 }
 
-export function JobsViewControls({ onRefresh }: JobsViewControlsProps) {
+export function JobsViewControls({ onRefresh, refreshJobs }: JobsViewControlsProps) {
   const t = useTranslations('common')
-  const queryClient = useQueryClient()
   const {
     viewMode,
     setViewMode,
@@ -25,9 +23,11 @@ export function JobsViewControls({ onRefresh }: JobsViewControlsProps) {
   const handleRefresh = () => {
     if (onRefresh) {
       onRefresh()
+    } else if (refreshJobs) {
+      refreshJobs()
     } else {
-      // Default refresh behavior using TanStack Query
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() })
+      // Fallback to page refresh
+      window.location.reload()
     }
   }
 

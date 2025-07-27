@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, Eye, Users, MessageSquare, Info } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
 
 interface PrivacySettings {
@@ -27,7 +27,7 @@ interface PrivacySettings {
 }
 
 export function PrivacySettingsCard() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser } = useSupabaseAuth()
   const t = useTranslations('settings.privacy')
   const [settings, setSettings] = useState<PrivacySettings>({
     profileVisibility: 'public',

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { Lightbulb, Mail } from 'lucide-react'
 
 interface ContactInformationSectionProps {
@@ -13,7 +13,7 @@ interface ContactInformationSectionProps {
 }
 
 export function ContactInformationSection({ formData, onChange }: ContactInformationSectionProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
 
   // Initialize contact email with user's email if not set
   useEffect(() => {

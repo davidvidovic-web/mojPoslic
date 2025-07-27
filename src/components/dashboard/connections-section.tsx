@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Zap } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
 import { ConnectionBalance } from './connections/connection-balance'
 import { ConnectionCosts } from './connections/connection-costs'
@@ -26,7 +26,7 @@ interface ConnectionHistoryEntry {
 }
 
 export function ConnectionsSection() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useSupabaseAuth()
   const t = useTranslations('dashboard.connections')
   const [connections, setConnections] = useState<number>(0)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)

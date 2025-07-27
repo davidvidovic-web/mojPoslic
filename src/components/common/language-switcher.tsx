@@ -2,7 +2,7 @@
 
 import { useLocale } from 'next-intl'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { Button } from '@/components/ui/button'
 
 const locales = ['bs', 'en'] as const
@@ -14,7 +14,7 @@ const localeNames = {
 export function LanguageSwitcher() {
   const locale = useLocale()
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
 
   const switchLanguage = async (newLocale: string) => {
     if (user) {

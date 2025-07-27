@@ -1,74 +1,25 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useAuth } from '@/contexts/auth-context'
-import { useTranslations } from 'next-intl'
+import { useApplicationManager } from '@/hooks/useQueryManagers'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { toast } from 'sonner'
 import {
   Search,
   Users,
   ChevronDown,
   ChevronUp,
-  ThumbsUp
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
-interface User {
-  id: string
-  name: string | null
-  email: string
-  phone: string | null
-  location: string | null
-  bio: string | null
-  skills: string | null
-  experience: string | null
-  position: string | null
-  website: string | null
-}
-
-interface Job {
-  id: string
-  title: string
-  company: string | null
-  type: string
-  status: string
-  postedById: string
-}
-
-interface JobApplication {
-  id: string
-  job_id: string
-  user_id: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'ACCEPTED' | 'REJECTED'
-  cover_letter: string | null
-  resume_url: string | null
-  application_date: string
-  client_notes: string | null
-  client_feedback: string | null
-  createdAt: string
-  updatedAt: string
-  appliedAt: string
-  user: User
-  job: Job
-  jobAssignment?: {
-    id: string
-    contractStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'WORK_COMPLETED' | 'CONFIRMED_COMPLETED' | 'COMPLETED'
-    workCompletedAt?: string
-    clientConfirmedAt?: string
-    completedAt?: string
-    completionNotes?: string
-    clientNotes?: string
-  }
-}
-
 interface ClientApplicationManagerProps {
-  showOnlyActive?: boolean // If true, only show applications with active job assignments
+  showOnlyActive?: boolean
   title?: string
   description?: string
 }
@@ -78,108 +29,33 @@ export function ClientApplicationManager({
   title = "Application Management",
   description = "Manage applications to your job postings"
 }: ClientApplicationManagerProps) {
-  const { user } = useAuth()
-  const tErrors = useTranslations('errors')
-  const [applications, setApplications] = useState<JobApplication[]>([])
-  const [loading, setLoading] = useState(true)
+  // Use Supabase hooks instead of manual state management
+  const { applications, isLoading, updateApplication } = useApplicationManager()
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [jobFilter, setJobFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest')
   const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set())
 
-  // Fetch applications on component mount
-  React.useEffect(() => {
-    const fetchApplications = async () => {
-      if (!user) return
-
-      try {
-        setLoading(true)
-        const response = await fetch('/api/client/applications')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch applications')
-        }
-
-        const data = await response.json()
-        
-        // Map the response to include proper typing
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- API response may have different property names
-        const mappedApplications = data.applications.map((app: any) => ({
-          ...app,
-          job_id: app.job_id || app.jobId,
-          user_id: app.user_id || app.userId,
-          application_date: app.application_date || app.appliedAt,
-          cover_letter: app.cover_letter || app.message,
-          client_notes: app.client_notes || app.clientNotes,
-          client_feedback: app.client_feedback || app.feedback
-        }))
-
-        // Filter for active applications if requested
-        const filteredApplications = showOnlyActive 
-          ? mappedApplications.filter((app: JobApplication) => 
-              app.jobAssignment && 
-              ['PENDING', 'ACCEPTED', 'WORK_COMPLETED'].includes(app.jobAssignment.contractStatus)
-            )
-          : mappedApplications
-
-        setApplications(filteredApplications)
-      } catch (error) {
-        console.error('Error fetching applications:', error)
-        toast.error(tErrors('failedToLoad.applications'))
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchApplications()
-  }, [user, showOnlyActive, tErrors])
-
-  const handleConfirmCompletion = async (applicationId: string, jobAssignmentId?: string) => {
-    if (!jobAssignmentId) {
-      toast.error('Job assignment not found')
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/job-assignments/${jobAssignmentId}/confirm-completion`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          clientNotes: '' // Could be expanded to include notes
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to confirm work completion')
-      }
-
-      await response.json()
-      
-      toast.success('Work completion confirmed! The job is now completed.')
-      
-      // Refresh applications to get updated status
-      window.location.reload()
-      
-    } catch (error) {
-      console.error('Error confirming work completion:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to confirm work completion')
-    }
-  }
-
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
-    const filtered = applications.filter(app => {
+    // Filter for active applications if requested
+    let filtered = showOnlyActive 
+      ? applications.filter(app => 
+          app.status && ['PENDING', 'SHORTLISTED', 'REVIEWED'].includes(app.status)
+        )
+      : applications
+
+    // Apply search and filter criteria
+    filtered = filtered.filter(app => {
       const matchesSearch = searchTerm === '' || 
-        app.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.job.title.toLowerCase().includes(searchTerm.toLowerCase())
+        app.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase())
       
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter
-      const matchesJob = jobFilter === 'all' || app.job.id === jobFilter
+      const matchesJob = jobFilter === 'all' || app.job?.id === jobFilter
       
       return matchesSearch && matchesStatus && matchesJob
     })
@@ -188,23 +64,23 @@ export function ClientApplicationManager({
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'oldest':
-          return new Date(a.application_date).getTime() - new Date(b.application_date).getTime()
+          return new Date(a.applied_at || '').getTime() - new Date(b.applied_at || '').getTime()
         case 'name':
-          return (a.user.name || '').localeCompare(b.user.name || '')
+          return (a.user?.name || '').localeCompare(b.user?.name || '')
         case 'newest':
         default:
-          return new Date(b.application_date).getTime() - new Date(a.application_date).getTime()
+          return new Date(b.applied_at || '').getTime() - new Date(a.applied_at || '').getTime()
       }
     })
 
     return filtered
-  }, [applications, searchTerm, statusFilter, jobFilter, sortBy])
+  }, [applications, searchTerm, statusFilter, jobFilter, sortBy, showOnlyActive])
 
   // Get unique jobs for filter
   const uniqueJobs = useMemo(() => {
-    const jobs = applications.map(app => app.job)
+    const jobs = applications.map(app => app.job).filter(job => job !== null)
     return jobs.filter((job, index, self) => 
-      self.findIndex(j => j.id === job.id) === index
+      self.findIndex(j => j?.id === job?.id) === index
     )
   }, [applications])
 
@@ -218,24 +94,7 @@ export function ClientApplicationManager({
     setExpandedApplications(newExpanded)
   }
 
-  const getStatusBadge = (status: string, jobAssignment?: JobApplication['jobAssignment']) => {
-    // If there's a job assignment, show its status instead
-    if (jobAssignment) {
-      switch (jobAssignment.contractStatus) {
-        case 'PENDING':
-          return <Badge className="bg-blue-100 text-blue-800">Work Starting</Badge>
-        case 'ACCEPTED':
-          return <Badge className="bg-green-100 text-green-800">In Progress</Badge>
-        case 'WORK_COMPLETED':
-          return <Badge className="bg-yellow-100 text-yellow-800">Awaiting Confirmation</Badge>
-        case 'COMPLETED':
-          return <Badge className="bg-green-100 text-green-800">Completed</Badge>
-        default:
-          return <Badge className="bg-gray-100 text-gray-800">Assigned</Badge>
-      }
-    }
-
-    // Regular application status
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
@@ -254,7 +113,7 @@ export function ClientApplicationManager({
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className="p-6">
         <div className="text-center">
@@ -351,50 +210,54 @@ export function ClientApplicationManager({
                   <div className="flex items-start space-x-4">
                     <Avatar className="h-12 w-12">
                       <AvatarFallback>
-                        {application.user.name ? application.user.name.charAt(0).toUpperCase() : 'U'}
+                        {application.user?.name ? application.user.name.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {application.user.name || 'Unknown User'}
+                          {application.user?.name || 'Unknown User'}
                         </h3>
-                        {getStatusBadge(application.status, application.jobAssignment)}
+                        {getStatusBadge(application.status || 'PENDING')}
                       </div>
-                      <p className="text-sm text-gray-600">{application.user.email}</p>
-                      <p className="text-sm font-medium text-gray-900">{application.job.title}</p>
+                      <p className="text-sm text-gray-600">{application.user?.email}</p>
+                      <p className="text-sm font-medium text-gray-900">{application.job?.title}</p>
                       <p className="text-xs text-gray-500">
-                        Applied {formatDistanceToNow(new Date(application.application_date), { addSuffix: true })}
+                        Applied {formatDistanceToNow(new Date(application.applied_at || ''), { addSuffix: true })}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {/* Job Completion Workflow Buttons */}
-                    {application.status === 'SELECTED' || application.status === 'ACCEPTED' ? (
-                      <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-300">
-                        {application.jobAssignment ? (
-                          <>
-                            {/* Client can confirm completion when tasker marks work complete */}
-                            {application.jobAssignment.contractStatus === 'WORK_COMPLETED' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-green-600 hover:text-green-700"
-                                onClick={() => handleConfirmCompletion(application.id, application.jobAssignment?.id)}
-                              >
-                                <ThumbsUp className="h-4 w-4 mr-1" />
-                                Confirm Complete
-                              </Button>
-                            )}
-                          </>
-                        ) : (
-                          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                            Job Assigned
-                          </Badge>
-                        )}
+                    {/* Application Actions */}
+                    {application.status === 'PENDING' && (
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-600 hover:text-green-700"
+                          onClick={() => updateApplication({ 
+                            id: application.id, 
+                            updates: { status: 'SHORTLISTED' }
+                          })}
+                        >
+                          <ThumbsUp className="h-4 w-4 mr-1" />
+                          Shortlist
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => updateApplication({ 
+                            id: application.id, 
+                            updates: { status: 'REJECTED' }
+                          })}
+                        >
+                          <ThumbsDown className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
                       </div>
-                    ) : null}
+                    )}
 
                     <Button
                       variant="ghost"
@@ -422,35 +285,31 @@ export function ClientApplicationManager({
                       </div>
                     )}
 
-                    {application.user.skills && (
+                    {application.user?.skills && (
                       <div>
                         <h4 className="text-sm font-medium text-gray-900 mb-1">Skills</h4>
                         <p className="text-sm text-gray-600">{application.user.skills}</p>
                       </div>
                     )}
 
-                    {application.user.location && (
+                    {application.user?.location && (
                       <div>
                         <h4 className="text-sm font-medium text-gray-900 mb-1">Location</h4>
                         <p className="text-sm text-gray-600">{application.user.location}</p>
                       </div>
                     )}
 
-                    {application.jobAssignment && (
+                    {application.cover_letter && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-1">Job Status</h4>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>Contract Status: {application.jobAssignment.contractStatus}</p>
-                          {application.jobAssignment.workCompletedAt && (
-                            <p>Work Completed: {formatDistanceToNow(new Date(application.jobAssignment.workCompletedAt), { addSuffix: true })}</p>
-                          )}
-                          {application.jobAssignment.completionNotes && (
-                            <div className="mt-2">
-                              <span className="font-medium">Completion Notes:</span>
-                              <p className="bg-gray-50 p-2 rounded mt-1">{application.jobAssignment.completionNotes}</p>
-                            </div>
-                          )}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-1">Cover Letter</h4>
+                        <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{application.cover_letter}</p>
+                      </div>
+                    )}
+
+                    {application.client_notes && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-1">Client Notes</h4>
+                        <p className="text-sm text-gray-600 bg-blue-50 p-2 rounded">{application.client_notes}</p>
                       </div>
                     )}
                   </div>

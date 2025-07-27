@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,13 +13,16 @@ import Link from "next/link"
 import { showToast } from "@/lib/toast"
 import { useTranslations } from "next-intl"
 
-export default function RegisterPage() {
+export default function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params)
   const t = useTranslations('auth')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, signInWithOtp, verifyOtp } = useSupabaseAuth()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [otpSent, setOtpSent] = useState(false)
+  const [otp, setOtp] = useState('')
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -31,77 +34,76 @@ export default function RegisterPage() {
   // Redirect logged-in users to returnUrl or dashboard
   useEffect(() => {
     if (!authLoading && user) {
-      const redirectTo = returnUrl || '/dashboard'
+      const redirectTo = returnUrl || `/${locale}/dashboard`
       router.replace(redirectTo)
     }
-  }, [user, authLoading, router, returnUrl])
+  }, [user, authLoading, router, returnUrl, locale])
 
-  const handleEmailRegister = async (e: React.FormEvent) => {
+    const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     setLoading(true)
 
     try {
-      // First create the user account
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      const { error } = await signInWithOtp(formData.email, {
+        shouldCreateUser: true
       })
 
-      const data = await response.json()
+      if (error) {
+        showToast.error(error.message || t('registrationFailed'))
+      } else {
+        setOtpSent(true)
+        showToast.success(t('otpSent') || 'Verification code sent to your email')
+      }
+    } catch {
+      showToast.error(t('registrationFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
-      if (!response.ok) {
-        throw new Error(data.error || t('registrationFailed'))
-      }
+  // Step 2: Verify OTP code
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
 
-      // Show success message - email should be sent automatically
-      showToast.success(data.message || t('accountCreated'))
-      
-      // In development mode, show verification code in alert
-      if (data.developmentMode && data.verificationCode) {
-        alert(`🔐 Development Mode\n\nYour verification code: ${data.verificationCode}\n\nThis code will be auto-filled on the next page.`)
-      }
-      
-      // Redirect to verification page
-      if (data.redirectTo) {
-        // In development mode, append the verification code to the URL for auto-fill
-        const redirectUrl = data.developmentMode && data.verificationCode 
-          ? `${data.redirectTo}&code=${data.verificationCode}`
-          : data.redirectTo
-        router.push(redirectUrl)
-        return
-      }
-      
-      // Reset form
-      setFormData({
-        email: "",
-        password: ""
-      })
-      
-      // Don't auto-sign in, wait for email verification
-    } catch (error) {
-      let errorMessage = t('registrationFailed')
-      
-      if (error instanceof Error) {
-        // Map API error messages to translation keys
-        if (error.message.includes('User with this email already exists')) {
-          errorMessage = t('errorMessages.userAlreadyExists')
-        } else if (error.message.includes('Invalid email address')) {
-          errorMessage = t('errorMessages.invalidEmailAddress')
-        } else if (error.message.includes('Password must be at least 8 characters')) {
-          errorMessage = t('errorMessages.passwordTooShort')
-        } else if (error.message.includes('Internal server error')) {
-          errorMessage = t('errorMessages.internalServerError')
-        } else if (error.message.includes('Account created successfully, but there was an issue sending the verification email')) {
-          errorMessage = t('errorMessages.emailSendFailed')
+    try {
+      const { error } = await verifyOtp(formData.email, otp)
+
+      if (error) {
+        if (error.message.includes('expired')) {
+          showToast.error(t('otpExpired') || 'Code expired. Please request a new one.')
+        } else if (error.message.includes('invalid')) {
+          showToast.error(t('invalidOtp') || 'Invalid code. Please check and try again.')
+        } else {
+          showToast.error(error.message || t('verificationFailed'))
         }
+      } else {
+        showToast.success(t('accountCreated'))
+        router.push(`/${locale}/role-selection`)
       }
-      
-      showToast.error(errorMessage)
+    } catch {
+      showToast.error(t('verificationFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Resend OTP code
+    const handleResendOtp = async () => {
+    setLoading(true)
+
+    try {
+      const { error } = await signInWithOtp(formData.email, {
+        shouldCreateUser: true
+      })
+
+      if (error) {
+        showToast.error(error.message || t('resendFailed'))
+      } else {
+        showToast.success(t('otpResent') || 'Verification code sent again')
+      }
+    } catch {
+      showToast.error(t('resendFailed'))
     } finally {
       setLoading(false)
     }
@@ -136,87 +138,148 @@ export default function RegisterPage() {
       <div className="flex-1 flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">{t('createAccount')}</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              {otpSent ? t('verifyEmail') || 'Verify Your Email' : t('createAccount')}
+            </CardTitle>
             <CardDescription className="text-center">
-              {t('createAccountDescription')}
+              {otpSent 
+                ? (t('enterOtpCode') || `We sent a 6-digit code to ${formData.email}`)
+                : (t('createAccountDescription') || 'Enter your details to create an account')
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Email Registration Form */}
-            <form onSubmit={handleEmailRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('email')}</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder={t('enterEmail')}
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('password')}</Label>
-                <div className="relative">
+            {otpSent ? (
+              /* OTP Verification Form */
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="otp">{t('verificationCode') || 'Verification Code'}</Label>
                   <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder={t('createPassword')}
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    id="otp"
+                    name="otp"
+                    type="text"
+                    placeholder={t('enterSixDigitCode') || 'Enter 6-digit code'}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     required
                     disabled={loading}
-                    minLength={8}
+                    maxLength={6}
+                    className="text-center text-lg tracking-widest"
                   />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-foreground hover:bg-foreground/90 text-background" 
+                  disabled={loading || otp.length !== 6}
+                >
+                  {loading ? (t('verifying') || 'Verifying...') : (t('verifyCode') || 'Verify Code')}
+                </Button>
+
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResendOtp}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    {loading ? (t('sending') || 'Sending...') : (t('resendCode') || 'Resend Code')}
+                  </Button>
+                  
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => {
+                      setOtpSent(false)
+                      setOtp('')
+                    }}
                     disabled={loading}
+                    className="w-full"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {t('backToRegistration') || 'Back to Registration'}
                   </Button>
                 </div>
-                {formData.password && (
-                  <PasswordStrengthIndicator 
-                    password={formData.password} 
-                    userInfo={{ email: formData.email }}
-                    showStrengthBar={true}
-                    showRequirements={true}
-                    className="mt-3"
+              </form>
+            ) : (
+              /* Email Registration Form */
+              <form onSubmit={handleEmailRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t('email')}</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder={t('enterEmail')}
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    disabled={loading}
                   />
-                )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">{t('password')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder={t('createPassword')}
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loading}
+                      minLength={8}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {formData.password && (
+                    <PasswordStrengthIndicator 
+                      password={formData.password} 
+                      userInfo={{ email: formData.email }}
+                      showStrengthBar={true}
+                      showRequirements={true}
+                      className="mt-3"
+                    />
+                  )}
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-foreground hover:bg-foreground/90 text-background" 
+                  disabled={loading}
+                >
+                  {loading ? (t('sendingCode') || 'Sending Code...') : (t('sendVerificationCode') || 'Send Verification Code')}
+                </Button>
+              </form>
+            )}
+
+            {/* Sign In Link - only show when not in OTP mode */}
+            {!otpSent && (
+              <div className="text-center text-sm">
+                <span className="text-muted-foreground">{t('alreadyHaveAccount')} </span>
+                <Link
+                  href={returnUrl ? `/${locale}/auth/signin?returnUrl=${encodeURIComponent(returnUrl)}` : `/${locale}/auth/signin`}
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  {t('signIn')}
+                </Link>
               </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-foreground hover:bg-foreground/90 text-background" 
-                disabled={loading}
-              >
-                {loading ? t('creatingAccount') : t('createAccountButton')}
-              </Button>
-            </form>
-
-            {/* Sign In Link */}
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">{t('alreadyHaveAccount')} </span>
-              <Link
-                href={returnUrl ? `/auth/signin?returnUrl=${encodeURIComponent(returnUrl)}` : "/auth/signin"}
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                {t('signIn')}
-              </Link>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

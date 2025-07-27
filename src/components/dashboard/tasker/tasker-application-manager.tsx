@@ -1,13 +1,11 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useAuth } from '@/contexts/auth-context'
-import { useTranslations } from 'next-intl'
+import { useApplicationManager } from '@/hooks/useQueryManagers'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { toast } from 'sonner'
 import {
   Search,
   Briefcase,
@@ -21,34 +19,6 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { useRouter } from 'next/navigation'
 
-interface Job {
-  id: string
-  title: string
-  company: string | null
-  type: string
-  status: string
-  salary?: number
-  salaryMin?: number
-  salaryMax?: number
-  location?: string
-  description?: string
-}
-
-interface JobApplication {
-  id: string
-  job_id: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
-  cover_letter: string | null
-  application_date: string
-  createdAt: string
-  updatedAt: string
-  appliedAt: string
-  job: Job
-  clientNotes?: string
-  shortlistedAt?: string
-  interviewDate?: string
-}
-
 interface TaskerApplicationManagerProps {
   showOnlyHistorical?: boolean // If true, only show completed/rejected applications
   title?: string
@@ -60,79 +30,45 @@ export function TaskerApplicationManager({
   title = "My Applications",
   description = "Track your job applications"
 }: TaskerApplicationManagerProps) {
-  const { user } = useAuth()
+  // Use Supabase hooks instead of manual state management
+  const { applications, isLoading, isError, error } = useApplicationManager()
   const router = useRouter()
-  const tErrors = useTranslations('errors')
-  const [applications, setApplications] = useState<JobApplication[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'company'>('newest')
   const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set())
 
-  // Fetch applications on component mount
-  React.useEffect(() => {
-    const fetchApplications = async () => {
-      if (!user) return
-
-      try {
-        setLoading(true)
-        setError(null)
-        const response = await fetch('/api/tasker/applications')
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        const data = await response.json()
-        
-        // Ensure data is an array, even if empty
-        const applicationsArray = Array.isArray(data) ? data : []
-        
-        // Filter applications based on props
-        const filteredApplications = showOnlyHistorical 
-          ? applicationsArray.filter((app: JobApplication) => 
-              ['REJECTED', 'WITHDRAWN'].includes(app.status) || 
-              (app.status === 'SELECTED' && hasCompletedWork(app))
-            )
-          : applicationsArray.filter((app: JobApplication) => 
-              ['PENDING', 'REVIEWED', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED'].includes(app.status) &&
-              !hasCompletedWork(app)
-            )
-
-        setApplications(filteredApplications)
-      } catch (error) {
-        console.error('Error fetching applications:', error)
-        setError('Failed to load applications')
-        toast.error(tErrors('failedToLoad.applications'))
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchApplications()
-  }, [user, showOnlyHistorical, tErrors])
-
   // Helper function to check if work is completed (this would need to be enhanced with actual job assignment data)
-  const hasCompletedWork = (app: JobApplication): boolean => {
+  const hasCompletedWork = (app: { status: string | null; applied_at: string | null; updated_at?: string | null }): boolean => {
     // This is a placeholder - in reality, you'd check job assignment status
     // For now, assume all SELECTED applications that are older than 30 days are completed
     if (app.status === 'SELECTED') {
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      return new Date(app.appliedAt || app.application_date) < thirtyDaysAgo
+      return new Date(app.applied_at || '').getTime() < thirtyDaysAgo.getTime()
     }
     return false
   }
 
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
-    const filtered = applications.filter(app => {
+    // Filter applications based on props first
+    let filtered = showOnlyHistorical 
+      ? applications.filter(app => 
+          ['REJECTED', 'WITHDRAWN'].includes(app.status || '') || 
+          (app.status === 'SELECTED' && hasCompletedWork(app))
+        )
+      : applications.filter(app => 
+          ['PENDING', 'REVIEWED', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED'].includes(app.status || '') &&
+          !hasCompletedWork(app)
+        )
+
+    // Apply search and status filters
+    filtered = filtered.filter(app => {
       const matchesSearch = searchTerm === '' || 
-        app.job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.job.company?.toLowerCase().includes(searchTerm.toLowerCase())
+        app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.job?.description?.toLowerCase().includes(searchTerm.toLowerCase())
       
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter
       
@@ -143,17 +79,17 @@ export function TaskerApplicationManager({
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'oldest':
-          return new Date(a.appliedAt || a.application_date).getTime() - new Date(b.appliedAt || b.application_date).getTime()
+          return new Date(a.applied_at || '').getTime() - new Date(b.applied_at || '').getTime()
         case 'company':
-          return (a.job.company || '').localeCompare(b.job.company || '')
+          return (a.job?.title || '').localeCompare(b.job?.title || '')
         case 'newest':
         default:
-          return new Date(b.appliedAt || b.application_date).getTime() - new Date(a.appliedAt || a.application_date).getTime()
+          return new Date(b.applied_at || '').getTime() - new Date(a.applied_at || '').getTime()
       }
     })
 
     return filtered
-  }, [applications, searchTerm, statusFilter, sortBy])
+  }, [applications, searchTerm, statusFilter, sortBy, showOnlyHistorical])
 
   const toggleExpanded = (applicationId: string) => {
     const newExpanded = new Set(expandedApplications)
@@ -201,19 +137,15 @@ export function TaskerApplicationManager({
     }
   }
 
-  const formatSalary = (job: Job) => {
-    if (job.salary) {
-      return `${job.salary.toLocaleString()} BAM`
-    } else if (job.salaryMin && job.salaryMax) {
-      return `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} BAM`
-    } else if (job.salaryMin) {
-      return `From ${job.salaryMin.toLocaleString()} BAM`
-    }
-    return 'Salary not specified'
+    const formatSalary = (job: { salary_min?: number | null; salary_max?: number | null; salary_type?: string | null } | null) => {
+    if (!job?.salary_min) return ''
+    const max = job.salary_max || job.salary_min
+    const salaryType = job.salary_type || ''
+    return `${job.salary_min}-${max} EUR${salaryType ? ` (${salaryType})` : ''}`
   }
 
   // Handle error state
-  if (error) {
+  if (isError) {
     return (
       <div className="text-center py-16 px-6">
         <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto mb-4">
@@ -221,7 +153,7 @@ export function TaskerApplicationManager({
         </div>
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Error Loading Applications</h3>
         <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-          {error}
+          {error?.message || 'Failed to load applications'}
         </p>
         <Button 
           variant="outline"
@@ -234,7 +166,7 @@ export function TaskerApplicationManager({
     )
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="text-center py-16 px-6">
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -337,22 +269,22 @@ export function TaskerApplicationManager({
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10 shrink-0">
-                        {getStatusIcon(application.status)}
+                        {getStatusIcon(application.status || 'PENDING')}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">
-                            {application.job.title}
+                            {application.job?.title || 'Job Title Not Available'}
                           </h3>
-                          {getStatusBadge(application.status)}
+                          {getStatusBadge(application.status || 'PENDING')}
                         </div>
                         <p className="text-base font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          {application.job.company || 'Company not specified'}
+                          Posted by: {application.job?.posted_by_id || 'Unknown'}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                           <span className="font-medium">{formatSalary(application.job)}</span>
                           <span>•</span>
-                          <span>Applied {formatDistanceToNow(new Date(application.appliedAt || application.application_date), { addSuffix: true })}</span>
+                          <span>Applied {formatDistanceToNow(new Date(application.applied_at || ''), { addSuffix: true })}</span>
                         </div>
                       </div>
                     </div>
@@ -361,8 +293,9 @@ export function TaskerApplicationManager({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.push(`/jobs/${application.job.id}`)}
+                        onClick={() => router.push(`/jobs/${application.job?.id}`)}
                         className="rounded-xl"
+                        disabled={!application.job?.id}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -398,19 +331,19 @@ export function TaskerApplicationManager({
                         </div>
                       )}
 
-                      {application.job.location && (
+                      {application.job?.city_id && (
                         <div className="flex items-start gap-3">
                           <div className="w-5 h-5 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mt-0.5">
                             <span className="text-xs text-purple-600">📍</span>
                           </div>
                           <div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Location</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{application.job.location}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{application.job.exact_location || application.job.city_id}</p>
                           </div>
                         </div>
                       )}
 
-                      {application.job.description && (
+                      {application.job?.description && (
                         <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4">
                           <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                             <div className="w-5 h-5 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -425,7 +358,7 @@ export function TaskerApplicationManager({
                         </div>
                       )}
 
-                      {application.clientNotes && (
+                      {application.client_notes && (
                         <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
                           <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
                             <div className="w-5 h-5 rounded-lg bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
@@ -434,12 +367,12 @@ export function TaskerApplicationManager({
                             Client Notes
                           </h4>
                           <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                            {application.clientNotes}
+                            {application.client_notes}
                           </p>
                         </div>
                       )}
 
-                      {application.shortlistedAt && (
+                      {application.applied_at && (
                         <div className="flex items-start gap-3">
                           <div className="w-5 h-5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mt-0.5">
                             <span className="text-xs text-yellow-600">⏰</span>
@@ -447,8 +380,10 @@ export function TaskerApplicationManager({
                           <div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Timeline</h4>
                             <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                              <p>Applied: {formatDistanceToNow(new Date(application.appliedAt || application.application_date), { addSuffix: true })}</p>
-                              <p>Shortlisted: {formatDistanceToNow(new Date(application.shortlistedAt), { addSuffix: true })}</p>
+                              <p>Applied: {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}</p>
+                              {application.updated_at && application.updated_at !== application.applied_at && (
+                                <p>Last Updated: {formatDistanceToNow(new Date(application.updated_at), { addSuffix: true })}</p>
+                              )}
                             </div>
                           </div>
                         </div>

@@ -1,55 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/auth-context'
-import { Job } from '@/types/job'
-import { JobApplication } from '@/types/application'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { ApplicationsSection } from '@/components/dashboard/tasker/applications-section'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
 import { formatDisplayName, getTimeBasedGreeting } from '@/lib/utils'
+import { useApplications } from '@/hooks/use-applications'
+import { useRecommendedJobsQuery } from '@/hooks/queries/useJobs'
 
 export default function ApplicationsPage() {
-  const { user } = useAuth()
-  const [applications, setApplications] = useState<JobApplication[]>([])
-  const [savedJobs, setSavedJobs] = useState<Job[]>([])
-  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
+  const { user } = useSupabaseAuth()
+  
+  // Use new Supabase-based hooks
+  const { data: applications = [], isLoading: applicationsLoading } = useApplications()
+  const { data: recommendedJobs = [], isLoading: recommendedLoading } = useRecommendedJobsQuery(user?.id, 5)
+  
+  // TODO: Implement saved jobs query when available
+  const savedJobs: any[] = []
+  // TODO: Implement saved jobs query when available
+  const savedJobs: Array<unknown> = []
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return
-
-      try {
-        const [applicationsResponse, savedResponse, recommendedResponse] = await Promise.all([
-          fetch(`/api/user/applications?userId=${user.id}`),
-          fetch(`/api/user/saved-jobs?userId=${user.id}`),
-          fetch('/api/jobs/recommended')
-        ])
-
-        if (applicationsResponse.ok) {
-          const data = await applicationsResponse.json()
-          setApplications(data.applications || [])
-        }
-
-        if (savedResponse.ok) {
-          const savedData = await savedResponse.json()
-          setSavedJobs(savedData.savedJobs || [])
-        }
-
-        if (recommendedResponse.ok) {
-          const recommendedData = await recommendedResponse.json()
-          setRecommendedJobs(recommendedData.jobs || [])
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [user])
+  const loading = applicationsLoading || recommendedLoading
 
   if (loading) {
     return (

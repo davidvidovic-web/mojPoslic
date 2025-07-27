@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Shield, Trash2, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
-import { useSession } from 'next-auth/react'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { DeleteAccountDialog } from './delete-account-dialog'
 
 interface DeletionRequest {
@@ -20,7 +20,7 @@ interface SecurityCardProps {
 
 export function SecurityCard({ deletionRequest }: SecurityCardProps) {
   const t = useTranslations('settings.security')
-  const { data: session } = useSession()
+  const { user } = useSupabaseAuth()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -33,7 +33,7 @@ export function SecurityCard({ deletionRequest }: SecurityCardProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          confirmationText: session?.user?.name || session?.user?.email?.split('@')[0],
+          confirmationText: user?.name || user?.email?.split('@')[0],
           reason,
         }),
       })
@@ -160,7 +160,7 @@ export function SecurityCard({ deletionRequest }: SecurityCardProps) {
       <DeleteAccountDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        username={session?.user?.name || session?.user?.email?.split('@')[0] || null}
+        username={user?.name || user?.email?.split('@')[0] || null}
         onConfirm={handleDeleteAccount}
       />
     </>

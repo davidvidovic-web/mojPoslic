@@ -8,9 +8,11 @@ import { Label } from '@/components/ui/label'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
+import { AvatarUpload } from '@/components/profile/avatar-upload'
+import { ResumeUpload } from '@/components/profile/resume-upload'
 import { User } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { parseSkillsArray, parseExperienceLevels } from '@/lib/profile-format'
 import { formatLocation } from '@/lib/location-format'
 import { useTranslations } from 'next-intl'
@@ -32,7 +34,7 @@ interface UserProfile {
 }
 
 export function ProfileSettingsCard() {
-  const { user: authProfile, loading: authLoading, refreshUser } = useAuth()
+  const { user: authProfile, loading: authLoading, refreshUser } = useSupabaseAuth()
   const t = useTranslations('settings.profileSettings')
   const tProfile = useTranslations('profile.setup.experienceLevels')
   const [profile, setProfile] = useState<UserProfile>({
@@ -126,11 +128,22 @@ export function ProfileSettingsCard() {
             preferredJobTypes: profile.preferredJobTypes,
           }
 
+      // Get session for auth header
+      const { supabase } = await import("@/lib/supabase")
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        toast.error('Please sign in again to continue')
+        return
+      }
+
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(profileData),
       })
 
@@ -171,6 +184,19 @@ export function ProfileSettingsCard() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleProfileUpdate} className="space-y-6">
+          {/* Avatar Upload Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('profilePicture')}</h3>
+            <AvatarUpload 
+              currentAvatarUrl={authProfile?.avatarUrl || undefined}
+              onAvatarUploaded={(_url) => {
+                // Avatar upload handles its own profile update, just refresh
+                refreshUser()
+              }}
+              size="lg"
+            />
+          </div>
+
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">{t('basicInformation')}</h3>
@@ -346,6 +372,20 @@ export function ProfileSettingsCard() {
                         )
                       })}
                     </div>
+                  </div>
+                )}
+
+                {/* Resume Upload - Only for taskers */}
+                {profile.role === 'tasker' && (
+                  <div className="space-y-2">
+                    <Label>{t('resume')}</Label>
+                    <ResumeUpload
+                      currentResumeUrl={authProfile?.resumeUrl || undefined}
+                      onResumeUploaded={(_url) => {
+                        // Resume upload handles its own profile update, just refresh
+                        refreshUser()
+                      }}
+                    />
                   </div>
                 )}
               </div>

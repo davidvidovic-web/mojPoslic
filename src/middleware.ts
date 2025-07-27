@@ -1,77 +1,63 @@
 import createMiddleware from 'next-intl/middleware';
-import {routing} from './i18n/routing';
-import { cleanupTransferCookie } from './lib/cleanup-transfer';
+import {routing} from '@/i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { updateSession } from '@/lib/supabase-server';
 
 const intlMiddleware = createMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
-  // Early return for static files and API routes to avoid unnecessary processing
   const pathname = request.nextUrl.pathname;
   
-  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.startsWith('/_vercel/') || pathname.includes('.')) {
+  // Early return for static files
+  if (pathname.startsWith('/_next/') || pathname.startsWith('/_vercel/') || pathname.includes('.')) {
     return NextResponse.next();
   }
 
-  const response = intlMiddleware(request);
-  
-  // Clean up transfer cookies if user is authenticated
-  const cleanedResponse = cleanupTransferCookie(request, response);
-  
-  // Define truly public paths that don't require authentication
-  const publicPaths = [
-    '/',
-    '/auth/signin',
-    '/auth/register', 
-    '/auth/verify-email',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-    '/privacy',
-    '/terms',
-    '/contact',
-    '/about'
-  ];
-  
-  // Skip auth checks for public paths
-  if (publicPaths.includes(pathname)) {
-    return cleanedResponse;
+  // For API routes, just update session
+  if (pathname.startsWith('/api/')) {
+    return await updateSession(request);
   }
 
-  try {
-    // Only check for basic authentication
-    const token = await getToken({ 
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      cookieName: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token' 
-        : 'next-auth.session-token'
-    });
+  // For auth routes, handle them specially to avoid redirect loops
+  if (pathname.startsWith('/auth/')) {
+    console.log('Auth route middleware:', pathname);
     
-    // If no token, redirect to signin
-    if (!token) {
-      const signInUrl = new URL('/auth/signin', request.url);
-      return NextResponse.redirect(signInUrl);
-    }
-
-    // User is authenticated - allow access to all protected paths
-    // RegistrationFlowGuard components handle role/profile completion checks
-    return cleanedResponse;
+    // Apply intl middleware but don't cascade to updateSession to avoid loops
+    const intlResponse = intlMiddleware(request);
     
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Middleware auth error:', error);
+    console.log('Intl response status:', intlResponse.status);
+    console.log('Intl response headers:', intlResponse.headers.get('location'));
+    
+    // If intl middleware wants to redirect, let it
+    if (intlResponse.status === 307 || intlResponse.status === 301) {
+      return intlResponse;
     }
-    // On error, allow the request to proceed to avoid breaking the app
-    return cleanedResponse;
+    
+    // Otherwise just return the intl response without session update for auth routes
+    return intlResponse;
   }
+
+  // For all other routes, apply both intl and session middleware
+  const intlResponse = intlMiddleware(request);
+  
+  // If intl middleware redirected, use that response
+  if (intlResponse.status === 307 || intlResponse.status === 301) {
+    return intlResponse;
+  }
+  
+  // Otherwise, update session and continue
+  return await updateSession(request);
 }
 
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
   matcher: [
-    '/((?!api|_next|_vercel|.*\\..*).*)' 
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - *.svg, *.png, *.jpg, *.jpeg, *.gif, *.webp (image files)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };

@@ -1,8 +1,8 @@
 'use client'
 
-import { useJobs } from '@/hooks/use-jobs'
-import { useUserAppliedJobs } from '@/hooks/use-applications'
-import { useAuth } from '@/contexts/auth-context'
+import { useJobManager } from '@/hooks/useQueryManagers'
+import { useUserAppliedJobsQuery } from '@/hooks/queries/useJobs'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useFilterStore } from '@/stores/filter-store'
 import { JobCard } from '@/components/job-card'
 import { JobCardSkeleton } from '@/components/job-card-skeleton'
@@ -11,45 +11,27 @@ import { JobsViewControls } from '@/components/job-list/jobs-view-controls'
 import { JobsEmptyState } from '@/components/job-list/jobs-empty-state'
 import { JobsPagination } from '@/components/job-list/jobs-pagination'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { JobFilters as JobFiltersType } from '@/types/job'
 import { useTranslations } from 'next-intl'
+import type { Job } from '@/types/job'
 
 export function JobList() {
   const t = useTranslations('common.messages')
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const {
-    jobSearch,
-    jobCityFilter,
-    jobCategoryFilter,
-    jobSubcategoryFilter,
-    jobTypeFilter,
     viewMode,
   } = useFilterStore()
 
-  // Map the filter store types to JobFilters type
-  const mapJobType = (type: string): 'quick_job' | 'full_time' | 'part_time' | 'remote' | 'all' | undefined => {
-    if (type === 'all') return 'all';
-    if (type === 'quick-job') return 'quick_job';
-    if (type === 'full-time') return 'full_time';
-    if (type === 'part-time') return 'part_time';
-    if (type === 'remote') return 'remote';
-    return undefined;
-  };
-
-  // Prepare filters for query
-  const filters: JobFiltersType = {
-    search: jobSearch,
-    city: jobCityFilter !== 'all' ? jobCityFilter : undefined,
-    category: jobCategoryFilter !== 'all' ? jobCategoryFilter : undefined,
-    subcategory: jobSubcategoryFilter !== 'all' ? jobSubcategoryFilter : undefined,
-    type: mapJobType(jobTypeFilter),
-  }
-
-  // Fetch jobs with TanStack Query
-  const { data: jobs, isLoading, isError, error } = useJobs(filters)
+    // Use the new Supabase-based job manager - works for both authenticated and public users
+  const { 
+    jobs, 
+    isLoading, 
+    isError, 
+    error,
+    refetch
+  } = useJobManager()
   
-  // Fetch user's applied jobs for display indication (only if user is logged in)
-  const { data: appliedJobIds = new Set() } = useUserAppliedJobs(!!user)
+  // Fetch user's applied jobs for display indication (only if user is logged in and auth is loaded)
+  const { data: appliedJobIds = new Set() } = useUserAppliedJobsQuery(user?.id)
 
   return (
     <div className="space-y-6">
@@ -57,7 +39,7 @@ export function JobList() {
       <JobFilters />
 
       {/* Active Filters & View Controls */}
-      <JobsViewControls />
+      <JobsViewControls refreshJobs={refetch} />
 
       {/* Results Section */}
       {isLoading ? (
@@ -73,10 +55,10 @@ export function JobList() {
       ) : isError ? (
         <Alert variant="destructive" className="my-4">
           <AlertDescription>
-            {t('somethingWentWrong')}: {error?.message || t('tryAgainLater')}
+            {t('somethingWentWrong')}: {typeof error === 'string' ? error : t('tryAgainLater')}
           </AlertDescription>
         </Alert>
-      ) : jobs?.length === 0 ? (
+      ) : !jobs || jobs.length === 0 ? (
         <JobsEmptyState />
       ) : (
         <>
@@ -85,18 +67,18 @@ export function JobList() {
               ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
               : "flex flex-col gap-3"
           }>
-            {jobs?.map((job) => (
+            {jobs.map((job: Job) => (
               <JobCard 
                 key={job.id} 
                 job={job} 
                 viewMode={viewMode} 
                 hasApplied={user ? appliedJobIds.has(job.id) : false}
               />
-            )) || []}
+            ))}
           </div>
           
           {/* Pagination */}
-          <JobsPagination totalItems={jobs?.length || 0} />
+          <JobsPagination totalItems={jobs.length} />
         </>
       )}
     </div>

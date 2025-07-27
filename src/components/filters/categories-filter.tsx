@@ -2,7 +2,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslations, useLocale } from 'next-intl'
-import { useCategories } from '@/hooks/use-data'
+import { useCategories } from '@/hooks/use-static-data'
 
 interface CategoriesFilterProps {
   value: string
@@ -27,44 +27,39 @@ export function CategoriesFilter({
   showSubcategories = false,
   stackOnMobile = false
 }: CategoriesFilterProps) {
-  const { isLoading, getCategoriesByParent, getAllSubcategories, getCategoryByKey } = useCategories()
+  const { categories, loading } = useCategories()
   const t = useTranslations('filters')
   const locale = useLocale()
   
   const defaultPlaceholder = placeholder || t('allCategories')
 
   // Get only main categories (no parent)
-  const mainCategories = getCategoriesByParent(undefined)
+  const mainCategories = categories.filter(cat => !cat.parent_id)
   
   // Get subcategories based on selected category or all subcategories
   const relevantSubcategories = value && value !== 'all' 
-    ? (() => {
-        const selectedCategory = getCategoryByKey(value)
-        return selectedCategory ? getCategoriesByParent(selectedCategory.id) : []
-      })()
-    : getAllSubcategories() // Get all subcategories when no parent is selected
+    ? categories.filter(cat => cat.parent_id === value)
+    : categories.filter(cat => cat.parent_id) // Get all subcategories when no parent is selected
 
   // Helper function to get category name based on locale
   const getCategoryName = (category: {
-    nameBS?: string
     name_bs?: string
-    nameEN?: string
     name_en?: string
     name?: string
   }) => {
     if (locale === 'bs') {
-      return category.nameBS || category.name_bs || category.nameEN || category.name_en || category.name
+      return category.name_bs || category.name_en || category.name
     } else {
-      return category.nameEN || category.name_en || category.nameBS || category.name_bs || category.name
+      return category.name_en || category.name_bs || category.name
     }
   }
 
   return (
     <div className={stackOnMobile ? "flex flex-col gap-4 sm:flex-row" : "flex gap-4"}>
       {/* Main Categories Dropdown */}
-      <Select value={value} onValueChange={onChange} disabled={isLoading}>
+      <Select value={value} onValueChange={onChange} disabled={loading}>
         <SelectTrigger className={className}>
-          <SelectValue placeholder={isLoading ? t('loadingCategories') : defaultPlaceholder} />
+          <SelectValue placeholder={loading ? t('loadingCategories') : defaultPlaceholder} />
         </SelectTrigger>
         <SelectContent>
           {includeAllOption && (
@@ -84,7 +79,7 @@ export function CategoriesFilter({
         <Select 
           value={subcategoryValue || "all"} 
           onValueChange={onSubcategoryChange || (() => {})}
-          disabled={isLoading}
+          disabled={loading}
         >
           <SelectTrigger className={className}>
             <SelectValue placeholder={t('allSubcategories')} />

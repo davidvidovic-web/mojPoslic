@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
-import { useAuth } from '@/contexts/auth-context'
-import { authenticatedSupabase } from '@/lib/messaging/supabase'
-import { useSupabaseAuth } from '@/hooks/use-supabase-auth'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { supabase } from '@/lib/supabase'
 import type { Message } from '@/types/messaging'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -50,7 +49,7 @@ export function useOptimizedRealtime({
   activeConversationId,
   isMessagingActive = true
 }: OptimizedRealtimeConfig) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const { isAuthenticated } = useSupabaseAuth() // Sync NextAuth with Supabase
   const channelRef = useRef<RealtimeChannel | null>(null)
   const lastActiveConversationRef = useRef<string | null>(null)
@@ -71,7 +70,7 @@ export function useOptimizedRealtime({
     }
     
     if (channelRef.current) {
-      authenticatedSupabase.removeChannel(channelRef.current)
+      supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
     
@@ -109,7 +108,7 @@ export function useOptimizedRealtime({
 
     // Clean up previous subscription
     if (channelRef.current) {
-      authenticatedSupabase.removeChannel(channelRef.current)
+      supabase.removeChannel(channelRef.current)
       channelRef.current = null
     }
 
@@ -118,7 +117,7 @@ export function useOptimizedRealtime({
       const channelName = `conversation-${activeConversationId}`
       
       // Subscribe to new messages directly with authenticated Supabase
-      const channel = authenticatedSupabase
+      const channel = supabase
         .channel(channelName)
         .on(
           'postgres_changes',
@@ -169,7 +168,7 @@ export function useOptimizedRealtime({
             
             // Clean up the failed channel
             if (channelRef.current) {
-              authenticatedSupabase.removeChannel(channelRef.current)
+              supabase.removeChannel(channelRef.current)
               channelRef.current = null
             }
             

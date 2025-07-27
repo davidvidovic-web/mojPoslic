@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { UserCircle, Crown, Building2, User } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations, useLocale } from 'next-intl'
 
 export function AccountInfoCard() {
-  const { user: profile, loading } = useAuth()
+  const { user: profile, loading } = useSupabaseAuth()
   const t = useTranslations('settings.accountInfo')
   const locale = useLocale()
 

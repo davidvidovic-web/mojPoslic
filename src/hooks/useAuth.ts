@@ -10,10 +10,11 @@ interface AuthUser {
   email?: string | null
   phone?: string | null
   role: UserRole
+  avatarUrl?: string | null
   profileSetupCompleted?: boolean
 }
 
-export function useAuth() {
+export function useSupabaseAuth() {
   const { data: session, status } = useSession()
   
   const user: AuthUser | null = session?.user ? {
@@ -22,6 +23,7 @@ export function useAuth() {
     email: session.user.email,
     phone: session.user.phone,
     role: (session.user.role as UserRole) || 'client',
+    avatarUrl: session.user.avatarUrl,
     profileSetupCompleted: session.user.profileSetupCompleted ?? false,
   } : null
 

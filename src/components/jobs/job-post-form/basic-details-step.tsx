@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from '@/hooks/use-data'
 
 interface BasicDetailsStepProps {
@@ -17,7 +17,7 @@ interface BasicDetailsStepProps {
 }
 
 export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDetailsStepProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const t = useTranslations('jobPost.types')
   const locale = useLocale()
   const { categories } = useData()

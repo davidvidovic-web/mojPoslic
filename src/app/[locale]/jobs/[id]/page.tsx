@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Briefcase, MapPin, Calendar, DollarSign, Tag, Users, Clock } from "lucide-react"
 import { Job } from "@/types/job"
-import { useAuth } from "@/contexts/auth-context"
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { toast } from "sonner"
 import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
@@ -18,13 +18,13 @@ export default function JobDetailPage() {
   const locale = useLocale()
   const params = useParams()
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useSupabaseAuth()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   
   // Check if user has already applied to this job
-  const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs(!!user)
+  const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs(!!user && !authLoading)
   const hasApplied = job ? appliedJobIds.has(job.id) : false
   const isOwner = !!(user && job && job.postedBy?.id === user.id)
 

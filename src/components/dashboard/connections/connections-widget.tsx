@@ -1,56 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { ConnectionBalance } from './connection-balance'
 import { ConnectionCosts } from './connection-costs'
 import { MonthlyRefreshInfo } from './monthly-refresh-info'
 import { PurchaseConnectionsSection } from './purchase-connections-section'
 import { LowConnectionsWarning } from './low-connections-warning'
 import { ConnectionActivity } from './connection-activity'
+import { useConnectionsManager } from '@/hooks/use-connections'
 import { Zap, TrendingUp } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export function ConnectionsWidget() {
   const t = useTranslations('dashboard.connections')
-  const [connections, setConnections] = useState(0)
-  const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
+  
+  // Use Supabase hooks instead of manual fetch() calls
+  const { 
+    connections, 
+    history, 
+    isLoading: loading,
+    refetchAll 
+  } = useConnectionsManager()
 
-  useEffect(() => {
-    fetchConnectionData()
-  }, [])
-
-  const fetchConnectionData = async () => {
-    try {
-      // Fetch current connections
-      const connectionsResponse = await fetch('/api/user/connections')
-      if (connectionsResponse.ok) {
-        const connectionsData = await connectionsResponse.json()
-        setConnections(connectionsData.connections || 0)
-      }
-
-      // Fetch recent history
-      const historyResponse = await fetch('/api/user/connections/history')
-      if (historyResponse.ok) {
-        const historyData = await historyResponse.json()
-        setHistory(historyData || [])
-      }
-    } catch (error) {
-      console.error('Error fetching connection data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Listen for connection updates
   useEffect(() => {
     const handleRefresh = () => {
-      fetchConnectionData()
+      refetchAll()
     }
 
     window.addEventListener('refresh-connections', handleRefresh)
     return () => window.removeEventListener('refresh-connections', handleRefresh)
-  }, [])
+  }, [refetchAll])
 
   if (loading) {
     return (

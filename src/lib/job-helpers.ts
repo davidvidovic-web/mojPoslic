@@ -1,10 +1,11 @@
 /**
  * Job Data Helpers
  * Utilities for enriching job data with static city and category information
+ * Updated for optimized static data management
  */
 
-import { staticDataManager } from './static-data'
-import type { City, Category } from './static-data-types'
+import { staticDataManager } from './static-data-manager'
+import type { StaticCity, StaticCategory } from '@/types/static-data'
 
 // Types for job enrichment
 export interface BaseJob {
@@ -42,10 +43,10 @@ export interface JobWithStaticData extends BaseJob {
  */
 export async function enrichJobWithStaticData(job: BaseJob): Promise<JobWithStaticData> {
   try {
-    const data = await staticDataManager.loadData()
+    const data = await staticDataManager.loadStaticData()
     
     const city = job.cityId ? data.cities.find(c => c.id === job.cityId) : null
-    const category = job.categoryId ? staticDataManager.getCategoryById(job.categoryId) : null
+    const category = job.categoryId ? await staticDataManager.getCategoryById(job.categoryId) : null
     
     return {
       ...job,
@@ -85,11 +86,11 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
 
   try {
     // Load static data once for all jobs
-    const data = await staticDataManager.loadData()
+    const data = await staticDataManager.loadStaticData()
     
     return jobs.map(job => {
       const city = job.cityId ? data.cities.find(c => c.id === job.cityId) : null
-      const category = job.categoryId ? staticDataManager.getCategoryById(job.categoryId) : null
+      const category = job.categoryId ? data.categories.find(c => c.id === job.categoryId) : null
       
       return {
         ...job,
@@ -125,8 +126,8 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
  */
 export async function validateCityId(cityId: string): Promise<boolean> {
   try {
-    const data = await staticDataManager.loadData()
-    return data.cities.some(city => city.id === cityId && city.is_active)
+    const data = await staticDataManager.loadStaticData()
+    return data.cities.some(city => city.id === cityId && city.is_active !== false)
   } catch (error) {
     console.error('Error validating city ID:', error)
     return false
@@ -138,8 +139,8 @@ export async function validateCityId(cityId: string): Promise<boolean> {
  */
 export async function validateCategoryId(categoryId: string): Promise<boolean> {
   try {
-    const category = staticDataManager.getCategoryById(categoryId)
-    return category ? category.is_active : false
+    const category = await staticDataManager.getCategoryById(categoryId)
+    return category ? category.is_active !== false : false
   } catch (error) {
     console.error('Error validating category ID:', error)
     return false
@@ -147,31 +148,17 @@ export async function validateCategoryId(categoryId: string): Promise<boolean> {
 }
 
 /**
- * Get city by ID from static data (synchronous if data is loaded)
+ * Get city by ID from static data (async)
  */
-export function getCityById(cityId: string): City | undefined {
+export async function getCityById(cityId: string): Promise<StaticCity | undefined> {
   return staticDataManager.getCityById(cityId)
 }
 
 /**
- * Get category by ID from static data (synchronous if data is loaded)
+ * Get category by ID from static data (async)
  */
-export function getCategoryById(categoryId: string): Category | undefined {
+export async function getCategoryById(categoryId: string): Promise<StaticCategory | undefined> {
   return staticDataManager.getCategoryById(categoryId)
-}
-
-/**
- * Get city by key from static data
- */
-export function getCityByKey(cityKey: string): City | undefined {
-  return staticDataManager.getCityByKey(cityKey)
-}
-
-/**
- * Get category by key from static data
- */
-export function getCategoryByKey(categoryKey: string): Category | undefined {
-  return staticDataManager.getCategoryByKey(categoryKey)
 }
 
 /**
@@ -180,20 +167,20 @@ export function getCategoryByKey(categoryKey: string): Category | undefined {
 export async function validateJobReferences(cityId: string, categoryId: string): Promise<{
   validCity: boolean
   validCategory: boolean
-  city?: City
-  category?: Category
+  city?: StaticCity
+  category?: StaticCategory
 }> {
   try {
-    const data = await staticDataManager.loadData()
+    const data = await staticDataManager.loadStaticData()
     
-    const city = data.cities.find(c => c.id === cityId && c.is_active)
-    const category = staticDataManager.getCategoryById(categoryId)
+    const city = data.cities.find(c => c.id === cityId && c.is_active !== false)
+    const category = data.categories.find(c => c.id === categoryId && c.is_active !== false)
     
     return {
       validCity: !!city,
-      validCategory: !!(category && category.is_active),
+      validCategory: !!category,
       city,
-      category: category && category.is_active ? category : undefined
+      category
     }
   } catch (error) {
     console.error('Error validating job references:', error)

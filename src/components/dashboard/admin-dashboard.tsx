@@ -20,7 +20,7 @@ import {
 } from '@/hooks/use-admin'
 
 export function AdminDashboard() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const { currentAdminTab, setAdminTab } = useNavigationStore()
   const t = useTranslations()
   

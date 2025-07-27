@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useDialogStore } from '@/stores/dialog-store'
 import { ConversationView } from '@/components/messaging/conversation-view'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -14,7 +14,7 @@ import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime'
 import { cn } from '@/lib/utils'
 
 function MessagingDialogContent() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const { isMessagingDialogOpen, closeMessagingDialog } = useDialogStore()
   const { setMessagingActive, conversations, totalUnreadCount } = useOptimizedMessaging()
   const {

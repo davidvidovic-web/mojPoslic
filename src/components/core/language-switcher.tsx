@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/contexts/auth-context';
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useLocale } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ variant = 'select', className }: LanguageSwitcherProps) {
-  const { user, updateLanguagePreference } = useAuth();
+  const { user, updateLanguagePreference } = useSupabaseAuth();
   const currentLocale = useLocale();
 
   const languages = [

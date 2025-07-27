@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { Card, CardContent } from '@/components/ui/card'
 import { Zap, Check } from 'lucide-react'
+import { useTodayJobCountQuery } from '@/hooks/queries/useJobs'
+import { getJobPostingCost } from '@/lib/connections/utils'
 
 interface JobCostInfoProps {
   className?: string
@@ -12,59 +13,17 @@ interface JobCostInfoProps {
 
 export function JobCostInfo({ className = '' }: JobCostInfoProps) {
   const t = useTranslations('jobPost.costs')
-  const { user } = useAuth()
-  const [costInfo, setCostInfo] = useState<{
-    count: number
-    willCostConnections: boolean
-    connectionCost: number
-  } | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchCostInfo = async () => {
-      if (!user) return
-
-      try {
-        const response = await fetch('/api/jobs/today-count')
-        if (response.ok) {
-          const data = await response.json()
-          setCostInfo(data)
-        }
-      } catch (error) {
-        console.error('Error fetching job cost info:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCostInfo()
-  }, [user])
-
-  // Listen for refresh events to update cost info after job posting
-  useEffect(() => {
-    const handleRefresh = () => {
-      if (user) {
-        const fetchCostInfo = async () => {
-          try {
-            const response = await fetch('/api/jobs/today-count')
-            if (response.ok) {
-              const data = await response.json()
-              setCostInfo(data)
-            }
-          } catch (error) {
-            console.error('Error fetching job cost info:', error)
-          }
-        }
-        fetchCostInfo()
-      }
-    }
-
-    window.addEventListener('refresh-job-cost', handleRefresh)
-    
-    return () => {
-      window.removeEventListener('refresh-job-cost', handleRefresh)
-    }
-  }, [user])
+  const { user } = useSupabaseAuth()
+  
+  // Use new Supabase hook for today's job count
+  const { data: todayCount = 0, isLoading: loading } = useTodayJobCountQuery(user?.id)
+  
+  // Calculate cost info using the utility function
+  const costInfo = todayCount !== undefined ? {
+    count: todayCount,
+    willCostConnections: getJobPostingCost(todayCount) > 0,
+    connectionCost: getJobPostingCost(todayCount)
+  } : null
 
   if (loading || !costInfo) {
     return null

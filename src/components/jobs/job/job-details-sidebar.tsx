@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation } from "@/lib/job-utils"
+import { getJobCategoryName } from "@/types/utils"
 import { useLocale, useTranslations } from 'next-intl'
 
 interface JobDetailsSidebarProps {
@@ -27,15 +28,15 @@ export function JobDetailsSidebar({ job, formatDate, formatSalary, showAddress =
       <CardContent className="space-y-3">
         <div className="flex justify-between">
           <span className="text-sm text-muted-foreground">{t('jobType')}</span>
-          <Badge variant={getTypeVariant(job.type)}>{formatJobType(job.type)}</Badge>
+          <Badge variant={getTypeVariant(job.job_type)}>{formatJobType(job.job_type)}</Badge>
         </div>
         
-        {job.category && (
+        {(job.category_name_bs || job.category_name_en) && (
           <>
             <Separator />
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">{t('category')}</span>
-              <span className="text-sm font-medium">{locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}</span>
+              <span className="text-sm font-medium">{getJobCategoryName(job, locale as 'bs' | 'en')}</span>
             </div>
           </>
         )}
@@ -82,7 +83,7 @@ export function JobDetailsSidebar({ job, formatDate, formatSalary, showAddress =
             <Separator />
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">
-                {job.type === 'quick_job' ? t('payment') : t('salary')}
+                {job.job_type === 'quick_job' ? t('payment') : t('salary')}
               </span>
               <span className="text-sm font-medium">{formatSalary(job)}</span>
             </div>

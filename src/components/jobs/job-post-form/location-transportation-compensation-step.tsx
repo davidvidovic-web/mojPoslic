@@ -7,7 +7,7 @@ import { TransportationSection } from './transportation-section'
 import { ScheduleSection } from './schedule-section'
 import { CompensationSection } from './compensation-section'
 import { ContactInformationSection } from './contact-information-section'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 
 
@@ -18,7 +18,7 @@ interface LocationTransportationCompensationStepProps {
 }
 
 export function LocationTransportationCompensationStep({ formData, onChange, onValidation }: LocationTransportationCompensationStepProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
 
   const isCompany = user?.role === 'company'

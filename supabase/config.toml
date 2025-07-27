@@ -1,0 +1,49 @@
+# Supabase Configuration
+# Project: MojPoslic Migration
+# Date: July 25, 2025
+
+# Project Reference ID
+project_id = "ecaukelsfokqzgvhonrk"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://yourdomain.com"]
+jwt_expiry = 3600
+
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.facebook]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+
+[db]
+port = 54322
+major_version = 15
+
+[storage]
+enabled = true
+file_size_limit = "50MB"
+
+[analytics]
+enabled = false

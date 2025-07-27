@@ -4,14 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreateJobData } from '@/types/job'
 import { Rocket, Star, Zap } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import { useEffect, useState, useRef } from 'react'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useEffect, useState } from 'react'
 import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useTranslations, useLocale } from 'next-intl'
 import { useData } from '@/hooks/use-data'
 import type { City, Category } from '@/lib/static-data-types'
 import { getJobPostingCost } from '@/lib/connections/utils'
+import { useTodayJobCountQuery } from '@/hooks/queries/useJobs'
 
 interface ReviewStepProps {
   formData: CreateJobData
@@ -21,7 +22,7 @@ interface ReviewStepProps {
 }
 
 export function ReviewStep({ formData, onValidation, onChange, isEditMode = false }: ReviewStepProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const t = useTranslations('jobs')
   const tCommon = useTranslations('common')
   const tSalary = useTranslations('jobPost.types.compensation')
@@ -32,7 +33,9 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
   const { cities, categories } = useData()
   const [city, setCity] = useState<City | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
-  const [todayJobCount, setTodayJobCount] = useState<number>(0)
+
+  // Use new Supabase hook for today's job count
+  const { data: todayJobCount = 0 } = useTodayJobCountQuery(isEditMode ? undefined : user?.id)
 
   // Helper function to map job type to translation key
   const getJobTypeTranslationKey = (type: string) => {
@@ -80,34 +83,6 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
       setCategory(foundCategory)
     }
   }, [formData.city_id, formData.category_id, cities, categories])
-
-  // Fetch today's job count to determine if connections will be deducted
-  // Only fetch this for create mode, not edit mode
-  // Use a ref to cache the result and avoid repeated API calls
-  const todayJobCountRef = useRef<number | null>(null)
-  
-  useEffect(() => {
-    const fetchTodayJobCount = async () => {
-      if (!user?.id || isEditMode) return
-      if (todayJobCountRef.current !== null) return // Already fetched
-      
-      try {
-        const response = await fetch('/api/jobs/today-count')
-        if (response.ok) {
-          const data = await response.json()
-          const count = data.count || 0
-          setTodayJobCount(count)
-          todayJobCountRef.current = count
-        }
-      } catch (error) {
-        console.error('Error fetching today job count:', error)
-        setTodayJobCount(0)
-        todayJobCountRef.current = 0
-      }
-    }
-
-    fetchTodayJobCount()
-  }, [user?.id, isEditMode])
 
   // Validation - invalid if date/time has passed OR if required fields are missing
   useEffect(() => {
@@ -262,7 +237,6 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
           <CardContent className="space-y-3">
             <div>
               <h4 className="font-medium text-lg">{formData.title}</h4>
-              <p className="text-muted-foreground">{formData.company}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">{t(`types.${getJobTypeTranslationKey(formData.type)}`)}</Badge>

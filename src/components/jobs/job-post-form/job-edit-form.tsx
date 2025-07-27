@@ -1,7 +1,7 @@
 'use client'
 
 import { CreateJobData, Job } from '@/types/job'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
 import { useTranslations } from 'next-intl'
@@ -19,17 +19,16 @@ interface JobEditFormProps {
 function mapJobToFormData(job: Job): Partial<CreateJobData> {
   return {
     title: job.title,
-    company: job.company,
     description: job.description,
-    type: job.type,
+    type: job.job_type as 'quick_job' | 'full_time' | 'part_time' | 'remote',
     city_id: job.city_id,
     category_id: job.category_id,
-    salary: job.salary,
-    salaryType: job.salaryType,
-    salaryMin: job.salaryMin,
-    salaryMax: job.salaryMax,
-    email: job.email,
-    website: job.website,
+    salary: job.salary_amount?.toString() || '',
+    salaryType: job.salary_type as 'fixed' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'negotiable',
+    salaryMin: job.salary_min,
+    salaryMax: job.salary_max,
+    email: job.contact_info || '',
+    website: job.application_url || '',
     tags: job.tags,
     // Handle special cases for start_date and start_time
     // If they're null/undefined/empty, it means "I don't know exact date/time" was selected
@@ -57,12 +56,12 @@ export function JobEditForm({
   onCancel,
   showCard = true
 }: JobEditFormProps) {
-  const { user } = useAuth()
-  const { cities } = useData()
+  const { user } = useSupabaseAuth()
+  const { cities, categories } = useData()
   const t = useTranslations('jobs.review')
 
   const handleSubmit = async (formData: CreateJobData) => {
-    // For edit mode, we need to convert city_id to city key
+    // Convert city_id to city key
     const selectedCity = formData.city_id ? cities.find(c => c.id === formData.city_id) : null
     const cityKey = selectedCity?.key
     
@@ -70,8 +69,29 @@ export function JobEditForm({
       toast.error('Please select a valid city')
       return
     }
+
+    // Convert category_id to category key
+    let categoryKey = null
+    if (formData.category_id) {
+      // Find category by ID (could be parent or subcategory)
+      const foundCategory = categories.find(cat => cat.id === formData.category_id)
+      if (foundCategory) {
+        categoryKey = foundCategory.key
+      } else {
+        // Search in subcategories
+        for (const cat of categories) {
+          if (cat.children) {
+            const subcat = cat.children.find(sub => sub.id === formData.category_id)
+            if (subcat) {
+              categoryKey = subcat.key
+              break
+            }
+          }
+        }
+      }
+    }
     
-    const requestData = mapFormDataToCreateAPI(formData, user?.email || '', cityKey)
+    const requestData = mapFormDataToCreateAPI(formData, user?.email || '', cityKey, categoryKey || undefined)
 
     // Make the API request to update the job
     const response = await fetch(`/api/jobs/${job.id}`, {

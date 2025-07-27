@@ -1,14 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { createServerClient } from '@supabase/ssr'
+import { Database } from '@/lib/database.types'
 
 export async function POST(request: NextRequest) {
-  const prisma = new PrismaClient()
-  
   try {
-    const session = await auth()
+    // Check for Authorization header
+    const authHeader = request.headers.get('authorization')
+    console.log('Profile Setup API: Authorization header:', authHeader ? 'present' : 'missing')
     
-    if (!session?.user?.id) {
+    // Create Supabase client with request cookies and auth header
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set() {
+            // Not needed for this use case
+          },
+          remove() {
+            // Not needed for this use case
+          },
+        },
+        // Add global headers if Authorization header is present
+        global: authHeader ? {
+          headers: {
+            'Authorization': authHeader
+          }
+        } : undefined
+      }
+    )
+
+    // Get current user from Supabase Auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      console.log('Profile Setup API: Auth failed:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -21,22 +50,62 @@ export async function POST(request: NextRequest) {
       skills,
       skillExperiences,
       website,
+      bio,
     } = body
 
+    // Prepare update data
+    const updateData: Record<string, string | string[] | boolean> = {
+      updated_at: new Date().toISOString(),
+      profile_setup_completed: true
+    }
+
+    if (name) updateData.name = name
+    if (username) updateData.username = username
+    if (phone) updateData.phone = phone
+    if (location) updateData.location = location
+    if (website) updateData.website = website
+    if (bio) updateData.bio = bio
+    
+    // Handle skills array
+    if (skills && Array.isArray(skills)) {
+      updateData.skills = skills
+    }
+    
+    // Handle skill experiences (convert to preferred_job_types or experience field)
+    if (skillExperiences && Array.isArray(skillExperiences)) {
+      updateData.experience = JSON.stringify(skillExperiences)
+    }
+
     // Update user profile
-    const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        name: name || undefined,
-        username: username || undefined,
-        skills: skills && Array.isArray(skills) ? skills.join(', ') : (skills || undefined),
-        experience: skillExperiences && Array.isArray(skillExperiences) ? JSON.stringify(skillExperiences) : undefined,
-        phone: phone || undefined,
-        website: website || undefined,
-        location: location || undefined,
-        profileSetupCompleted: true,
-      },
-    })
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', user.id)
+      .select(`
+        id,
+        name,
+        email,
+        username,
+        bio,
+        phone,
+        location,
+        website,
+        skills,
+        experience,
+        preferred_job_types,
+        role,
+        profile_setup_completed,
+        created_at
+      `)
+      .single()
+
+    if (updateError) {
+      console.error('Database update error:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update profile' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({ 
       success: true, 
@@ -51,10 +120,10 @@ export async function POST(request: NextRequest) {
         website: updatedUser.website,
         skills: updatedUser.skills,
         experience: updatedUser.experience,
-        preferredJobTypes: updatedUser.preferredJobTypes ? updatedUser.preferredJobTypes.split(', ') : [],
+        preferredJobTypes: updatedUser.preferred_job_types ? updatedUser.preferred_job_types.split(', ') : [],
         role: updatedUser.role,
-        profileSetupCompleted: updatedUser.profileSetupCompleted,
-        createdAt: updatedUser.createdAt,
+        profileSetupCompleted: updatedUser.profile_setup_completed,
+        createdAt: updatedUser.created_at,
       }
     })
   } catch (error) {
@@ -63,7 +132,5 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to update profile' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

@@ -45,7 +45,6 @@ export function transformJobData(
   return {
     id: job.id,
     title: job.title,
-    company: job.company,
     description: job.description,
     requirements: job.requirements,
     benefits: job.benefits,

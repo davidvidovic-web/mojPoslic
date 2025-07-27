@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react'
 import { CreateJobData } from '@/types/job'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { JobFormStep } from './types'
 
 export interface UseJobFormStateProps {
@@ -14,7 +14,7 @@ export interface UseJobFormStateProps {
 const FORM_STORAGE_KEY = 'job-form-draft'
 
 export function useJobFormState({ initialData }: UseJobFormStateProps) {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   
   // Check if user can post all job types (companies and admins)
   const canPostAllJobTypes = user?.role === 'company' || user?.role === 'admin'

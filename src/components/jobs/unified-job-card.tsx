@@ -26,7 +26,7 @@ interface UnifiedJobCardProps {
 
 export function UnifiedJobCard({ job }: UnifiedJobCardProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const t = useTranslations('jobCard');
   const locale = useLocale();
   const [applicationCount, setApplicationCount] = useState<number | null>(null);

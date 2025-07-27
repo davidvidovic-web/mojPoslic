@@ -1,22 +1,33 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-export async function PATCH() {
-  const prisma = new PrismaClient()
-  
+export async function POST(request: Request) {
   try {
-    const session = await auth()
+    const supabase = await createServerSupabaseClient()
+
+    // Get current user from Supabase Auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (!session?.user?.id) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Mark profile setup as completed
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { profileSetupCompleted: true }
-    })
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ 
+        profile_setup_completed: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.error('Error updating profile setup status:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update profile setup status' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -25,7 +36,5 @@ export async function PATCH() {
       { error: 'Internal server error' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

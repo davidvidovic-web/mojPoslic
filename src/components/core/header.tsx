@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
-import { useAuth } from "@/contexts/auth-context";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useDialogStore } from "@/stores/dialog-store";
 import { useOptimizedMessaging } from "@/hooks/use-optimized-messaging";
 import { OptimizedNotificationCenter } from "./optimized-notification-center";
@@ -42,7 +42,7 @@ export const Header = React.memo(function Header() {
     closeMobileMenu,
     openMessagingDialog
   } = useDialogStore();
-  const { loading, user, signOut } = useAuth();
+  const { loading, user, signOut } = useSupabaseAuth();
   const { 
     totalUnreadCount, 
     isLoading: isMessagingLoading, 

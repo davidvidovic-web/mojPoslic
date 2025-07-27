@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,10 +13,8 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useTranslations } from 'next-intl'
-import { useSession } from 'next-auth/react'
-import { OnboardingPageGuard } from '@/components/auth/registration-flow-guard'
 import { useRouter } from 'next/navigation'
 
 interface RoleOption {
@@ -54,20 +53,200 @@ const roleOptions: RoleOption[] = [
 ]
 
 export default function RoleSelectionPage() {
-  return (
-    <OnboardingPageGuard allowedStates={['needs-role']}>
-      <RoleSelectionContent />
-    </OnboardingPageGuard>
-  )
-}
-
-function RoleSelectionContent() {
   const t = useTranslations('roleSelection')
-  const { refreshUser } = useAuth()
-  const { update } = useSession()
   const router = useRouter()
+  const { user, loading, refreshUser } = useSupabaseAuth()
+  const searchParams = useSearchParams()
   const [selectedRole, setSelectedRole] = useState<'tasker' | 'client' | 'company' | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [waitingForSession, setWaitingForSession] = useState(false)
+  const [initialCheckDone, setInitialCheckDone] = useState(false)
+
+  // Check if user just verified email
+  const isVerified = searchParams.get('verified') === 'true'
+  const verifyToken = searchParams.get('token') // This indicates fresh verification
+
+  console.log('RoleSelection: Component rendered with state:', {
+    loading,
+    user: user ? { id: user.id, email: user.email } : null,
+    isVerified,
+    verifyToken,
+    waitingForSession,
+    initialCheckDone
+  })
+
+  // CRITICAL: Immediate detection and waiting state setup
+  useEffect(() => {
+    if (isVerified && verifyToken) {
+      console.log('RoleSelection: Fresh verification detected, setting up waiting state')
+      setWaitingForSession(true)
+      // Give the auth context some time to initialize, then start refreshing
+      setTimeout(() => {
+        console.log('RoleSelection: Starting session refresh attempts')
+        let attempts = 0
+        const maxAttempts = 30 // Increased attempts
+        
+        const tryRefresh = async () => {
+          attempts++
+          console.log(`RoleSelection: Refresh attempt ${attempts}/${maxAttempts}`)
+          
+          try {
+            await refreshUser()
+            
+            // Check if we need to continue
+            if (attempts < maxAttempts) {
+              setTimeout(tryRefresh, 800) // Longer delay between attempts
+            } else {
+              console.log('RoleSelection: Max attempts reached, stopping')
+              setWaitingForSession(false)
+              setInitialCheckDone(true)
+            }
+          } catch (error) {
+            console.error('RoleSelection: Error in refresh:', error)
+            if (attempts < maxAttempts) {
+              setTimeout(tryRefresh, 1000) // Even longer delay on error
+            } else {
+              setWaitingForSession(false)
+              setInitialCheckDone(true)
+            }
+          }
+        }
+        
+        tryRefresh()
+      }, 1500) // Increased initial wait time
+    } else {
+      // Not a fresh verification, proceed normally
+      setTimeout(() => {
+        setInitialCheckDone(true)
+      }, 500)
+    }
+  }, [isVerified, verifyToken, refreshUser])
+
+  // Monitor for successful user detection
+  useEffect(() => {
+    if (waitingForSession && user) {
+      console.log('RoleSelection: User detected! Session established successfully')
+      setWaitingForSession(false)
+      setInitialCheckDone(true)
+    }
+  }, [waitingForSession, user])
+
+  // Debug auth state
+  useEffect(() => {
+    console.log('Role selection - Auth state:', { 
+      loading, 
+      user: user ? { id: user.id, email: user.email, role: user.role } : null, 
+      isVerified 
+    })
+  }, [loading, user, isVerified])
+
+  // Pre-select user's current role if they have one
+  useEffect(() => {
+    if (user && user.role && !selectedRole) {
+      setSelectedRole(user.role as 'tasker' | 'client' | 'company')
+    }
+  }, [user, selectedRole])
+
+  // Handle redirects with proper flow tracking
+  useEffect(() => {
+    // Don't do any redirects until initial check is done
+    if (!initialCheckDone) {
+      console.log('RoleSelection: Initial check not done yet, waiting...')
+      return
+    }
+    
+    console.log('RoleSelection: Redirect logic check:', { 
+      loading, 
+      user: !!user, 
+      waitingForSession, 
+      isVerified, 
+      verifyToken,
+      initialCheckDone,
+      userDetails: user ? {
+        email: user.email,
+        role: user.role,
+        profileSetupCompleted: user.profileSetupCompleted,
+        emailVerified: user.emailVerified,
+      } : null,
+      'decision': (() => {
+        if (waitingForSession) return 'WAIT - waitingForSession=true'
+        if (loading) return 'WAIT - still loading'
+        if (!user && !isVerified) return 'REDIRECT - no user, not verified'
+        if (user && user.profileSetupCompleted) return 'REDIRECT - profile complete'
+        if (user && !user.profileSetupCompleted) return 'CONTINUE - show role selection'
+        return 'CONTINUE - default case'
+      })()
+    })
+    
+    // Don't redirect if we're waiting for session to establish
+    if (waitingForSession) {
+      console.log('RoleSelection: Waiting for session to establish, not redirecting yet...')
+      return
+    }
+    
+    // Don't redirect if still loading
+    if (loading) {
+      console.log('RoleSelection: Still loading, not redirecting yet...')
+      return
+    }
+    
+    // Only redirect to signin if we're sure there's no user and we're not in a verification flow
+    if (!user && !isVerified) {
+      console.log('RoleSelection: No user found and not in verification flow, redirecting to sign in')
+      router.push('/auth/signin')
+      return
+    }
+    
+    // Special case: if we were expecting a user from verification but still don't have one
+    if (!user && isVerified && verifyToken) {
+      console.log('RoleSelection: Expected user from verification but none found, redirecting to signin with error')
+      router.push('/auth/signin?error=verification_session_failed')
+      return
+    }
+
+    // If user exists and profile is complete, redirect to dashboard
+    if (user && user.profileSetupCompleted) {
+      console.log('RoleSelection: User profile already completed, redirecting to dashboard')
+      router.push('/dashboard')
+      return
+    }
+    
+    // If user exists but profile not complete, stay on role selection
+    if (user && !user.profileSetupCompleted) {
+      console.log('RoleSelection: User found, profile incomplete, showing role selection interface')
+      // This is the correct state - user should select role here (role might be null)
+    }
+    
+    console.log('RoleSelection: All checks passed, showing role selection interface')
+  }, [user, loading, router, isVerified, verifyToken, waitingForSession, initialCheckDone])
+
+  // Show loading if auth is still loading or if user just verified and we're waiting for session
+  if (loading || waitingForSession || (isVerified && verifyToken && !user)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">
+            {waitingForSession ? 'Setting up your account...' : 
+             isVerified && verifyToken ? 'Finalizing email verification...' : 
+             'Loading...'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading while redirecting (but not for verified users who might still be establishing session)
+  if (!isVerified && (!user || user.profileSetupCompleted)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleRoleSelect = (roleId: 'tasker' | 'client' | 'company') => {
     // Disable company role selection for now
@@ -86,11 +265,24 @@ function RoleSelectionContent() {
     setIsSubmitting(true)
 
     try {
+      // Get the current session from Supabase client
+      const { supabase } = await import("@/lib/supabase")
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        console.error('No valid session found:', sessionError)
+        toast.error('Please sign in again to continue')
+        router.push('/auth/signin')
+        return
+      }
+
       const response = await fetch('/api/user/role', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}` // Pass session token
         },
+        credentials: 'include', // Ensure cookies are sent
         body: JSON.stringify({
           role: selectedRole
         })
@@ -98,7 +290,6 @@ function RoleSelectionContent() {
       
       if (response.ok) {
         toast.success('Role updated successfully!')
-        await update()
         await refreshUser()
         router.push('/profile-setup')
       } else {

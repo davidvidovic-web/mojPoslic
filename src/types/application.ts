@@ -1,4 +1,7 @@
-// Application-related TypeScript interfaces and types
+/**
+ * Application Types for Optimized Database Structure
+ * These interfaces reflect cached job and applicant data for better performance
+ */
 
 export enum ApplicationStatus {
   PENDING = 'PENDING',
@@ -13,30 +16,71 @@ export enum ContractStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
   DECLINED = 'DECLINED',
+  WORK_COMPLETED = 'WORK_COMPLETED',
+  CONFIRMED_COMPLETED = 'CONFIRMED_COMPLETED',
   COMPLETED = 'COMPLETED'
+}
+
+// Optimized Application interface with cached data (NEW)
+export interface Application {
+  id: string
+  job_id: string
+  user_id: string
+  status: ApplicationStatus
+  cover_letter?: string
+  hourly_rate?: number
+  applied_at: string
+  reviewed_at?: string
+  
+  // Cached job data (embedded for performance)
+  job_title: string
+  job_type: 'quick_job' | 'full_time' | 'part_time' | 'remote'
+  job_city_name: string
+  job_category_name: string
+  job_poster_name: string
+  job_salary_min?: number
+  job_salary_max?: number
+  job_status: string
+  
+  // Cached applicant data (embedded for performance)
+  applicant_name: string
+  applicant_email: string
+  applicant_phone?: string
+  applicant_avatar_url?: string
+  applicant_rating: number
+  applicant_location?: string
+  
+  // Performance tracking
+  response_time_hours?: number
+  last_status_change_at: string
+  
+  // Timestamps
+  created_at: string
+  updated_at: string
 }
 
 export interface JobAssignment {
   id: string
-  jobId: string
-  selectedApplicationId: string
-  contractStatus: ContractStatus
-  assignedAt: Date
-  startDate?: Date
-  agreedSalary?: number
+  job_id: string
+  selected_application_id: string
+  contract_status: ContractStatus
+  assigned_at: string
+  start_date?: string
+  agreed_salary?: number
   notes?: string
-  createdAt: Date
-  updatedAt: Date
+  created_at: string
+  updated_at: string
   
-  // Relations
+  // Relations (will include cached data)
   job?: {
     id: string
     title: string
-    company: string
+    poster_name: string
   }
-  selectedApplication?: JobApplication
+  selected_application?: Application
 }
 
+// Legacy interface for backward compatibility (will be removed)
 export interface JobApplication {
   id: string
   jobId: string

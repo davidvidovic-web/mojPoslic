@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useTranslations } from 'next-intl'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { showToast } from '@/lib/toast'
 
 export default function AccountTypePage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useSupabaseAuth()
   const tValidation = useTranslations('errors.validation')
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [loading, setLoading] = useState(false)

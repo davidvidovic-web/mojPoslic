@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/auth-context'
-import { OnboardingPageGuard } from '@/components/auth/registration-flow-guard'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { X, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
-import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 interface SkillExperience {
   skill: string
@@ -24,18 +24,11 @@ interface SkillExperience {
 }
 
 export default function ProfileSetupPage() {
-  return (
-    <OnboardingPageGuard allowedStates={['needs-profile']}>
-      <ProfileSetupContent />
-    </OnboardingPageGuard>
-  )
-}
-
-function ProfileSetupContent() {
   const t = useTranslations('profile')
   const tErrors = useTranslations('errors')
-  const { user, loading, refreshUser } = useAuth()
-  const { update } = useSession()
+  const { user, loading, refreshUser } = useSupabaseAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   
   const [formData, setFormData] = useState(() => ({
     name: '',
@@ -49,6 +42,17 @@ function ProfileSetupContent() {
   }))
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Check if user just verified email
+  const isVerified = searchParams.get('verified') === 'true'
+
+  // Refresh user context if just verified
+  useEffect(() => {
+    if (isVerified && !loading) {
+      console.log('User just verified, refreshing auth context...')
+      refreshUser()
+    }
+  }, [isVerified, loading, refreshUser])
+
   // Populate form with existing user data if available
   useEffect(() => {
     if (user) {
@@ -61,6 +65,52 @@ function ProfileSetupContent() {
       }))
     }
   }, [user])
+
+  // Handle redirects after hooks
+  useEffect(() => {
+    if (loading) return
+
+    // If just verified, give more time for auth context to refresh
+    if (isVerified && !user) {
+      console.log('Just verified but no user yet, waiting...')
+      return
+    }
+
+    // Redirect to signin if not authenticated (but not immediately after verification)
+    if (!user && !isVerified) {
+      router.push('/auth/signin')
+      return
+    }
+
+    // Redirect if already completed profile setup
+    if (user && user.profileSetupCompleted) {
+      router.push('/dashboard')
+      return
+    }
+
+    // Redirect if no role selected yet
+    if (user && !user.role) {
+      router.push('/role-selection')
+      return
+    }
+  }, [user, loading, router, isVerified])
+
+  // Show loading if auth is still loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Return null while redirecting (but not if just verified and waiting for auth refresh)
+  if ((!user && !isVerified) || (user && user.profileSetupCompleted) || (user && !user.role)) {
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,11 +135,23 @@ function ProfileSetupContent() {
         }
       }
 
+      // Get session for auth header
+      const { supabase } = await import("@/lib/supabase")
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        toast.error('Please sign in again to continue')
+        setIsSubmitting(false)
+        return
+      }
+
       const response = await fetch('/api/profile/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           username: finalUsername,
@@ -103,16 +165,13 @@ function ProfileSetupContent() {
       // Show success message immediately
       toast.success(t('setup.errors.profileSetupCompleted'))
       
-      // Update NextAuth session to trigger JWT refresh
-      await update()
-      
       // Refresh user context to get updated profileSetupCompleted status
       await refreshUser()
       
-      // Wait longer to ensure database, auth state and middleware are synced
-      await new Promise(resolve => setTimeout(resolve, 2500))
+      // Wait for state to sync
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Use window.location.href for a complete page reload to ensure fresh token
+      // Navigate to dashboard
       window.location.href = '/dashboard'
     } catch (error) {
       console.error('Error updating profile:', error)

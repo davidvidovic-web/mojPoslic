@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/auth-context'
-import { Job } from '@/types/job'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
 import { TaskerApplicationManager } from '@/components/dashboard/tasker/tasker-application-manager'
@@ -10,42 +8,18 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRecommendedJobsQuery } from '@/hooks/queries/useJobs'
 
 export default function JobsPage() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const t = useTranslations('dashboard.jobs')
-  const [savedJobs, setSavedJobs] = useState<Job[]>([])
-  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return
-
-      try {
-        const [savedResponse, recommendedResponse] = await Promise.all([
-          fetch(`/api/user/saved-jobs?userId=${user.id}`),
-          fetch('/api/jobs/recommended')
-        ])
-
-        if (savedResponse.ok) {
-          const savedData = await savedResponse.json()
-          setSavedJobs(savedData.savedJobs || [])
-        }
-
-        if (recommendedResponse.ok) {
-          const recommendedData = await recommendedResponse.json()
-          setRecommendedJobs(recommendedData.jobs || [])
-        }
-      } catch (error) {
-        console.error('Error fetching jobs:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [user])
+  
+  // Use new Supabase-based hooks
+  const { data: recommendedJobs = [], isLoading: recommendedLoading } = useRecommendedJobsQuery(user?.id, 10)
+  
+  // TODO: Implement saved jobs query when available
+  const savedJobs: Array<unknown> = []
+  const loading = recommendedLoading
 
   if (loading) {
     return (

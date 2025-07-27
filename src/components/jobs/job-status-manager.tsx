@@ -20,9 +20,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { CheckCircle, Pause, Play, Clock, AlertCircle } from 'lucide-react'
+import { useUpdateJobStatusMutation } from '@/hooks/queries/useJobs'
 import { toast } from 'sonner'
+import type { Database } from '@/types/supabase'
 
-type JobStatus = 'active' | 'inactive' | 'completed' | 'expired'
+type JobStatus = Database['public']['Enums']['job_status']
 
 interface JobStatusManagerProps {
   jobId: string
@@ -41,6 +43,10 @@ export function JobStatusManager({
 }: JobStatusManagerProps) {
   const t = useTranslations('jobs')
   const tCommon = useTranslations('common')
+  const [selectedStatus, setSelectedStatus] = useState<JobStatus>(currentStatus)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  
+  const updateStatusMutation = useUpdateJobStatusMutation()
 
   const statusConfig = {
     active: {
@@ -69,42 +75,28 @@ export function JobStatusManager({
     }
   }
 
-  const [selectedStatus, setSelectedStatus] = useState<JobStatus>(currentStatus)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-
   const handleStatusUpdate = async () => {
     if (selectedStatus === currentStatus) {
       setIsDialogOpen(false)
       return
     }
 
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/jobs/${jobId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+    updateStatusMutation.mutate(
+      { jobId, status: selectedStatus },
+      {
+        onSuccess: () => {
+          toast.success(`Job status updated to ${statusConfig[selectedStatus].label}`)
+          onStatusUpdate?.(selectedStatus)
+          setIsDialogOpen(false)
         },
-        body: JSON.stringify({ status: selectedStatus }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to update job status')
+        onError: (error) => {
+          console.error('Error updating job status:', error)
+          toast.error(error instanceof Error ? error.message : 'Failed to update job status')
+          // Reset to current status on error
+          setSelectedStatus(currentStatus)
+        }
       }
-
-      await response.json() // Consume the response
-      toast.success(`Job status updated to ${statusConfig[selectedStatus].label}`)
-      onStatusUpdate?.(selectedStatus)
-      setIsDialogOpen(false)
-    } catch (error) {
-      console.error('Error updating job status:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update job status')
-      setSelectedStatus(currentStatus) // Reset to original status
-    } finally {
-      setIsLoading(false)
-    }
+    )
   }
 
   const StatusIcon = statusConfig[currentStatus].icon
@@ -185,15 +177,15 @@ export function JobStatusManager({
                   setSelectedStatus(currentStatus)
                   setIsDialogOpen(false)
                 }}
-                disabled={isLoading}
+                disabled={updateStatusMutation.isPending}
               >
                 {tCommon('buttons.cancel')}
               </Button>
               <Button
                 onClick={handleStatusUpdate}
-                disabled={isLoading || selectedStatus === currentStatus}
+                disabled={updateStatusMutation.isPending || selectedStatus === currentStatus}
               >
-                {isLoading ? tCommon('actions.updating') : tCommon('actions.updateStatus')}
+                {updateStatusMutation.isPending ? tCommon('actions.updating') : tCommon('actions.updateStatus')}
               </Button>
             </div>
           </DialogContent>

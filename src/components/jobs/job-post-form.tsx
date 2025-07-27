@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { CreateJobData } from "@/types/job"
-import { useAuth } from "@/hooks/useAuth"
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
+import { useCreateJobMutation } from "@/hooks/queries/useJobs"
+import { useJobFormAutoSave } from "@/hooks/use-job-form-auto-save"
 import { toast } from "sonner"
 import { useTranslations } from 'next-intl'
 import { BasicInformationSection } from "./job-post-form/basic-information-section"
@@ -21,13 +23,12 @@ interface JobPostFormProps {
 
 export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   const t = useTranslations('jobs.postForm')
-  const tSuccess = useTranslations('jobs.success')
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const { cities, categories } = useData()
+  const createJobMutation = useCreateJobMutation()
   
   const [selectedParentCategory, setSelectedParentCategory] = useState<string>('')
   const [availableChildCategories, setAvailableChildCategories] = useState<Category[]>([])
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const [includeStartTime, setIncludeStartTime] = useState(false)
   const [formData, setFormData] = useState<CreateJobData>({
     title: '',
@@ -49,6 +50,27 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     job_address: undefined,
     job_latitude: undefined,
     job_longitude: undefined
+  })
+
+  // Auto-save functionality
+  const { clearSavedFormData, saveNow, isFormDataMeaningful } = useJobFormAutoSave({
+    formData,
+    onRestore: (savedData) => {
+      setFormData(savedData)
+      // Restore parent category if available
+      if (savedData.category_id) {
+        const category = categories.find(cat => 
+          cat.id === savedData.category_id || 
+          cat.children?.some(child => child.id === savedData.category_id)
+        )
+        if (category) {
+          if (category.children?.some(child => child.id === savedData.category_id)) {
+            setSelectedParentCategory(category.id)
+          }
+        }
+      }
+    },
+    enabled: true
   })
 
   // Update available child categories when parent category changes
@@ -122,85 +144,72 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       return
     }
 
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch('/api/jobs/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          type: formData.type,
-          city_id: formData.city_id,
-          category_id: formData.category_id || null,
-          salary: null, // Legacy field, no longer used
-          salaryType: formData.salaryType || null,
-          salaryMin: formData.salaryMin || null,
-          salaryMax: formData.salaryMax || null,
-          website: formData.website || null,
-          email: formData.email || user.email, // Use form email or fallback to user email
-          start_date: formData.start_date || null,
-          job_address: formData.job_address || null,
-          job_latitude: formData.job_latitude || null,
-          job_longitude: formData.job_longitude || null,
-          requirements: formData.requirements || null,
-          benefits: formData.performance_bonus ? 
-            (formData.benefits ? `${formData.benefits}\n• Performance bonus available` : '• Performance bonus available') : 
-            formData.benefits || null,
-          contact_email: formData.contact_email || formData.email || user.email,
-          application_url: formData.application_url || formData.website || null
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to post job')
-      }
-
-      const result = await response.json()
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to post job')
-      }
-
-      toast.success(tSuccess('jobPosted'))
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        requirements: '',
-        benefits: '',
-        type: 'quick_job',
-        city_id: '',
-        category_id: '',
-        salary: '',
-        salaryType: undefined,
-        salaryMin: undefined,
-        salaryMax: undefined,
-        website: '',
-        email: '',
-        contact_email: '',
-        application_url: '',
-        start_date: undefined,
-        job_address: undefined,
-        job_latitude: undefined,
-        job_longitude: undefined
-      })
-      setSelectedParentCategory('')
-      setAvailableChildCategories([])
-      
-      onJobPosted?.()
-    } catch (error: unknown) {
-      console.error('Error posting job:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to post job'
-      toast.error(errorMessage)
-    } finally {
-      setIsSubmitting(false)
+    // Prepare job data for API submission
+    const jobData = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      type: formData.type, // API expects 'type', not 'job_type'
+      city_id: formData.city_id,
+      category_id: formData.category_id,
+      requirements: formData.requirements?.trim() || null,
+      benefits: formData.performance_bonus ? 
+        (formData.benefits ? `${formData.benefits}\n• Performance bonus available` : '• Performance bonus available') : 
+        formData.benefits?.trim() || null,
+      salaryType: formData.salaryType || null, // API expects 'salaryType', not 'salary_type'
+      salaryMin: formData.salaryMin || null,
+      salaryMax: formData.salaryMax || null,
+      application_url: formData.application_url?.trim() || formData.website?.trim() || null,
+      website: formData.website?.trim() || null,
+      email: formData.email?.trim() || user.email,
+      contact_email: formData.contact_email?.trim() || formData.email?.trim() || user.email,
+      job_address: formData.job_address?.trim() || null,
+      job_latitude: formData.job_latitude || null,
+      job_longitude: formData.job_longitude || null
     }
+
+    createJobMutation.mutate(jobData, {
+      onSuccess: () => {
+        // Job posted successfully - toast will be handled by the component that calls this
+        
+        // Clear saved form data since job was posted successfully
+        clearSavedFormData()
+        
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          requirements: '',
+          benefits: '',
+          type: 'quick_job',
+          city_id: '',
+          category_id: '',
+          salary: '',
+          salaryType: undefined,
+          salaryMin: undefined,
+          salaryMax: undefined,
+          website: '',
+          email: '',
+          contact_email: '',
+          application_url: '',
+          start_date: undefined,
+          job_address: undefined,
+          job_latitude: undefined,
+          job_longitude: undefined
+        })
+        setSelectedParentCategory('')
+        setAvailableChildCategories([])
+        
+        onJobPosted?.()
+      },
+      onError: (error) => {
+        console.error('Error posting job:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Failed to post job'
+        toast.error(errorMessage)
+        
+        // Save current form data in case user wants to try again
+        saveNow()
+      }
+    })
   }
 
   const handleFormDataChange = (newData: Partial<CreateJobData>) => {
@@ -270,8 +279,30 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           onChange={handleFormDataChange}
         />
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? t('posting') : t('submit')}
+        {/* Auto-save status indicator */}
+        {isFormDataMeaningful && (
+          <div className="text-xs text-muted-foreground text-center space-y-1">
+            <div className="inline-flex items-center gap-1">
+              <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Draft saved automatically
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                clearSavedFormData()
+                toast.success('Draft cleared')
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              Clear draft
+            </button>
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={createJobMutation.isPending}>
+          {createJobMutation.isPending ? t('posting') : t('submit')}
         </Button>
       </form>
     </div>

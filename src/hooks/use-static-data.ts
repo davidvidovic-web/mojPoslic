@@ -1,12 +1,259 @@
 /**
- * React hooks for static data (cities, categories)
- * Replaces TanStack Query for static reference data
+ * Optimized Static Data Hooks
+ * These hooks provide access to cities and categories from JSON files
+ * with caching and error handling for better performance
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { staticDataManager } from '@/lib/static-data'
-import type { City, Category } from '@/lib/static-data-types'
+'use client'
 
+import { useState, useEffect, useCallback } from 'react'
+import { StaticCity, StaticCategory, StaticDataState } from '@/types/static-data'
+import { staticDataManager } from '@/lib/static-data-manager'
+
+/**
+ * Main hook for static data (cities and categories)
+ */
+export function useStaticData(): StaticDataState & {
+  refresh: () => Promise<void>
+  getCityName: (id: string, locale?: 'bs' | 'en') => Promise<string>
+  getCategoryName: (id: string, locale?: 'bs' | 'en') => Promise<string>
+} {
+  const [state, setState] = useState<StaticDataState>({
+    cities: [],
+    categories: [],
+    loading: true,
+    error: null,
+    lastFetch: null
+  })
+
+  const loadData = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }))
+      
+      const data = await staticDataManager.loadStaticData()
+      
+      setState({
+        cities: data.cities,
+        categories: data.categories,
+        loading: false,
+        error: null,
+        lastFetch: new Date()
+      })
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Failed to load static data'
+      }))
+    }
+  }, [])
+
+  const refresh = useCallback(async () => {
+    await staticDataManager.refresh()
+    await loadData()
+  }, [loadData])
+
+  const getCityName = useCallback(async (id: string, locale: 'bs' | 'en' = 'en') => {
+    return staticDataManager.getCityName(id, locale)
+  }, [])
+
+  const getCategoryName = useCallback(async (id: string, locale: 'bs' | 'en' = 'en') => {
+    return staticDataManager.getCategoryName(id, locale)
+  }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  return {
+    ...state,
+    refresh,
+    getCityName,
+    getCategoryName
+  }
+}
+
+/**
+ * Hook for cities only
+ */
+export function useCities() {
+  const [cities, setCities] = useState<StaticCity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await staticDataManager.getCities()
+        setCities(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load cities')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCities()
+  }, [])
+
+  const searchCities = useCallback(async (query: string, locale: 'bs' | 'en' = 'en') => {
+    return staticDataManager.searchCities(query, locale)
+  }, [])
+
+  const getCityById = useCallback(async (id: string) => {
+    return staticDataManager.getCityById(id)
+  }, [])
+
+  const getPopularCities = useCallback(async () => {
+    return staticDataManager.getPopularCities()
+  }, [])
+
+  return {
+    cities,
+    loading,
+    error,
+    searchCities,
+    getCityById,
+    getPopularCities
+  }
+}
+
+/**
+ * Hook for categories only
+ */
+export function useCategories() {
+  const [categories, setCategories] = useState<StaticCategory[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await staticDataManager.getCategories()
+        setCategories(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load categories')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
+
+  const searchCategories = useCallback(async (query: string, locale: 'bs' | 'en' = 'en') => {
+    return staticDataManager.searchCategories(query, locale)
+  }, [])
+
+  const getCategoryById = useCallback(async (id: string) => {
+    return staticDataManager.getCategoryById(id)
+  }, [])
+
+  const getPopularCategories = useCallback(async () => {
+    return staticDataManager.getPopularCategories()
+  }, [])
+
+  return {
+    categories,
+    loading,
+    error,
+    searchCategories,
+    getCategoryById,
+    getPopularCategories
+  }
+}
+
+/**
+ * Hook for a specific city
+ */
+export function useCity(cityId: string | undefined) {
+  const [city, setCity] = useState<StaticCity | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadCity = async () => {
+      if (!cityId) {
+        setCity(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        const cityData = await staticDataManager.getCityById(cityId)
+        setCity(cityData || null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load city')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCity()
+  }, [cityId])
+
+  return { city, loading, error }
+}
+
+/**
+ * Hook for a specific category
+ */
+export function useCategory(categoryId: string | undefined) {
+  const [category, setCategory] = useState<StaticCategory | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadCategory = async () => {
+      if (!categoryId) {
+        setCategory(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        const categoryData = await staticDataManager.getCategoryById(categoryId)
+        setCategory(categoryData || null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load category')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCategory()
+  }, [categoryId])
+
+  return { category, loading, error }
+}
+
+/**
+ * Hook for localized names (cached lookup)
+ */
+export function useLocalizedNames(locale: 'bs' | 'en' = 'en') {
+  const getCityName = useCallback(async (cityId: string) => {
+    return staticDataManager.getCityName(cityId, locale)
+  }, [locale])
+
+  const getCategoryName = useCallback(async (categoryId: string) => {
+    return staticDataManager.getCategoryName(categoryId, locale)
+  }, [locale])
+
+  return {
+    getCityName,
+    getCategoryName
+  }
+}
+
+// Legacy exports for backward compatibility
 export interface UseStaticDataResult<T> {
   data: T
   loading: boolean
@@ -15,146 +262,15 @@ export interface UseStaticDataResult<T> {
 }
 
 /**
- * Hook for cities static data
+ * @deprecated Use useCities() instead
  */
-export function useStaticCities(): UseStaticDataResult<City[]> & {
-  getCityById: (id: string) => City | undefined
-  getCityByKey: (key: string) => City | undefined
-  getActiveCities: () => City[]
-  getSpecialCities: () => City[]
-  getCitiesByCountry: (country: string) => City[]
-} {
-  const [cities, setCities] = useState<City[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await staticDataManager.loadData()
-      setCities(data.cities)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load cities'
-      setError(errorMessage)
-      setCities([])
-      console.error('Error loading cities:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const reload = useCallback(async () => {
-    await staticDataManager.reloadData()
-    await loadData()
-  }, [loadData])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  return {
-    data: cities,
-    loading,
-    error,
-    reload,
-    getCityById: staticDataManager.getCityById.bind(staticDataManager),
-    getCityByKey: staticDataManager.getCityByKey.bind(staticDataManager),
-    getActiveCities: staticDataManager.getActiveCities.bind(staticDataManager),
-    getSpecialCities: staticDataManager.getSpecialCities.bind(staticDataManager),
-    getCitiesByCountry: staticDataManager.getCitiesByCountry.bind(staticDataManager),
-  }
+export function useStaticCities() {
+  return useCities()
 }
 
 /**
- * Hook for categories static data
+ * @deprecated Use useCategories() instead
  */
-export function useStaticCategories(): UseStaticDataResult<Category[]> & {
-  getCategoryById: (id: string) => Category | undefined
-  getCategoryByKey: (key: string) => Category | undefined
-  getMainCategories: () => Category[]
-  getSubcategories: (parentId: string) => Category[]
-  getAllSubcategories: () => Category[]
-  getPopularCategories: () => Category[]
-} {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await staticDataManager.loadData()
-      setCategories(data.categories)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load categories'
-      setError(errorMessage)
-      setCategories([])
-      console.error('Error loading categories:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const reload = useCallback(async () => {
-    await staticDataManager.reloadData()
-    await loadData()
-  }, [loadData])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  return {
-    data: categories,
-    loading,
-    error,
-    reload,
-    getCategoryById: staticDataManager.getCategoryById.bind(staticDataManager),
-    getCategoryByKey: staticDataManager.getCategoryByKey.bind(staticDataManager),
-    getMainCategories: staticDataManager.getMainCategories.bind(staticDataManager),
-    getSubcategories: staticDataManager.getSubcategories.bind(staticDataManager),
-    getAllSubcategories: staticDataManager.getAllSubcategories.bind(staticDataManager),
-    getPopularCategories: staticDataManager.getPopularCategories.bind(staticDataManager),
-  }
-}
-
-/**
- * Combined hook for both cities and categories
- */
-export function useStaticData() {
-  const cities = useStaticCities()
-  const categories = useStaticCategories()
-
-  const reload = useCallback(async () => {
-    await staticDataManager.reloadData()
-    await Promise.all([cities.reload(), categories.reload()])
-  }, [cities, categories])
-
-  return {
-    cities: cities.data,
-    categories: categories.data,
-    loading: cities.loading || categories.loading,
-    error: cities.error || categories.error,
-    reload,
-    
-    // City helpers
-    getCityById: cities.getCityById,
-    getCityByKey: cities.getCityByKey,
-    getActiveCities: cities.getActiveCities,
-    getSpecialCities: cities.getSpecialCities,
-    getCitiesByCountry: cities.getCitiesByCountry,
-    
-    // Category helpers
-    getCategoryById: categories.getCategoryById,
-    getCategoryByKey: categories.getCategoryByKey,
-    getMainCategories: categories.getMainCategories,
-    getSubcategories: categories.getSubcategories,
-    getAllSubcategories: categories.getAllSubcategories,
-    getPopularCategories: categories.getPopularCategories,
-    
-    // Cache stats
-    getCacheStats: staticDataManager.getCacheStats.bind(staticDataManager),
-  }
+export function useStaticCategories() {
+  return useCategories()
 }
