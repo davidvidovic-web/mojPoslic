@@ -1,7 +1,7 @@
 'use client'
 
 import { useJobs } from '@/hooks/use-jobs'
-import { useApplications as useApplicationsQuery, useApplyToJob as useCreateApplicationMutation, useUpdateApplication as useUpdateApplicationMutation } from './use-applications'
+import { useApplications as useApplicationsQuery, useUserApplications as useUserApplicationsQuery, useApplyToJob as useCreateApplicationMutation, useUpdateApplication as useUpdateApplicationMutation } from './use-applications'
 import { useCities, useCategories } from '@/hooks/use-static-data'
 import { useFilterStore } from '@/stores/filter-store'
 import { useRealtimeJobs, useRealtimeJobApplications } from './queries/useRealtimeJobs'
@@ -70,8 +70,11 @@ export function useJobManager() {
 /**
  * Application Manager Hook - Enhanced with real-time features
  */
-export function useApplicationManager(jobId?: string) {
-  const applicationsQuery = useApplicationsQuery() // No parameters since it takes ApplicationFilters
+export function useApplicationManager(jobId?: string, userId?: string) {
+  // Use user-specific applications query if userId is provided, otherwise use general query
+  const applicationsQuery = userId 
+    ? useUserApplicationsQuery(userId) 
+    : useApplicationsQuery() 
   const applyMutation = useCreateApplicationMutation()
   const updateMutation = useUpdateApplicationMutation()
 

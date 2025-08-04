@@ -100,6 +100,7 @@ export interface Job {
   updated_at: string
   
   // Legacy fields for backward compatibility (deprecated)
+  type?: 'quick_job' | 'full_time' | 'part_time' | 'remote' // Use job_type instead, but mapped for component compatibility
   company?: string // Use poster_name instead
   city?: City // Use cached city_name_* instead
   category?: Category // Use cached category_name_* instead

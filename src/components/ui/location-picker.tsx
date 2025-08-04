@@ -345,7 +345,8 @@ export function LocationPicker({
         setLocationWarning(null)
       }
 
-      // Use enhanced geocoding service to get detailed location info
+      // Use enhanced geocoding service to get detailed location info immediately
+      // This will prioritize getting a readable address rather than just coordinates
       const locationData = await GeolocationService.reverseGeocodeDetailed(lat, lng);
       
       // Create location data object with city information
@@ -354,7 +355,8 @@ export function LocationPicker({
         latitude: lat,
         longitude: lng,
         city: locationData.city,
-        cityKey: locationData.cityKey
+        country: "Bosnia and Herzegovina",
+        cityKey: locationData.cityKey || undefined
       };
       
       // Update search query immediately for internal updates

@@ -32,15 +32,34 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
     if (job.category_name_bs && job.category_name_en) {
       return locale === 'bs' ? job.category_name_bs : job.category_name_en
     }
-    // Fallback to old structure if cached data not available
-    return job.category?.name || job.category_name || ''
+    
+    // Use the category object directly since cached fields aren't populated
+    if (job.category) {
+      return locale === 'bs' ? job.category.name_bs : job.category.name_en || job.category.name
+    }
+    
+    // Final fallback
+    return job.category_name || ''
   }
   
   // Get relative time string for job posting date
   const getRelativeTimeString = (date: string) => {
+    if (!date) {
+      return t('time.unknown') || 'Nepoznato'
+    }
+    
     const now = new Date()
     const postDate = new Date(date)
+    
+    // Check if date is valid
+    if (isNaN(postDate.getTime())) {
+      return t('time.unknown') || 'Nepoznato'
+    }
+    
     const diffInDays = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    // Handle negative values (future dates)
+    if (diffInDays < 0) return t('time.today')
     
     if (diffInDays === 0) return t('time.today')
     if (diffInDays === 1) return t('time.yesterday')
@@ -51,12 +70,17 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
   
   // Format job type for display
   const formatJobType = (type: string) => {
+    if (!type) {
+      return 'N/A'
+    }
+    
     switch(type) {
-      case 'quick_job': return t('types.quickJob') || 'Quick Job'
-      case 'full_time': return t('types.fullTime') || 'Full Time'
-      case 'part_time': return t('types.partTime') || 'Part Time'
-      case 'remote': return t('types.remote') || 'Remote'
-      default: return type
+      case 'quick_job': return t('types.quickJob') || 'Brzi posao'
+      case 'full_time': return t('types.fullTime') || 'Puno radno vrijeme'
+      case 'part_time': return t('types.partTime') || 'Djelomično radno vrijeme'
+      case 'remote': return t('types.remote') || 'Udaljeni rad'
+      default: 
+        return type
     }
   }
   
@@ -77,7 +101,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
             <div className="flex items-start justify-start mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge className="px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
-                  {formatJobType(job.job_type)}
+                  {formatJobType(job.type || job.job_type)}
                 </Badge>
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
                   <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -135,7 +159,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
               </div>
               <div className="flex flex-col justify-between h-full gap-4 items-end">
                 <span className="text-xs text-muted-foreground">
-                  {getRelativeTimeString(job.created_at)}
+                  {getRelativeTimeString(job.posted_at || job.created_at)}
                 </span>
                 <Button asChild variant={hasApplied ? "outline" : "default"} className="rounded-[var(--radius)] mt-auto">
                   <Link href={`/jobs/${job.id}`}>
@@ -158,7 +182,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge className="px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
-                {formatJobType(job.job_type)}
+                {formatJobType(job.type || job.job_type)}
               </Badge>
               <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
                 <MapPin className="h-3 w-3 text-muted-foreground" />
@@ -172,7 +196,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
               )}
             </div>
             <span className="text-xs text-muted-foreground flex-shrink-0">
-              {getRelativeTimeString(job.created_at)}
+              {getRelativeTimeString(job.posted_at || job.created_at)}
             </span>
           </div>
         

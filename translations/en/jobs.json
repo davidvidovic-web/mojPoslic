@@ -61,7 +61,8 @@
     "yesterday": "Yesterday",
     "daysAgo": "{count} days ago",
     "weeksAgo": "{count} weeks ago",
-    "monthsAgo": "{count} months ago"
+    "monthsAgo": "{count} months ago",
+    "unknown": "Unknown"
   },
   "card": {
     "readMore": "Read more",
@@ -128,7 +129,8 @@
       "links": "Links",
       "transportationAndLocation": "Transportation & Location",
       "contactInformation": "Contact Information",
-      "scheduleAndTimeline": "Schedule & Timeline"
+      "scheduleAndTimeline": "Schedule & Timeline",
+      "locationMap": "Location Map"
     },
     "placeholders": {
       "jobTitleExample": "e.g., Web Developer, Graphic Designer",

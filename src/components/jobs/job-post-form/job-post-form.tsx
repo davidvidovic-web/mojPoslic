@@ -1,6 +1,7 @@
 'use client'
 
 import { CreateJobData } from '@/types/job'
+import { StaticCategory } from '@/types/static-data'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
@@ -48,8 +49,11 @@ export function JobPostForm({
         } else {
           // Search in subcategories
           for (const cat of categories) {
-            if (cat.children) {
-              const subcat = cat.children.find(sub => sub.id === formData.category_id)
+            // Handle both 'subcategories' (JSON) and 'children' (TypeScript type)
+            const catWithSubs = cat as StaticCategory & { subcategories?: StaticCategory[] }
+            const subcats = catWithSubs.subcategories || cat.children
+            if (subcats) {
+              const subcat = subcats.find((sub: StaticCategory) => sub.id === formData.category_id)
               if (subcat) {
                 categoryKey = subcat.key
                 break

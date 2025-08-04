@@ -23,12 +23,12 @@ export async function GET(request: Request) {
     const { data: applications, error: applicationsError } = await supabase
       .from('applications')
       .select(`
-        id,
-        status,
-        applied_at,
-        cover_letter,
-        job_id,
-        user_id,
+        applications.id,
+        applications.status,
+        applications.applied_at,
+        applications.cover_letter,
+        applications.job_id,
+        applications.user_id,
         job_listings!applications_job_id_fkey (
           id,
           title,

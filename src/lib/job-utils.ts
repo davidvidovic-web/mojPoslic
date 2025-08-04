@@ -2,29 +2,61 @@
  * Utility functions for formatting job-related data
  */
 
-import { formatDisplayName } from './utils'
+import { formatDisplayName } from "./utils";
 
 /**
  * Formats job type strings to human-readable format
  * @param type - The job type string (e.g., 'full_time', 'part-time', 'quick_job')
+ * @param locale - The locale to use for translation (optional, defaults to English)
  * @returns Human-readable job type (e.g., 'Full Time', 'Part Time', 'Quick Job')
  */
-export function formatJobType(type: string): string {
+export function formatJobType(
+  type: string | undefined | null,
+  locale?: string
+): string {
+  // Handle null, undefined, or empty strings
+  if (!type || typeof type !== "string") {
+    return locale === "bs" ? "Nepoznato" : "Unknown";
+  }
+
+  // Bosnian translations
+  if (locale === "bs") {
+    switch (type) {
+      case "full-time":
+      case "full_time":
+        return "Puno radno vrijeme";
+      case "part-time":
+      case "part_time":
+        return "Skraćeno radno vrijeme";
+      case "remote":
+        return "Rad na daljinu";
+      case "quick-job":
+      case "quick_job":
+        return "Brzi posao";
+      default:
+        // Fallback: capitalize first letter and replace hyphens/underscores with spaces
+        return (
+          type.charAt(0).toUpperCase() + type.slice(1).replace(/[-_]/g, " ")
+        );
+    }
+  }
+
+  // English translations (default)
   switch (type) {
-    case 'full-time':
-    case 'full_time':
-      return 'Full Time'
-    case 'part-time':
-    case 'part_time':
-      return 'Part Time'
-    case 'remote':
-      return 'Remote'
-    case 'quick-job':
-    case 'quick_job':
-      return 'Quick Job'
+    case "full-time":
+    case "full_time":
+      return "Full Time";
+    case "part-time":
+    case "part_time":
+      return "Part Time";
+    case "remote":
+      return "Remote";
+    case "quick-job":
+    case "quick_job":
+      return "Quick Job";
     default:
       // Fallback: capitalize first letter and replace hyphens/underscores with spaces
-      return type.charAt(0).toUpperCase() + type.slice(1).replace(/[-_]/g, ' ')
+      return type.charAt(0).toUpperCase() + type.slice(1).replace(/[-_]/g, " ");
   }
 }
 
@@ -33,21 +65,28 @@ export function formatJobType(type: string): string {
  * @param type - The job type string
  * @returns Badge variant for consistent styling
  */
-export function getJobTypeBadgeVariant(type: string): "default" | "secondary" | "destructive" | "outline" {
+export function getJobTypeBadgeVariant(
+  type: string | undefined | null
+): "default" | "secondary" | "destructive" | "outline" {
+  // Handle null, undefined, or empty strings
+  if (!type || typeof type !== "string") {
+    return "outline";
+  }
+
   switch (type) {
-    case 'full-time':
-    case 'full_time':
-      return 'default'
-    case 'part-time':
-    case 'part_time':
-      return 'secondary'
-    case 'remote':
-      return 'default'
-    case 'quick-job':
-    case 'quick_job':
-      return 'default' // Changed from 'destructive' to 'default' (blue instead of red)
+    case "full-time":
+    case "full_time":
+      return "default";
+    case "part-time":
+    case "part_time":
+      return "secondary";
+    case "remote":
+      return "default";
+    case "quick-job":
+    case "quick_job":
+      return "default"; // Changed from 'destructive' to 'default' (blue instead of red)
     default:
-      return 'outline'
+      return "outline";
   }
 }
 
@@ -56,46 +95,68 @@ export function getJobTypeBadgeVariant(type: string): "default" | "secondary" | 
  * @param job - The job object or legacy salary string
  * @returns Formatted salary string or null if not provided
  */
-export function formatSalary(job: string | { salaryMin?: number; salaryMax?: number; salaryType?: string; salary?: string } | undefined): string | null {
+export function formatSalary(
+  job:
+    | string
+    | {
+        salaryMin?: number;
+        salaryMax?: number;
+        salaryType?: string;
+        salary?: string;
+      }
+    | undefined
+): string | null {
   // Handle legacy string input for backward compatibility
-  if (typeof job === 'string') {
-    return job || null
+  if (typeof job === "string") {
+    return job || null;
   }
-  
+
   // Handle job object with new salary structure
-  if (typeof job === 'object' && job !== null) {
+  if (typeof job === "object" && job !== null) {
     // If we have structured salary data
     if (job.salaryMin && job.salaryMax && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const max = job.salaryMax.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
-      return `${min} - ${max} BAM${type}`
+      const min = job.salaryMin.toLocaleString();
+      const max = job.salaryMax.toLocaleString();
+      const type =
+        job.salaryType === "hourly"
+          ? "/hr"
+          : job.salaryType === "daily"
+            ? "/day"
+            : job.salaryType === "weekly"
+              ? "/week"
+              : job.salaryType === "monthly"
+                ? "/month"
+                : "";
+      return `${min} - ${max} BAM${type}`;
     }
-    
+
     // If we only have minimum salary
     if (job.salaryMin && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
-      
+      const min = job.salaryMin.toLocaleString();
+      const type =
+        job.salaryType === "hourly"
+          ? "/hr"
+          : job.salaryType === "daily"
+            ? "/day"
+            : job.salaryType === "weekly"
+              ? "/week"
+              : job.salaryType === "monthly"
+                ? "/month"
+                : "";
+
       // Don't show "From" for fixed prices
-      if (job.salaryType === 'fixed') {
-        return `${min} BAM`
+      if (job.salaryType === "fixed") {
+        return `${min} BAM`;
       }
-      
-      return `From ${min} BAM${type}`
+
+      return `From ${min} BAM${type}`;
     }
-    
+
     // Fallback to legacy salary field
-    return job.salary || null
+    return job.salary || null;
   }
-  
-  return null
+
+  return null;
 }
 
 /**
@@ -104,14 +165,16 @@ export function formatSalary(job: string | { salaryMin?: number; salaryMax?: num
  * @returns Human-readable relative time
  */
 export function formatRelativeDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-  
-  if (diffInDays === 0) return "Today"
-  if (diffInDays === 1) return "Yesterday"
-  if (diffInDays < 7) return `${diffInDays} days ago`
-  return date.toLocaleDateString()
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffInDays === 0) return "Today";
+  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays < 7) return `${diffInDays} days ago`;
+  return date.toLocaleDateString();
 }
 
 /**
@@ -120,38 +183,40 @@ export function formatRelativeDate(dateString: string): string {
  * @returns Human-readable start date with time or null if not provided
  */
 export function formatStartDate(dateString?: string): string | null {
-  if (!dateString) return null
-  
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInDays = Math.floor((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  
+  if (!dateString) return null;
+
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInDays = Math.floor(
+    (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
   // Format time
-  const timeFormat = date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: false 
-  })
-  
+  const timeFormat = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
   // If start date is today
-  if (diffInDays === 0) return `Starts today at ${timeFormat}`
-  
+  if (diffInDays === 0) return `Starts today at ${timeFormat}`;
+
   // If start date is tomorrow
-  if (diffInDays === 1) return `Starts tomorrow at ${timeFormat}`
-  
+  if (diffInDays === 1) return `Starts tomorrow at ${timeFormat}`;
+
   // If start date is in the past
   if (diffInDays < 0) {
-    const pastDays = Math.abs(diffInDays)
-    if (pastDays === 1) return `Started yesterday at ${timeFormat}`
-    if (pastDays < 7) return `Started ${pastDays} days ago at ${timeFormat}`
-    return `Started on ${date.toLocaleDateString()} at ${timeFormat}`
+    const pastDays = Math.abs(diffInDays);
+    if (pastDays === 1) return `Started yesterday at ${timeFormat}`;
+    if (pastDays < 7) return `Started ${pastDays} days ago at ${timeFormat}`;
+    return `Started on ${date.toLocaleDateString()} at ${timeFormat}`;
   }
-  
+
   // If start date is in the near future
-  if (diffInDays < 7) return `Starts in ${diffInDays} days at ${timeFormat}`
-  
+  if (diffInDays < 7) return `Starts in ${diffInDays} days at ${timeFormat}`;
+
   // For farther dates, show the actual date with time
-  return `Starts ${date.toLocaleDateString()} at ${timeFormat}`
+  return `Starts ${date.toLocaleDateString()} at ${timeFormat}`;
 }
 
 /**
@@ -160,22 +225,30 @@ export function formatStartDate(dateString?: string): string | null {
  * @param amount - The compensation amount if transportation is 'compensated'
  * @returns Human-readable transportation information
  */
-export function formatTransportation(transportation?: string, amount?: number): string | null {
-  if (!transportation) return null
-  
+export function formatTransportation(
+  transportation?: string,
+  amount?: number
+): string | null {
+  if (!transportation) return null;
+
   switch (transportation) {
-    case 'provided':
-      return 'Transportation provided'
-    case 'not_provided':
-      return 'Transportation not provided'
-    case 'employee_responsible':
-    case 'tasker_responsible':
-      return 'Tasker responsible for transportation'
-    case 'compensated':
-      return amount ? `Transportation compensation: ${amount} BAM` : 'Transportation compensation provided'
+    case "provided":
+      return "Transportation provided";
+    case "not_provided":
+      return "Transportation not provided";
+    case "employee_responsible":
+    case "tasker_responsible":
+      return "Tasker responsible for transportation";
+    case "compensated":
+      return amount
+        ? `Transportation compensation: ${amount} BAM`
+        : "Transportation compensation provided";
     default:
       // Fallback: capitalize first letter and replace underscores with spaces
-      return transportation.charAt(0).toUpperCase() + transportation.slice(1).replace(/_/g, ' ')
+      return (
+        transportation.charAt(0).toUpperCase() +
+        transportation.slice(1).replace(/_/g, " ")
+      );
   }
 }
 
@@ -185,20 +258,20 @@ export function formatTransportation(transportation?: string, amount?: number): 
  * @returns Icon component name or null
  */
 export function getTransportationIcon(transportation?: string): string | null {
-  if (!transportation) return null
-  
+  if (!transportation) return null;
+
   switch (transportation) {
-    case 'provided':
-      return 'Car' // Car icon for provided transportation
-    case 'not_provided':
-      return 'Ban' // Ban icon for not provided
-    case 'employee_responsible':
-    case 'tasker_responsible':
-      return 'User' // User icon for tasker responsible
-    case 'compensated':
-      return 'DollarSign' // DollarSign icon for compensation
+    case "provided":
+      return "Car"; // Car icon for provided transportation
+    case "not_provided":
+      return "Ban"; // Ban icon for not provided
+    case "employee_responsible":
+    case "tasker_responsible":
+      return "User"; // User icon for tasker responsible
+    case "compensated":
+      return "DollarSign"; // DollarSign icon for compensation
     default:
-      return 'Car' // Default to car icon
+      return "Car"; // Default to car icon
   }
 }
 
@@ -208,12 +281,12 @@ export function getTransportationIcon(transportation?: string): string | null {
  * @returns Formatted name (e.g., "John D." from "John Doe")
  */
 export function formatClientName(fullName?: string): string {
-  if (!fullName || typeof fullName !== 'string') {
-    return 'Anonymous Client'
+  if (!fullName || typeof fullName !== "string") {
+    return "Anonymous Client";
   }
-  
-  const formatted = formatDisplayName(fullName)
-  return formatted || 'Anonymous Client'
+
+  const formatted = formatDisplayName(fullName);
+  return formatted || "Anonymous Client";
 }
 
 /**
@@ -222,27 +295,42 @@ export function formatClientName(fullName?: string): string {
  * @returns Human-readable time ago
  */
 export const formatTimeAgo = (dateString: string): string => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInMs = now.getTime() - date.getTime()
-  
-  // Convert to different time units
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
-  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
-  const diffInMonths = Math.floor(diffInDays / 30)
-  
-  // Format based on time elapsed
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`
-  } else if (diffInHours < 24) {
-    return `${diffInHours}h ago`
-  } else if (diffInDays < 30) {
-    return `${diffInDays}d ago`
-  } else {
-    return `${diffInMonths}mo ago`
+  if (!dateString) return "Unknown time";
+
+  const date = new Date(dateString);
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return "Invalid date";
   }
-}
+
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+
+  // Handle future dates
+  if (diffInMs < 0) {
+    return "Just posted";
+  }
+
+  // Convert to different time units
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  const diffInMonths = Math.floor(diffInDays / 30);
+
+  // Format based on time elapsed
+  if (diffInMinutes < 1) {
+    return "Just now";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  } else if (diffInDays < 30) {
+    return `${diffInDays}d ago`;
+  } else {
+    return `${diffInMonths}mo ago`;
+  }
+};
 
 /**
  * Formats duration strings to human-readable format (e.g., "1 hour", "2 days", "3 months")
@@ -250,26 +338,26 @@ export const formatTimeAgo = (dateString: string): string => {
  * @returns Human-readable duration or original string if unrecognized
  */
 export const formatDuration = (duration?: string): string => {
-  if (!duration) return ''
-  
+  if (!duration) return "";
+
   const durationMap: Record<string, string> = {
-    '1_hour': '1 hour',
-    '2_hours': '2 hours',
-    '3_hours': '3 hours',
-    '4_hours': '4 hours',
-    '6_hours': '6 hours',
-    '8_hours': '8 hours',
-    '1_day': '1 day',
-    '2_days': '2 days',
-    '3_days': '3 days',
-    '1_week': '1 week',
-    '2_weeks': '2 weeks',
-    '1_month': '1 month',
-    '2_months': '2 months',
-    '3_months': '3 months',
-    '6_months': '6 months',
-    '1_year': '1 year'
-  }
-  
-  return durationMap[duration] || duration.replace('_', ' ')
-}
+    "1_hour": "1 hour",
+    "2_hours": "2 hours",
+    "3_hours": "3 hours",
+    "4_hours": "4 hours",
+    "6_hours": "6 hours",
+    "8_hours": "8 hours",
+    "1_day": "1 day",
+    "2_days": "2 days",
+    "3_days": "3 days",
+    "1_week": "1 week",
+    "2_weeks": "2 weeks",
+    "1_month": "1 month",
+    "2_months": "2 months",
+    "3_months": "3 months",
+    "6_months": "6 months",
+    "1_year": "1 year",
+  };
+
+  return durationMap[duration] || duration.replace("_", " ");
+};

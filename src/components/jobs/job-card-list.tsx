@@ -135,7 +135,7 @@ export function JobCardList({ job }: JobCardListProps) {
         {/* Tags and Badges */}
         <div className="flex flex-wrap gap-2 mb-5">
           <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20">
-            {formatJobType(job.type)}
+            {formatJobType(job.type, locale)}
           </Badge>
           
           {job.category && (

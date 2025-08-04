@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 
 export async function POST(request: NextRequest) {
@@ -8,51 +9,38 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Role API: Starting role update request...')
     
-    // Debug: Log all cookies
-    const allCookies = request.cookies.getAll()
-    console.log('Role API: Available cookies:', allCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
-    
-    // Look for Supabase auth cookies specifically
-    const authCookies = allCookies.filter(cookie => 
-      cookie.name.includes('supabase') || 
-      cookie.name.includes('auth') ||
-      cookie.name.includes('sb-')
-    )
-    console.log('Role API: Auth-related cookies:', authCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
-    
     // Check for Authorization header
     const authHeader = request.headers.get('authorization')
     console.log('Role API: Authorization header:', authHeader ? 'present' : 'missing')
     
-    // Create Supabase client with request cookies
-    const supabase = createServerClient<Database>(
+    // Create Supabase auth client with request cookies for user verification
+    const supabaseAuth = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            const cookie = request.cookies.get(name)
-            console.log(`Role API: Getting cookie ${name}:`, cookie ? 'found' : 'not found')
-            return cookie?.value
+            return request.cookies.get(name)?.value
           },
-          set() {
-            // Not needed for this use case
-          },
-          remove() {
-            // Not needed for this use case
-          },
+          set() {},
+          remove() {},
         },
-        // Add global headers if Authorization header is present
         global: authHeader ? {
-          headers: {
-            'Authorization': authHeader
-          }
+          headers: { 'Authorization': authHeader }
         } : undefined
       }
     )
 
+    // Create service client for database operations (bypasses RLS)
+    const supabaseService = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    console.log('Role API: Service role key available:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
+
     // Get current user from Supabase Auth
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
     
     console.log('Role API: Auth result:', { 
       hasUser: !!user, 
@@ -74,35 +62,76 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Role API: Updating user role in database...')
-    // Update user role but keep profile_setup_completed as false
-    // Profile will be marked as completed after the profile setup form
-    const { data: updatedUser, error: updateError } = await supabase
+    
+    // First, check if user exists in users table
+    const { data: existingUser, error: checkError } = await supabaseService
       .from('users')
-      .update({
-        role: role,
-        updated_at: new Date().toISOString()
-        // Don't set profile_setup_completed here - will be set after profile setup
-      })
+      .select('id, email, name, role, profile_setup_completed, email_verified, connections, created_at, updated_at')
       .eq('id', user.id)
-      .select(`
-        id,
-        email,
-        name,
-        role,
-        profile_setup_completed,
-        email_verified,
-        connections,
-        created_at,
-        updated_at
-      `)
       .single()
 
-    if (updateError) {
-      console.error('Role API: Database update error:', updateError)
+    console.log('Role API: User check result:', { 
+      userExists: !!existingUser, 
+      checkError: checkError?.code,
+      userId: user.id 
+    })
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Role API: Error checking existing user:', checkError)
       return NextResponse.json(
-        { error: 'Failed to update user role' },
+        { error: 'Failed to check user status' },
         { status: 500 }
       )
+    }
+
+    let updatedUser
+    if (!existingUser) {
+      console.log('Role API: User not found in users table, creating new user record...')
+      const { data: newUser, error: createError } = await supabaseService
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          name: user.user_metadata?.full_name || user.email!.split('@')[0],
+          role: role,
+          email_verified: !!user.email_confirmed_at,
+          profile_setup_completed: false,
+          connections: 5,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('id, email, name, role, profile_setup_completed, email_verified, connections, created_at, updated_at')
+        .single()
+
+      if (createError) {
+        console.error('Role API: Error creating user:', createError)
+        return NextResponse.json(
+          { error: 'Failed to create user record' },
+          { status: 500 }
+        )
+      }
+      updatedUser = newUser
+      console.log('Role API: New user created successfully')
+    } else {
+      console.log('Role API: Updating existing user role...')
+      const { data: updated, error: updateError } = await supabaseService
+        .from('users')
+        .update({
+          role: role,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+        .select('id, email, name, role, profile_setup_completed, email_verified, connections, created_at, updated_at')
+        .single()
+
+      if (updateError) {
+        console.error('Role API: Database update error:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to update user role' },
+          { status: 500 }
+        )
+      }
+      updatedUser = updated
     }
     
     console.log('Role API: User updated successfully:', {
@@ -111,9 +140,6 @@ export async function POST(request: NextRequest) {
       profileSetupCompleted: updatedUser.profile_setup_completed,
       connections: updatedUser.connections
     })
-
-    // TODO: Initialize connections based on role if needed
-    // For now, connections are handled via database functions
 
     console.log('Role API: Returning success response')
     return NextResponse.json({

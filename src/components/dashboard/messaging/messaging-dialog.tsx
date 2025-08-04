@@ -3,98 +3,27 @@
 import React from 'react'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useDialogStore } from '@/stores/dialog-store'
-import { ConversationView } from '@/components/messaging/conversation-view'
+import { MessagingInterface } from '@/components/messaging/messaging-interface'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { MessageAttachment, Conversation } from '@/types/messaging'
 import { useTranslations } from 'next-intl'
 import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
-import { useOptimizedConversations } from '@/hooks/use-optimized-conversations'
-import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime'
 import { cn } from '@/lib/utils'
 
 function MessagingDialogContent() {
   const { user } = useSupabaseAuth()
-  const { isMessagingDialogOpen, closeMessagingDialog } = useDialogStore()
-  const { setMessagingActive, conversations, totalUnreadCount } = useOptimizedMessaging()
-  const {
-    activeConversation,
-    setActiveConversation,
-    messages,
-    isLoadingMessages,
-    canLoadMore,
-    loadMoreMessages,
-    sendMessage,
-    addRealtimeMessage
-  } = useOptimizedConversations()
+  const { isMessagingDialogOpen, closeMessagingDialog, currentConversationId } = useDialogStore()
+  const { setMessagingActive, totalUnreadCount } = useOptimizedMessaging()
   const t = useTranslations('messaging')
-  const [isMobile, setIsMobile] = React.useState(false)
-  
-  // Mobile detection
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   // Notify optimized messaging when dialog opens/closes
   React.useEffect(() => {
     setMessagingActive(isMessagingDialogOpen)
   }, [isMessagingDialogOpen, setMessagingActive])
 
-  // Set up real-time messaging
-  useOptimizedRealtime({
-    onNewMessage: (message) => {
-      addRealtimeMessage(message)
-    },
-    activeConversationId: activeConversation?.id || null,
-    isMessagingActive: isMessagingDialogOpen
-  })
-
-  const handleSendMessage = async (content: string, attachments?: File[]) => {
-    if (!activeConversation) return
-    
-    try {
-      await sendMessage({
-        conversationId: activeConversation.id,
-        content,
-        messageType: attachments && attachments.length > 0 ? 'file' : 'text',
-      })
-    } catch (error) {
-      console.error('Error sending message:', error)
-    }
+  const handleClose = () => {
+    closeMessagingDialog()
   }
-
-  const handleSelectConversation = (conversation: Conversation) => {
-    setActiveConversation(conversation)
-  }
-
-  const handleTyping = (isTyping: boolean) => {
-    // TODO: Implement optimized typing indicator
-  }
-
-  const handleLoadMoreMessages = () => {
-    if (canLoadMore) {
-      loadMoreMessages()
-    }
-  }
-
-  const handleAttachmentClick = (attachment: MessageAttachment) => {
-    if (attachment.file_url) {
-      window.open(attachment.file_url, '_blank')
-    }
-  }
-
-  const handleArchiveConversation = () => {
-    // TODO: Implement archive with optimized system
-  }
-
-  // Use total unread count from optimized messaging
-  const unreadCount = totalUnreadCount
 
   if (!user) return null
 
@@ -124,9 +53,9 @@ function MessagingDialogContent() {
               </svg>
             </div>
             <span className="text-lg font-semibold">{t('title')}</span>
-            {unreadCount > 0 && (
+            {totalUnreadCount > 0 && (
               <Badge className="bg-red-500 hover:bg-red-600 text-white border-0 rounded-full px-2 py-1 text-xs min-w-[20px] h-5 flex items-center justify-center">
-                {unreadCount}
+                {totalUnreadCount}
               </Badge>
             )}
           </DialogTitle>
@@ -134,27 +63,10 @@ function MessagingDialogContent() {
             Messaging interface for conversations and direct messages
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 overflow-hidden">
-          <ConversationView
-            conversations={conversations}
-            selectedConversation={activeConversation}
-            messages={messages}
-            currentUserId={user.id}
-            onSelectConversation={handleSelectConversation}
-            onSendMessage={handleSendMessage}
-            onLoadMoreMessages={handleLoadMoreMessages}
-            onTyping={handleTyping}
-            onAttachmentClick={handleAttachmentClick}
-            onArchiveConversation={handleArchiveConversation}
-            typingUsers={[]} // TODO: Implement with optimized system
-            loading={{
-              conversations: false, // Handled by optimized messaging
-              messages: isLoadingMessages,
-            }}
-            hasMoreMessages={canLoadMore}
-            locale="en"
-            className="h-full"
-            isMobile={isMobile}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <MessagingInterface 
+            conversationId={currentConversationId || undefined}
+            onClose={handleClose}
           />
         </div>
       </DialogContent>

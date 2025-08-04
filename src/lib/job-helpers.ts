@@ -4,7 +4,7 @@
  * Updated for optimized static data management
  */
 
-import { staticDataManager } from './static-data-manager'
+import { loadStaticDataFromFiles } from './static-data-file-loader'
 import type { StaticCity, StaticCategory } from '@/types/static-data'
 
 // Types for job enrichment
@@ -43,10 +43,43 @@ export interface JobWithStaticData extends BaseJob {
  */
 export async function enrichJobWithStaticData(job: BaseJob): Promise<JobWithStaticData> {
   try {
-    const data = await staticDataManager.loadStaticData()
+    const data = await loadStaticDataFromFiles()
     
-    const city = job.cityId ? data.cities.find(c => c.id === job.cityId) : null
-    const category = job.categoryId ? await staticDataManager.getCategoryById(job.categoryId) : null
+    // Find city - check both by key (new format) and by id (legacy format)
+    let city = null
+    if (job.cityId) {
+      // First try to find by key (new format)
+      city = data.cities.find(c => c.key === job.cityId)
+      // If not found, try by id (legacy format)
+      if (!city) {
+        city = data.cities.find(c => c.id === job.cityId)
+      }
+    }
+    
+    // Find category - check both by key (new format) and by id (legacy format)
+    let category = null
+    if (job.categoryId) {
+      // First try to find by key (new format)
+      category = data.categories.find(c => c.key === job.categoryId)
+      // If not found, try by id (legacy format)
+      if (!category) {
+        category = data.categories.find(c => c.id === job.categoryId)
+      }
+      // If still not found, search in subcategories
+      if (!category) {
+        for (const cat of data.categories) {
+          if (cat.subcategories) {
+            const subcat = cat.subcategories.find((sub: StaticCategory) => 
+              sub.key === job.categoryId || sub.id === job.categoryId
+            )
+            if (subcat) {
+              category = subcat
+              break
+            }
+          }
+        }
+      }
+    }
     
     return {
       ...job,
@@ -55,7 +88,7 @@ export async function enrichJobWithStaticData(job: BaseJob): Promise<JobWithStat
         key: city.key,
         name_bs: city.name_bs,
         name_en: city.name_en,
-        name: city.name_en, // Default to English
+        name: city.name_bs, // Default to Bosnian for compatibility
         country: city.country,
         is_special: city.is_special
       } : null,
@@ -64,7 +97,7 @@ export async function enrichJobWithStaticData(job: BaseJob): Promise<JobWithStat
         key: category.key,
         name_bs: category.name_bs,
         name_en: category.name_en,
-        name: category.name_en, // Default to English
+        name: category.name_bs, // Default to Bosnian for compatibility
         is_popular: category.is_popular,
         parent_id: category.parent_id
       } : null
@@ -86,20 +119,62 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
 
   try {
     // Load static data once for all jobs
-    const data = await staticDataManager.loadStaticData()
+    const data = await loadStaticDataFromFiles()
     
-    return jobs.map(job => {
-      const city = job.cityId ? data.cities.find(c => c.id === job.cityId) : null
-      const category = job.categoryId ? data.categories.find(c => c.id === job.categoryId) : null
+    return jobs.map((job) => {
+      let city = null
+      let category = null
+      
+      // Find city - check both by key (new format) and by id (legacy format)
+      if (job.cityId) {
+        // First try to find by key (new format)
+        city = data.cities.find(c => c.key === job.cityId)
+        // If not found, try by id (legacy format)
+        if (!city) {
+          city = data.cities.find(c => c.id === job.cityId)
+        }
+      }
+      
+      // Find category - check both by key (new format) and by id (legacy format)  
+      if (job.categoryId) {
+        // First try to find by key (new format)
+        category = data.categories.find(c => c.key === job.categoryId)
+        // If not found, try by id (legacy format)
+        if (!category) {
+          category = data.categories.find(c => c.id === job.categoryId)
+        }
+        // If still not found, search in subcategories
+        if (!category) {
+          for (const cat of data.categories) {
+            if (cat.subcategories) {
+              const subcat = cat.subcategories.find((sub: StaticCategory) => 
+                sub.key === job.categoryId || sub.id === job.categoryId
+              )
+              if (subcat) {
+                category = subcat
+                break
+              }
+            }
+          }
+        }
+      }
       
       return {
         ...job,
+        // Add cached city fields for direct access
+        city_name_bs: city?.name_bs || null,
+        city_name_en: city?.name_en || null,
+        city_name: city?.name_bs || null, // Default to Bosnian
+        // Add cached category fields for direct access  
+        category_name_bs: category?.name_bs || null,
+        category_name_en: category?.name_en || null,
+        category_name: category?.name_bs || null, // Default to Bosnian
         city: city ? {
           id: city.id,
           key: city.key,
           name_bs: city.name_bs,
           name_en: city.name_en,
-          name: city.name_en,
+          name: city.name_bs, // Default to Bosnian for compatibility
           country: city.country,
           is_special: city.is_special
         } : null,
@@ -108,7 +183,7 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
           key: category.key,
           name_bs: category.name_bs,
           name_en: category.name_en,
-          name: category.name_en,
+          name: category.name_bs, // Default to Bosnian for compatibility
           is_popular: category.is_popular,
           parent_id: category.parent_id
         } : null
@@ -126,8 +201,8 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
  */
 export async function validateCityId(cityId: string): Promise<boolean> {
   try {
-    const data = await staticDataManager.loadStaticData()
-    return data.cities.some(city => city.id === cityId && city.is_active !== false)
+    const data = await loadStaticDataFromFiles()
+    return data.cities.some((city: StaticCity) => city.id === cityId && city.is_active !== false)
   } catch (error) {
     console.error('Error validating city ID:', error)
     return false
@@ -139,7 +214,8 @@ export async function validateCityId(cityId: string): Promise<boolean> {
  */
 export async function validateCategoryId(categoryId: string): Promise<boolean> {
   try {
-    const category = await staticDataManager.getCategoryById(categoryId)
+    const data = await loadStaticDataFromFiles()
+    const category = data.categories.find((c: StaticCategory) => c.id === categoryId)
     return category ? category.is_active !== false : false
   } catch (error) {
     console.error('Error validating category ID:', error)
@@ -151,14 +227,26 @@ export async function validateCategoryId(categoryId: string): Promise<boolean> {
  * Get city by ID from static data (async)
  */
 export async function getCityById(cityId: string): Promise<StaticCity | undefined> {
-  return staticDataManager.getCityById(cityId)
+  try {
+    const data = await loadStaticDataFromFiles()
+    return data.cities.find((c: StaticCity) => c.id === cityId)
+  } catch (error) {
+    console.error('Error getting city by ID:', error)
+    return undefined
+  }
 }
 
 /**
  * Get category by ID from static data (async)
  */
 export async function getCategoryById(categoryId: string): Promise<StaticCategory | undefined> {
-  return staticDataManager.getCategoryById(categoryId)
+  try {
+    const data = await loadStaticDataFromFiles()
+    return data.categories.find((c: StaticCategory) => c.id === categoryId)
+  } catch (error) {
+    console.error('Error getting category by ID:', error)
+    return undefined
+  }
 }
 
 /**
@@ -171,10 +259,10 @@ export async function validateJobReferences(cityId: string, categoryId: string):
   category?: StaticCategory
 }> {
   try {
-    const data = await staticDataManager.loadStaticData()
+    const data = await loadStaticDataFromFiles()
     
-    const city = data.cities.find(c => c.id === cityId && c.is_active !== false)
-    const category = data.categories.find(c => c.id === categoryId && c.is_active !== false)
+    const city = data.cities.find((c: StaticCity) => c.id === cityId && c.is_active !== false)
+    const category = data.categories.find((c: StaticCategory) => c.id === categoryId && c.is_active !== false)
     
     return {
       validCity: !!city,

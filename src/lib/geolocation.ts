@@ -163,14 +163,18 @@ export class GeolocationService {
       console.warn('City lookup error:', cityError);
     }
     
-    // Try to get detailed address via our proxy API
+    // Try to get detailed address via our proxy API first for better address formatting
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased timeout for better results
       
       try {
         const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
-          signal: controller.signal
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
         });
         
         clearTimeout(timeoutId);
@@ -213,7 +217,19 @@ export class GeolocationService {
       console.error('Detailed geocoding error:', error);
     }
     
-    // Fallback
+    // Fallback to basic reverse geocoding
+    try {
+      const basicAddress = await this.reverseGeocode(roundedLat, roundedLng);
+      if (basicAddress && basicAddress !== `${roundedLat}, ${roundedLng}`) {
+        return {
+          address: basicAddress
+        };
+      }
+    } catch (error) {
+      console.warn('Basic reverse geocoding failed:', error);
+    }
+    
+    // Final fallback to coordinates
     return {
       address: `${roundedLat}, ${roundedLng}`
     };

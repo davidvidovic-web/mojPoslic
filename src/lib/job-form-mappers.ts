@@ -23,10 +23,11 @@ export function mapFormDataToCreateAPI(
     email: formData.email || userEmail,
     start_date: formData.start_date || null,
     start_time: formData.start_time || null,
+    duration_days: formData.duration_days || (formData.duration ? parseInt(formData.duration.replace('_days', '')) : null),
     job_address: formData.job_address || null,
     job_latitude: formData.job_latitude || null,
     job_longitude: formData.job_longitude || null,
-    duration: formData.duration || null,
+    duration: formData.duration || null, // Keep legacy field for compatibility
     transportation: formData.transportation || null,
     requirements: formData.requirements || null,
     benefits: formData.benefits || null,

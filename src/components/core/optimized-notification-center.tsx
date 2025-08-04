@@ -14,8 +14,7 @@ export function OptimizedNotificationCenter({ className }: OptimizedNotification
   const { 
     totalUnreadCount, 
     isLoading, 
-    setMessagingActive,
-    hasNotifications
+    setMessagingActive
   } = useOptimizedMessaging()
   
   const { openMessagingDialog } = useDialogStore()
@@ -23,8 +22,8 @@ export function OptimizedNotificationCenter({ className }: OptimizedNotification
 
   // Show notification center when there are unread messages
   useEffect(() => {
-    setIsVisible(totalUnreadCount > 0 || hasNotifications)
-  }, [totalUnreadCount, hasNotifications])
+    setIsVisible(totalUnreadCount > 0)
+  }, [totalUnreadCount])
 
   const handleClick = () => {
     // Tell the messaging system that messaging is now active
@@ -53,11 +52,6 @@ export function OptimizedNotificationCenter({ className }: OptimizedNotification
             {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
           </span>
         </div>
-      )}
-      
-      {/* Notification indicator for non-unread but pending notifications */}
-      {totalUnreadCount === 0 && hasNotifications && (
-        <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500" />
       )}
     </Button>
   )

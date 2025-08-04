@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Job } from '@/types/job'
 import { formatJobType } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 interface JobCardProps {
   job: Job
@@ -16,6 +16,7 @@ interface JobCardProps {
 
 export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: JobCardProps) {
   const t = useTranslations('dashboard.jobCard')
+  const locale = useLocale()
   
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) {
@@ -48,7 +49,7 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: 
     if (job.salaryMin && job.salaryMax && job.salaryType) {
       const min = job.salaryMin.toLocaleString()
       const max = job.salaryMax.toLocaleString()
-      const typeMap = {
+      const typeMap: Record<string, string> = {
         'hourly': '/h',
         'daily': '/day', 
         'weekly': '/week',
@@ -66,7 +67,7 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: 
     
     if (job.salaryMin && job.salaryType) {
       const min = job.salaryMin.toLocaleString()
-      const typeMap = {
+      const typeMap: Record<string, string> = {
         'hourly': '/h',
         'daily': '/day', 
         'weekly': '/week',
@@ -118,7 +119,7 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: 
             )}
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge className="bg-primary/10 text-primary border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs">{formatJobType(job.type)}</Badge>
+            <Badge className="bg-primary/10 text-primary border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs">{formatJobType(job.type || job.job_type, locale)}</Badge>
             <Badge className={`border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs ${status.color === 'text-green-600' ? 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' : status.color === 'text-red-600' ? 'bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400'}`}>
               {status.text}
             </Badge>
@@ -166,7 +167,20 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: 
         
         <div>
           <span className="font-medium">{t('location')}: </span>
-          <span>{job.city?.name || t('remote')}</span>
+          <span>
+            {job.exact_location || job.job_address ? (
+              <span className="text-sm">
+                {job.exact_location || job.job_address}
+                {job.city?.name && (
+                  <span className="text-gray-500 dark:text-gray-400 ml-1">
+                    ({job.city.name})
+                  </span>
+                )}
+              </span>
+            ) : (
+              job.city?.name || t('remote')
+            )}
+          </span>
         </div>
         
         <div>

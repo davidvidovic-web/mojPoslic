@@ -7,14 +7,17 @@ import { TaskerApplicationManager } from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
-import { MessagingDialog } from './messaging/messaging-dialog'
+import { MessagingDialog } from '@/components/dashboard/messaging/messaging-dialog'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Star, Briefcase, History } from 'lucide-react'
-import { useApplications } from '@/hooks/use-applications'
+import { Star, Briefcase, History, MessageCircle } from 'lucide-react'
+import { useUserApplications } from '@/hooks/use-applications'
 import { useJobAcceptanceManager } from '@/hooks/useQueryManagers'
+import { useDialogStore } from '@/stores/dialog-store'
+import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 import type { ActiveJob } from '@/hooks/use-job-acceptance'
 
 interface ApplicationStats {
@@ -33,9 +36,13 @@ export function TaskerDashboard() {
   // Translation hooks
   const tDashboard = useTranslations('dashboard')
   
-  // Use Supabase hooks instead of manual fetch calls
-  const { data: applications = [], isLoading: applicationsLoading } = useApplications()
-  const { activeJobs, isLoading: isLoadingActiveJobs } = useJobAcceptanceManager(user?.id)
+  // Dialog and messaging state
+  const { openMessagingDialog } = useDialogStore()
+  const { totalUnreadCount, conversations } = useOptimizedMessaging()
+  
+  // Use Supabase hooks for user-specific data
+  const { data: applications = [], isLoading: applicationsLoading } = useUserApplications(user?.id)
+  const { activeJobs, isLoading: isLoadingActiveJobs } = useJobAcceptanceManager()
   
   // Calculate derived data from hook data
   const shortlistedApplications = applications.filter(app => 
@@ -78,17 +85,34 @@ export function TaskerDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-green-500 flex items-center justify-center">
-                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
+                  <MessageCircle className="h-4 w-4 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">Messages</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">Messages</h3>
+                  {totalUnreadCount > 0 && (
+                    <Badge variant="destructive" className="text-xs px-2 py-1">
+                      {totalUnreadCount}
+                    </Badge>
+                  )}
+                </div>
               </div>
-              <MessagingDialog />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openMessagingDialog()}
+                className="text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100"
+              >
+                Open
+              </Button>
             </div>
-            <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
+            <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed mb-3">
               Communicate with clients and manage your conversations in real-time.
             </p>
+            {conversations.length > 0 && (
+              <div className="text-xs text-green-600 dark:text-green-400">
+                {conversations.length} active conversation{conversations.length !== 1 ? 's' : ''}
+              </div>
+            )}
           </div>
           
           {/* Connections Widget */}
@@ -232,6 +256,9 @@ export function TaskerDashboard() {
         </div>
         
       </div>
+
+      {/* Messaging Dialog */}
+      <MessagingDialog />
     </DashboardLayout>
   )
 }

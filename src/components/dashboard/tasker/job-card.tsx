@@ -6,6 +6,7 @@ import { Job } from '@/types/job'
 import { MapPin, Calendar, DollarSign, Car, Star } from 'lucide-react'
 import { formatJobType, formatTransportation } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
+import { useLocale } from 'next-intl'
 
 interface JobCardProps {
   job: Job
@@ -15,6 +16,7 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProps) {
+  const locale = useLocale()
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
   }
@@ -32,7 +34,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
                   Featured
                 </Badge>
               )}
-              <Badge variant="secondary">{formatJobType(job.type)}</Badge>
+              <Badge variant="secondary">{formatJobType(job.type, locale)}</Badge>
               {job.transportation && (
                 <Badge variant="outline" className="text-xs">
                   <Car className="h-3 w-3 mr-1" />

@@ -45,8 +45,7 @@ export const Header = React.memo(function Header() {
   const { loading, user, signOut } = useSupabaseAuth();
   const { 
     totalUnreadCount, 
-    isLoading: isMessagingLoading, 
-    hasNotifications
+    isLoading: isMessagingLoading
   } = useOptimizedMessaging();
   const pathname = usePathname();
   
@@ -363,7 +362,7 @@ export const Header = React.memo(function Header() {
                 ) : (
                   <>
                     {/* Messaging Button - Show OptimizedNotificationCenter if there are notifications, otherwise show regular button */}
-                    {(totalUnreadCount > 0 || hasNotifications) ? (
+                    {totalUnreadCount > 0 ? (
                       <OptimizedNotificationCenter />
                     ) : (
                       <Button
@@ -371,7 +370,7 @@ export const Header = React.memo(function Header() {
                         size="sm"
                         className="relative h-9 w-9 rounded-full"
                         title={tBreadcrumb('messages')}
-                        onClick={openMessagingDialog}
+                        onClick={() => openMessagingDialog()}
                         disabled={isMessagingLoading}
                       >
                         <MessageSquare className="h-7 w-7" />

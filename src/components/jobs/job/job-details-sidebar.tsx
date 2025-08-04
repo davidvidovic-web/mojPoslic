@@ -28,7 +28,7 @@ export function JobDetailsSidebar({ job, formatDate, formatSalary, showAddress =
       <CardContent className="space-y-3">
         <div className="flex justify-between">
           <span className="text-sm text-muted-foreground">{t('jobType')}</span>
-          <Badge variant={getTypeVariant(job.job_type)}>{formatJobType(job.job_type)}</Badge>
+          <Badge variant={getTypeVariant(job.job_type)}>{formatJobType(job.job_type, locale)}</Badge>
         </div>
         
         {(job.category_name_bs || job.category_name_en) && (

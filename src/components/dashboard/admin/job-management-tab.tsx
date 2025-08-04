@@ -100,7 +100,7 @@ export function JobManagementTab({ jobs }: JobManagementTabProps) {
                 <div className="space-y-2">
                   <h4 className="font-semibold text-base leading-tight">{job.title}</h4>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">{formatJobType(job.type)}</Badge>
+                    <Badge variant="secondary" className="text-xs">{formatJobType(job.type, locale)}</Badge>
                     {job.transportation && (
                       <Badge variant="outline" className="text-xs flex items-center gap-1">
                         <Car className="h-3 w-3" />

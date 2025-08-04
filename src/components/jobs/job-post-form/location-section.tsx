@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { LocationPicker } from '@/components/ui/location-picker'
 import { CitiesFilter } from '@/components/filters/cities-filter'
 import { CreateJobData } from '@/types/job'
-import { validateLocationInCity, cleanMapAddress } from '@/lib/location-utils'
+import { validateLocationInCity, cleanMapAddress } from '@/lib/location/validation'
 import { CITY_COORDINATES } from '@/lib/city-coordinates'
 import { MapPin as MapPinIcon } from 'lucide-react'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"

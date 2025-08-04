@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { queryKeys } from '@/lib/query-keys'
 import type { Database } from '@/types/supabase'
 import type { JobFilters } from '@/types/job'
+import { useData } from '@/hooks/use-data'
 type JobListing = Database['public']['Tables']['job_listings']['Row']
 type JobUpdate = Database['public']['Tables']['job_listings']['Update']
 // Standard job listing columns for consistent queries (including the new application_url column)
@@ -39,6 +40,8 @@ const JOB_LISTING_COLUMNS = `
   application_url
 ` as const
 export function useJobsQuery(filters: JobFilters = {}) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.list(filters),
     queryFn: async () => {
@@ -87,30 +90,32 @@ export function useJobsQuery(filters: JobFilters = {}) {
       const transformedJobs = (data || []).map((job) => {
         const typedJob = job as JobListing & {
           posted_by?: { name?: string } | null
-          city?: { name?: string; country?: string } | null  
-          category?: { name?: string } | null
         }
+        
+        // Get city and category data using keys
+        const cityData = getCityByKey(typedJob.city_id || '')
+        const categoryData = getCategoryByKey(typedJob.category_id || '')
         
         return {
           id: typedJob.id,
           title: typedJob.title,
           company: typedJob.posted_by?.name || 'Company',
           city_id: typedJob.city_id || '', // Handle null case
-          city: typedJob.city ? {
-            id: typedJob.city_id || '',
-            key: typedJob.city_id || '',
-            name_bs: typedJob.city.name || '',
-            name_en: typedJob.city.name || '',
-            name: typedJob.city.name || '',
-            country: typedJob.city.country || 'Bosnia and Herzegovina'
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
           } : undefined,
           category_id: typedJob.category_id || '',
-          category: typedJob.category ? {
-            id: typedJob.category_id || '',
-            key: typedJob.category_id || '',
-            name_bs: typedJob.category.name || '',
-            name_en: typedJob.category.name || '',
-            name: typedJob.category.name || '',
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
           } : undefined,
           type: typedJob.job_type as 'quick_job' | 'full_time' | 'part_time' | 'remote',
           description: typedJob.description,
@@ -145,6 +150,8 @@ export function useJobsQuery(filters: JobFilters = {}) {
   })
 }
 export function useJobQuery(jobId: string) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.detail(jobId),
     queryFn: async () => {
@@ -164,12 +171,40 @@ export function useJobQuery(jobId: string) {
         .eq('id', jobId)
         .single()
       if (error) throw error
+      
+      // Enhance the job data with city and category information
+      if (data) {
+        const cityData = getCityByKey(data.city_id || '')
+        const categoryData = getCategoryByKey(data.category_id || '')
+        
+        return {
+          ...data,
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
+          } : undefined,
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
+          } : undefined,
+        }
+      }
+      
       return data
     },
     enabled: !!jobId,
   })
 }
 export function useUserJobsQuery(userId: string) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.list({ postedBy: userId }),
     queryFn: async () => {
@@ -179,12 +214,105 @@ export function useUserJobsQuery(userId: string) {
         .eq('posted_by_id', userId)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data
+      
+      // Return jobs with minimal transformation - the database already has cached names
+      const enhancedJobs = (data || []).map(job => {
+        try {
+          // Cast to include cached name fields that exist in DB but not in types
+          const jobWithCachedFields = job as typeof job & {
+            city_name?: string
+            city_name_bs?: string  
+            city_name_en?: string
+            category_name?: string
+            category_name_bs?: string
+            category_name_en?: string
+          }
+          
+          // If the job doesn't have cached names (legacy data), enhance with lookup
+          if (!jobWithCachedFields.city_name && job.city_id) {
+            const cityData = getCityByKey(job.city_id || '')
+            if (cityData) {
+              jobWithCachedFields.city_name = cityData.name_en || cityData.name_bs || cityData.name || job.city_id
+              jobWithCachedFields.city_name_bs = cityData.name_bs || cityData.name_en || cityData.name || job.city_id  
+              jobWithCachedFields.city_name_en = cityData.name_en || cityData.name_bs || cityData.name || job.city_id
+            }
+          }
+          
+          if (!jobWithCachedFields.category_name && job.category_id) {
+            const categoryData = getCategoryByKey(job.category_id || '')
+            if (categoryData) {
+              jobWithCachedFields.category_name = categoryData.name_en || categoryData.name_bs || categoryData.name || job.category_id
+              jobWithCachedFields.category_name_bs = categoryData.name_bs || categoryData.name_en || categoryData.name || job.category_id
+              jobWithCachedFields.category_name_en = categoryData.name_en || categoryData.name_bs || categoryData.name || job.category_id
+            }
+          }
+          
+          // Also add nested objects for components that expect them
+          const cityData = getCityByKey(job.city_id || '')
+          const categoryData = getCategoryByKey(job.category_id || '')
+          
+          return {
+            ...jobWithCachedFields,
+            // Map database fields to expected Job interface fields
+            type: jobWithCachedFields.job_type || 'quick_job', // Map job_type to type
+            salary: jobWithCachedFields.salary_amount || null, // Map salary_amount to salary
+            salaryMin: jobWithCachedFields.salary_min, // Map salary_min to salaryMin
+            salaryMax: jobWithCachedFields.salary_max, // Map salary_max to salaryMax  
+            salaryType: jobWithCachedFields.salary_type, // Map salary_type to salaryType
+            posted_at: jobWithCachedFields.created_at, // Map created_at to posted_at
+            createdAt: jobWithCachedFields.created_at, // Also keep createdAt for compatibility
+            expires_at: jobWithCachedFields.application_deadline, // Map application_deadline to expires_at
+            start_date: null, // Not available in database schema
+            duration: jobWithCachedFields.duration_days ? `${jobWithCachedFields.duration_days} days` : null,
+            tags: [], // Not available in database schema, ensure tags is an array
+            // Location fields mapping  
+            job_address: jobWithCachedFields.exact_location, // Map exact_location to job_address for compatibility
+            job_latitude: jobWithCachedFields.latitude, // Map latitude to job_latitude
+            job_longitude: jobWithCachedFields.longitude, // Map longitude to job_longitude
+            city: cityData ? {
+              id: cityData.id,
+              key: cityData.key,
+              name_bs: cityData.name_bs,
+              name_en: cityData.name_en,
+              name: cityData.name_en || cityData.name_bs || cityData.name || jobWithCachedFields.city_name || job.city_id,
+              country: cityData.country || 'Bosnia and Herzegovina'
+            } : (jobWithCachedFields.city_name ? {
+              id: job.city_id || '',
+              key: job.city_id || '',
+              name_bs: jobWithCachedFields.city_name_bs || jobWithCachedFields.city_name || job.city_id || '',
+              name_en: jobWithCachedFields.city_name_en || jobWithCachedFields.city_name || job.city_id || '',
+              name: jobWithCachedFields.city_name || job.city_id || '',
+              country: 'Bosnia and Herzegovina'
+            } : undefined),
+            category: categoryData ? {
+              id: categoryData.id,
+              key: categoryData.key,
+              name_bs: categoryData.name_bs,
+              name_en: categoryData.name_en,
+              name: categoryData.name_en || categoryData.name_bs || categoryData.name || jobWithCachedFields.category_name || job.category_id,
+            } : (jobWithCachedFields.category_name ? {
+              id: job.category_id || '',
+              key: job.category_id || '',
+              name_bs: jobWithCachedFields.category_name_bs || jobWithCachedFields.category_name || job.category_id || '',
+              name_en: jobWithCachedFields.category_name_en || jobWithCachedFields.category_name || job.category_id || '',
+              name: jobWithCachedFields.category_name || job.category_id || '',
+            } : undefined),
+          }
+        } catch (error) {
+          console.error('useUserJobsQuery - Error processing job:', job.id, error)
+          // Return the job as-is if transformation fails
+          return job
+        }
+      })
+      
+      return enhancedJobs
     },
     enabled: !!userId,
   })
 }
 export function useFeaturedJobsQuery() {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.list({ featured: true }),
     queryFn: async () => {
@@ -199,7 +327,33 @@ export function useFeaturedJobsQuery() {
         .order('created_at', { ascending: false })
         .limit(10)
       if (error) throw error
-      return data
+      
+      // Enhance jobs with city and category data
+      const enhancedJobs = (data || []).map(job => {
+        const cityData = getCityByKey(job.city_id || '')
+        const categoryData = getCategoryByKey(job.category_id || '')
+        
+        return {
+          ...job,
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
+          } : undefined,
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
+          } : undefined,
+        }
+      })
+      
+      return enhancedJobs
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - featured jobs don't change often
   })
@@ -245,6 +399,9 @@ interface CreateJobAPIData {
   job_address?: string | null
   job_latitude?: number | null
   job_longitude?: number | null
+  start_date?: string | null
+  start_time?: string | null
+  duration_days?: number | null
 }
 export function useCreateJobMutation() {
   const queryClient = useQueryClient()
@@ -396,7 +553,6 @@ export function useJobViewMutation() {
   })
 }
 // ===== APPLICATION HOOKS =====
-type ApplicationInsert = Database['public']['Tables']['applications']['Insert']
 type ApplicationUpdate = Database['public']['Tables']['applications']['Update']
 // Import ApplicationFilters from query-keys to avoid duplication
 import type { ApplicationFilters } from '@/lib/query-keys'
@@ -442,6 +598,42 @@ export function useApplicationsQuery(filters?: ApplicationFilters) {
       return data || []
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+}
+
+/**
+ * Query hook for fetching applications for a specific job using the API endpoint
+ * This provides better authentication and permission handling
+ */
+export function useJobApplicationsQuery(jobId: string) {
+  return useQuery({
+    queryKey: ['job-applications', jobId], // Use a unique key to avoid conflicts
+    queryFn: async () => {
+      // Get session token for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        throw new Error('Not authenticated')
+      }
+
+      const response = await fetch(`/api/jobs/${jobId}/applications`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch job applications')
+      }
+
+      const result = await response.json()
+      return result.data || []
+    },
+    enabled: !!jobId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   })
 }
 export function useApplicationQuery(applicationId: string) {
@@ -513,43 +705,40 @@ export function useUserAppliedJobsQuery(userId?: string) {
 export function useCreateApplicationMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ jobId, data }: { jobId: string; data: { message: string } }) => {
-      // Get current user first
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+    mutationFn: async ({ jobId, coverLetter, clientNotes }: { jobId: string; coverLetter?: string; clientNotes?: string }) => {
+      // Get current session for authorization header
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
         throw new Error('You must be logged in to apply for jobs')
       }
-      // Check if user has already applied
-      const { data: existingApplication } = await supabase
-        .from('applications')
-        .select('id')
-        .eq('job_id', jobId)
-        .eq('user_id', user.id)
-        .single()
-      if (existingApplication) {
-        throw new Error('You have already applied for this job. You can check your application status in your dashboard.')
+
+      // Call the simplified API route
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          jobId,
+          coverLetter,
+          clientNotes
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit application')
       }
-      // Create the application
-      const applicationData: ApplicationInsert = {
-        job_id: jobId,
-        user_id: user.id,
-        cover_letter: data.message,
-        status: 'PENDING',
-        applied_at: new Date().toISOString(),
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit application')
       }
-      const { data: newApplication, error } = await supabase
-        .from('applications')
-        .insert([applicationData])
-        .select(`
-          *,
-          job:job_listings!applications_job_id_fkey(
-            id, title, job_type, 
-            posted_by:users(name)
-          )
-        `)
-        .single()
-      if (error) throw error
-      return newApplication
+
+      return result.data
     },
     onSuccess: (data, variables) => {
       // Invalidate relevant queries
@@ -794,6 +983,8 @@ export function useAcceptTaskerMutation() {
  * Uses job matching based on user preferences, applied jobs, and profile
  */
 export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.recommended(userId, limit),
     queryFn: async () => {
@@ -810,7 +1001,7 @@ export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
       const { data: userApplications } = await supabase
         .from('applications')
         .select('job_id')
-        .eq('applicant_id', userId)
+        .eq('user_id', userId)
       
       const appliedJobIds = userApplications?.map((app: { job_id: string | null }) => app.job_id).filter(id => id !== null) || []
       
@@ -839,10 +1030,6 @@ export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
           application_deadline,
           contact_info,
           status,
-            id, key, name, country
-          ),
-            id, key, name
-          ),
           posted_by:users!job_listings_posted_by_id_fkey (
             id, name, email
           )
@@ -866,26 +1053,29 @@ export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
       // Transform to match expected Job interface
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const transformedJobs = (data || []).map((job: any) => {
+        const cityData = getCityByKey(job.city_id || '')
+        const categoryData = getCategoryByKey(job.category_id || '')
+        
         return {
           id: job.id,
           title: job.title,
           company: job.posted_by?.name || 'Company',
           city_id: job.city_id || '',
-          city: job.city ? {
-            id: job.city_id || '',
-            key: job.city_id || '',
-            name_bs: job.city.name || '',
-            name_en: job.city.name || '',
-            name: job.city.name || '',
-            country: job.city.country || 'Bosnia and Herzegovina'
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
           } : undefined,
           category_id: job.category_id || '',
-          category: job.category ? {
-            id: job.category_id || '',
-            key: job.category_id || '',
-            name_bs: job.category.name || '',
-            name_en: job.category.name || '',
-            name: job.category.name || '',
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
           } : undefined,
           type: job.job_type as 'quick_job' | 'full_time' | 'part_time' | 'remote',
           description: job.description,
@@ -961,7 +1151,7 @@ export function useMultipleJobApplicantCountsQuery(jobIds: string[]) {
         .from('applications')
         .select('job_id')
         .in('job_id', jobIds)
-        .not('status', 'eq', 'withdrawn')
+        .not('status', 'eq', 'WITHDRAWN')
       
       if (error) {
         console.error('Error fetching application counts:', error)

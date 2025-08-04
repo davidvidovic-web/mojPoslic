@@ -94,9 +94,11 @@ export async function GET(request: NextRequest) {
       salary: job.salary_amount?.toString() || '',
       salaryType: job.salary_type || '',
       type: job.job_type,
+      job_type: job.job_type, // Ensure both fields are available
       cityId: job.city_id,
       categoryId: job.category_id,
       posted_at: job.created_at,
+      created_at: job.created_at, // Ensure both fields are available
       start_date: null,
       job_address: job.exact_location,
       job_latitude: job.latitude,

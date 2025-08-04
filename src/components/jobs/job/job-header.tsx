@@ -38,7 +38,7 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
                 <p className="text-lg text-muted-foreground mt-1">{formatClientName(job.company)}</p>
               </div>
               <Badge variant={getTypeVariant(job.type)}>
-                {formatJobType(job.type)}
+                {formatJobType(job.type, locale)}
               </Badge>
             </div>
             

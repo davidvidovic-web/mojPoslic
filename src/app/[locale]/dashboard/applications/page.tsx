@@ -16,8 +16,6 @@ export default function ApplicationsPage() {
   const { data: recommendedJobs = [], isLoading: recommendedLoading } = useRecommendedJobsQuery(user?.id, 5)
   
   // TODO: Implement saved jobs query when available
-  const savedJobs: any[] = []
-  // TODO: Implement saved jobs query when available
   const savedJobs: Array<unknown> = []
 
   const loading = applicationsLoading || recommendedLoading

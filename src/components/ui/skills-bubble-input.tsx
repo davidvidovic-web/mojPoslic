@@ -8,9 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Category } from '@/lib/static-data-types'
+import type { StaticCategory } from '@/types/static-data'
 import { useTranslations, useLocale } from 'next-intl'
-import { useStaticCategories } from '@/hooks/use-static-data'
+import { useCategories } from '@/hooks/use-static-data'
 
 interface SkillsBubbleInputProps {
   value: string[]
@@ -38,34 +38,51 @@ export function SkillsBubbleInput({
   const locale = useLocale()
   
   // Use static categories instead of API
-  const { data: categoriesData } = useStaticCategories()
+  const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories()
   
-  // Flatten categories for easier processing (static data manager now provides correct structure)
+  // Debug categories loading
+  useEffect(() => {
+    console.log('SkillsBubbleInput: Categories state:', {
+      loading: categoriesLoading,
+      error: categoriesError,
+      dataLength: categoriesData?.length || 0,
+      sampleData: categoriesData?.slice(0, 2)
+    })
+  }, [categoriesData, categoriesLoading, categoriesError])
+  
+  // Flatten categories for easier processing (handle both nested and flat structures)
   const categories = useMemo(() => {
     if (!categoriesData) return []
     
-    const flatCategories: Category[] = []
+    const flatCategories: StaticCategory[] = []
     
     categoriesData.forEach(category => {
       // Add parent category
-      flatCategories.push(category)
+      flatCategories.push({
+        ...category,
+        parent_id: null // Ensure parent categories have no parent_id
+      })
       
-      // Add children if they exist (processed by static data manager)
-      if (category.children && Array.isArray(category.children)) {
-        category.children.forEach(subcategory => {
+      // Handle both 'subcategories' (from JSON) and 'children' (processed data)
+      const subcats = category.subcategories || category.children || []
+      
+      if (Array.isArray(subcats)) {
+        subcats.forEach(subcategory => {
           flatCategories.push({
             ...subcategory,
-            is_popular: false        // Subcategories are not popular by default
+            parent_id: category.id, // Set parent_id to the parent category's id
+            is_popular: false       // Subcategories are not popular by default
           })
         })
       }
     })
     
+    console.log('SkillsBubbleInput: Processed categories:', flatCategories.length, 'total categories')
     return flatCategories
   }, [categoriesData])
 
   // Helper function to get category name in current locale
-  const getCategoryName = useCallback((category: Category) => {
+  const getCategoryName = useCallback((category: StaticCategory) => {
     return locale === 'bs' ? category.name_bs : category.name_en
   }, [locale])
 
@@ -132,7 +149,7 @@ export function SkillsBubbleInput({
     // If there's input, filter only subcategories that match (no primary categories in suggestions)
     if (inputValue.trim()) {
       // Add matching subcategories only (not parent categories)
-      categories.forEach((category: Category) => {
+      categories.forEach((category: StaticCategory) => {
         const categoryName = getCategoryName(category)
         // Only include subcategories (those with parent_id) in search suggestions
         if (categoryName && 

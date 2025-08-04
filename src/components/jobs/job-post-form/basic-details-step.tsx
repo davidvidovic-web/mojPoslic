@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreateJobData } from '@/types/job'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from '@/hooks/use-data'
+import { StaticCategory } from '@/types/static-data'
 
 interface BasicDetailsStepProps {
   formData: CreateJobData
@@ -29,8 +30,15 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
   }
 
   // Get subcategories for selected parent category
+  // Handle both 'children' (TypeScript type) and 'subcategories' (JSON structure)
   const availableSubcategories = selectedParentCategory 
-    ? categories.find(cat => cat.id === selectedParentCategory)?.children || []
+    ? (() => {
+        const parentCat = categories.find(cat => cat.id === selectedParentCategory)
+        if (!parentCat) return []
+        // Try both possible field names
+        const parentWithSubs = parentCat as StaticCategory & { subcategories?: StaticCategory[] }
+        return parentWithSubs.subcategories || parentCat.children || []
+      })()
     : []
 
   // Check if user can post all job types (companies and admins)
@@ -89,6 +97,21 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
       (formData.category_id || selectedParentCategory) &&
       formData.type
     )
+    
+    console.log('BasicDetailsStep validation:', {
+      title: !!formData.title?.trim(),
+      description: !!formData.description?.trim(),
+      categoryId: !!formData.category_id,
+      selectedParent: !!selectedParentCategory,
+      categoryOrParent: !!(formData.category_id || selectedParentCategory),
+      type: !!formData.type,
+      isValid,
+      formData: {
+        title: formData.title,
+        category_id: formData.category_id,
+        type: formData.type
+      }
+    })
     
     onValidation(isValid)
   }, [formData.title, formData.description, formData.category_id, selectedParentCategory, formData.type, onValidation])
@@ -171,7 +194,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
             <Label htmlFor="child-category">{t('labels.subcategory')}</Label>
             <Select 
               value={
-                availableSubcategories.find(child => child.id === formData.category_id) ? formData.category_id : '__none__'
+                availableSubcategories.find((child: StaticCategory) => child.id === formData.category_id) ? formData.category_id : '__none__'
               } 
               onValueChange={(value) => {
                 if (value === '__none__') {
@@ -187,7 +210,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">{t('placeholders.noSpecificSubcategory')}</SelectItem>
-                {availableSubcategories.map((category) => (
+                {availableSubcategories.map((category: StaticCategory) => (
                   <SelectItem key={category.id} value={category.id}>
                     {getCategoryName(category)}
                   </SelectItem>

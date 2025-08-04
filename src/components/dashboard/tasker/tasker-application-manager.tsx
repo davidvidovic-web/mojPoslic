@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useApplicationManager } from '@/hooks/useQueryManagers'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -30,8 +31,9 @@ export function TaskerApplicationManager({
   title = "My Applications",
   description = "Track your job applications"
 }: TaskerApplicationManagerProps) {
-  // Use Supabase hooks instead of manual state management
-  const { applications, isLoading, isError, error } = useApplicationManager()
+  const { user } = useSupabaseAuth()
+  // Use Supabase hooks with user ID filter for user-specific applications
+  const { applications, isLoading, isError, error } = useApplicationManager(undefined, user?.id)
   const router = useRouter()
   
   const [searchTerm, setSearchTerm] = useState('')

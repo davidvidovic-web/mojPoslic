@@ -61,7 +61,8 @@
     "yesterday": "Juče",
     "daysAgo": "prije {count} dana",
     "weeksAgo": "prije {count} nedjelja",
-    "monthsAgo": "prije {count} mjeseci"
+    "monthsAgo": "prije {count} mjeseci",
+    "unknown": "Nepoznato"
   },
   "card": {
     "readMore": "Pročitaj više",
@@ -129,7 +130,8 @@
       "links": "Linkovi",
       "transportationAndLocation": "Prijevoz i lokacija",
       "contactInformation": "Kontakt informacije",
-      "scheduleAndTimeline": "Raspored i vremenski okvir"
+      "scheduleAndTimeline": "Raspored i vremenski okvir",
+      "locationMap": "Mapa lokacije"
     },
     "placeholders": {
       "jobTitleExample": "npr., Web Developer, Graphic Designer",

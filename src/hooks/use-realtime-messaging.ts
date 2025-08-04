@@ -58,14 +58,18 @@ interface UseRealtimeMessagingProps {
   enabled?: boolean
 }
 
-export function useRealtimeMessaging() {
+export function useRealtimeMessaging({ conversationId, enabled = true }: UseRealtimeMessagingProps = {}) {
   const [messages, setMessages] = useState<Message[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isTyping, setIsTyping] = useState<string[]>([])
+  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
   const channelRef = useRef<RealtimeChannel | null>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const { user } = useSupabaseAuth()  // Load initial conversations
+  const presenceStateRef = useRef<RealtimePresenceState>({})
+  const { user } = useSupabaseAuth()
   const loadConversations = useCallback(async () => {
     if (!user?.id || !enabled) return
 
@@ -75,42 +79,41 @@ export function useRealtimeMessaging() {
         .from('conversations')
         .select(`
           *,
-          conversation_participants!inner (
-            user_id,
-            users (
-              id,
-              name,
-              avatar_url
-            )
-          ),
           messages (
             id,
             content,
             created_at,
             sender_id,
-            users (
-              id,
-              name,
-              avatar_url
-            )
+            sender_name,
+            sender_avatar_url
           )
         `)
-        .eq('conversation_participants.user_id', user.id)
+        .contains('participant_ids', [user.id])
         .eq('is_active', true)
         .order('updated_at', { ascending: false })
 
       if (error) throw error
 
       // Process conversations with unread counts and last messages
-      const processedConversations = data?.map(conv => ({
-        ...conv,
-        participants: conv.conversation_participants?.map((p: { user_id: string; users: { id: string; name: string; avatar_url?: string } }) => ({
-          user_id: p.user_id,
-          user: p.users
-        })),
-        last_message: conv.messages?.[conv.messages.length - 1],
-        unread_count: 0 // TODO: Calculate based on last_read_at
-      })) || []
+      const processedConversations = data?.map(conv => {
+        const participants = conv.participant_ids.map((userId: string, index: number) => ({
+          user_id: userId,
+          user: {
+            id: userId,
+            name: conv.participant_names?.[index] || 'Unknown User',
+            avatar_url: conv.participant_avatars?.[index] || null
+          }
+        }))
+
+        const lastMessage = conv.messages?.[conv.messages.length - 1]
+        
+        return {
+          ...conv,
+          participants,
+          last_message: lastMessage,
+          unread_count: 0 // TODO: Calculate based on read_by array
+        }
+      }) || []
 
       setConversations(processedConversations)
     } catch (err) {
@@ -129,12 +132,16 @@ export function useRealtimeMessaging() {
       const { data, error } = await supabase
         .from('messages')
         .select(`
-          *,
-          users (
-            id,
-            name,
-            avatar_url
-          )
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          message_type,
+          attachment_url,
+          sender_name,
+          sender_avatar_url,
+          read_by,
+          created_at
         `)
         .eq('conversation_id', convId)
         .order('created_at', { ascending: true })
@@ -144,17 +151,36 @@ export function useRealtimeMessaging() {
 
       const processedMessages = data?.map(msg => ({
         ...msg,
-        sender: msg.users
+        sender: {
+          id: msg.sender_id,
+          name: msg.sender_name,
+          avatar_url: msg.sender_avatar_url
+        }
       })) || []
 
       setMessages(processedMessages)
 
-      // Mark messages as read
-      await supabase
-        .from('conversation_participants')
-        .update({ last_read_at: new Date().toISOString() })
+      // Mark messages as read by updating the read_by array
+      const { data: messagesToUpdate } = await supabase
+        .from('messages')
+        .select('id, read_by')
         .eq('conversation_id', convId)
-        .eq('user_id', user.id)
+        .not('read_by', 'cs', `{${user.id}}`)
+
+      if (messagesToUpdate && messagesToUpdate.length > 0) {
+        // Update each message to add the user to read_by array
+        for (const message of messagesToUpdate) {
+          const currentReadBy = message.read_by || []
+          const updatedReadBy = [...currentReadBy, user.id]
+          
+          await supabase
+            .from('messages')
+            .update({ read_by: updatedReadBy })
+            .eq('id', message.id)
+        }
+      }
+
+
 
     } catch (err) {
       console.error('Failed to load messages:', err)
@@ -167,32 +193,60 @@ export function useRealtimeMessaging() {
     if (!user?.id || !conversationId || !content.trim()) return
 
     try {
+      // Get user details for sender info
+      const { data: userData } = await supabase
+        .from('users')
+        .select('name, avatar_url')
+        .eq('id', user.id)
+        .single()
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
+          sender_name: userData?.name || user.email || 'Unknown User',
+          sender_avatar_url: userData?.avatar_url || null,
           content: content.trim(),
           message_type: messageType,
-          attachment_url: attachmentUrl
+          attachment_url: attachmentUrl,
+          read_by: [user.id] // Mark as read by sender
         })
         .select(`
-          *,
-          users (
-            id,
-            name,
-            avatar_url
-          )
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          message_type,
+          attachment_url,
+          sender_name,
+          sender_avatar_url,
+          read_by,
+          created_at
         `)
         .single()
 
       if (error) throw error
 
-      // Update conversation's updated_at
-      await supabase
+      // Update conversation's updated_at and message count
+      const { data: currentConversation } = await supabase
         .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
+        .select('message_count')
         .eq('id', conversationId)
+        .single()
+
+      if (currentConversation) {
+        await supabase
+          .from('conversations')
+          .update({ 
+            updated_at: new Date().toISOString(),
+            message_count: (currentConversation.message_count || 0) + 1,
+            last_message_at: new Date().toISOString(),
+            last_message_preview: content.trim().substring(0, 100),
+            last_sender_id: user.id
+          })
+          .eq('id', conversationId)
+      }
 
       return data
     } catch (err) {
@@ -216,7 +270,7 @@ export function useRealtimeMessaging() {
       event: 'typing',
       payload: {
         user_id: user.id,
-        name: user.name,
+        name: user.name || user.email || 'Unknown User',
         avatar_url: user.avatarUrl
       }
     })
@@ -252,7 +306,7 @@ export function useRealtimeMessaging() {
       if (status === 'SUBSCRIBED') {
         await channel.track({
           user_id: user.id,
-          name: user.name,
+          name: user.name || user.email || 'Unknown User',
           avatar_url: user.avatarUrl,
           online_at: new Date().toISOString(),
         })
@@ -317,12 +371,16 @@ export function useRealtimeMessaging() {
       const { data: messageData } = await supabase
         .from('messages')
         .select(`
-          *,
-          users (
-            id,
-            name,
-            avatar_url
-          )
+          id,
+          conversation_id,
+          sender_id,
+          content,
+          message_type,
+          attachment_url,
+          sender_name,
+          sender_avatar_url,
+          read_by,
+          created_at
         `)
         .eq('id', payload.new.id)
         .single()
@@ -330,7 +388,11 @@ export function useRealtimeMessaging() {
       if (messageData) {
         const processedMessage = {
           ...messageData,
-          sender: messageData.users
+          sender: {
+            id: messageData.sender_id,
+            name: messageData.sender_name,
+            avatar_url: messageData.sender_avatar_url
+          }
         }
 
         if (conversationId === payload.new.conversation_id) {

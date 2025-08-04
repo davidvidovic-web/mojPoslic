@@ -51,9 +51,7 @@ export function JobApplicationForm({
     try {
       await applyMutation.mutateAsync({
         jobId,
-        data: {
-          message: message
-        }
+        coverLetter: message
       })
 
       // Reset form

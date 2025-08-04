@@ -114,6 +114,7 @@ export function validateLocationInCity(address: string, cityName: string): {
   // Special handling for common map address patterns
   const commonPatterns = [
     /bosnia and herzegovina/i,
+    /bosna i hercegovina/i,
     /bosnia/i,
     /hercegov/i,
     /ba\s*\d{5}/i, // Postal codes
@@ -121,6 +122,24 @@ export function validateLocationInCity(address: string, cityName: string): {
   ]
 
   const hasBosnianContext = commonPatterns.some(pattern => pattern.test(address))
+  
+  // If the address only contains country-level information and no specific city match,
+  // consider it as insufficient location detail rather than a mismatch
+  if (hasBosnianContext && extractedCities.length > 0) {
+    // Check if the only extracted "city" is actually the country name
+    const isOnlyCountryName = extractedCities.every(city => 
+      /bosnia|hercegovina|bosna/i.test(city)
+    )
+    
+    if (isOnlyCountryName) {
+      return {
+        isValid: false,
+        confidence: 'medium',
+        details: `Please provide a more specific address within ${cityName}. The current address only indicates the country level.`,
+        extractedCities
+      }
+    }
+  }
   
   if (hasBosnianContext) {
     return {

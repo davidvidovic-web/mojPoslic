@@ -11,9 +11,11 @@ import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { JobEditDialog } from '@/components/core/job-edit-dialog'
 import { ClientJobsManager } from './client/client-jobs-manager'
 import { ClientApplicationsManager } from './client/client-applications-manager'
+import { ClientNotificationsSection } from './client/client-notifications-section'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
+import { MessagingDialog } from '@/components/dashboard/messaging/messaging-dialog'
 import { Briefcase, Users, History, ChevronDown, ChevronUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,7 +23,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
-import { useOptimizedJobMessaging } from '@/hooks/use-optimized-job-messaging'
 import { Job } from '@/types/job'
 import { ApplicationStatus } from '@/types/application'
 export function ClientDashboard() {
@@ -34,7 +35,7 @@ export function ClientDashboard() {
   
   // State for collapsible connection history
   const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
-  const { user } = useSupabaseAuth()
+  const { user, session } = useSupabaseAuth()
   
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobsQuery(user?.id || '')
@@ -46,7 +47,9 @@ export function ClientDashboard() {
   const { data: applicationCounts = {} } = useMultipleJobApplicantCounts(jobIds)
   
   // Fetch applications for all client jobs
-  const { data: allApplications = [], isLoading: applicationsLoading } = useClientApplications(jobIds, jobs)  // Zustand stores for UI state
+  const { data: allApplications = [], isLoading: applicationsLoading } = useClientApplications(jobIds, jobs)
+  
+  // Zustand stores for UI state
   const {
     isJobPostDialogOpen,
     openJobPostDialog,
@@ -54,14 +57,11 @@ export function ClientDashboard() {
     openMessagingDialog,
   } = useDialogStore()
   
-  // Optimized messaging for job conversations
-  const { startJobMessaging } = useOptimizedJobMessaging()
-  
   const handleJobPosted = () => {
     closeJobPostDialog()
     // Explicitly invalidate and refetch job-related queries for immediate refresh
-    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.byUser(user?.id || '') })
-    queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.list({ postedBy: user?.id || '' }) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
     // Show success message
     toast.success(t('jobs.success.jobPosted'))
   }
@@ -70,8 +70,8 @@ export function ClientDashboard() {
     setIsEditDialogOpen(false)
     setEditingJob(null)
     // Explicitly invalidate and refetch job-related queries for immediate refresh
-    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.byUser(user?.id || '') })
-    queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.list({ postedBy: user?.id || '' }) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
     // Show success message
     toast.success(t('jobs.success.jobUpdated') || 'Job updated successfully')
   }
@@ -108,7 +108,7 @@ export function ClientDashboard() {
       
       await updateApplicationMutation.mutateAsync({
         applicationId,
-        data: { status: applicationStatus }
+        updates: { status: applicationStatus }
       })
       toast.success(t('applications.statusUpdated') || 'Application status updated successfully')
     } catch (error) {
@@ -118,6 +118,8 @@ export function ClientDashboard() {
   }
 
   const handleMessageApplicant = async (applicationId: string, userId: string) => {
+    console.log('DEBUG: handleMessageApplicant called with:', { applicationId, userId })
+    
     try {
       console.log('Starting to create conversation for:', { applicationId, userId })
       
@@ -139,26 +141,63 @@ export function ClientDashboard() {
         jobTitle: application.job.title
       })
 
-      // Start job messaging with optimized system
-      await startJobMessaging(
-        application.job.id,
-        userId,
-        application.job.title
-      )
+      // Create conversation via API
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          applicationId: applicationId,
+          jobId: application.job.id,
+          taskerId: userId,
+          clientId: user?.id
+        })
+      })
 
-      // Open the messaging dialog
-      openMessagingDialog()
+      const result = await response.json()
 
-      toast.success('Conversation started successfully!')
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create conversation')
+      }
+
+      if (result.success) {
+        // Open messaging dialog with the conversation
+        openMessagingDialog(result.data.conversationId)
+        toast.success(`Started conversation about "${application.job.title}"`)
+      } else {
+        throw new Error(result.error || 'Failed to create conversation')
+      }
+
     } catch (error) {
       console.error('Error creating conversation:', error)
       toast.error('Failed to start conversation. Please try again.')
     }
   }
 
-  const handleViewProfile = () => {
-    // TODO: Implement profile viewing functionality
-    toast.info('Profile viewing feature coming soon!')
+  const handleViewProfile = (userId: string, applicationId: string) => {
+    console.log('Viewing profile for user:', userId, 'application:', applicationId)
+    
+    // Find the application to get user details
+    const application = allApplications.find(app => app.id === applicationId)
+    if (!application || !application.user) {
+      toast.error('User information not found')
+      return
+    }
+
+    // For now, show user information in a toast
+    // TODO: Implement proper profile view modal/page
+    const user = application.user
+    const userInfo = [
+      `Name: ${user.name}`,
+      `Email: ${user.email}`,
+      user.location && `Location: ${user.location}`,
+      user.bio && `Bio: ${user.bio}`,
+      user.skills && Array.isArray(user.skills) && user.skills.length > 0 && `Skills: ${user.skills.join(', ')}`
+    ].filter(Boolean).join('\n')
+
+    toast.info(`User Profile:\n${userInfo}`, { duration: 10000 })
   }
 
   // const handleFeatureJob = async (jobId: string, isFeatured: boolean) => {
@@ -189,6 +228,9 @@ export function ClientDashboard() {
         <div className="space-y-6">
           {/* Connections Widget */}
           <ConnectionsWidget />
+          
+          {/* Notifications Section */}
+          <ClientNotificationsSection />
         </div>
       }
     >
@@ -297,6 +339,9 @@ export function ClientDashboard() {
           onJobUpdated={handleJobUpdated}
         />
       )}
+
+      {/* Messaging Dialog */}
+      <MessagingDialog />
     </DashboardLayout>
   )
 }
