@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
 
 interface Message {
   id: string
@@ -37,6 +36,12 @@ interface Conversation {
   unread_count?: number
 }
 
+/**
+ * Legacy hook maintained for backward compatibility.
+ * Use MessagingInterface component directly for new implementations.
+ * 
+ * @deprecated Use MessagingInterface component instead
+ */
 export function useOptimizedMessaging() {
   const { user, session } = useSupabaseAuth()
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -61,13 +66,20 @@ export function useOptimizedMessaging() {
       if (error) throw error
 
       // Calculate unread counts
-      const conversationsWithUnread = data?.map(conv => {
-        const unreadCount = conv.message_count - (conv.read_status?.[user.id] || 0)
-        return {
-          ...conv,
-          unread_count: Math.max(0, unreadCount)
-        }
-      }) || []
+      const conversationsWithUnread = await Promise.all(
+        (data || []).map(async (conv) => {
+          const { count } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact' })
+            .eq('conversation_id', conv.id)
+            .not('read_by', 'cs', `{${user.id}}`)
+
+          return {
+            ...conv,
+            unread_count: count || 0
+          }
+        })
+      )
 
       setConversations(conversationsWithUnread)
     } catch (err) {
@@ -94,19 +106,16 @@ export function useOptimizedMessaging() {
 
       setMessages(data || [])
 
-      // Mark messages as read - get current messages and update them
-      const { data: messagesToUpdate } = await supabase
+      // Mark messages as read
+      const { data: unreadMessages } = await supabase
         .from('messages')
         .select('id, read_by')
         .eq('conversation_id', conversationId)
         .not('read_by', 'cs', `{${user.id}}`)
 
-      if (messagesToUpdate && messagesToUpdate.length > 0) {
-        // Update each message to add the user to read_by array
-        for (const message of messagesToUpdate) {
-          const currentReadBy = message.read_by || []
-          const updatedReadBy = [...currentReadBy, user.id]
-          
+      if (unreadMessages && unreadMessages.length > 0) {
+        for (const message of unreadMessages) {
+          const updatedReadBy = [...(message.read_by || []), user.id]
           await supabase
             .from('messages')
             .update({ read_by: updatedReadBy })
@@ -150,7 +159,7 @@ export function useOptimizedMessaging() {
 
       if (error) throw error
 
-      // Update conversation - get current conversation first
+      // Update conversation
       const { data: currentConversation } = await supabase
         .from('conversations')
         .select('message_count')
@@ -175,9 +184,9 @@ export function useOptimizedMessaging() {
       console.error('Failed to send message:', err)
       throw err
     }
-  }, [user?.id, session])
+  }, [user?.id, user?.email, session])
 
-  // Setup realtime subscriptions
+  // Basic realtime setup (limited compared to MessagingInterface)
   useEffect(() => {
     if (!user?.id || !messagingActive) return
 
@@ -210,20 +219,6 @@ export function useOptimizedMessaging() {
               last_sender_id: newMessage.sender_id,
               updated_at: newMessage.created_at
             }
-          : conv
-      ))
-    })
-
-    // Listen for conversation updates
-    channel.on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'conversations'
-    }, (payload) => {
-      const updatedConversation = payload.new as Conversation
-      setConversations(prev => prev.map(conv =>
-        conv.id === updatedConversation.id
-          ? { ...conv, ...updatedConversation }
           : conv
       ))
     })

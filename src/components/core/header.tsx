@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  LogIn,
+  LogOut,
+  Settings,
+  User,
+  LayoutDashboard,
+  UserPlus
+} from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
@@ -10,20 +18,11 @@ import { useOptimizedMessaging } from "@/hooks/use-optimized-messaging";
 import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
-import { MessagingDialog } from "@/components/dashboard/messaging/messaging-dialog";
+import { MessagingButton } from "@/components/messaging/messaging-button";
 import { Button } from "@/components/ui/button";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
 import { LanguageSwitcher } from "@/components/common/language-switcher";
-import {
-  LogIn,
-  LogOut,
-  User,
-  Settings,
-  LayoutDashboard,
-  UserPlus,
-  MessageSquare,
-} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,13 +38,11 @@ export const Header = React.memo(function Header() {
     closeJobPostDialog, 
     isMobileMenuOpen, 
     toggleMobileMenu,
-    closeMobileMenu,
-    openMessagingDialog
+    closeMobileMenu
   } = useDialogStore();
   const { loading, user, signOut } = useSupabaseAuth();
   const { 
-    totalUnreadCount, 
-    isLoading: isMessagingLoading
+    totalUnreadCount
   } = useOptimizedMessaging();
   const pathname = usePathname();
   
@@ -72,7 +69,6 @@ export const Header = React.memo(function Header() {
   const tAuth = useTranslations('auth');
   const tHeader = useTranslations('header');
   const tNavigation = useTranslations('navigation.main');
-  const tBreadcrumb = useTranslations('navigation.breadcrumb');
 
   // Throttled scroll handler for better performance
   const handleScroll = useCallback(() => {
@@ -361,20 +357,14 @@ export const Header = React.memo(function Header() {
                   </div>
                 ) : (
                   <>
-                    {/* Messaging Button - Show OptimizedNotificationCenter if there are notifications, otherwise show regular button */}
+                    {/* Messaging Button - Show OptimizedNotificationCenter if there are notifications, otherwise show messaging */}
                     {totalUnreadCount > 0 ? (
                       <OptimizedNotificationCenter />
                     ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <MessagingButton 
                         className="relative h-9 w-9 rounded-full"
-                        title={tBreadcrumb('messages')}
-                        onClick={() => openMessagingDialog()}
-                        disabled={isMessagingLoading}
-                      >
-                        <MessageSquare className="h-7 w-7" />
-                      </Button>
+                        iconOnly={true}
+                      />
                     )}
 
                     {/* Desktop Menu */}
@@ -440,9 +430,6 @@ export const Header = React.memo(function Header() {
         </div>
       </div>
     </header>
-    
-    {/* Messaging Dialog */}
-    {user && <MessagingDialog />}
     </>
   );
 });

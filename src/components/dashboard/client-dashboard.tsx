@@ -15,7 +15,7 @@ import { ClientNotificationsSection } from './client/client-notifications-sectio
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
-import { MessagingDialog } from '@/components/dashboard/messaging/messaging-dialog'
+import { MessagingInterface } from '@/components/messaging/messaging-interface'
 import { Briefcase, Users, History, ChevronDown, ChevronUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -35,6 +35,11 @@ export function ClientDashboard() {
   
   // State for collapsible connection history
   const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
+  
+  // State for messaging
+  const [messagingConversationId, setMessagingConversationId] = useState<string | null>(null)
+  const [showMessaging, setShowMessaging] = useState(false)
+  
   const { user, session } = useSupabaseAuth()
   
   // TanStack Query hooks for job data
@@ -54,7 +59,6 @@ export function ClientDashboard() {
     isJobPostDialogOpen,
     openJobPostDialog,
     closeJobPostDialog,
-    openMessagingDialog,
   } = useDialogStore()
   
   const handleJobPosted = () => {
@@ -163,8 +167,9 @@ export function ClientDashboard() {
       }
 
       if (result.success) {
-        // Open messaging dialog with the conversation
-        openMessagingDialog(result.data.conversationId)
+        // Show messaging interface with the conversation
+        setMessagingConversationId(result.data.conversationId)
+        setShowMessaging(true)
         toast.success(`Started conversation about "${application.job.title}"`)
       } else {
         throw new Error(result.error || 'Failed to create conversation')
@@ -340,8 +345,20 @@ export function ClientDashboard() {
         />
       )}
 
-      {/* Messaging Dialog */}
-      <MessagingDialog />
+      {/* Messaging Interface */}
+      {showMessaging && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-4 z-50 flex items-center justify-center">
+            <div className="w-full max-w-4xl h-full max-h-[600px] bg-background border rounded-lg shadow-lg relative">
+              <MessagingInterface 
+                conversationId={messagingConversationId || undefined}
+                onClose={() => setShowMessaging(false)}
+                className="h-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 }

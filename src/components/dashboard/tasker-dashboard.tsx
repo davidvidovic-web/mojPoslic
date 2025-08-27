@@ -7,16 +7,14 @@ import { TaskerApplicationManager } from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
-import { MessagingDialog } from '@/components/dashboard/messaging/messaging-dialog'
+import { MessagingButton } from '@/components/messaging/messaging-button'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Star, Briefcase, History, MessageCircle } from 'lucide-react'
 import { useUserApplications } from '@/hooks/use-applications'
 import { useJobAcceptanceManager } from '@/hooks/useQueryManagers'
-import { useDialogStore } from '@/stores/dialog-store'
 import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 import type { ActiveJob } from '@/hooks/use-job-acceptance'
 
@@ -36,8 +34,7 @@ export function TaskerDashboard() {
   // Translation hooks
   const tDashboard = useTranslations('dashboard')
   
-  // Dialog and messaging state
-  const { openMessagingDialog } = useDialogStore()
+  // Messaging state - simplified now that we use MessagingButton
   const { totalUnreadCount, conversations } = useOptimizedMessaging()
   
   // Use Supabase hooks for user-specific data
@@ -96,14 +93,7 @@ export function TaskerDashboard() {
                   )}
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => openMessagingDialog()}
-                className="text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100"
-              >
-                Open
-              </Button>
+              <MessagingButton className="text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100" />
             </div>
             <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed mb-3">
               Communicate with clients and manage your conversations in real-time.
@@ -256,9 +246,6 @@ export function TaskerDashboard() {
         </div>
         
       </div>
-
-      {/* Messaging Dialog */}
-      <MessagingDialog />
     </DashboardLayout>
   )
 }

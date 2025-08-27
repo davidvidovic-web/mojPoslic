@@ -4,20 +4,19 @@ import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { MessageSquare } from 'lucide-react'
 import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
-import { useDialogStore } from '@/stores/dialog-store'
 
 interface OptimizedNotificationCenterProps {
   className?: string
+  onClick?: () => void
 }
 
-export function OptimizedNotificationCenter({ className }: OptimizedNotificationCenterProps) {
+export function OptimizedNotificationCenter({ className, onClick }: OptimizedNotificationCenterProps) {
   const { 
     totalUnreadCount, 
     isLoading, 
     setMessagingActive
   } = useOptimizedMessaging()
   
-  const { openMessagingDialog } = useDialogStore()
   const [isVisible, setIsVisible] = useState(false)
 
   // Show notification center when there are unread messages
@@ -28,7 +27,8 @@ export function OptimizedNotificationCenter({ className }: OptimizedNotification
   const handleClick = () => {
     // Tell the messaging system that messaging is now active
     setMessagingActive(true)
-    openMessagingDialog()
+    // Call custom onClick handler if provided
+    onClick?.()
   }
 
   if (!isVisible && !isLoading) {
@@ -39,7 +39,7 @@ export function OptimizedNotificationCenter({ className }: OptimizedNotification
     <Button
       variant="ghost"
       size="sm"
-      className={`relative h-9 w-9 rounded-full ${className}`}
+      className={`relative h-9 w-9 rounded-full ${className || ''}`}
       onClick={handleClick}
       disabled={isLoading}
     >

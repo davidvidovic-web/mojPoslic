@@ -1,79 +1,278 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 import { useDialogStore } from '@/stores/dialog-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Send, MessageCircle, ArrowLeft, Users } from 'lucide-react'
 import { toast } from 'sonner'
-
-interface Message {
-  id: string
-  content: string
-  sender_id: string
-  created_at: string
-  message_type?: string
-  attachment_url?: string
-  read_by?: string[]
-}
+import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 interface MessagingInterfaceProps {
   conversationId?: string
   onClose?: () => void
+  className?: string
 }
 
-export function MessagingInterface({ conversationId, onClose }: MessagingInterfaceProps) {
-  const { user, session } = useSupabaseAuth()
+export function MessagingInterface({ conversationId, onClose, className }: MessagingInterfaceProps) {
+  const { user } = useSupabaseAuth()
   const { currentConversationId, openMessagingDialog } = useDialogStore()
   const [newMessage, setNewMessage] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { 
     conversations, 
-    messages, 
+    messages: hookMessages, 
     isLoading: loading, 
     totalUnreadCount,
     loadMessages,
-    sendMessage: sendMessageHook
+    setMessagingActive
   } = useOptimizedMessaging()
+
+  // Local messages state that includes realtime updates
+  const [messages, setMessages] = useState<{
+    id: string
+    conversation_id: string
+    sender_id: string
+    content: string
+    message_type: string
+    sender_name: string
+    created_at: string
+  }[]>([])
+
+  // Sync with hook messages when they change
+  useEffect(() => {
+    setMessages(hookMessages)
+  }, [hookMessages])
 
   // Use conversationId from props or dialog store
   const activeConversationId = conversationId || currentConversationId
   const [showConversationList, setShowConversationList] = useState(!activeConversationId)
+  
+  // Reset to conversation list when back button is clicked
+  const handleBackToList = () => {
+    setShowConversationList(true)
+    // If using dialog store, clear the conversation
+    if (!conversationId && currentConversationId) {
+      openMessagingDialog(undefined)
+    }
+  }
+
+  // Set messaging as active when component mounts
+  useEffect(() => {
+    setMessagingActive(true)
+    return () => setMessagingActive(false)
+  }, [setMessagingActive])
+
+  // Proper Supabase realtime subscription for messages
+  useEffect(() => {
+    if (!user?.id || !activeConversationId) return
+
+    console.log('🔄 Setting up realtime subscription for conversation:', activeConversationId)
+
+    // Create a unique channel for this conversation
+    const channel = supabase
+      .channel(`conversation:${activeConversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${activeConversationId}`
+        },
+        (payload) => {
+          console.log('📨 New message received via realtime:', payload.new)
+          const newMessage = payload.new as {
+            id: string
+            conversation_id: string
+            sender_id: string
+            content: string
+            message_type: string
+            sender_name: string
+            created_at: string
+          }
+
+          // Only add if it's not from current user (to avoid duplicates from optimistic updates)
+          if (newMessage.sender_id !== user.id) {
+            console.log('✅ Adding message from another user')
+            setMessages(prevMessages => {
+              // Check if message already exists to prevent duplicates
+              const exists = prevMessages.find(msg => msg.id === newMessage.id)
+              if (exists) {
+                console.log('⚠️ Message already exists, skipping')
+                return prevMessages
+              }
+              
+              console.log('✅ Adding new message to state')
+              return [...prevMessages, newMessage]
+            })
+
+            // Auto-scroll to bottom when new message arrives
+            setTimeout(() => {
+              scrollToBottom()
+            }, 100)
+          } else {
+            console.log('⚠️ Message from current user, skipping realtime update (handled by optimistic update)')
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Successfully subscribed to conversation updates')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Realtime subscription error')
+        } else if (status === 'TIMED_OUT') {
+          console.error('⏰ Realtime subscription timed out')
+        } else if (status === 'CLOSED') {
+          console.log('🔒 Realtime subscription closed')
+        }
+      })
+
+    // Cleanup function
+    return () => {
+      console.log('🧹 Cleaning up realtime subscription')
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id, activeConversationId])
+
+  // Separate subscription for conversation list updates
+  useEffect(() => {
+    if (!user?.id) return
+
+    console.log('🔄 Setting up conversation list realtime subscription')
+
+    const channel = supabase
+      .channel('conversation_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations'
+        },
+        (payload) => {
+          console.log('📋 New conversation created:', payload.new)
+          const newConversation = payload.new as {
+            id: string
+            participant_ids: string[]
+          }
+          
+          // Check if user is participant
+          if (newConversation.participant_ids?.includes(user.id)) {
+            // Reload conversations to get the new one
+            setTimeout(() => {
+              setMessagingActive(false)
+              setTimeout(() => setMessagingActive(true), 50)
+            }, 100)
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations'
+        },
+        (payload) => {
+          console.log('📋 Conversation updated:', payload.new)
+          // Refresh conversations list
+          setTimeout(() => {
+            setMessagingActive(false)
+            setTimeout(() => setMessagingActive(true), 50)
+          }, 100)
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Conversation list subscription status:', status)
+      })
+
+    return () => {
+      console.log('🧹 Cleaning up conversation list subscription')
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id, setMessagingActive])
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  // Load conversation and messages
-  const loadMessagesForConversation = useCallback(async (convId: string) => {
-    if (!convId) return
-    await loadMessages(convId)
-  }, [loadMessages])
-
+  // Load messages when conversation changes
   useEffect(() => {
-    if (!activeConversationId || !user) return
+    if (!activeConversationId || !user) {
+      setMessages([]) // Clear messages when no active conversation
+      return
+    }
 
+    console.log('🔄 Loading messages for conversation:', activeConversationId)
     loadMessages(activeConversationId)
   }, [activeConversationId, user, loadMessages])
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    // Use setTimeout to ensure DOM is updated
+    setTimeout(scrollToBottom, 100)
+  }, [messages, activeConversationId])
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !activeConversationId || !user) return
 
+    const messageContent = newMessage.trim()
+    setNewMessage('') // Clear input immediately for better UX
+
     try {
-      await sendMessageHook(activeConversationId, newMessage.trim(), 'text')
-      setNewMessage('')
+      // Optimistically add the message to local state first
+      const tempMessage = {
+        id: `temp-${Date.now()}`, // Temporary ID
+        conversation_id: activeConversationId,
+        sender_id: user.id,
+        content: messageContent,
+        message_type: 'text',
+        sender_name: user.email || 'You',
+        created_at: new Date().toISOString()
+      }
+
+      // Add to local state immediately
+      setMessages(prev => [...prev, tempMessage])
+
+      // Send to server
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: activeConversationId,
+          sender_id: user.id,
+          content: messageContent,
+          message_type: 'text',
+          sender_name: user.email || 'You'
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Failed to send message:', error)
+        // Remove temp message on error
+        setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
+        setNewMessage(messageContent) // Restore message content
+        toast.error('Failed to send message')
+        return
+      }
+
+      // Replace temp message with real message
+      if (data) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempMessage.id ? { ...data, sender_name: user.email || 'You' } : msg
+        ))
+      }
+
     } catch (error) {
       console.error('Error sending message:', error)
       toast.error('Failed to send message')
+      setNewMessage(messageContent) // Restore message content on error
     }
   }
 
@@ -106,32 +305,37 @@ export function MessagingInterface({ conversationId, onClose }: MessagingInterfa
   }
 
   const renderConversationList = () => (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            Conversations
-          </CardTitle>
-          {totalUnreadCount > 0 && (
-            <Badge variant="destructive" className="text-xs">
-              {totalUnreadCount} unread
-            </Badge>
-          )}
+    <div className={cn("flex flex-col h-full", className)}>
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-5 w-5" />
+          <span className="font-semibold">Conversations</span>
         </div>
-      </CardHeader>
+        {totalUnreadCount > 0 && (
+          <Badge variant="destructive" className="text-xs">
+            {totalUnreadCount} unread
+          </Badge>
+        )}
+        {onClose && (
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
+        )}
+      </div>
       
-      <CardContent className="p-0">
+      <div className="flex-1 flex flex-col min-h-0">
         {conversations.length === 0 ? (
-          <div className="p-8 text-center">
-            <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Conversations Yet</h3>
-            <p className="text-muted-foreground">
-              Start a conversation by messaging an applicant from your job applications.
-            </p>
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center">
+              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Conversations Yet</h3>
+              <p className="text-muted-foreground">
+                Start a conversation by messaging an applicant from your job applications.
+              </p>
+            </div>
           </div>
         ) : (
-          <ScrollArea className="h-96">
+          <ScrollArea className="flex-1">
             <div className="space-y-1 p-4">
               {conversations.map((conversation) => (
                 <Button
@@ -176,51 +380,45 @@ export function MessagingInterface({ conversationId, onClose }: MessagingInterfa
             </div>
           </ScrollArea>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 
 
 
-  if (!activeConversationId && !showConversationList) {
-    return renderConversationList()
-  }
-
-  if (!activeConversationId) {
+  if (!activeConversationId || showConversationList) {
     return renderConversationList()
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {conversations.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowConversationList(true)}
-                className="p-1"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              Conversation
-            </CardTitle>
-          </div>
-          {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Close
+    <div className={cn("flex flex-col h-full", className)}>
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
+          {conversations.length > 0 && !showConversationList && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToList}
+              className="p-1"
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            <span className="font-semibold">Conversation</span>
+          </div>
         </div>
-      </CardHeader>
+        {onClose && (
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
+        )}
+      </div>
       
-      <CardContent className="p-0">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Messages Area */}
-        <ScrollArea className="h-96 p-4">
+        <ScrollArea className="flex-1 p-4">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -278,7 +476,7 @@ export function MessagingInterface({ conversationId, onClose }: MessagingInterfa
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
