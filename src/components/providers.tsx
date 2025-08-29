@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes"
 import { SupabaseAuthProvider } from "@/contexts/supabase-auth-context"
 import { Toaster } from "sonner"
 import { queryClient } from '@/lib/query-client'
+import { GlobalDialogs } from '@/components/global-dialogs'
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -38,6 +39,7 @@ export function Providers({ children }: ProvidersProps) {
               }}
             />
             {children}
+            <GlobalDialogs />
           </div>
         </SupabaseAuthProvider>
       </ThemeProvider>

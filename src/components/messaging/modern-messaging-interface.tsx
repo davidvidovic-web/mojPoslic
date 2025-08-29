@@ -1,7 +1,7 @@
 import React from 'react'
 import { UnifiedMessagingInterface } from './unified-messaging-interface'
 
-interface MessagingInterfaceProps {
+interface ModernMessagingInterfaceProps {
   conversationId?: string
   onClose?: () => void
   className?: string
@@ -11,9 +11,9 @@ interface MessagingInterfaceProps {
  * @deprecated Use UnifiedMessagingInterface instead
  * This component is maintained for backward compatibility
  */
-export function MessagingInterface(props: MessagingInterfaceProps) {
-  console.warn('MessagingInterface is deprecated. Please use UnifiedMessagingInterface instead.')
+export function ModernMessagingInterface(props: ModernMessagingInterfaceProps) {
+  console.warn('ModernMessagingInterface is deprecated. Please use UnifiedMessagingInterface instead.')
   return <UnifiedMessagingInterface {...props} />
 }
 
-export default MessagingInterface
+export default ModernMessagingInterface

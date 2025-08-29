@@ -37,10 +37,11 @@ interface Conversation {
 }
 
 /**
+ * @deprecated This hook is deprecated. Use useSupabaseRealtimeChat instead.
  * Legacy hook maintained for backward compatibility.
- * Use MessagingInterface component directly for new implementations.
+ * Use the new UnifiedMessagingInterface component for new implementations.
  * 
- * @deprecated Use MessagingInterface component instead
+ * @deprecated Use useSupabaseRealtimeChat hook instead
  */
 export function useOptimizedMessaging() {
   const { user, session } = useSupabaseAuth()

@@ -81,11 +81,18 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get job title for conversation
+    // Get job title and application info for conversation
     const { data: job } = await supabase
       .from('job_listings')
       .select('title')
       .eq('id', jobId)
+      .single()
+
+    // Get application details to get applicant name
+    const { data: application } = await supabase
+      .from('job_applications')
+      .select('applicant_name')
+      .eq('id', applicationId)
       .single()
 
     // Create new conversation
@@ -95,7 +102,7 @@ export async function POST(request: NextRequest) {
         application_id: applicationId,
         job_id: jobId,
         created_by_id: user.id,
-        title: `Application for: ${job?.title || 'Job'}`,
+        title: `${application?.applicant_name || 'Applicant'} - ${job?.title || 'Job'}`,
         is_active: true,
         participant_ids: [clientId, taskerId],
         participant_names: ['Client', 'Tasker'], // Will be updated by trigger
