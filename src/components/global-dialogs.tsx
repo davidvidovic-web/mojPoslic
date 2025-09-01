@@ -27,7 +27,7 @@ export function GlobalDialogs() {
           </DialogHeader>
           <UnifiedMessagingInterface 
             conversationId={currentConversationId || undefined}
-            onClose={closeMessagingDialog}
+            onClose={undefined}
             className="h-[70vh] max-w-none border-0 rounded-lg"
           />
         </DialogContent>

@@ -376,8 +376,12 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     try {
+      // Get the current locale from the URL or default to 'en'
+      const currentPath = window.location.pathname
+      const locale = currentPath.split('/')[1] || 'en'
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+        redirectTo: `${window.location.origin}/${locale}/auth/reset-password`
       })
       return { error }
     } catch (error) {

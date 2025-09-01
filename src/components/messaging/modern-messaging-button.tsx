@@ -50,7 +50,7 @@ export function ModernMessagingButton({
     >
       {iconOnly ? (
         <>
-          <MessageCircle className="h-4 w-4" />
+          <MessageCircle className="h-7 w-7" />
           {totalUnreadCount > 0 && (
             <Badge 
               variant="destructive" 

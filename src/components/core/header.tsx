@@ -22,7 +22,6 @@ import { MessagingButton } from "@/components/messaging/messaging-button";
 import { Button } from "@/components/ui/button";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
-import { LanguageSwitcher } from "@/components/common/language-switcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -304,11 +303,6 @@ export const Header = React.memo(function Header() {
                 {/* Auth.js Authentication Components */}
                 {!user ? (
                   <div className="flex items-center gap-2">
-                    {/* Language Switcher - visible on all screen sizes */}
-                    <div className="flex items-center">
-                      <LanguageSwitcher />
-                    </div>
-                    
                     {/* Desktop: Full buttons with text and icons */}
                     <div className="hidden sm:flex items-center gap-2">
                       <Link href="/auth/signin">

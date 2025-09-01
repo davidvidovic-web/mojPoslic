@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
-const prisma = new PrismaClient()
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 const checkUsernameSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -14,9 +16,11 @@ export async function POST(request: NextRequest) {
     const { username } = checkUsernameSchema.parse(body)
 
     // Check if username exists in the database
-    const existingUser = await prisma.user.findUnique({
-      where: { username }
-    })
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .single()
 
     return NextResponse.json({
       available: !existingUser

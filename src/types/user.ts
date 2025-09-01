@@ -3,9 +3,7 @@
  * These interfaces reflect embedded privacy settings and performance data
  */
 
-import { UserRole as PrismaUserRole } from '@prisma/client'
-
-export type UserRole = PrismaUserRole
+export type UserRole = 'client' | 'tasker' | 'admin'
 
 // Optimized User interface with embedded privacy settings and performance data (NEW)
 export interface User {

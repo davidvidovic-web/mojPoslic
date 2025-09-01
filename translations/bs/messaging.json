@@ -1,32 +1,70 @@
 {
   "title": "Poruke",
   "subtitle": "Ostanite povezani sa svojim klijentima",
-  "startConversation": "Započni razgovor",
-  "noConversations": "Nema razgovora",
-  "noConversationsDesc": "Započnite razgovor s klijentom ili radnikom",
-  "newConversation": "Novi razgovor",
-  "searchConversations": "Pretraži razgovore",
-  "allConversations": "Svi razgovori",
-  "unreadMessages": "Nepročitane poruke",
-  "recentMessages": "Nedavne poruke",
-  "archivedConversations": "Arhivirani razgovori",
-  "startNew": "Započni novi razgovor",
+  "auth": {
+    "signInRequired": "Molimo prijavite se da pristupite porukama"
+  },
+  "error": {
+    "general": "Dogodila se greška"
+  },
+  "actions": {
+    "close": "Zatvori",
+    "tryAgain": "Pokušaj ponovo",
+    "markAsRead": "Označi kao pročitano",
+    "markAsUnread": "Označi kao nepročitano",
+    "archive": "Arhiviraj",
+    "unarchive": "Ukloni iz arhive",
+    "delete": "Obriši",
+    "block": "Blokiraj",
+    "unblock": "Odblokiraj",
+    "report": "Prijavi"
+  },
+  "conversation": {
+    "defaultTitle": "Razgovor"
+  },
+  "conversations": {
+    "title": "Razgovori",
+    "noConversations": "Nema razgovora. Počnite razmjenjivati poruke preko vaših prijava za posao.",
+    "noConversationsDesc": "Započnite razgovor s klijentom ili radnikom",
+    "startConversation": "Započni razgovor",
+    "searchConversations": "Pretraži razgovore",
+    "allConversations": "Svi razgovori",
+    "unreadMessages": "Nepročitane poruke",
+    "recentMessages": "Nedavne poruke",
+    "archivedConversations": "Arhivirani razgovori",
+    "startNew": "Započni novi razgovor"
+  },
   "messages": {
     "title": "Poruke",
-    "noMessages": "Nema poruka",
-    "sendMessage": "Pošalji poruku",
-    "messagePlaceholder": "Napišite svoju poruku...",
+    "noMessages": "Nema poruka. Počnite razgovor!",
+    "noMessagesDesc": "Pošaljite prvu poruku da započnete razgovor",
+    "typeMessage": "Napišite svoju poruku...",
+    "send": "Pošalji",
+    "attachFile": "Priloži datoteku",
+    "removeAttachment": "Ukloni prilog",
+    "fileTooLarge": "Datoteka je prevelika",
+    "unsupportedFileType": "Nepodržan tip datoteke",
+    "loadingMessages": "Učitavam poruke...",
+    "loadMoreMessages": "Učitaj više poruka",
+    "messageSent": "Poruka poslana",
+    "messageFailed": "Neuspješno slanje poruke",
+    "typing": {
+      "single": "Neko kuca...",
+      "multiple": "{count} osoba kuca..."
+    },
+    "online": "online",
+    "offline": "offline",
+    "lastSeen": "Zadnji put viđen {time}",
+    "today": "danas",
+    "yesterday": "jučer"
+  },
+  "conversationTypes": {
+    "jobChat": "Razgovor o prijavi za posao",
     "groupChat": "Grupni razgovor",
     "directMessage": "Direktna poruka",
     "unknown": "Nepoznato",
     "direct": "Direktna poruka",
     "group": "Grupni razgovor"
-  },
-  "conversationTypes": {
-    "jobChat": "Razgovor o poslu",
-    "groupChat": "Grupni razgovor",
-    "directMessage": "Direktna poruka",
-    "unknown": "Nepoznato"
   },
   "attachments": {
     "title": "Prilozi",
@@ -39,15 +77,6 @@
     "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 10MB.",
     "invalidFileType": "Neispravan tip fajla. Molimo odaberite ispravan fajl.",
     "dropFilesHere": "Pustite fajlove ovde"
-  },
-  "actions": {
-    "send": "Pošalji",
-    "reply": "Odgovori",
-    "forward": "Proslijedi",
-    "delete": "Obriši",
-    "archive": "Arhiviraj",
-    "markAsRead": "Označi kao pročitano",
-    "markAsUnread": "Označi kao nepročitano"
   },
   "status": {
     "sending": "Slanje...",

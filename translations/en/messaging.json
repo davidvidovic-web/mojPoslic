@@ -1,9 +1,30 @@
 {
   "title": "Messages",
   "subtitle": "Stay connected with your clients",
+  "auth": {
+    "signInRequired": "Please sign in to access messaging"
+  },
+  "error": {
+    "general": "An error occurred"
+  },
+  "actions": {
+    "close": "Close",
+    "tryAgain": "Try Again",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "delete": "Delete",
+    "block": "Block",
+    "unblock": "Unblock",
+    "report": "Report"
+  },
+  "conversation": {
+    "defaultTitle": "Conversation"
+  },
   "conversations": {
     "title": "Conversations",
-    "noConversations": "No conversations",
+    "noConversations": "No conversations yet. Start messaging from your job applications.",
     "noConversationsDesc": "Start a conversation with a client or worker",
     "startConversation": "Start conversation",
     "searchConversations": "Search conversations...",
@@ -15,9 +36,9 @@
   },
   "messages": {
     "title": "Messages",
-    "noMessages": "No messages",
+    "noMessages": "No messages yet. Start the conversation!",
     "noMessagesDesc": "Send the first message to start a conversation",
-    "typeMessage": "Type a message...",
+    "typeMessage": "Type your message...",
     "send": "Send",
     "attachFile": "Attach file",
     "removeAttachment": "Remove attachment",
@@ -27,7 +48,10 @@
     "loadMoreMessages": "Load more messages",
     "messageSent": "Message sent",
     "messageFailed": "Failed to send message",
-    "typing": "typing...",
+    "typing": {
+      "single": "Someone is typing...",
+      "multiple": "{count} people are typing..."
+    },
     "online": "online",
     "offline": "offline",
     "lastSeen": "Last seen {time}",
@@ -35,34 +59,12 @@
     "yesterday": "yesterday"
   },
   "conversationTypes": {
-    "jobChat": "Job chat",
+    "jobChat": "Job application conversation",
     "groupChat": "Group chat",
     "directMessage": "Direct message",
     "unknown": "Unknown",
     "direct": "Direct Message",
     "group": "Group Chat"
-  },
-  "attachments": {
-    "file": "File",
-    "image": "Image",
-    "document": "Document",
-    "video": "Video",
-    "audio": "Audio",
-    "attachFile": "Attach file",
-    "removeAttachment": "Remove attachment",
-    "fileTooLarge": "File is too large. Maximum size is 10MB.",
-    "invalidFileType": "Invalid file type. Please select a valid file.",
-    "dropFilesHere": "Drop files here"
-  },
-  "actions": {
-    "markAsRead": "Mark as read",
-    "markAsUnread": "Mark as unread",
-    "archive": "Archive",
-    "unarchive": "Unarchive",
-    "delete": "Delete",
-    "block": "Block",
-    "unblock": "Unblock",
-    "report": "Report"
   },
   "status": {
     "sending": "Sending...",

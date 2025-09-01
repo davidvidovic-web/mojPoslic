@@ -8,8 +8,42 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { Send, MessageCircle, ArrowLeft, Users, Loader2 } from 'lucide-react'
+import { Send, MessageCircle, ArrowLeft, Users, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
+
+// Hook to safely use translations with fallbacks
+function useMessagingTranslations() {
+  try {
+    const t = useTranslations('messaging')
+    return {
+      t,
+      hasTranslations: true
+    }
+  } catch {
+    // Return a mock function with fallbacks when translations are not available
+    return {
+      t: (key: string) => {
+        const fallbacks: Record<string, string> = {
+          'title': 'Messages',
+          'auth.signInRequired': 'Please sign in to access messaging',
+          'error.general': 'An error occurred',
+          'actions.close': 'Close',
+          'actions.tryAgain': 'Try Again',
+          'conversation.defaultTitle': 'Conversation',
+          'conversations.noConversations': 'No conversations yet. Start messaging from your job applications.',
+          'conversationTypes.jobChat': 'Job application conversation',
+          'messages.noMessages': 'No messages yet. Start the conversation!',
+          'messages.typeMessage': 'Type your message...',
+          'messages.typing.single': 'Someone is typing...',
+          'messages.typing.multiple': '{count} people are typing...'
+        }
+        return fallbacks[key] || key
+      },
+      hasTranslations: false
+    }
+  }
+}
 
 interface UnifiedMessagingInterfaceProps {
   conversationId?: string
@@ -24,6 +58,7 @@ export function UnifiedMessagingInterface({
 }: UnifiedMessagingInterfaceProps) {
   const { user } = useSupabaseAuth()
   const { currentConversationId, openMessagingDialog } = useDialogStore()
+  const { t } = useMessagingTranslations()
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -164,7 +199,7 @@ export function UnifiedMessagingInterface({
   if (!user) {
     return (
       <div className={cn('flex items-center justify-center h-96 border rounded-lg', className)}>
-        <p className="text-muted-foreground">Please sign in to access messaging</p>
+        <p className="text-muted-foreground">{t('auth.signInRequired')}</p>
       </div>
     )
   }
@@ -172,9 +207,9 @@ export function UnifiedMessagingInterface({
   if (error) {
     return (
       <div className={cn('flex flex-col items-center justify-center h-96 border rounded-lg gap-4', className)}>
-        <p className="text-destructive">Error: {error}</p>
+        <p className="text-destructive">{t('error.general')}</p>
         <Button onClick={clearError} variant="outline">
-          Try Again
+          {t('actions.tryAgain')}
         </Button>
       </div>
     )
@@ -197,18 +232,21 @@ export function UnifiedMessagingInterface({
               </Button>
               <div>
                 <h3 className="font-medium text-sm">
-                  {conversations.find(c => c.id === activeConversationId)?.title || 'Conversation'}
+                  {conversations.find(c => c.id === activeConversationId)?.title || t('conversation.defaultTitle')}
                 </h3>
                 {typingUsers.length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {typingUsers.length === 1 ? 'Someone is' : `${typingUsers.length} people are`} typing...
+                    {typingUsers.length === 1 ? 
+                      t('messages.typing.single') : 
+                      t('messages.typing.multiple').replace('{count}', typingUsers.length.toString())
+                    }
                   </p>
                 )}
               </div>
             </div>
             {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                ×
+              <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('actions.close')}>
+                <X className="h-4 w-4" />
               </Button>
             )}
           </>
@@ -216,7 +254,7 @@ export function UnifiedMessagingInterface({
           <>
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
-              <h3 className="font-medium">Messages</h3>
+              <h3 className="font-medium">{t('title')}</h3>
               {totalUnreadCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {totalUnreadCount}
@@ -224,8 +262,8 @@ export function UnifiedMessagingInterface({
               )}
             </div>
             {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                ×
+              <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('actions.close')}>
+                <X className="h-4 w-4" />
               </Button>
             )}
           </>
@@ -245,7 +283,7 @@ export function UnifiedMessagingInterface({
               <div>
                 <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  No conversations yet. Start messaging from your job applications.
+                  {t('conversations.noConversations')}
                 </p>
               </div>
             </div>
@@ -267,7 +305,7 @@ export function UnifiedMessagingInterface({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <h4 className="font-medium text-sm truncate">
-                            {conversation.title || 'Job Application'}
+                            {conversation.title || t('conversationTypes.jobChat')}
                           </h4>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {(conversation.unread_count || 0) > 0 && (
@@ -282,7 +320,7 @@ export function UnifiedMessagingInterface({
                         </div>
                         
                         <p className="text-xs text-muted-foreground">
-                          Job application conversation
+                          {t('conversationTypes.jobChat')}
                         </p>
                       </div>
                     </div>
@@ -303,7 +341,7 @@ export function UnifiedMessagingInterface({
               </div>
             ) : messageGroups.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No messages yet. Start the conversation!
+                {t('messages.noMessages')}
               </div>
             ) : (
               <div className="space-y-4">
@@ -349,7 +387,7 @@ export function UnifiedMessagingInterface({
                 value={newMessage}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder={t('messages.typeMessage')}
                 disabled={loading}
                 className="flex-1"
               />

@@ -238,7 +238,7 @@ ${content.ignore}
       }
 
       const isBosnian = locale === 'bs';
-      const baseUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000';
       const resetUrl = `${baseUrl}/${locale}/auth/reset-password?token=${resetToken}`;
 
       const greeting = name 
