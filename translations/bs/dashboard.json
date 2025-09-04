@@ -307,7 +307,13 @@
       "clientFeedback": "Povratne informacije klijenta",
       "location": "Lokacija",
       "jobDescription": "Opis posla",
-      "clientNotes": "Napomene klijenta"
+      "clientNotes": "Napomene klijenta",
+      "cancelApplication": "Otkaži",
+      "cancelling": "Otkazujem...",
+      "cancelSuccess": "Prijava je uspješno uklonjena",
+      "cancelError": "Neuspješno otkazivanje prijave",
+      "cancelConfirm": "Da li ste sigurni da želite ukloniti ovu prijavu? Ova akcija se ne može poništiti.",
+      "cancelNotAllowed": "Ova prijava ne može biti otkazana jer je već počelo komuniciranje sa klijentom."
     },
     "activeJobs": {
       "title": "Aktivni poslovi",

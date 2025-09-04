@@ -71,6 +71,52 @@ export function useRealtimeJobApplications(jobId: string) {
 }
 
 /**
+ * Real-time user applications hook 
+ * Provides live updates for the current user's applications across all jobs
+ */
+export function useRealtimeUserApplications() {
+  const queryClient = useQueryClient()
+  const { user } = useSupabaseAuth()
+
+  useEffect(() => {
+    if (!user) return
+
+    const subscription = supabase
+      .channel('user_applications')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'applications',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        // Invalidate all user application queries when any of user's applications change
+        queryClient.invalidateQueries({ 
+          queryKey: ['applications', 'user', user.id] 
+        })
+        queryClient.invalidateQueries({ 
+          queryKey: ['applications'] 
+        })
+        // Also invalidate client applications cache (for client dashboard)
+        queryClient.invalidateQueries({ 
+          queryKey: ['client-applications'] 
+        })
+        // Invalidate job-specific applications
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            return query.queryKey[0] === 'jobs' && 
+                   query.queryKey[2] === 'applications'
+          }
+        })
+      })
+      .subscribe()
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [queryClient, user])
+}
+
+/**
  * Real-time notifications hook for a specific user
  * Provides live notification updates
  * Only connects when user is authenticated

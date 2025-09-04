@@ -3,10 +3,9 @@
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
 import { ApplicationStatus } from '@/types/application'
-import { TaskerApplicationManager } from './tasker/tasker-application-manager'
-import { TaskerQuickStats } from './tasker/tasker-quick-stats'
-import { TaskerNotificationsSection } from './tasker/tasker-notifications-section'
-import { ConnectionsWidget } from './connections/connections-widget'
+import TaskerApplicationManager from './tasker/tasker-application-manager'
+import { TaskerQuickStats } from '@/components/dashboard/tasker/tasker-quick-stats'
+import { ConnectionsWidget } from '@/components/dashboard/connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
@@ -73,9 +72,6 @@ export function TaskerDashboard() {
       userName={user?.name}
       sidebar={
         <div className="space-y-6">
-          {/* Notifications Section */}
-          <TaskerNotificationsSection />
-          
           {/* Connections Widget */}
           <ConnectionsWidget />
         </div>

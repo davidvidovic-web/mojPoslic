@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function POST(request: Request) {
@@ -11,6 +10,7 @@ export async function POST(request: Request) {
     console.log('Jobs Create API: Authorization header:', authHeader ? 'present' : 'missing')
     
     let user = null
+    let authenticatedSupabase = null
     
     // Get the authenticated user - try both cookies and auth header
     if (authHeader) {
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       }
       
       user = authData.user
+      authenticatedSupabase = supabaseWithAuth
       console.log('Jobs Create API: Authenticated user via auth header:', user.email)
     } else {
       // Fall back to cookie-based auth
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
       }
       
       user = authData.user
+      authenticatedSupabase = supabaseServer
       console.log('Jobs Create API: Authenticated user via cookies:', user.email)
     }
 
@@ -224,8 +226,8 @@ export async function POST(request: Request) {
 
     console.log('Jobs Create API: Final job data:', jobData)
 
-    // Insert the job into Supabase
-    const { data: insertedJob, error: insertError } = await supabase
+    // Insert the job into Supabase using the authenticated client
+    const { data: insertedJob, error: insertError } = await authenticatedSupabase
       .from('job_listings')
       .insert([jobData])
       .select(`

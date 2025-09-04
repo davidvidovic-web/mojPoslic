@@ -307,7 +307,13 @@
       "clientFeedback": "Client Feedback",
       "location": "Location",
       "jobDescription": "Job Description",
-      "clientNotes": "Client Notes"
+      "clientNotes": "Client Notes",
+      "cancelApplication": "Cancel",
+      "cancelling": "Cancelling...",
+      "cancelSuccess": "Application removed successfully",
+      "cancelError": "Failed to cancel application",
+      "cancelConfirm": "Are you sure you want to remove this application? This action cannot be undone.",
+      "cancelNotAllowed": "This application cannot be cancelled because messaging has already started with the client."
     },
     "activeJobs": {
       "title": "Active Jobs",

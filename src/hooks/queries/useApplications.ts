@@ -34,10 +34,14 @@ export function useApplicationsQuery(jobId?: string) {
   })
 }
 
-export function useUserApplicationsQuery(userId: string) {
+export function useUserApplicationsQuery(userId?: string) {
   return useQuery({
-    queryKey: queryKeys.applications.user(userId),
+    queryKey: queryKeys.applications.user(userId || ''),
     queryFn: async () => {
+      if (!userId) {
+        return []
+      }
+      
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -51,8 +55,9 @@ export function useUserApplicationsQuery(userId: string) {
         .order('applied_at', { ascending: false })
 
       if (error) throw error
-      return data
+      return data || []
     },
+    enabled: !!userId,
   })
 }
 

@@ -664,6 +664,8 @@ export function useUserApplicationsQuery(userId?: string) {
     queryFn: async () => {
       if (!userId) return []
       
+      console.log('🔍 Fetching applications for user:', userId)
+      
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -676,6 +678,19 @@ export function useUserApplicationsQuery(userId?: string) {
         `)
         .eq('user_id', userId)
         .order('applied_at', { ascending: false })
+      
+      console.log('🔍 Applications query result:', {
+        userId,
+        count: data?.length || 0,
+        error: error?.message,
+        firstApplication: data?.[0] ? {
+          id: data[0].id,
+          status: data[0].status,
+          job_title: data[0].job?.title,
+          applied_at: data[0].applied_at
+        } : null
+      })
+      
       if (error) throw error
       return data || []
     },

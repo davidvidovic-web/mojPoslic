@@ -3,7 +3,7 @@
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
-import { TaskerApplicationManager } from '@/components/dashboard/tasker/tasker-application-manager'
+import TaskerApplicationManager from '@/components/dashboard/tasker/tasker-application-manager'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

@@ -11,7 +11,6 @@ import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { JobEditDialog } from '@/components/core/job-edit-dialog'
 import { ClientJobsManager } from './client/client-jobs-manager'
 import { ClientApplicationsManager } from './client/client-applications-manager'
-import { ClientNotificationsSection } from './client/client-notifications-section'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
@@ -231,9 +230,6 @@ export function ClientDashboard() {
       userRole="client"
       sidebar={
         <div className="space-y-6">
-          {/* Notifications Section */}
-          <ClientNotificationsSection />
-          
           {/* Connections Widget */}
           <ConnectionsWidget />
         </div>

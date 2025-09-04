@@ -18,7 +18,8 @@ import { useOptimizedMessaging } from "@/hooks/use-optimized-messaging";
 import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
-import { MessagingButton } from "@/components/messaging/messaging-button";
+import { ModernMessagingButton } from "@/components/messaging/modern-messaging-button";
+import { HeaderNotifications } from "@/components/notifications/header-notifications";
 import { Button } from "@/components/ui/button";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
@@ -351,11 +352,14 @@ export const Header = React.memo(function Header() {
                   </div>
                 ) : (
                   <>
-                    {/* Messaging Button - Show OptimizedNotificationCenter if there are notifications, otherwise show messaging */}
+                    {/* Header Notifications - always show */}
+                    <HeaderNotifications />
+
+                    {/* Messaging Button - Show OptimizedNotificationCenter if there are messages, otherwise show messaging */}
                     {totalUnreadCount > 0 ? (
                       <OptimizedNotificationCenter />
                     ) : (
-                      <MessagingButton 
+                      <ModernMessagingButton 
                         variant="ghost"
                         size="sm"
                         className="relative h-9 w-9 rounded-full"

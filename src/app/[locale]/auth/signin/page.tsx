@@ -70,12 +70,30 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
       // This would use the signIn function from context for password auth
       // For now using supabase directly since we need both password and OTP auth
       const { supabase } = await import("@/lib/supabase")
-      const { error } = await supabase.auth.signInWithPassword({
+      
+      console.log('🔐 Attempting signin with:', {
+        email: formData.email,
+        passwordLength: formData.password.length,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 30) + '...',
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      })
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       })
 
+      console.log('🔐 Signin response:', {
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        errorCode: error?.code,
+        errorMessage: error?.message,
+        userId: data?.user?.id,
+        userEmail: data?.user?.email
+      })
+
       if (error) {
+        console.error('🔐 Signin error details:', error)
         if (error.message.includes('Email not confirmed')) {
           showToast.error(t('emailNotVerified'))
           window.location.href = `/${locale}/auth/verify-email?email=${encodeURIComponent(formData.email)}`
@@ -85,11 +103,13 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
           showToast.error(error.message || t('signInFailed'))
         }
       } else {
+        console.log('🔐 Signin successful, redirecting...')
         showToast.success(t('signedInSuccessfully'))
         const redirectTo = returnUrl || `/${locale}/dashboard`
         window.location.href = redirectTo
       }
-    } catch {
+    } catch (catchError) {
+      console.error('🔐 Signin catch error:', catchError)
       showToast.error(t('signInFailed'))
     } finally {
       setLoading(false)

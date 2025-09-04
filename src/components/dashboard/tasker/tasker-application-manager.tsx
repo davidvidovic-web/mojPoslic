@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { useApplicationManager } from '@/hooks/useQueryManagers'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -15,11 +16,13 @@ import {
   XCircle,
   ChevronDown,
   ChevronUp,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { showToast } from '@/lib/toast'
 
 interface TaskerApplicationManagerProps {
   showOnlyHistorical?: boolean // If true, only show completed/rejected applications
@@ -27,23 +30,30 @@ interface TaskerApplicationManagerProps {
   description?: string
 }
 
-export function TaskerApplicationManager({ 
+export default function TaskerApplicationManager({ 
   showOnlyHistorical = false,
   title,
   description
 }: TaskerApplicationManagerProps) {
-  const { user } = useSupabaseAuth()
-  const tDashboard = useTranslations('dashboard')
-  // Use Supabase hooks with user ID filter for user-specific applications
-  const { applications, isLoading, isError, error } = useApplicationManager(undefined, user?.id)
-  const router = useRouter()
-  
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'company'>('newest')
-  const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set())
+  const { user, session } = useSupabaseAuth()
+  const { applications = [], isLoading, isError, error, refetch } = useApplicationManager(undefined, user?.id)
+  const queryClient = useQueryClient()
 
-  // Use translations with fallbacks
+  // Debug logging
+  console.log('🔍 TaskerApplicationManager render:', {
+    applicationsCount: applications.length,
+    isLoading,
+    userId: user?.id,
+    applicationIds: applications.map(app => app.id)
+  })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'company'>('newest')
+  const [cancellingApplications, setCancellingApplications] = useState<Set<string>>(new Set())
+  const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set())
+  const router = useRouter()
+  const tDashboard = useTranslations('dashboard')
+
   const finalTitle = title || tDashboard('tasker.applicationManager.title')
   const finalDescription = description || tDashboard('tasker.applicationManager.description')
 
@@ -61,26 +71,48 @@ export function TaskerApplicationManager({
 
   // Filter and sort applications
   const filteredAndSortedApplications = useMemo(() => {
+    console.log('🔍 Filtering applications:', {
+      total: applications.length,
+      showOnlyHistorical,
+      statuses: applications.map(app => ({ id: app.id, status: app.status }))
+    })
+
     // Filter applications based on props first
     let filtered = showOnlyHistorical 
-      ? applications.filter(app => 
-          ['REJECTED', 'WITHDRAWN'].includes(app.status || '') || 
-          (app.status === 'SELECTED' && hasCompletedWork(app))
-        )
-      : applications.filter(app => 
-          ['PENDING', 'REVIEWED', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED'].includes(app.status || '') &&
-          !hasCompletedWork(app)
-        )
+      ? applications.filter(app => {
+          const status = app.status?.toLowerCase() || ''
+          const isHistorical = ['rejected', 'withdrawn'].includes(status) || 
+            (status === 'selected' && hasCompletedWork(app))
+          console.log(`📋 App ${app.id}: status=${app.status}, isHistorical=${isHistorical}`)
+          return isHistorical
+        })
+      : applications.filter(app => {
+          const status = app.status?.toLowerCase() || ''
+          const isActive = ['pending', 'reviewed', 'shortlisted', 'interview_scheduled', 'selected'].includes(status) &&
+            !hasCompletedWork(app)
+          console.log(`📋 App ${app.id}: status=${app.status}, isActive=${isActive}`)
+          return isActive
+        })
+
+    console.log('🔍 After status filter:', {
+      filteredCount: filtered.length,
+      statuses: filtered.map(app => ({ id: app.id, status: app.status }))
+    })
 
     // Apply search and status filters
     filtered = filtered.filter(app => {
       const matchesSearch = searchTerm === '' || 
-        app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.job?.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase())
       
-      const matchesStatus = statusFilter === 'all' || app.status === statusFilter
+      const matchesStatus = statusFilter === 'all' || app.status?.toLowerCase() === statusFilter.toLowerCase()
       
       return matchesSearch && matchesStatus
+    })
+
+    console.log('🔍 After search and status filter:', {
+      finalCount: filtered.length,
+      searchTerm,
+      statusFilter
     })
 
     // Sort applications
@@ -98,6 +130,111 @@ export function TaskerApplicationManager({
 
     return filtered
   }, [applications, searchTerm, statusFilter, sortBy, showOnlyHistorical])
+
+  // Early return if user doesn't have the right role
+  if (!user || user.role !== 'tasker') {
+    return null
+  }
+
+  // Function to cancel application
+  const handleCancelApplication = async (applicationId: string) => {
+    if (cancellingApplications.has(applicationId)) return
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      tDashboard('tasker.applicationManager.cancelConfirm') || 
+      'Are you sure you want to cancel this application? This action cannot be undone.'
+    )
+
+    if (!confirmed) return
+
+    setCancellingApplications(prev => new Set(prev).add(applicationId))
+
+    try {
+      // Prepare headers with authorization if session exists
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      const response = await fetch(`/api/applications/${applicationId}/cancel`, {
+        method: 'DELETE',
+        headers,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        // Handle specific error messages
+        if (response.status === 400 && result.error?.includes('messaging has already started')) {
+          showToast.error(
+            tDashboard('tasker.applicationManager.cancelNotAllowed') || 
+            'This application cannot be cancelled because messaging has already started with the client.'
+          )
+        } else {
+          throw new Error(result.error || 'Failed to cancel application')
+        }
+        return
+      }
+
+      showToast.success(tDashboard('tasker.applicationManager.cancelSuccess') || 'Application removed successfully')
+      
+      // Small delay to allow real-time subscription to process
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Invalidate and refetch applications to ensure fresh data
+      console.log('🔄 Invalidating applications cache and refetching...')
+      
+      // Invalidate user-specific applications queries using correct query key
+      if (user?.id) {
+        await queryClient.invalidateQueries({ 
+          queryKey: ['applications', 'user', user.id],
+          refetchType: 'active' 
+        })
+      }
+      
+      // Also invalidate general applications queries
+      await queryClient.invalidateQueries({ 
+        queryKey: ['applications'],
+        refetchType: 'active' 
+      })
+      
+      // Invalidate client applications cache (for client dashboard)
+      await queryClient.invalidateQueries({ 
+        queryKey: ['client-applications'],
+        refetchType: 'active' 
+      })
+      
+      // Invalidate job-specific applications
+      await queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0] === 'jobs' && 
+                 query.queryKey[1] === 'applications'
+        },
+        refetchType: 'active' 
+      })
+      
+      await refetch({ throwOnError: false, cancelRefetch: true })
+      console.log('✅ Applications cache invalidated and refetched')
+      
+    } catch (error) {
+      console.error('Failed to cancel application:', error)
+      showToast.error(
+        error instanceof Error 
+          ? error.message 
+          : tDashboard('tasker.applicationManager.cancelError') || 'Failed to cancel application'
+      )
+    } finally {
+      setCancellingApplications(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(applicationId)
+        return newSet
+      })
+    }
+  }
 
   const toggleExpanded = (applicationId: string) => {
     const newExpanded = new Set(expandedApplications)
@@ -211,18 +348,18 @@ export function TaskerApplicationManager({
               <SelectItem value="all">{tDashboard('tasker.applicationManager.filters.allStatus')}</SelectItem>
               {!showOnlyHistorical && (
                 <>
-                  <SelectItem value="PENDING">{tDashboard('tasker.applicationManager.status.pending')}</SelectItem>
-                  <SelectItem value="REVIEWED">{tDashboard('tasker.applicationManager.status.reviewed')}</SelectItem>
-                  <SelectItem value="SHORTLISTED">{tDashboard('tasker.applicationManager.status.shortlisted')}</SelectItem>
-                  <SelectItem value="INTERVIEW_SCHEDULED">{tDashboard('tasker.applicationManager.status.interviewScheduled')}</SelectItem>
-                  <SelectItem value="SELECTED">{tDashboard('tasker.applicationManager.status.selected')}</SelectItem>
+                  <SelectItem value="pending">{tDashboard('tasker.applicationManager.status.pending')}</SelectItem>
+                  <SelectItem value="reviewed">{tDashboard('tasker.applicationManager.status.reviewed')}</SelectItem>
+                  <SelectItem value="shortlisted">{tDashboard('tasker.applicationManager.status.shortlisted')}</SelectItem>
+                  <SelectItem value="interview_scheduled">{tDashboard('tasker.applicationManager.status.interviewScheduled')}</SelectItem>
+                  <SelectItem value="selected">{tDashboard('tasker.applicationManager.status.selected')}</SelectItem>
                 </>
               )}
               {showOnlyHistorical && (
                 <>
-                  <SelectItem value="REJECTED">{tDashboard('tasker.applicationManager.status.rejected')}</SelectItem>
-                  <SelectItem value="WITHDRAWN">{tDashboard('tasker.applicationManager.status.withdrawn')}</SelectItem>
-                  <SelectItem value="SELECTED">{tDashboard('tasker.applicationManager.status.completed')}</SelectItem>
+                  <SelectItem value="rejected">{tDashboard('tasker.applicationManager.status.rejected')}</SelectItem>
+                  <SelectItem value="withdrawn">{tDashboard('tasker.applicationManager.status.withdrawn')}</SelectItem>
+                  <SelectItem value="selected">{tDashboard('tasker.applicationManager.status.completed')}</SelectItem>
                 </>
               )}
             </SelectContent>
@@ -293,6 +430,23 @@ export function TaskerApplicationManager({
                     </div>
 
                     <div className="flex items-center space-x-2">
+                      {/* Cancel button - only show for pending applications */}
+                      {application.status?.toLowerCase() === 'pending' && !showOnlyHistorical && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelApplication(application.id)}
+                          disabled={cancellingApplications.has(application.id)}
+                          className="rounded-xl text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          {cancellingApplications.has(application.id) 
+                            ? (tDashboard('tasker.applicationManager.cancelling') || 'Cancelling...') 
+                            : (tDashboard('tasker.applicationManager.cancelApplication') || 'Cancel')
+                          }
+                        </Button>
+                      )}
+                      
                       <Button
                         variant="ghost"
                         size="sm"
@@ -348,25 +502,12 @@ export function TaskerApplicationManager({
                           </div>
                           <div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">{tDashboard('tasker.applicationManager.location')}</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{application.job.exact_location || application.job.city_id}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{application.job.city_id}</p>
                           </div>
                         </div>
                       )}
 
-                      {application.job?.description && (
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4">
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                              <span className="text-xs text-green-600">📄</span>
-                            </div>
-                            {tDashboard('tasker.applicationManager.jobDescription')}
-                          </h4>
-                          <div 
-                            className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: application.job.description }}
-                          />
-                        </div>
-                      )}
+                      {/* Job description section removed since description is not available in the current data structure */}
 
                       {application.client_notes && (
                         <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
