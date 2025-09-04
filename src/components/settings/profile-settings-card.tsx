@@ -66,7 +66,7 @@ export function ProfileSettingsCard() {
         experience: authProfile.experience || '',
         experienceLevels: parsedExperienceLevels,
         preferredJobTypes: authProfile.preferredJobTypes || [],
-        createdAt: authProfile.createdAt?.toISOString()
+        createdAt: authProfile.created_at
       })
     }
   }, [authProfile])
@@ -189,9 +189,9 @@ export function ProfileSettingsCard() {
             <h3 className="text-lg font-medium">{t('profilePicture')}</h3>
             <AvatarUpload 
               currentAvatarUrl={authProfile?.avatarUrl || undefined}
-              onAvatarUploaded={(_url) => {
-                // Avatar upload handles its own profile update, just refresh
-                refreshUser()
+              onAvatarUploaded={async () => {
+                // Avatar upload handles its own profile update, refresh to get updated data
+                await refreshUser()
               }}
               size="lg"
             />
@@ -381,7 +381,7 @@ export function ProfileSettingsCard() {
                     <Label>{t('resume')}</Label>
                     <ResumeUpload
                       currentResumeUrl={authProfile?.resumeUrl || undefined}
-                      onResumeUploaded={(_url) => {
+                      onResumeUploaded={() => {
                         // Resume upload handles its own profile update, just refresh
                         refreshUser()
                       }}

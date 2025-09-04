@@ -127,7 +127,7 @@
     "removeSuccess": "Slika profila je uspješno uklonjena",
     "errors": {
       "invalidFileType": "Neispravna vrsta fajla. Molimo otpremite sliku.",
-      "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 5MB.",
+      "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 2MB.",
       "uploadFailed": "Greška pri otpremanju. Molimo pokušajte ponovo.",
       "removeFailed": "Greška pri uklanjanju slike. Molimo pokušajte ponovo.",
       "notAuthenticated": "Niste prijavljeni. Molimo prijavite se."
@@ -148,7 +148,7 @@
     "removeSuccess": "CV je uspješno uklonjen",
     "errors": {
       "invalidFileType": "Neispravna vrsta fajla. Molimo otpremite PDF fajl.",
-      "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 10MB.",
+      "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 2MB.",
       "uploadFailed": "Greška pri otpremanju. Molimo pokušajte ponovo.",
       "removeFailed": "Greška pri uklanjanju CV-a. Molimo pokušajte ponovo.",
       "notAuthenticated": "Niste prijavljeni. Molimo prijavite se."

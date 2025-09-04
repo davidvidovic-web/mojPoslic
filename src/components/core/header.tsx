@@ -356,6 +356,8 @@ export const Header = React.memo(function Header() {
                       <OptimizedNotificationCenter />
                     ) : (
                       <MessagingButton 
+                        variant="ghost"
+                        size="sm"
                         className="relative h-9 w-9 rounded-full"
                         iconOnly={true}
                       />

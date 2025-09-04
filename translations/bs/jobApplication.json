@@ -58,7 +58,7 @@
   "companyWebsite": "Web stranica kompanije",
   "applicationPortal": "Portal za prijave",
   "invalidFileType": "Nevažeći tip datoteke. Molimo unesite samo PDF ili DOC datoteke.",
-  "fileTooLarge": "Datoteka je prevelika. Maksimalna veličina je 10MB.",
+  "fileTooLarge": "Datoteka je prevelika. Maksimalna veličina je 2MB.",
   "pleaseWriteCoverLetter": "Molimo napišite motivaciono pismo da biste se prijavili.",
   "applicationPreview": "Pregled prijave",
   "applyingFor": "Prijavljujem se za",

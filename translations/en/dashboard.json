@@ -257,6 +257,61 @@
       "title": "Saved Jobs",
       "noSavedJobs": "No saved jobs",
       "saveJobsToSeeHere": "Save jobs to see them here"
+    },
+    "applicationManager": {
+      "title": "My Applications",
+      "description": "Track your job applications",
+      "recentApplications": "Recent Applications",
+      "recentApplicationsDescription": "Your latest job applications and their status",
+      "search": {
+        "placeholder": "Search by job title or company...",
+        "filterByStatus": "Filter by status",
+        "sortBy": "Sort by"
+      },
+      "sorting": {
+        "newest": "Newest First",
+        "oldest": "Oldest First", 
+        "company": "Company A-Z"
+      },
+      "filters": {
+        "allStatus": "All Status"
+      },
+      "status": {
+        "pending": "Pending",
+        "reviewed": "Reviewed",
+        "shortlisted": "Shortlisted",
+        "interviewScheduled": "Interview Scheduled",
+        "selected": "Selected", 
+        "rejected": "Rejected",
+        "withdrawn": "Withdrawn",
+        "completed": "Completed"
+      },
+      "empty": {
+        "title": "No applications found",
+        "description": "No active applications match your current filters.",
+        "historicalDescription": "No historical applications to show.",
+        "browseJobs": "Browse Jobs"
+      },
+      "error": {
+        "title": "Error Loading Applications",
+        "tryAgain": "Try Again"
+      },
+      "loading": "Loading applications...",
+      "appliedTime": "Applied {time}",
+      "postedBy": "Posted by: {company}",
+      "viewJob": "View Job",
+      "expandDetails": "Expand Details",
+      "collapseDetails": "Collapse Details",
+      "jobNotAvailable": "Job Title Not Available",
+      "yourApplicationMessage": "Your Application Message",
+      "clientFeedback": "Client Feedback",
+      "location": "Location",
+      "jobDescription": "Job Description",
+      "clientNotes": "Client Notes"
+    },
+    "activeJobs": {
+      "title": "Active Jobs",
+      "description": "You have {count} job{count, plural, one {} other {s}} in progress"
     }
   },
   "client": {
@@ -401,6 +456,16 @@
     }
   },
   "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "allMarkedRead": "All notifications marked as read",
+    "noNotifications": "No notifications yet",
+    "error": "Error updating notifications",
+    "viewAll": "View all notifications",
+    "errors": {
+      "markReadFailed": "Failed to mark notification as read",
+      "markAllReadFailed": "Failed to mark all notifications as read"
+    },
     "paymentSuccessful": "Payment successful",
     "paymentCancelled": "Payment cancelled"
   },

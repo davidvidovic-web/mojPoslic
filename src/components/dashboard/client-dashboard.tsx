@@ -231,11 +231,11 @@ export function ClientDashboard() {
       userRole="client"
       sidebar={
         <div className="space-y-6">
-          {/* Connections Widget */}
-          <ConnectionsWidget />
-          
           {/* Notifications Section */}
           <ClientNotificationsSection />
+          
+          {/* Connections Widget */}
+          <ConnectionsWidget />
         </div>
       }
     >

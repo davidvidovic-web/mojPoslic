@@ -16,6 +16,8 @@
     "supabase:stop": "npx supabase stop",
     "supabase:generate-types": "npx supabase gen types typescript --local > src/lib/database.types.ts",
     "supabase:deploy": "npx supabase functions deploy",
+    "supabase:setup-storage": "node scripts/setup-storage-buckets.js",
+    "supabase:setup-policies": "node scripts/setup-storage-policies.js",
     "clear-users": "node scripts/clear-users-supabase.js"
   },
   "dependencies": {

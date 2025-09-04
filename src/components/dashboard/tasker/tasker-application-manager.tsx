@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface TaskerApplicationManagerProps {
   showOnlyHistorical?: boolean // If true, only show completed/rejected applications
@@ -28,10 +29,11 @@ interface TaskerApplicationManagerProps {
 
 export function TaskerApplicationManager({ 
   showOnlyHistorical = false,
-  title = "My Applications",
-  description = "Track your job applications"
+  title,
+  description
 }: TaskerApplicationManagerProps) {
   const { user } = useSupabaseAuth()
+  const tDashboard = useTranslations('dashboard')
   // Use Supabase hooks with user ID filter for user-specific applications
   const { applications, isLoading, isError, error } = useApplicationManager(undefined, user?.id)
   const router = useRouter()
@@ -40,6 +42,10 @@ export function TaskerApplicationManager({
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'company'>('newest')
   const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set())
+
+  // Use translations with fallbacks
+  const finalTitle = title || tDashboard('tasker.applicationManager.title')
+  const finalDescription = description || tDashboard('tasker.applicationManager.description')
 
   // Helper function to check if work is completed (this would need to be enhanced with actual job assignment data)
   const hasCompletedWork = (app: { status: string | null; applied_at: string | null; updated_at?: string | null }): boolean => {
@@ -104,24 +110,19 @@ export function TaskerApplicationManager({
   }
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return <Badge className="bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400 border-0 rounded-xl px-3 py-1">Pending</Badge>
-      case 'REVIEWED':
-        return <Badge className="bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400 border-0 rounded-xl px-3 py-1">Reviewed</Badge>
-      case 'SHORTLISTED':
-        return <Badge className="bg-purple-100 dark:bg-purple-950/30 text-purple-800 dark:text-purple-400 border-0 rounded-xl px-3 py-1">Shortlisted</Badge>
-      case 'INTERVIEW_SCHEDULED':
-        return <Badge className="bg-indigo-100 dark:bg-indigo-950/30 text-indigo-800 dark:text-indigo-400 border-0 rounded-xl px-3 py-1">Interview Scheduled</Badge>
-      case 'SELECTED':
-        return <Badge className="bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400 border-0 rounded-xl px-3 py-1">Selected</Badge>
-      case 'REJECTED':
-        return <Badge className="bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400 border-0 rounded-xl px-3 py-1">Rejected</Badge>
-      case 'WITHDRAWN':
-        return <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400 border-0 rounded-xl px-3 py-1">Withdrawn</Badge>
-      default:
-        return <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400 border-0 rounded-xl px-3 py-1">{status}</Badge>
+    const statusMap = {
+      'PENDING': { text: tDashboard('tasker.applicationManager.status.pending'), className: 'bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400' },
+      'REVIEWED': { text: tDashboard('tasker.applicationManager.status.reviewed'), className: 'bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400' },
+      'SHORTLISTED': { text: tDashboard('tasker.applicationManager.status.shortlisted'), className: 'bg-purple-100 dark:bg-purple-950/30 text-purple-800 dark:text-purple-400' },
+      'INTERVIEW_SCHEDULED': { text: tDashboard('tasker.applicationManager.status.interviewScheduled'), className: 'bg-indigo-100 dark:bg-indigo-950/30 text-indigo-800 dark:text-indigo-400' },
+      'SELECTED': { text: tDashboard('tasker.applicationManager.status.selected'), className: 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' },
+      'REJECTED': { text: tDashboard('tasker.applicationManager.status.rejected'), className: 'bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400' },
+      'WITHDRAWN': { text: tDashboard('tasker.applicationManager.status.withdrawn'), className: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400' }
     }
+    
+    const statusInfo = statusMap[status as keyof typeof statusMap] || { text: status, className: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400' }
+    
+    return <Badge className={`${statusInfo.className} border-0 rounded-xl px-3 py-1`}>{statusInfo.text}</Badge>
   }
 
   const getStatusIcon = (status: string) => {
@@ -153,7 +154,7 @@ export function TaskerApplicationManager({
         <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto mb-4">
           <XCircle className="h-8 w-8 text-red-500" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Error Loading Applications</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{tDashboard('tasker.applicationManager.error.title')}</h3>
         <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
           {error?.message || 'Failed to load applications'}
         </p>
@@ -162,7 +163,7 @@ export function TaskerApplicationManager({
           className="rounded-xl" 
           onClick={() => window.location.reload()}
         >
-          Try Again
+          {tDashboard('tasker.applicationManager.error.tryAgain')}
         </Button>
       </div>
     )
@@ -174,7 +175,7 @@ export function TaskerApplicationManager({
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 font-medium">Loading applications...</p>
+        <p className="text-gray-600 dark:text-gray-400 font-medium">{tDashboard('tasker.applicationManager.loading')}</p>
       </div>
     )
   }
@@ -183,8 +184,8 @@ export function TaskerApplicationManager({
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center lg:text-left">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{title}</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">{description}</p>
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{finalTitle}</h2>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{finalDescription}</p>
       </div>
 
       {/* Filters */}
@@ -194,7 +195,7 @@ export function TaskerApplicationManager({
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search by job title or company..."
+                placeholder={tDashboard('tasker.applicationManager.search.placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-11 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:bg-white dark:focus:bg-gray-900"
@@ -204,24 +205,24 @@ export function TaskerApplicationManager({
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full lg:w-48 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder={tDashboard('tasker.applicationManager.search.filterByStatus')} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="all">{tDashboard('tasker.applicationManager.filters.allStatus')}</SelectItem>
               {!showOnlyHistorical && (
                 <>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="REVIEWED">Reviewed</SelectItem>
-                  <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
-                  <SelectItem value="INTERVIEW_SCHEDULED">Interview Scheduled</SelectItem>
-                  <SelectItem value="SELECTED">Selected</SelectItem>
+                  <SelectItem value="PENDING">{tDashboard('tasker.applicationManager.status.pending')}</SelectItem>
+                  <SelectItem value="REVIEWED">{tDashboard('tasker.applicationManager.status.reviewed')}</SelectItem>
+                  <SelectItem value="SHORTLISTED">{tDashboard('tasker.applicationManager.status.shortlisted')}</SelectItem>
+                  <SelectItem value="INTERVIEW_SCHEDULED">{tDashboard('tasker.applicationManager.status.interviewScheduled')}</SelectItem>
+                  <SelectItem value="SELECTED">{tDashboard('tasker.applicationManager.status.selected')}</SelectItem>
                 </>
               )}
               {showOnlyHistorical && (
                 <>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                  <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
-                  <SelectItem value="SELECTED">Completed</SelectItem>
+                  <SelectItem value="REJECTED">{tDashboard('tasker.applicationManager.status.rejected')}</SelectItem>
+                  <SelectItem value="WITHDRAWN">{tDashboard('tasker.applicationManager.status.withdrawn')}</SelectItem>
+                  <SelectItem value="SELECTED">{tDashboard('tasker.applicationManager.status.completed')}</SelectItem>
                 </>
               )}
             </SelectContent>
@@ -232,9 +233,9 @@ export function TaskerApplicationManager({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="company">Company A-Z</SelectItem>
+              <SelectItem value="newest">{tDashboard('tasker.applicationManager.sorting.newest')}</SelectItem>
+              <SelectItem value="oldest">{tDashboard('tasker.applicationManager.sorting.oldest')}</SelectItem>
+              <SelectItem value="company">{tDashboard('tasker.applicationManager.sorting.company')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -246,11 +247,11 @@ export function TaskerApplicationManager({
             <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center mx-auto mb-4">
               <Briefcase className="h-8 w-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No applications found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{tDashboard('tasker.applicationManager.empty.title')}</h3>
             <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
               {showOnlyHistorical 
-                ? "No historical applications to show."
-                : "No active applications match your current filters."
+                ? tDashboard('tasker.applicationManager.empty.historicalDescription')
+                : tDashboard('tasker.applicationManager.empty.description')
               }
             </p>
             {!showOnlyHistorical && (
@@ -258,7 +259,7 @@ export function TaskerApplicationManager({
                 className="rounded-xl" 
                 onClick={() => router.push('/jobs')}
               >
-                Browse Jobs
+                {tDashboard('tasker.applicationManager.empty.browseJobs')}
               </Button>
             )}
           </div>
@@ -276,17 +277,17 @@ export function TaskerApplicationManager({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">
-                            {application.job?.title || 'Job Title Not Available'}
+                            {application.job?.title || tDashboard('tasker.applicationManager.jobNotAvailable')}
                           </h3>
                           {getStatusBadge(application.status || 'PENDING')}
                         </div>
                         <p className="text-base font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          Posted by: {application.job?.posted_by_id || 'Unknown'}
+                          {tDashboard('tasker.applicationManager.postedBy', { company: application.job?.posted_by?.name || 'Unknown' })}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                           <span className="font-medium">{formatSalary(application.job)}</span>
                           <span>•</span>
-                          <span>Applied {formatDistanceToNow(new Date(application.applied_at || ''), { addSuffix: true })}</span>
+                          <span>{tDashboard('tasker.applicationManager.appliedTime', { time: formatDistanceToNow(new Date(application.applied_at || ''), { addSuffix: true }) })}</span>
                         </div>
                       </div>
                     </div>
@@ -299,7 +300,8 @@ export function TaskerApplicationManager({
                         className="rounded-xl"
                         disabled={!application.job?.id}
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {tDashboard('tasker.applicationManager.viewJob')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -308,9 +310,15 @@ export function TaskerApplicationManager({
                         className="rounded-xl"
                       >
                         {expandedApplications.has(application.id) ? (
-                          <ChevronUp className="h-4 w-4" />
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-2" />
+                            {tDashboard('tasker.applicationManager.collapseDetails')}
+                          </>
                         ) : (
-                          <ChevronDown className="h-4 w-4" />
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-2" />
+                            {tDashboard('tasker.applicationManager.expandDetails')}
+                          </>
                         )}
                       </Button>
                     </div>
@@ -325,7 +333,7 @@ export function TaskerApplicationManager({
                             <div className="w-5 h-5 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                               <span className="text-xs text-blue-600">📝</span>
                             </div>
-                            Your Application Message
+                            {tDashboard('tasker.applicationManager.yourApplicationMessage')}
                           </h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                             {application.cover_letter}
@@ -339,7 +347,7 @@ export function TaskerApplicationManager({
                             <span className="text-xs text-purple-600">📍</span>
                           </div>
                           <div>
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Location</h4>
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">{tDashboard('tasker.applicationManager.location')}</h4>
                             <p className="text-sm text-gray-600 dark:text-gray-400">{application.job.exact_location || application.job.city_id}</p>
                           </div>
                         </div>
@@ -351,7 +359,7 @@ export function TaskerApplicationManager({
                             <div className="w-5 h-5 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                               <span className="text-xs text-green-600">📄</span>
                             </div>
-                            Job Description
+                            {tDashboard('tasker.applicationManager.jobDescription')}
                           </h4>
                           <div 
                             className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 prose prose-sm max-w-none"
@@ -366,7 +374,7 @@ export function TaskerApplicationManager({
                             <div className="w-5 h-5 rounded-lg bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
                               <span className="text-xs text-blue-700">💬</span>
                             </div>
-                            Client Notes
+                            {tDashboard('tasker.applicationManager.clientNotes')}
                           </h4>
                           <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
                             {application.client_notes}

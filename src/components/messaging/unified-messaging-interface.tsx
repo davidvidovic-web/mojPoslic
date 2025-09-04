@@ -32,11 +32,16 @@ function useMessagingTranslations() {
           'actions.tryAgain': 'Try Again',
           'conversation.defaultTitle': 'Conversation',
           'conversations.noConversations': 'No conversations yet. Start messaging from your job applications.',
-          'conversationTypes.jobChat': 'Job application conversation',
+          'conversationTypes.jobChat': 'Razgovor o prijavi za posao',
           'messages.noMessages': 'No messages yet. Start the conversation!',
           'messages.typeMessage': 'Type your message...',
           'messages.typing.single': 'Someone is typing...',
-          'messages.typing.multiple': '{count} people are typing...'
+          'messages.typing.multiple': '{count} people are typing...',
+          'messages.justNow': 'Upravo sada',
+          'messages.minutesAgo': 'prije {count}min',
+          'messages.hoursAgo': 'prije {count}h',
+          'messages.today': 'danas',
+          'messages.yesterday': 'jučer'
         }
         return fallbacks[key] || key
       },
@@ -80,7 +85,7 @@ export function UnifiedMessagingInterface({
     stopTyping,
     clearError
   } = useSupabaseRealtimeChat({
-    conversationId: activeConversationId,
+    conversationId: activeConversationId || undefined,
     enabled: !!user?.id
   })
 
@@ -176,9 +181,9 @@ export function UnifiedMessagingInterface({
     const now = new Date()
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
     
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
+    if (diffInMinutes < 1) return t('messages.justNow')
+    if (diffInMinutes < 60) return t('messages.minutesAgo').replace('{count}', diffInMinutes.toString())
+    if (diffInMinutes < 1440) return t('messages.hoursAgo').replace('{count}', Math.floor(diffInMinutes / 60).toString())
     
     return date.toLocaleDateString()
   }
@@ -189,11 +194,11 @@ export function UnifiedMessagingInterface({
     const now = new Date()
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
     
-    if (diffInDays === 0) return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-    if (diffInDays === 1) return 'Yesterday'
-    if (diffInDays < 7) return date.toLocaleDateString('en-US', { weekday: 'short' })
+    if (diffInDays === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    if (diffInDays === 1) return t('messages.yesterday')
+    if (diffInDays < 7) return date.toLocaleDateString([], { weekday: 'short' })
     
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
   }
 
   if (!user) {

@@ -5,17 +5,16 @@ import { useTranslations } from 'next-intl'
 import { ApplicationStatus } from '@/types/application'
 import { TaskerApplicationManager } from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from './tasker/tasker-quick-stats'
+import { TaskerNotificationsSection } from './tasker/tasker-notifications-section'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
-import { MessagingButton } from '@/components/messaging/messaging-button'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Star, Briefcase, History, MessageCircle } from 'lucide-react'
+import { Star, Briefcase, History } from 'lucide-react'
 import { useUserApplications } from '@/hooks/use-applications'
 import { useJobAcceptanceManager } from '@/hooks/useQueryManagers'
-import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 import type { ActiveJob } from '@/hooks/use-job-acceptance'
 
 interface ApplicationStats {
@@ -33,9 +32,6 @@ export function TaskerDashboard() {
   
   // Translation hooks
   const tDashboard = useTranslations('dashboard')
-  
-  // Messaging state - simplified now that we use MessagingButton
-  const { totalUnreadCount, conversations } = useOptimizedMessaging()
   
   // Use Supabase hooks for user-specific data
   const { data: applications = [], isLoading: applicationsLoading } = useUserApplications(user?.id)
@@ -77,33 +73,8 @@ export function TaskerDashboard() {
       userName={user?.name}
       sidebar={
         <div className="space-y-6">
-          {/* Messages Section - Prominent and First */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-[calc(var(--radius)*1.5)] p-6 border border-green-200 dark:border-green-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-green-500 flex items-center justify-center">
-                  <MessageCircle className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">Messages</h3>
-                  {totalUnreadCount > 0 && (
-                    <Badge variant="destructive" className="text-xs px-2 py-1">
-                      {totalUnreadCount}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <MessagingButton className="text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100" />
-            </div>
-            <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed mb-3">
-              Communicate with clients and manage your conversations in real-time.
-            </p>
-            {conversations.length > 0 && (
-              <div className="text-xs text-green-600 dark:text-green-400">
-                {conversations.length} active conversation{conversations.length !== 1 ? 's' : ''}
-              </div>
-            )}
-          </div>
+          {/* Notifications Section */}
+          <TaskerNotificationsSection />
           
           {/* Connections Widget */}
           <ConnectionsWidget />
@@ -128,9 +99,9 @@ export function TaskerDashboard() {
                     <Briefcase className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Active Jobs</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{tDashboard('tasker.activeJobs.title')}</h2>
                     <p className="text-sm text-muted-foreground">
-                      You have {activeJobs.length} job{activeJobs.length !== 1 ? 's' : ''} in progress
+                      {tDashboard('tasker.activeJobs.description', { count: activeJobs.length })}
                     </p>
                   </div>
                 </div>
@@ -177,8 +148,8 @@ export function TaskerDashboard() {
               <CardContent className="p-6">
                 <TaskerApplicationManager 
                   showOnlyHistorical={false}
-                  title="Recent Applications"
-                  description="Your latest job applications and their status"
+                  title={tDashboard('tasker.applicationManager.recentApplications')}
+                  description={tDashboard('tasker.applicationManager.recentApplicationsDescription')}
                 />
               </CardContent>
             </Card>
@@ -208,7 +179,7 @@ export function TaskerDashboard() {
                             {application.job?.title || 'Untitled Job'}
                           </h3>
                           <p className="text-gray-600 dark:text-gray-400 font-medium">
-                            {application.job?.company || 'Unknown Company'}
+                            {application.job?.posted_by?.name || 'Unknown Company'}
                           </p>
                         </div>
                         <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">

@@ -257,6 +257,61 @@
       "title": "Sačuvani poslovi",
       "noSavedJobs": "Nema sačuvanih poslova",
       "saveJobsToSeeHere": "Sačuvajte poslove da ih vidite ovdje"
+    },
+    "applicationManager": {
+      "title": "Moje prijave",
+      "description": "Pratite svoje prijave za posao",
+      "recentApplications": "Nedavne prijave",
+      "recentApplicationsDescription": "Vaše najnovije prijave za posao i njihov status",
+      "search": {
+        "placeholder": "Pretraži po nazivu posla ili kompaniji...",
+        "filterByStatus": "Filtriraj po statusu",
+        "sortBy": "Sortiraj po"
+      },
+      "sorting": {
+        "newest": "Najnovije prvo",
+        "oldest": "Najstarije prvo",
+        "company": "Kompanija A-Z"
+      },
+      "filters": {
+        "allStatus": "Svi statusi"
+      },
+      "status": {
+        "pending": "Na čekanju",
+        "reviewed": "Pregledano",
+        "shortlisted": "Uži izbor",
+        "interviewScheduled": "Intervju zakazan",
+        "selected": "Izabrano",
+        "rejected": "Odbačeno",
+        "withdrawn": "Povučeno",
+        "completed": "Završeno"
+      },
+      "empty": {
+        "title": "Nema pronađenih prijava",
+        "description": "Nema aktivnih prijava koje odgovaraju vašim filterima.",
+        "historicalDescription": "Nema historijskih prijava za prikaz.",
+        "browseJobs": "Pretraži poslove"
+      },
+      "error": {
+        "title": "Greška pri učitavanju prijava",
+        "tryAgain": "Pokušaj ponovo"
+      },
+      "loading": "Učitavanje prijava...",
+      "appliedTime": "Prijavljeno {time}",
+      "postedBy": "Objavio: {company}",
+      "viewJob": "Pogledaj posao",
+      "expandDetails": "Proširi detalje",
+      "collapseDetails": "Smanji detalje",
+      "jobNotAvailable": "Naziv posla nije dostupan",
+      "yourApplicationMessage": "Vaša poruka o prijavi",
+      "clientFeedback": "Povratne informacije klijenta",
+      "location": "Lokacija",
+      "jobDescription": "Opis posla",
+      "clientNotes": "Napomene klijenta"
+    },
+    "activeJobs": {
+      "title": "Aktivni poslovi",
+      "description": "Imate {count} posao{count, plural, one {} other {a/ova}} u toku"
     }
   },
   "client": {
@@ -401,6 +456,16 @@
     }
   },
   "notifications": {
+    "title": "Obavještenja",
+    "markAllRead": "Označi sve kao pročitano",
+    "allMarkedRead": "Sva obavještenja označena kao pročitana",
+    "noNotifications": "Još nema obavještenja",
+    "error": "Greška pri ažuriranju obavještenja",
+    "viewAll": "Pogledaj sva obavještenja",
+    "errors": {
+      "markReadFailed": "Neuspješno označavanje obavještenja kao pročitano",
+      "markAllReadFailed": "Neuspješno označavanje svih obavještenja kao pročitano"
+    },
     "paymentSuccessful": "Plaćanje uspješno",
     "paymentCancelled": "Plaćanje otkazano"
   },

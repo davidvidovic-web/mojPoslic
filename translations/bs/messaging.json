@@ -56,7 +56,13 @@
     "offline": "offline",
     "lastSeen": "Zadnji put viđen {time}",
     "today": "danas",
-    "yesterday": "jučer"
+    "yesterday": "jučer",
+    "justNow": "Upravo sada",
+    "minutesAgo": "prije {count}min",
+    "hoursAgo": "prije {count}h",
+    "timeFormat": "{hour}:{minute}",
+    "dateFormat": "{day}. {month}",
+    "weekdayFormat": "{weekday}"
   },
   "conversationTypes": {
     "jobChat": "Razgovor o prijavi za posao",
@@ -74,7 +80,7 @@
     "audio": "Audio",
     "attachFile": "Priloži fajl",
     "removeAttachment": "Ukloni prilog",
-    "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 10MB.",
+    "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 2MB.",
     "invalidFileType": "Neispravan tip fajla. Molimo odaberite ispravan fajl.",
     "dropFilesHere": "Pustite fajlove ovde"
   },

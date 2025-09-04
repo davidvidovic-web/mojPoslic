@@ -58,7 +58,7 @@
   "companyWebsite": "Company Website",
   "applicationPortal": "Application Portal",
   "invalidFileType": "Invalid file type. Please upload PDF or DOC files only.",
-  "fileTooLarge": "File too large. Maximum size is 10MB.",
+  "fileTooLarge": "File too large. Maximum size is 2MB.",
   "pleaseWriteCoverLetter": "Please write a cover letter to apply.",
   "applicationPreview": "Application Preview",
   "applyingFor": "Applying for",

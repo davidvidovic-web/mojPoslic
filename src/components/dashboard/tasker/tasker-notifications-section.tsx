@@ -15,11 +15,11 @@ import type { Database } from '@/types/supabase'
 
 type NotificationRow = Database['public']['Tables']['notifications']['Row']
 
-interface ClientNotificationsSectionProps {
+interface TaskerNotificationsSectionProps {
   className?: string
 }
 
-export function ClientNotificationsSection({ className }: ClientNotificationsSectionProps) {
+export function TaskerNotificationsSection({ className }: TaskerNotificationsSectionProps) {
   const { user } = useSupabaseAuth()
   const t = useTranslations('dashboard.notifications')
   const locale = useLocale() as 'bs' | 'en'
@@ -53,7 +53,7 @@ export function ClientNotificationsSection({ className }: ClientNotificationsSec
     let title = notification.title || ''
     let message = notification.message || ''
 
-    // Try to translate based on notification type and content patterns for clients
+    // Try to translate based on notification type and content patterns
     try {
       switch (notification.type) {
         case 'JOB_APPLICATION':
@@ -68,28 +68,28 @@ export function ClientNotificationsSection({ className }: ClientNotificationsSec
         case 'JOB_UPDATE':
           if (locale === 'bs') {
             title = 'Ažuriranje posla'
-            message = notification.message || 'Jedan od vaših poslova je ažuriran'
+            message = notification.message || 'Posao je ažuriran'
           } else {
             title = 'Job Update'
-            message = notification.message || 'One of your jobs has been updated'
+            message = notification.message || 'A job has been updated'
           }
           break
         case 'NEW_MESSAGE':
           if (locale === 'bs') {
             title = 'Nova poruka'
-            message = notification.message || 'Imate novu poruku od kandidata'
+            message = notification.message || 'Imate novu poruku'
           } else {
             title = 'New Message'
-            message = notification.message || 'You have a new message from a candidate'
+            message = notification.message || 'You have a new message'
           }
           break
         case 'NEW_REVIEW':
           if (locale === 'bs') {
             title = 'Nova recenzija'
-            message = notification.message || 'Kandidat je ostavio recenziju'
+            message = notification.message || 'Dobili ste novu recenziju'
           } else {
             title = 'New Review'
-            message = notification.message || 'A candidate left you a review'
+            message = notification.message || 'You received a new review'
           }
           break
         case 'SYSTEM':
@@ -116,19 +116,17 @@ export function ClientNotificationsSection({ className }: ClientNotificationsSec
       await markAsReadMutation.mutateAsync(notificationId)
     } catch (error) {
       console.error('Error marking notification as read:', error)
-      toast.error(t('errors.markReadFailed'))
+      toast.error(t('error'))
     }
   }
 
   const handleMarkAllAsRead = async () => {
-    if (!user?.id) return
-    
     try {
-      await markAllAsReadMutation.mutateAsync(user.id)
+      await markAllAsReadMutation.mutateAsync(user?.id || '')
       toast.success(t('allMarkedRead'))
     } catch (error) {
       console.error('Error marking all notifications as read:', error)
-      toast.error(t('errors.markAllReadFailed'))
+      toast.error(t('error'))
     }
   }
 

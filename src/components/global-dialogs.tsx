@@ -3,6 +3,7 @@
 import React from 'react'
 import { useDialogStore } from '@/stores/dialog-store'
 import { UnifiedMessagingInterface } from '@/components/messaging/unified-messaging-interface'
+import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ export function GlobalDialogs() {
     closeMessagingDialog, 
     currentConversationId 
   } = useDialogStore()
+  
+  const t = useTranslations('messaging')
 
   return (
     <>
@@ -23,7 +26,7 @@ export function GlobalDialogs() {
       <Dialog open={isMessagingDialogOpen} onOpenChange={() => closeMessagingDialog()}>
         <DialogContent className="max-w-4xl max-h-[80vh] p-0">
           <DialogHeader className="sr-only">
-            <DialogTitle>Messages</DialogTitle>
+            <DialogTitle>{t('title')}</DialogTitle>
           </DialogHeader>
           <UnifiedMessagingInterface 
             conversationId={currentConversationId || undefined}

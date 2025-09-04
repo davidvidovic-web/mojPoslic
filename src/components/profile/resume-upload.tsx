@@ -176,6 +176,7 @@ export function ResumeUpload({
               
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleDownload}
@@ -183,6 +184,7 @@ export function ResumeUpload({
                   <Download className="w-4 h-4" />
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleRemoveResume}
@@ -209,6 +211,7 @@ export function ResumeUpload({
                 {t('uploadDescription')}
               </p>
               <Button 
+                type="button"
                 variant="outline" 
                 disabled={isUploading}
                 onClick={(e) => {
@@ -236,6 +239,7 @@ export function ResumeUpload({
       {/* Upload button (alternative) */}
       {currentResume && (
         <Button
+          type="button"
           variant="outline"
           onClick={openFileDialog}
           disabled={isUploading}

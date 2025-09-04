@@ -56,7 +56,13 @@
     "offline": "offline",
     "lastSeen": "Last seen {time}",
     "today": "today",
-    "yesterday": "yesterday"
+    "yesterday": "yesterday",
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "timeFormat": "{hour}:{minute}",
+    "dateFormat": "{month} {day}",
+    "weekdayFormat": "{weekday}"
   },
   "conversationTypes": {
     "jobChat": "Job application conversation",

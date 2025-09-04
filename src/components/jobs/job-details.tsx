@@ -12,6 +12,7 @@ import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
 import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
+import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 interface JobDetailsProps {
@@ -20,7 +21,7 @@ interface JobDetailsProps {
 
 export function JobDetails({ jobId }: JobDetailsProps) {
   const t = useTranslations()
-  const locale = useLocale()
+  const locale = useLocale() as 'bs' | 'en'
   const router = useRouter()
   const { user, loading: authLoading } = useSupabaseAuth()
   const [job, setJob] = useState<Job | null>(null)
@@ -118,14 +119,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffInDays === 0) return t('common.time.today')
-    if (diffInDays === 1) return t('common.time.yesterday')
-    if (diffInDays < 7) return t('common.time.daysAgo', { count: diffInDays })
-    return date.toLocaleDateString()
+    return formatRelativeDate(dateString, locale)
   }
 
   const formatSalary = (job: Job) => {
@@ -368,7 +362,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                 <div>
                   <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.startDate')}</span>
                   {job.start_date && job.start_date !== 'negotiable' && job.start_date.trim() !== '' ? (
-                    <p className="text-sm font-medium text-foreground">{new Date(job.start_date).toLocaleDateString()}</p>
+                    <p className="text-sm font-medium text-foreground">{formatDateUtil(job.start_date, locale, { format: 'short' })}</p>
                   ) : (
                     <p className="text-sm font-medium text-foreground">{t('jobs.form.labels.byAgreement')}</p>
                   )}
