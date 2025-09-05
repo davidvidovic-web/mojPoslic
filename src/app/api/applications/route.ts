@@ -156,8 +156,21 @@ export async function POST(request: NextRequest) {
           applicantName: applicantDisplayName
         })
         
-        // Create notification for the job poster (client) using authenticated client
-        const { data: notificationData, error: notificationError } = await supabaseAuth
+        // Create a service role client for notification creation (to bypass RLS)
+        const supabaseService = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            cookies: {
+              get: () => undefined,
+              set: () => {},
+              remove: () => {},
+            }
+          }
+        )
+        
+        // Create notification for the job poster (client) using service role
+        const { data: notificationData, error: notificationError } = await supabaseService
           .from('notifications')
           .insert({
             user_id: jobData.posted_by_id,
@@ -175,9 +188,19 @@ export async function POST(request: NextRequest) {
           .select()
         
         if (notificationError) {
-          console.error('❌ Failed to create notification:', notificationError)
+          console.error('❌ Failed to create notification:', {
+            error: notificationError,
+            jobPosterUuid: jobData.posted_by_id,
+            applicantId: user.id,
+            applicationId: newApplication.id
+          })
         } else {
-          console.log('✅ Notification created successfully:', notificationData)
+          console.log('✅ Notification created successfully:', {
+            notificationData,
+            notificationId: notificationData?.[0]?.id,
+            recipientId: jobData.posted_by_id,
+            applicantId: user.id
+          })
         }
       }
     } catch (statsError) {

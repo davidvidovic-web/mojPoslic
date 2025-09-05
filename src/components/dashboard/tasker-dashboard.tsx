@@ -1,6 +1,7 @@
 'use client'
 
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
+import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications'
 import { useTranslations } from 'next-intl'
 import { ApplicationStatus } from '@/types/application'
 import TaskerApplicationManager from './tasker/tasker-application-manager'
@@ -28,6 +29,9 @@ interface ApplicationStats {
 
 export function TaskerDashboard() {
   const { user } = useSupabaseAuth()
+  
+  // Real-time notifications for application updates and messages
+  const { notifications, unreadCount, markAsRead } = useRealtimeNotifications()
   
   // Translation hooks
   const tDashboard = useTranslations('dashboard')

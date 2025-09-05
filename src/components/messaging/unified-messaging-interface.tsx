@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useSupabaseRealtimeChat } from '@/hooks/use-supabase-realtime-chat'
+import { useSupabaseRealtimeChat } from '@/hooks/use-supabase-realtime-chat-postgres'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
 import { Button } from '@/components/ui/button'
@@ -182,8 +182,8 @@ export function UnifiedMessagingInterface({
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
     
     if (diffInMinutes < 1) return t('messages.justNow')
-    if (diffInMinutes < 60) return t('messages.minutesAgo').replace('{count}', diffInMinutes.toString())
-    if (diffInMinutes < 1440) return t('messages.hoursAgo').replace('{count}', Math.floor(diffInMinutes / 60).toString())
+    if (diffInMinutes < 60) return t('messages.minutesAgo', { count: diffInMinutes })
+    if (diffInMinutes < 1440) return t('messages.hoursAgo', { count: Math.floor(diffInMinutes / 60) })
     
     return date.toLocaleDateString()
   }
@@ -243,7 +243,7 @@ export function UnifiedMessagingInterface({
                   <p className="text-xs text-muted-foreground">
                     {typingUsers.length === 1 ? 
                       t('messages.typing.single') : 
-                      t('messages.typing.multiple').replace('{count}', typingUsers.length.toString())
+                      t('messages.typing.multiple', { count: typingUsers.length })
                     }
                   </p>
                 )}

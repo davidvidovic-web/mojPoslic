@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
 import { toast } from 'sonner'
 
 export type NotificationType = 
@@ -12,9 +14,6 @@ export type NotificationType =
   | 'JOB_APPLICATION' 
   | 'JOB_UPDATE' 
   | 'SYSTEM'
-  | 'APPLICATION_STATUS_CHANGE'
-  | 'NEW_JOB_MATCH'
-  | 'CONNECTION_UPDATE'
 
 export interface NotificationData {
   url?: string
@@ -42,12 +41,15 @@ interface UseRealtimeNotificationsProps {
   showToasts?: boolean
 }
 
-export function useRealtimeNotifications() {
+export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = {}) {
+  const { enabled = true, showToasts = true } = props
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const { user } = useSupabaseAuth()
+  const queryClient = useQueryClient()
 
   // Load initial notifications
   const loadNotifications = useCallback(async () => {
@@ -64,15 +66,29 @@ export function useRealtimeNotifications() {
 
       if (error) throw error
 
-      setNotifications(data || [])
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0)
+      // Filter and convert to proper Notification type
+      const filteredNotifications = (data || [])
+        .filter(n => n.id && n.user_id && n.type && n.title && n.message && n.created_at)
+        .map(n => ({
+          id: n.id,
+          user_id: n.user_id!,
+          type: n.type as NotificationType,
+          title: n.title,
+          message: n.message,
+          data: n.data as NotificationData | undefined,
+          is_read: n.is_read || false,
+          created_at: n.created_at!
+        }))
+
+      setNotifications(filteredNotifications)
+      setUnreadCount(filteredNotifications.filter(n => !n.is_read).length)
     } catch (err) {
       console.error('Failed to load notifications:', err)
       setError(err instanceof Error ? err.message : 'Failed to load notifications')
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, enabled, supabase])
+  }, [user?.id, enabled])
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -94,7 +110,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Failed to mark notification as read:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
@@ -114,7 +130,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Failed to mark all notifications as read:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Delete notification
   const deleteNotification = useCallback(async (notificationId: string) => {
@@ -138,7 +154,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Failed to delete notification:', err)
     }
-  }, [user?.id, notifications, supabase])
+  }, [user?.id, notifications])
 
   // Create notification (for testing or manual creation)
   const createNotification = useCallback(async (
@@ -168,7 +184,7 @@ export function useRealtimeNotifications() {
       console.error('Failed to create notification:', err)
       throw err
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Format notification for display
   const formatNotification = useCallback((notification: Notification) => {
@@ -184,20 +200,45 @@ export function useRealtimeNotifications() {
 
   // Set up real-time subscription
   useEffect(() => {
-    if (!user?.id || !enabled) return
+    if (!user?.id || !enabled) {
+      console.log('🔄 Notifications realtime setup skipped:', { 
+        hasUser: !!user?.id, 
+        enabled,
+        userId: user?.id 
+      })
+      return
+    }
+
+    console.log('🔄 Setting up notifications realtime for user:', user.id)
 
     const channel = supabase
-      .channel(`notifications_${user.id}`)
+      .channel(`notifications:user:${user.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`
-      }, (payload: any) => {
+      }, (payload) => {
         const newNotification = payload.new as Notification
+        console.log('🔔 New notification via postgres_changes:', {
+          notification: newNotification,
+          expectedUserId: user.id,
+          actualUserId: newNotification.user_id,
+          matches: newNotification.user_id === user.id
+        })
+        
+        // Double check that this notification is for the current user
+        if (newNotification.user_id !== user.id) {
+          console.warn('⚠️ Received notification for different user, ignoring')
+          return
+        }
         
         setNotifications(prev => [newNotification, ...prev])
         setUnreadCount(prev => prev + 1)
+
+        // Invalidate React Query cache to update header notifications
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
 
         // Show toast notification
         if (showToasts) {
@@ -220,6 +261,7 @@ export function useRealtimeNotifications() {
         filter: `user_id=eq.${user.id}`
       }, (payload) => {
         const updatedNotification = payload.new as Notification
+        console.log('🔔 Updated notification via postgres_changes:', updatedNotification)
         
         setNotifications(prev => prev.map(n => 
           n.id === updatedNotification.id ? updatedNotification : n
@@ -229,6 +271,10 @@ export function useRealtimeNotifications() {
         if (updatedNotification.is_read) {
           setUnreadCount(prev => Math.max(0, prev - 1))
         }
+
+        // Invalidate React Query cache
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
       })
       .on('postgres_changes', {
         event: 'DELETE',
@@ -237,20 +283,52 @@ export function useRealtimeNotifications() {
         filter: `user_id=eq.${user.id}`
       }, (payload) => {
         const deletedId = payload.old.id
-        const deletedNotification = notifications.find(n => n.id === deletedId)
+        console.log('🔔 Deleted notification via postgres_changes:', deletedId)
         
-        setNotifications(prev => prev.filter(n => n.id !== deletedId))
+        setNotifications(prev => {
+          const deletedNotification = prev.find(n => n.id === deletedId)
+          const newNotifications = prev.filter(n => n.id !== deletedId)
+          
+          // Update unread count if the deleted notification was unread
+          if (deletedNotification && !deletedNotification.is_read) {
+            setUnreadCount(prevCount => Math.max(0, prevCount - 1))
+          }
+          
+          return newNotifications
+        })
+
+        // Invalidate React Query cache
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+      })
+      .subscribe((status, err) => {
+        console.log('📡 Notifications realtime status:', status)
+        if (err) {
+          console.error('📡 Notifications realtime error details:', err)
+        }
         
-        if (deletedNotification && !deletedNotification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1))
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Notifications realtime connected')
+          setError(null)
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Notifications realtime error:', err)
+          console.log('🔄 Notifications realtime will retry connection...')
+        } else if (status === 'TIMED_OUT') {
+          console.error('⏰ Notifications realtime timed out')
+          console.log('🔄 Notifications realtime will retry connection...')
+        } else if (status === 'CLOSED') {
+          console.log('🔌 Notifications realtime closed')
         }
       })
-      .subscribe()
+
+    channelRef.current = channel
 
     return () => {
-      channel.unsubscribe()
+      console.log('🧹 Cleaning up notifications realtime')
+      supabase.removeChannel(channel)
+      channelRef.current = null
     }
-  }, [user?.id, enabled, showToasts, notifications, supabase])
+  }, [user?.id, enabled, showToasts, queryClient])
 
   // Load initial notifications
   useEffect(() => {
@@ -292,16 +370,10 @@ function getNotificationIcon(type: NotificationType): string {
       return '📝'
     case 'JOB_UPDATE':
       return '🔄'
-    case 'APPLICATION_STATUS_CHANGE':
-      return '📋'
-    case 'NEW_JOB_MATCH':
-      return '🎯'
-    case 'CONNECTION_UPDATE':
-      return '🔗'
     case 'SYSTEM':
-      return '⚙️'
+      return '🔔'
     default:
-      return '📢'
+      return '�'
   }
 }
 
@@ -315,16 +387,10 @@ function getNotificationColor(type: NotificationType): string {
       return 'green'
     case 'JOB_UPDATE':
       return 'orange'
-    case 'APPLICATION_STATUS_CHANGE':
-      return 'purple'
-    case 'NEW_JOB_MATCH':
-      return 'pink'
-    case 'CONNECTION_UPDATE':
-      return 'cyan'
     case 'SYSTEM':
       return 'gray'
     default:
-      return 'blue'
+      return 'gray'
   }
 }
 

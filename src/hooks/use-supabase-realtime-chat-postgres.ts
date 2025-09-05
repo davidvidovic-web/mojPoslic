@@ -31,6 +31,35 @@ export interface Conversation {
   unread_count?: number
 }
 
+// Database types for realtime payloads
+interface ConversationRecord {
+  id: string
+  title?: string
+  job_id?: string
+  application_id?: string
+  created_by_id: string
+  participant_ids: string[]
+  participant_names: string[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  last_message_at?: string
+  last_message_preview?: string
+  last_sender_id?: string
+}
+
+interface MessageRecord {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  message_type: string
+  sender_name: string
+  sender_avatar_url?: string
+  read_by: string[]
+  created_at: string
+}
+
 interface UseSupabaseRealtimeChatProps {
   conversationId?: string
   enabled?: boolean
@@ -88,11 +117,13 @@ export function useSupabaseRealtimeChat({
       // Calculate unread counts for each conversation
       const conversationsWithUnread = await Promise.all(
         (data || []).map(async (conv) => {
+          // Count messages where the current user is NOT in the read_by array
           const { count } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('conversation_id', conv.id)
-            .not('read_by', 'cs', `{${user.id}}`)
+            .neq('sender_id', user.id) // Exclude messages sent by current user
+            .not('read_by', 'cs', `{${user.id}}`) // Where read_by does NOT contain user.id
 
           return {
             ...conv,
@@ -309,7 +340,7 @@ export function useSupabaseRealtimeChat({
         table: 'messages',
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
-        const dbMessage = payload.new as any
+        const dbMessage = payload.new as MessageRecord
         console.log('📨 New message via postgres_changes:', dbMessage)
         
         // Add message if it's not from current user (optimistic updates handle own messages)
@@ -319,7 +350,7 @@ export function useSupabaseRealtimeChat({
             conversation_id: dbMessage.conversation_id,
             sender_id: dbMessage.sender_id,
             content: dbMessage.content,
-            message_type: dbMessage.message_type || 'text',
+            message_type: (dbMessage.message_type as 'text' | 'image' | 'file') || 'text',
             sender_name: dbMessage.sender_name,
             sender_avatar_url: dbMessage.sender_avatar_url || undefined,
             read_by: dbMessage.read_by || [],
@@ -342,7 +373,7 @@ export function useSupabaseRealtimeChat({
         table: 'messages',
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
-        const dbMessage = payload.new as any
+        const dbMessage = payload.new as MessageRecord
         console.log('📝 Message updated via postgres_changes:', dbMessage)
         
         if (dbMessage.conversation_id && dbMessage.sender_id && dbMessage.created_at) {
@@ -380,13 +411,18 @@ export function useSupabaseRealtimeChat({
         }
       })
       
-      .subscribe((status) => {
-        console.log('📡 Message realtime status:', status)
+      .subscribe((status, err) => {
+        console.log('📡 Message realtime status:', status, err)
         if (status === 'SUBSCRIBED') {
           console.log('✅ Message realtime connected')
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Message realtime error')
-          setError('Realtime connection failed')
+          console.error('❌ Message realtime error:', err)
+          setError(`Realtime connection failed: ${err?.message || 'Unknown error'}`)
+        } else if (status === 'TIMED_OUT') {
+          console.error('⏰ Message realtime timed out')
+          setError('Realtime connection timed out')
+        } else if (status === 'CLOSED') {
+          console.log('🔌 Message realtime closed')
         }
       })
 
@@ -414,8 +450,8 @@ export function useSupabaseRealtimeChat({
 
     console.log('🔄 Setting up conversations realtime')
 
-    // Create channel for conversations
-    const channel = supabase.channel('conversations')
+    // Create channel for conversations with user-specific naming
+    const channel = supabase.channel(`conversations:user:${user.id}`)
     conversationsChannelRef.current = channel
 
     channel
@@ -424,10 +460,12 @@ export function useSupabaseRealtimeChat({
         schema: 'public',
         table: 'conversations'
       }, (payload) => {
-        const newConversation = payload.new as any
+        const newConversation = payload.new as ConversationRecord
         console.log('📋 New conversation:', newConversation)
         
-        if (newConversation.participant_ids?.includes(user.id)) {
+        // Only process if user is a participant
+        if (Array.isArray(newConversation.participant_ids) && 
+            newConversation.participant_ids.includes(user.id)) {
           loadConversations() // Reload to get proper data
         }
       })
@@ -437,29 +475,33 @@ export function useSupabaseRealtimeChat({
         schema: 'public',
         table: 'conversations'
       }, (payload) => {
-        const updatedConversation = payload.new as any
+        const updatedConversation = payload.new as ConversationRecord
         console.log('📋 Updated conversation:', updatedConversation)
         
-        if (updatedConversation.participant_ids?.includes(user.id)) {
-          setConversations(prev => prev.map(conv => 
-            conv.id === updatedConversation.id ? { 
-              ...conv,
-              title: updatedConversation.title || undefined,
-              last_message_at: updatedConversation.last_message_at,
-              last_message_preview: updatedConversation.last_message_preview,
-              last_sender_id: updatedConversation.last_sender_id,
-              updated_at: updatedConversation.updated_at
-            } : conv
-          ))
+        // Only process if user is a participant
+        if (Array.isArray(updatedConversation.participant_ids) && 
+            updatedConversation.participant_ids.includes(user.id)) {
+          // For conversation updates, just reload to get fresh data
+          loadConversations()
         }
       })
       
-      .subscribe((status) => {
+      .subscribe((status, err) => {
         console.log('📡 Conversations realtime status:', status)
+        if (err) {
+          console.error('📡 Conversations realtime error details:', err)
+        }
         if (status === 'SUBSCRIBED') {
           console.log('✅ Conversations realtime connected')
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Conversations realtime error')
+          console.error('❌ Conversations realtime error:', err)
+          // Don't set error state immediately, let it retry
+          console.log('🔄 Realtime will retry connection...')
+        } else if (status === 'TIMED_OUT') {
+          console.error('⏰ Conversations realtime timed out')
+          console.log('🔄 Realtime will retry connection...')
+        } else if (status === 'CLOSED') {
+          console.log('🔌 Conversations realtime closed')
         }
       })
 

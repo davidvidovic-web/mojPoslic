@@ -4,7 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MessageCircle } from 'lucide-react'
-import { useSupabaseRealtimeChat } from '@/hooks/use-supabase-realtime-chat'
+import { useSupabaseRealtimeChat } from '@/hooks/use-supabase-realtime-chat-postgres'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
 
