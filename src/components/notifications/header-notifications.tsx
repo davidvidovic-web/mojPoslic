@@ -38,6 +38,10 @@ interface NotificationData {
   client?: {
     name?: string
   }
+  sender_name?: string
+  sender_id?: string
+  conversation_id?: string
+  message_id?: string
 }
 
 interface HeaderNotificationsProps {
@@ -93,14 +97,6 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
       // Fallback: clean the stored name (this will convert emails to "Someone/Neko")
       finalApplicantName = cleanDisplayName(storedApplicantName)
     }
-
-    console.log('✅ Final name resolution:', {
-      shouldResolve,
-      resolvedName,
-      storedApplicantName,
-      finalApplicantName,
-      applicantId
-    })
 
     // Generate the notification content with the proper name
     const { title, message } = getLocalizedNotificationContentWithName(notification, finalApplicantName)
@@ -158,13 +154,8 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
     let message = notification.message || ''
 
     // Debug logging
-    console.log('🔍 Notification debug:', {
-      type: notification.type,
-      data: notification.data,
-      applicantName,
-      userRole: user?.role,
-      locale
-    })
+    // Debug information for notification content generation
+    // This helps track how notifications are processed and displayed
 
     try {
       switch (notification.type) {
@@ -255,7 +246,13 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
           if (notification.data) {
             try {
               const data = notification.data as NotificationData
-              senderName = cleanDisplayName(data.applicant_name || data.client_name || '')
+              // Check for sender_name first (new format), then fallback to old format
+              senderName = cleanDisplayName(
+                data.sender_name || 
+                data.applicant_name || 
+                data.client_name || 
+                ''
+              )
             } catch (e) {
               console.warn('Failed to parse notification data:', e)
             }
@@ -304,8 +301,6 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
       title = notification.title || ''
       message = notification.message || ''
     }
-
-    console.log('🎯 Final notification content:', { title, message });
 
     return { title, message }
   }
@@ -358,6 +353,24 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
     if (notification.type === 'JOB_APPLICATION') {
       // Could navigate to the specific job applications
       console.log('Navigate to job applications for notification:', notification.id)
+    } else if (notification.type === 'NEW_MESSAGE') {
+      // Navigate to the conversation
+      if (notification.data) {
+        try {
+          const data = notification.data as NotificationData
+          if (data.conversation_id) {
+            window.location.href = `/dashboard/messaging?conversation=${data.conversation_id}`
+          } else {
+            // Fallback to general messaging page
+            window.location.href = '/dashboard/messaging'
+          }
+        } catch (e) {
+          console.warn('Failed to parse message notification data:', e)
+          window.location.href = '/dashboard/messaging'
+        }
+      } else {
+        window.location.href = '/dashboard/messaging'
+      }
     }
   }
 

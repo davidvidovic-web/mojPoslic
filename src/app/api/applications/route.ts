@@ -7,11 +7,6 @@ export async function POST(request: NextRequest) {
     // Get auth header for token-based auth
     const authHeader = request.headers.get('authorization')
     
-    console.log('🔐 Applications API - Auth check:', {
-      hasAuthHeader: !!authHeader,
-      authHeaderPreview: authHeader ? authHeader.substring(0, 20) + '...' : 'none'
-    })
-    
     // Create supabase client with proper auth handling
     const supabase = authHeader 
       ? createServerClient(
@@ -34,13 +29,6 @@ export async function POST(request: NextRequest) {
 
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    console.log('🔐 Applications API - User check:', {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      authError: authError?.message
-    })
     
     if (authError || !user) {
       console.error('Authentication failed:', authError)
@@ -121,16 +109,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('✅ Application created successfully:', newApplication)
-
     // Manually update statistics (instead of using triggers)
     try {
-      console.log('📊 Starting statistics and notification updates...')
-      
       // Note: RPC functions temporarily disabled due to TypeScript issues
       // await supabase.rpc('update_job_application_stats', { job_uuid: jobId })
       // await supabase.rpc('update_user_application_stats', { user_uuid: user.id })
-      console.log('✅ Statistics update skipped (temporarily disabled)')
       
       // Get job details for notification
       const { data: jobData, error: jobDataError } = await supabase
@@ -141,20 +124,11 @@ export async function POST(request: NextRequest) {
       
       if (jobDataError) {
         console.error('❌ Failed to fetch job data for notification:', jobDataError)
-      } else {
-        console.log('✅ Job data fetched:', jobData)
       }
 
       if (jobData?.posted_by_id) {
         // Note: Statistics update temporarily disabled
         // await supabase.rpc('update_user_application_stats', { user_uuid: jobData.posted_by_id })
-        
-        console.log('📢 Creating notification for job poster:', {
-          jobPosterUuid: jobData.posted_by_id,
-          jobTitle: jobData.title,
-          applicantId: user.id,
-          applicantName: applicantDisplayName
-        })
         
         // Create a service role client for notification creation (to bypass RLS)
         const supabaseService = createServerClient(
@@ -193,13 +167,6 @@ export async function POST(request: NextRequest) {
             jobPosterUuid: jobData.posted_by_id,
             applicantId: user.id,
             applicationId: newApplication.id
-          })
-        } else {
-          console.log('✅ Notification created successfully:', {
-            notificationData,
-            notificationId: notificationData?.[0]?.id,
-            recipientId: jobData.posted_by_id,
-            applicantId: user.id
           })
         }
       }

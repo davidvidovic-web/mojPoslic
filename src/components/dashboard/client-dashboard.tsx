@@ -5,7 +5,6 @@ import { useUserJobsQuery, useDeleteJobMutation } from '@/hooks/queries/useJobs'
 import { queryKeys } from '@/lib/query-keys'
 import { useMultipleJobApplicantCounts, useUpdateApplication } from '@/hooks/use-applications'
 import { useClientApplications } from '@/hooks/use-client-applications'
-import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
 import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
@@ -20,7 +19,7 @@ import { Briefcase, Users, History, ChevronDown, ChevronUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { NotificationRealtimeDebug } from '@/components/notifications/notification-realtime-debug'
+import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { Job } from '@/types/job'
@@ -41,10 +40,7 @@ export function ClientDashboard() {
   const [showMessaging, setShowMessaging] = useState(false)
   
   const { user, session } = useSupabaseAuth()
-  
-  // Real-time notifications for job applications and other updates
-  const { notifications, unreadCount, markAsRead } = useRealtimeNotifications()
-  
+
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobsQuery(user?.id || '')
   const deleteJobMutation = useDeleteJobMutation()
@@ -240,9 +236,6 @@ export function ClientDashboard() {
       }
     >
       <div className="space-y-12 lg:space-y-20">
-        {/* Debug Component - Remove after testing */}
-        <NotificationRealtimeDebug />
-        
         {/* Jobs Section */}
         <Card>
           <CardContent className="p-6">

@@ -7,15 +7,11 @@ export function useUserName(userId: string | undefined) {
     queryFn: async () => {
       if (!userId) return null
       
-      console.log('🔍 useUserName: Fetching name for userId:', userId)
-      
       const { data, error } = await supabase
         .from('users')
         .select('name')
         .eq('id', userId)
-        .maybeSingle()
-      
-      console.log('🔍 useUserName: Query result:', { data, error, userId })
+        .single()
       
       if (error) {
         console.warn('Failed to fetch user name:', error)

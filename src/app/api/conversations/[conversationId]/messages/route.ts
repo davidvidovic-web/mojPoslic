@@ -295,6 +295,90 @@ export async function POST(
       )
     }
 
+    // Create notification for message recipient(s)
+    try {
+      // Determine who should receive the notification (everyone in conversation except sender)
+      let recipientIds: string[] = []
+      
+      if (conversation.application_id) {
+        // Get application details to find both client and tasker
+        const { data: application } = await supabase
+          .from('applications')
+          .select(`
+            user_id,
+            job:job_listings!applications_job_id_fkey(posted_by_id)
+          `)
+          .eq('id', conversation.application_id)
+          .single()
+          
+        if (application) {
+          // Add tasker (applicant) and client (job poster) to recipients
+          if (application.user_id !== user.id) {
+            recipientIds.push(application.user_id)
+          }
+          if (application.job?.posted_by_id && application.job.posted_by_id !== user.id) {
+            recipientIds.push(application.job.posted_by_id)
+          }
+        }
+      } else if (conversation.job_id) {
+        // If it's a job-based conversation, notify the job poster
+        const { data: job } = await supabase
+          .from('job_listings')
+          .select('posted_by_id')
+          .eq('id', conversation.job_id)
+          .single()
+          
+        if (job?.posted_by_id && job.posted_by_id !== user.id) {
+          recipientIds.push(job.posted_by_id)
+        }
+      }
+
+      // Create notifications for each recipient
+      if (recipientIds.length > 0) {
+        const senderName = userData?.name || user.email || 'Someone'
+        const messagePreview = content.length > 50 ? content.substring(0, 50) + '...' : content
+        
+        // Create service role client for notification creation (to bypass RLS)
+        const supabaseService = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            cookies: {
+              get: () => undefined,
+              set: () => {},
+              remove: () => {},
+            }
+          }
+        )
+
+        const notifications = recipientIds.map(recipientId => ({
+          user_id: recipientId,
+          type: 'NEW_MESSAGE' as const,
+          title: `New message from ${senderName}`,
+          message: messagePreview,
+          data: {
+            conversation_id: conversationId,
+            sender_id: user.id,
+            sender_name: senderName,
+            message_id: newMessage.id
+          },
+          is_read: false
+        }))
+
+        const { error: notificationError } = await supabaseService
+          .from('notifications')
+          .insert(notifications)
+
+        if (notificationError) {
+          console.error('Failed to create message notification:', notificationError)
+          // Don't fail the message sending if notification creation fails
+        }
+      }
+    } catch (notificationError) {
+      console.error('Error creating message notification:', notificationError)
+      // Don't fail the message sending if notification creation fails
+    }
+
     return NextResponse.json({
       success: true,
       data: newMessage

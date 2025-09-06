@@ -201,15 +201,8 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
   // Set up real-time subscription
   useEffect(() => {
     if (!user?.id || !enabled) {
-      console.log('🔄 Notifications realtime setup skipped:', { 
-        hasUser: !!user?.id, 
-        enabled,
-        userId: user?.id 
-      })
       return
     }
-
-    console.log('🔄 Setting up notifications realtime for user:', user.id)
 
     const channel = supabase
       .channel(`notifications:user:${user.id}`)
@@ -220,16 +213,9 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
         filter: `user_id=eq.${user.id}`
       }, (payload) => {
         const newNotification = payload.new as Notification
-        console.log('🔔 New notification via postgres_changes:', {
-          notification: newNotification,
-          expectedUserId: user.id,
-          actualUserId: newNotification.user_id,
-          matches: newNotification.user_id === user.id
-        })
         
         // Double check that this notification is for the current user
         if (newNotification.user_id !== user.id) {
-          console.warn('⚠️ Received notification for different user, ignoring')
           return
         }
         
@@ -261,7 +247,6 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
         filter: `user_id=eq.${user.id}`
       }, (payload) => {
         const updatedNotification = payload.new as Notification
-        console.log('🔔 Updated notification via postgres_changes:', updatedNotification)
         
         setNotifications(prev => prev.map(n => 
           n.id === updatedNotification.id ? updatedNotification : n
@@ -283,7 +268,6 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
         filter: `user_id=eq.${user.id}`
       }, (payload) => {
         const deletedId = payload.old.id
-        console.log('🔔 Deleted notification via postgres_changes:', deletedId)
         
         setNotifications(prev => {
           const deletedNotification = prev.find(n => n.id === deletedId)
@@ -301,30 +285,17 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
         queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
         queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
       })
-      .subscribe((status, err) => {
-        console.log('📡 Notifications realtime status:', status)
-        if (err) {
-          console.error('📡 Notifications realtime error details:', err)
-        }
-        
+      .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Notifications realtime connected')
           setError(null)
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Notifications realtime error:', err)
-          console.log('🔄 Notifications realtime will retry connection...')
-        } else if (status === 'TIMED_OUT') {
-          console.error('⏰ Notifications realtime timed out')
-          console.log('🔄 Notifications realtime will retry connection...')
-        } else if (status === 'CLOSED') {
-          console.log('🔌 Notifications realtime closed')
+          console.error('Notifications realtime connection failed')
         }
       })
 
     channelRef.current = channel
 
     return () => {
-      console.log('🧹 Cleaning up notifications realtime')
       supabase.removeChannel(channel)
       channelRef.current = null
     }

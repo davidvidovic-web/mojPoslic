@@ -326,8 +326,6 @@ export function useSupabaseRealtimeChat({
       return
     }
 
-    console.log('🔄 Setting up message realtime for conversation:', conversationId)
-
     // Create channel with proper naming convention
     const channel = supabase.channel(`messages:${conversationId}`)
     channelRef.current = channel
@@ -341,7 +339,6 @@ export function useSupabaseRealtimeChat({
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
         const dbMessage = payload.new as MessageRecord
-        console.log('📨 New message via postgres_changes:', dbMessage)
         
         // Add message if it's not from current user (optimistic updates handle own messages)
         if (dbMessage.sender_id !== user.id && dbMessage.conversation_id && dbMessage.sender_id && dbMessage.created_at) {
@@ -412,9 +409,8 @@ export function useSupabaseRealtimeChat({
       })
       
       .subscribe((status, err) => {
-        console.log('📡 Message realtime status:', status, err)
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Message realtime connected')
+          // Message realtime connected
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Message realtime error:', err)
           setError(`Realtime connection failed: ${err?.message || 'Unknown error'}`)
@@ -447,8 +443,6 @@ export function useSupabaseRealtimeChat({
       }
       return
     }
-
-    console.log('🔄 Setting up conversations realtime')
 
     // Create channel for conversations with user-specific naming
     const channel = supabase.channel(`conversations:user:${user.id}`)
@@ -492,16 +486,14 @@ export function useSupabaseRealtimeChat({
           console.error('📡 Conversations realtime error details:', err)
         }
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Conversations realtime connected')
+          // Conversations realtime connected
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Conversations realtime error:', err)
           // Don't set error state immediately, let it retry
-          console.log('🔄 Realtime will retry connection...')
         } else if (status === 'TIMED_OUT') {
           console.error('⏰ Conversations realtime timed out')
-          console.log('🔄 Realtime will retry connection...')
         } else if (status === 'CLOSED') {
-          console.log('🔌 Conversations realtime closed')
+          // Conversations realtime closed
         }
       })
 

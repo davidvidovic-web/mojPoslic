@@ -179,8 +179,6 @@ export function useRealtimeChat({
 
           if (error) {
             console.warn('Failed to persist message to database:', error)
-          } else {
-            console.log('✅ Message persisted to database:', data)
           }
         } catch (persistError) {
           console.warn('Database persistence failed:', persistError)
