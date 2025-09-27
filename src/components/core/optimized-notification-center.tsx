@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { MessageSquare } from 'lucide-react'
-import { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
+import { MessageCircle } from 'lucide-react'
+import { useSupabaseRealtimeChat } from '@/hooks/use-supabase-realtime-chat-postgres'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useDialogStore } from '@/stores/dialog-store'
 
 interface OptimizedNotificationCenterProps {
   className?: string
@@ -11,11 +13,15 @@ interface OptimizedNotificationCenterProps {
 }
 
 export function OptimizedNotificationCenter({ className, onClick }: OptimizedNotificationCenterProps) {
+  const { user } = useSupabaseAuth()
+  const { openMessagingDialog } = useDialogStore()
   const { 
-    totalUnreadCount, 
-    isLoading, 
-    setMessagingActive
-  } = useOptimizedMessaging()
+    totalUnreadCount,
+    loading: isLoading
+  } = useSupabaseRealtimeChat({
+    conversationId: undefined, // Get all conversations for total unread count
+    enabled: !!user?.id
+  })
   
   const [isVisible, setIsVisible] = useState(false)
 
@@ -25,8 +31,8 @@ export function OptimizedNotificationCenter({ className, onClick }: OptimizedNot
   }, [totalUnreadCount])
 
   const handleClick = () => {
-    // Tell the messaging system that messaging is now active
-    setMessagingActive(true)
+    // Open the messaging dialog
+    openMessagingDialog()
     // Call custom onClick handler if provided
     onClick?.()
   }
@@ -43,7 +49,7 @@ export function OptimizedNotificationCenter({ className, onClick }: OptimizedNot
       onClick={handleClick}
       disabled={isLoading}
     >
-      <MessageSquare className="h-7 w-7" />
+      <MessageCircle className="h-7 w-7" />
       
       {/* Unread count badge */}
       {totalUnreadCount > 0 && (
@@ -55,13 +61,4 @@ export function OptimizedNotificationCenter({ className, onClick }: OptimizedNot
       )}
     </Button>
   )
-}
-
-// Hook for components that want to know when messaging is active
-export function useMessagingActivity() {
-  const { setMessagingActive } = useOptimizedMessaging()
-  
-  return {
-    setMessagingActive
-  }
 }

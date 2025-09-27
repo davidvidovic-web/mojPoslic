@@ -47,6 +47,7 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
   const channelRef = useRef<RealtimeChannel | null>(null)
   const { user } = useSupabaseAuth()
   const queryClient = useQueryClient()
@@ -204,100 +205,156 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
       return
     }
 
-    const channel = supabase
-      .channel(`notifications:user:${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        const newNotification = payload.new as Notification
-        
-        // Double check that this notification is for the current user
-        if (newNotification.user_id !== user.id) {
-          return
-        }
-        
-        setNotifications(prev => [newNotification, ...prev])
-        setUnreadCount(prev => prev + 1)
+    let retryTimeout: NodeJS.Timeout | null = null
 
-        // Invalidate React Query cache to update header notifications
-        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+    const setupSubscription = () => {
+      // Clean up existing channel
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
 
-        // Show toast notification
-        if (showToasts) {
-          toast(newNotification.title, {
-            description: newNotification.message,
-            action: {
-              label: 'View',
-              onClick: () => {
-                // Handle notification action based on type
-                handleNotificationAction(newNotification)
-              }
-            }
-          })
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        const updatedNotification = payload.new as Notification
-        
-        setNotifications(prev => prev.map(n => 
-          n.id === updatedNotification.id ? updatedNotification : n
-        ))
-        
-        // Update unread count if read status changed
-        if (updatedNotification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1))
-        }
-
-        // Invalidate React Query cache
-        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        const deletedId = payload.old.id
-        
-        setNotifications(prev => {
-          const deletedNotification = prev.find(n => n.id === deletedId)
-          const newNotifications = prev.filter(n => n.id !== deletedId)
+      const channel = supabase
+        .channel(`notifications:user:${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const newNotification = payload.new as Notification
           
-          // Update unread count if the deleted notification was unread
-          if (deletedNotification && !deletedNotification.is_read) {
-            setUnreadCount(prevCount => Math.max(0, prevCount - 1))
+          // Double check that this notification is for the current user
+          if (newNotification.user_id !== user.id) {
+            return
           }
           
-          return newNotifications
+          setNotifications(prev => [newNotification, ...prev])
+          setUnreadCount(prev => prev + 1)
+
+          // Invalidate React Query cache to update header notifications
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+
+          // Show toast notification
+          if (showToasts) {
+            toast(newNotification.title, {
+              description: newNotification.message,
+              action: {
+                label: 'View',
+                onClick: () => {
+                  // Handle notification action based on type
+                  handleNotificationAction(newNotification)
+                }
+              }
+            })
+          }
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const updatedNotification = payload.new as Notification
+          
+          setNotifications(prev => prev.map(n => 
+            n.id === updatedNotification.id ? updatedNotification : n
+          ))
+          
+          // Update unread count if read status changed
+          if (updatedNotification.is_read) {
+            setUnreadCount(prev => Math.max(0, prev - 1))
+          }
+
+          // Invalidate React Query cache
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+        })
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const deletedId = payload.old.id
+          
+          setNotifications(prev => {
+            const deletedNotification = prev.find(n => n.id === deletedId)
+            const newNotifications = prev.filter(n => n.id !== deletedId)
+            
+            // Update unread count if the deleted notification was unread
+            if (deletedNotification && !deletedNotification.is_read) {
+              setUnreadCount(prevCount => Math.max(0, prevCount - 1))
+            }
+            
+            return newNotifications
+          })
+
+          // Invalidate React Query cache
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+        })
+        .subscribe((status, err) => {
+          console.log('📡 Notifications realtime status:', status, 'User:', user.id)
+          setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'connecting')
+          if (status === 'SUBSCRIBED') {
+            setError(null)
+            // Clear any pending retry
+            if (retryTimeout) {
+              clearTimeout(retryTimeout)
+              retryTimeout = null
+            }
+          } else if (status === 'CHANNEL_ERROR') {
+            setConnectionStatus('disconnected')
+            console.error('❌ Notifications realtime connection failed:', {
+              error: err,
+              userId: user.id,
+              channelName: `notifications:user:${user.id}`,
+              timestamp: new Date().toISOString()
+            })
+            setError('Realtime notifications connection failed')
+            
+            // Retry after 3 seconds
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                console.log('🔄 Retrying notifications realtime connection...')
+                setupSubscription()
+              }, 3000)
+            }
+          } else if (status === 'TIMED_OUT') {
+            setConnectionStatus('disconnected')
+            console.error('⏰ Notifications realtime timed out')
+            setError('Realtime notifications timed out')
+            
+            // Retry after 5 seconds
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                console.log('🔄 Retrying notifications realtime connection after timeout...')
+                setupSubscription()
+              }, 5000)
+            }
+          } else if (status === 'CLOSED') {
+            setConnectionStatus('disconnected')
+            console.log('🔌 Notifications realtime closed')
+            setError(null)
+          }
         })
 
-        // Invalidate React Query cache
-        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          setError(null)
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Notifications realtime connection failed')
-        }
-      })
+      channelRef.current = channel
+    }
 
-    channelRef.current = channel
+    // Initial setup
+    setupSubscription()
 
     return () => {
-      supabase.removeChannel(channel)
-      channelRef.current = null
+      if (retryTimeout) {
+        clearTimeout(retryTimeout)
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
     }
   }, [user?.id, enabled, showToasts, queryClient])
 
@@ -316,6 +373,7 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
     // State
     isLoading,
     error,
+    connectionStatus,
     
     // Actions
     markAsRead,

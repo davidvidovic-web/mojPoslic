@@ -1,6 +1,7 @@
 'use client'
 
-import { Briefcase, Users, MessageSquare, Calendar } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Briefcase, Users, MessageCircle, Calendar } from 'lucide-react'
 import { Job } from '@/types/job'
 import { useTranslations } from 'next-intl'
 
@@ -57,7 +58,7 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
       <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
-            <MessageSquare className="h-6 w-6 text-purple-600" />
+            <MessageCircle className="h-6 w-6 text-purple-600" />
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">0</div>

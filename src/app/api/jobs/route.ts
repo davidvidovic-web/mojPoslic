@@ -1,6 +1,30 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { enrichJobsWithStaticData } from '@/lib/job-helpers'
+import fs from 'fs'
+import path from 'path'
+
+// Server-side helper to load static data
+async function loadStaticCategories() {
+  const categoriesPath = path.join(process.cwd(), 'public', 'static', 'categories.json')
+  const categoriesFile = fs.readFileSync(categoriesPath, 'utf8')
+  const categoriesData = JSON.parse(categoriesFile)
+  return categoriesData.categories || []
+}
+
+// Helper to find category by key or ID
+function findCategoryRecursive(categories: Record<string, unknown>[], keyOrId: string): Record<string, unknown> | null {
+  for (const category of categories) {
+    if (category.id === keyOrId || category.key === keyOrId) {
+      return category
+    }
+    if (category.subcategories && Array.isArray(category.subcategories)) {
+      const found = findCategoryRecursive(category.subcategories as Record<string, unknown>[], keyOrId)
+      if (found) return found
+    }
+  }
+  return null
+}
 
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient()
@@ -12,7 +36,30 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const city = searchParams.get('city')
     const category = searchParams.get('category')
+    const subcategory = searchParams.get('subcategory')
     const type = searchParams.get('type')
+
+    // Convert category and subcategory keys to IDs if needed
+    let categoryId = category
+    let subcategoryId = subcategory
+
+    if (category && category !== 'all') {
+      // Load static categories and find the category
+      const categories = await loadStaticCategories()
+      const categoryData = findCategoryRecursive(categories, category)
+      if (categoryData && typeof categoryData.id === 'string') {
+        categoryId = categoryData.id
+      }
+    }
+
+    if (subcategory && subcategory !== 'all') {
+      // Load static categories and find the subcategory
+      const categories = await loadStaticCategories()
+      const subcategoryData = findCategoryRecursive(categories, subcategory)
+      if (subcategoryData && typeof subcategoryData.id === 'string') {
+        subcategoryId = subcategoryData.id
+      }
+    }
     
     // Build query
     let query = supabase
@@ -43,7 +90,9 @@ export async function GET(request: NextRequest) {
         posted_by_id,
         requirements,
         benefits,
-        is_urgent
+        is_urgent,
+        view_count,
+        application_count
       `)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
@@ -59,8 +108,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Category filter
-    if (category && category !== 'all') {
-      query = query.eq('category_id', category)
+    if (categoryId && categoryId !== 'all') {
+      query = query.eq('category_id', categoryId)
+    }
+
+    // Subcategory filter
+    if (subcategoryId && subcategoryId !== 'all') {
+      query = query.eq('subcategory_id', subcategoryId)
     }
 
     // Job type filter
@@ -116,7 +170,9 @@ export async function GET(request: NextRequest) {
       salary_max: job.salary_max,
       is_salary_negotiable: job.is_salary_negotiable || false,
       currency: job.currency,
-      subcategory_id: job.subcategory_id
+      subcategory_id: job.subcategory_id,
+      view_count: job.view_count || 0,
+      application_count: job.application_count || 0
     }))
 
     // Enrich with static city and category data

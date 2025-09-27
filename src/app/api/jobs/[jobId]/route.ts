@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerClient } from '@supabase/ssr'
 import { enrichJobWithStaticData } from '@/lib/job-helpers'
 
 export async function GET(
@@ -44,10 +45,15 @@ export async function GET(
         posted_by_id,
         requirements,
         benefits,
-        is_urgent
+        is_urgent,
+        view_count,
+        application_count
       `)
       .eq('id', jobId)
       .single()
+
+    console.log('Job query params:', { jobId })
+    console.log('Job query result:', { job: job ? { id: job.id, title: job.title, posted_by_id: job.posted_by_id } : null, error })
 
     if (error) {
       console.error('Error fetching job:', error)
@@ -64,12 +70,19 @@ export async function GET(
       return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
+    console.log('Raw job data from DB:', {
+      id: job.id,
+      title: job.title,
+      posted_by_id: job.posted_by_id
+    })
+
     // Transform job to match expected structure
     const baseJob = {
       id: job.id,
       title: job.title,
       description: job.description,
       company: '', // Will be enriched from user data
+      posted_by_id: job.posted_by_id, // Include the poster ID
       salary: job.salary_amount?.toString() || '',
       salaryType: job.salary_type || '',
       type: job.job_type,
@@ -107,7 +120,8 @@ export async function GET(
       transportation_amount: null,
       has_parking: null,
       public_transport_info: null,
-      view_count: 0
+      view_count: job.view_count || 0,
+      application_count: job.application_count || 0
     }
 
     // Enrich with static city and category data
@@ -115,26 +129,52 @@ export async function GET(
 
     // Fetch poster information
     if (job.posted_by_id) {
-      const { data: poster } = await supabase
-        .from('users')
-        .select('id, email, name')
-        .eq('id', job.posted_by_id)
-        .single()
+      console.log('Attempting to fetch poster with ID:', job.posted_by_id, 'Type:', typeof job.posted_by_id)
+      
+      // Use the public profile API to get user information with proper privacy handling
+      try {
+        const publicProfileResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/users/${job.posted_by_id}/public-profile?forJobContact=true`)
+        
+        if (publicProfileResponse.ok) {
+          const publicProfile = await publicProfileResponse.json()
+          console.log('Public profile fetched:', publicProfile)
+          
+          // Use the public profile data
+          const displayName = publicProfile.name || publicProfile.email || 'Unknown'
+          const companyName = publicProfile.company_name || publicProfile.name || 'Individual'
 
-      if (poster) {
-        // Use name if available, otherwise fall back to email
-        const displayName = poster.name || poster.email || 'Unknown'
-        const companyName = poster.name || poster.email || 'Individual'
-
-        enrichedJob.postedBy = {
-          id: poster.id,
-          name: displayName,
-          email: poster.email,
-          phone: null // We can add this if available in the users table
+          enrichedJob.postedBy = {
+            id: publicProfile.id,
+            name: displayName,
+            email: publicProfile.showEmail ? publicProfile.email : null,
+            phone: publicProfile.showPhone ? publicProfile.phone : null
+          }
+          enrichedJob.company = companyName
+          enrichedJob.poster_name = displayName
+          enrichedJob.email = publicProfile.showEmail ? publicProfile.email : enrichedJob.contact_email
+          
+          console.log('Set enrichedJob poster info from public profile:', {
+            postedBy: enrichedJob.postedBy,
+            company: enrichedJob.company,
+            poster_name: enrichedJob.poster_name
+          })
+        } else {
+          console.error('Failed to fetch public profile:', publicProfileResponse.status)
+          // Set fallback values
+          enrichedJob.company = 'Individual'
+          enrichedJob.poster_name = 'Unknown'
         }
-        enrichedJob.company = companyName
-        enrichedJob.email = poster.email || enrichedJob.contact_email
+      } catch (error) {
+        console.error('Error fetching public profile:', error)
+        // Set fallback values
+        enrichedJob.company = 'Individual'
+        enrichedJob.poster_name = 'Unknown'
       }
+    } else {
+      console.log('No posted_by_id found for job:', job.id)
+      // Set fallback values when no posted_by_id
+      enrichedJob.company = 'Individual'
+      enrichedJob.poster_name = 'Unknown'
     }
 
     return NextResponse.json(enrichedJob)
@@ -143,6 +183,77 @@ export async function GET(
     
     return NextResponse.json(
       { error: 'Failed to fetch job', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ jobId: string }> }) {
+  const supabase = await createServerSupabaseClient()
+  
+  // Also create a service role client for updates that might be blocked by RLS
+  const supabaseService = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        get: () => undefined,
+        set: () => {},
+        remove: () => {},
+      }
+    }
+  )
+  
+  try {
+    const { jobId } = await params
+    const body = await request.json()
+    
+    // Handle view count increment
+    if (body.action === 'increment_view') {
+      // First get the current view count
+      const { data: currentJob, error: fetchError } = await supabase
+        .from('job_listings')
+        .select('view_count')
+        .eq('id', jobId)
+        .single()
+      
+      if (fetchError || !currentJob) {
+        return NextResponse.json(
+          { error: 'Job not found' },
+          { status: 404 }
+        )
+      }
+      
+      const newViewCount = (currentJob.view_count || 0) + 1
+      
+      // Increment the view count using service role client to bypass RLS
+      const { error } = await supabaseService
+        .from('job_listings')
+        .update({ 
+          view_count: newViewCount,
+          last_viewed_at: new Date().toISOString()
+        })
+        .eq('id', jobId)
+        .select('view_count')
+      
+      if (error) {
+        return NextResponse.json(
+          { error: 'Failed to update view count' },
+          { status: 500 }
+        )
+      }
+      
+      return NextResponse.json({ success: true, newViewCount })
+    }
+    
+    return NextResponse.json(
+      { error: 'Invalid action' },
+      { status: 400 }
+    )
+  } catch (error) {
+    console.error('Error updating job:', error)
+    return NextResponse.json(
+      { error: 'Failed to update job', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

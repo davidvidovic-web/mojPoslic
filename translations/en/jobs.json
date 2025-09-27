@@ -158,7 +158,8 @@
     "jobNotFound": "Job not found",
     "loadFailed": "Failed to load job details",
     "cannotApplyToOwnJob": "You cannot apply to your own job",
-    "alreadyApplied": "You have already applied to this job"
+    "alreadyApplied": "You have already applied to this job",
+    "clientCannotApply": "Clients cannot apply to jobs. Switch to job seeker role to apply for positions."
   },
   "details": {
     "jobDetails": "Job Details",
@@ -197,6 +198,7 @@
     "contactHidden": "Hidden",
     "addressHidden": "Hidden",
     "mapHidden": "Map hidden for privacy",
+    "locationRestricted": "Location details are restricted",
     "availableAfterSelection": "Available after job assignment"
   },
   "statusManager": {

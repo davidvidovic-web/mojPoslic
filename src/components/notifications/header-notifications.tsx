@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Bell, UserPlus, Briefcase, MessageSquare, Star, AlertCircle } from 'lucide-react'
+import { Bell, UserPlus, Briefcase, MessageCircle, Star, AlertCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
@@ -312,7 +312,7 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
       case 'JOB_UPDATE':
         return <Briefcase className="h-4 w-4 text-green-500" />
       case 'NEW_MESSAGE':
-        return <MessageSquare className="h-4 w-4 text-purple-500" />
+        return <MessageCircle className="h-4 w-4 text-purple-500" />
       case 'NEW_REVIEW':
         return <Star className="h-4 w-4 text-yellow-500" />
       case 'SYSTEM':

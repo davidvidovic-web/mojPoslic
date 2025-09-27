@@ -1,7 +1,8 @@
 'use client'
 
+import { useMemo, useCallback } from 'react'
 import { useJobs } from '@/hooks/use-jobs'
-import { useApplications as useApplicationsQuery, useUserApplications as useUserApplicationsQuery, useApplyToJob as useCreateApplicationMutation, useUpdateApplication as useUpdateApplicationMutation } from './use-applications'
+import { useUserApplications as useUserApplicationsQuery, useApplyToJob as useCreateApplicationMutation, useUpdateApplication as useUpdateApplicationMutation } from './use-applications'
 import { useCities, useCategories } from '@/hooks/use-static-data'
 import { useFilterStore } from '@/stores/filter-store'
 import { useRealtimeJobs, useRealtimeJobApplications, useRealtimeUserApplications } from './queries/useRealtimeJobs'
@@ -16,28 +17,30 @@ export function useJobManager() {
     jobSearch, 
     jobCityFilter, 
     jobCategoryFilter, 
+    jobSubcategoryFilter,
     jobTypeFilter,
     currentPage,
     itemsPerPage
   } = useFilterStore()
 
   // Map the filter store types to JobFilters type
-  const mapJobType = (type: string): 'quick_job' | 'full_time' | 'part_time' | 'remote' | 'all' | undefined => {
+  const mapJobType = useCallback((type: string): 'quick_job' | 'full_time' | 'part_time' | 'remote' | 'all' | undefined => {
     if (type === 'all') return 'all';
     if (type === 'quick-job') return 'quick_job';
     if (type === 'full-time') return 'full_time';
     if (type === 'part-time') return 'part_time';
     if (type === 'remote') return 'remote';
     return undefined;
-  };
+  }, [])
 
   // Build filters from Zustand store
-  const filters: JobFilters = {
+  const filters: JobFilters = useMemo(() => ({
     search: jobSearch || undefined,
     city: jobCityFilter !== 'all' ? jobCityFilter : undefined,
     category: jobCategoryFilter !== 'all' ? jobCategoryFilter : undefined,
+    subcategory: jobSubcategoryFilter !== 'all' ? jobSubcategoryFilter : undefined,
     type: mapJobType(jobTypeFilter),
-  }
+  }), [jobSearch, jobCityFilter, jobCategoryFilter, jobSubcategoryFilter, jobTypeFilter, mapJobType])
 
   // Use our optimized Supabase-based hooks
   const { jobs, loading, error, refetch } = useJobs(filters)

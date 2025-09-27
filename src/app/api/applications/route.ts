@@ -2,6 +2,58 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createServerClient } from '@supabase/ssr'
 
+export async function GET() {
+  try {
+    const supabase = await createServerSupabaseClient()
+    
+    // Get all applications with job info for debugging
+    const { data: applications, error } = await supabase
+      .from('applications')
+      .select(`
+        id,
+        job_id,
+        user_id,
+        status,
+        applied_at,
+        job_listings (
+          id,
+          title,
+          application_count
+        )
+      `)
+      .order('applied_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching applications:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch applications' },
+        { status: 500 }
+      )
+    }
+
+    // Group by job_id to get counts
+    const jobApplicationCounts = applications?.reduce((acc: Record<string, number>, app) => {
+      if (app.job_id) {
+        acc[app.job_id] = (acc[app.job_id] || 0) + 1
+      }
+      return acc
+    }, {}) || {}
+
+    return NextResponse.json({
+      applications,
+      applicationCounts: jobApplicationCounts,
+      total: applications?.length || 0
+    })
+    
+  } catch (error) {
+    console.error('Error in applications GET:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get auth header for token-based auth
@@ -26,6 +78,19 @@ export async function POST(request: NextRequest) {
           }
         )
       : await createServerSupabaseClient()
+
+    // Create service role client for admin operations (like updating counts)
+    const supabaseService = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          get: () => undefined,
+          set: () => {},
+          remove: () => {},
+        }
+      }
+    )
 
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -52,12 +117,20 @@ export async function POST(request: NextRequest) {
     // Get the user's profile data for proper display name
     const { data: userProfile, error: userProfileError } = await supabase
       .from('users')
-      .select('name, email')
+      .select('name, email, role')
       .eq('id', user.id)
       .single()
 
     if (userProfileError) {
       console.warn('Could not fetch user profile for notification:', userProfileError)
+    }
+
+    // Check if user is a client (clients cannot apply to jobs)
+    if (userProfile?.role === 'client') {
+      return NextResponse.json(
+        { success: false, error: 'Clients cannot apply to jobs' },
+        { status: 403 }
+      )
     }
 
     // Use profile name if available, fallback to auth metadata, then email
@@ -94,7 +167,7 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         cover_letter: coverLetter || null,
         client_notes: clientNotes || null,
-        status: 'pending',
+        status: 'PENDING',
         applied_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -111,12 +184,36 @@ export async function POST(request: NextRequest) {
 
     // Manually update statistics (instead of using triggers)
     try {
+      // Manually update job application count
+      const { data: jobDataForCount, error: jobFetchError } = await supabase
+        .from('job_listings')
+        .select('application_count, posted_by_id, title')
+        .eq('id', jobId)
+        .single()
+      
+      if (jobFetchError) {
+        console.error('❌ Failed to fetch job data:', jobFetchError)
+      } else {
+        // Update job application count using service role to bypass RLS
+        const { error: updateError } = await supabaseService
+          .from('job_listings')
+          .update({ 
+            application_count: (jobDataForCount.application_count || 0) + 1,
+            last_application_at: new Date().toISOString()
+          })
+          .eq('id', jobId)
+        
+        if (updateError) {
+          console.error('❌ Failed to update job application count:', updateError)
+        }
+      }
+      
       // Note: RPC functions temporarily disabled due to TypeScript issues
       // await supabase.rpc('update_job_application_stats', { job_uuid: jobId })
       // await supabase.rpc('update_user_application_stats', { user_uuid: user.id })
       
       // Get job details for notification
-      const { data: jobData, error: jobDataError } = await supabase
+      const { data: jobDataForNotification, error: jobDataError } = await supabase
         .from('job_listings')
         .select('posted_by_id, title')
         .eq('id', jobId)
@@ -126,9 +223,9 @@ export async function POST(request: NextRequest) {
         console.error('❌ Failed to fetch job data for notification:', jobDataError)
       }
 
-      if (jobData?.posted_by_id) {
+      if (jobDataForNotification?.posted_by_id) {
         // Note: Statistics update temporarily disabled
-        // await supabase.rpc('update_user_application_stats', { user_uuid: jobData.posted_by_id })
+                // await supabase.rpc('update_user_application_stats', { user_uuid: jobData.posted_by_id })
         
         // Create a service role client for notification creation (to bypass RLS)
         const supabaseService = createServerClient(
@@ -143,31 +240,50 @@ export async function POST(request: NextRequest) {
           }
         )
         
-        // Create notification for the job poster (client) using service role
-        const { data: notificationData, error: notificationError } = await supabaseService
+        // Create notification for job owner
+        const { error: notificationError } = await supabaseService
           .from('notifications')
           .insert({
-            user_id: jobData.posted_by_id,
+            user_id: jobDataForNotification.posted_by_id,
             type: 'JOB_APPLICATION',
-            title: 'New Job Application',
-            message: `Someone has applied to your job "${jobData.title}"`,
+            title: 'New job application',
+            message: `Someone has applied to your job "${jobDataForNotification.title}"`,
             data: {
-              application_id: newApplication.id,
               job_id: jobId,
-              job_title: jobData.title,
-              applicant_id: user.id,
-              applicant_name: applicantDisplayName
-            }
+              application_id: newApplication.id,
+              applicant_name: applicantDisplayName,
+              job_title: jobDataForNotification.title,
+              applicant_id: user.id
+            },
+            is_read: false
           })
           .select()
-        
+          .single()
+
         if (notificationError) {
-          console.error('❌ Failed to create notification:', {
-            error: notificationError,
-            jobPosterUuid: jobData.posted_by_id,
-            applicantId: user.id,
-            applicationId: newApplication.id
+          console.error('❌ Failed to create notification:', notificationError)
+        }
+        
+        try {
+          // Send email notification using edge function
+          await supabaseService.functions.invoke('send-notification', {
+            body: {
+              userId: jobDataForNotification.posted_by_id,
+              type: 'JOB_APPLICATION',
+              title: 'New job application',
+              message: `${applicantDisplayName} has applied to your job "${jobDataForNotification.title}"`,
+              data: {
+                jobId,
+                applicationId: newApplication.id,
+                applicantName: applicantDisplayName,
+                jobTitle: jobDataForNotification.title,
+                jobPosterUuid: jobDataForNotification.posted_by_id,
+                applicantId: user.id
+              }
+            }
           })
+        } catch (emailError) {
+          console.error('❌ Failed to send email notification:', emailError)
         }
       }
     } catch (statsError) {

@@ -14,8 +14,6 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useDialogStore } from "@/stores/dialog-store";
-import { useOptimizedMessaging } from "@/hooks/use-optimized-messaging";
-import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
 import { ModernMessagingButton } from "@/components/messaging/modern-messaging-button";
@@ -41,9 +39,6 @@ export const Header = React.memo(function Header() {
     closeMobileMenu
   } = useDialogStore();
   const { loading, user, signOut } = useSupabaseAuth();
-  const { 
-    totalUnreadCount
-  } = useOptimizedMessaging();
   const pathname = usePathname();
   
   // Scroll detection state
@@ -355,17 +350,13 @@ export const Header = React.memo(function Header() {
                     {/* Header Notifications - always show */}
                     <HeaderNotifications />
 
-                    {/* Messaging Button - Show OptimizedNotificationCenter if there are messages, otherwise show messaging */}
-                    {totalUnreadCount > 0 ? (
-                      <OptimizedNotificationCenter />
-                    ) : (
-                      <ModernMessagingButton 
-                        variant="ghost"
-                        size="sm"
-                        className="relative h-9 w-9 rounded-full"
-                        iconOnly={true}
-                      />
-                    )}
+                    {/* Messaging Button - Always show ModernMessagingButton */}
+                    <ModernMessagingButton 
+                      variant="ghost"
+                      size="sm"
+                      className="relative h-9 w-9 rounded-full"
+                      iconOnly={true}
+                    />
 
                     {/* Desktop Menu */}
                     <div className="hidden md:block">

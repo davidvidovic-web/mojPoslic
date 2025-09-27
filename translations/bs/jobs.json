@@ -159,7 +159,8 @@
     "jobNotFound": "Posao nije pronađen",
     "loadFailed": "Greška pri učitavanju detalja posla",
     "cannotApplyToOwnJob": "Ne možete se prijaviti na svoj vlastiti posao",
-    "alreadyApplied": "Već ste se prijavili na ovaj posao"
+    "alreadyApplied": "Već ste se prijavili na ovaj posao",
+    "clientCannotApply": "Klijenti se ne mogu prijaviti na poslove. Prebacite se na ulogu tražitelja posla da se prijavite za pozicije."
   },
   "details": {
     "jobDetails": "Detalji posla",
@@ -197,6 +198,7 @@
     "contactHidden": "Skriveno",
     "addressHidden": "Skriveno",
     "mapHidden": "Mapa skrivena zbog privatnosti",
+    "locationRestricted": "Detalji lokacije su ograničeni",
     "availableAfterSelection": "Dostupno nakon dodjeljivanja posla"
   },
   "statusManager": {

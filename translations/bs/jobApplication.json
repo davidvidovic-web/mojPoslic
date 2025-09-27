@@ -50,6 +50,7 @@
   "mixed": "Mješovito",
   "applyForPosition": "Prijavite se za ovu poziciju",
   "ownerMessage": "Ovo je vaš oglas za posao. Možete vidjeti prijave u vašoj kontrolnoj tabli.",
+  "clientCannotApply": "Klijenti se ne mogu prijaviti na poslove. Trebate imati račun tražitelja posla da se prijavite za pozicije.",
   "viewApplicationPortal": "Pogledajte portal za prijave",
   "applyNow": "Prijavite se sada",
   "loginToApply": "Trebate se prijaviti da biste aplicirali za ovaj posao",

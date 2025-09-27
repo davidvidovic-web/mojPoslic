@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Briefcase, MapPin, Calendar, DollarSign, Tag, Users, Clock }
+import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Users, Clock, Mail, Phone }
  from "lucide-react"
 import { Job } from "@/types/job"
 import { toast } from "sonner"
@@ -14,6 +14,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
+import { useData } from "@/hooks/use-data"
 
 interface JobDetailsProps {
   jobId: string
@@ -24,9 +25,11 @@ export function JobDetails({ jobId }: JobDetailsProps) {
   const locale = useLocale() as 'bs' | 'en'
   const router = useRouter()
   const { user, loading: authLoading } = useSupabaseAuth()
+  const { getCategoryByKey } = useData()
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
+  const viewTrackedRef = useRef(false) // Prevent double view tracking
   
   // Check if user has already applied to this job (only if authenticated)
   const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs(user?.id || '')
@@ -59,17 +62,44 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           return
         }
         const job = await response.json()
+        console.log('Received job data:', {
+          id: job.id,
+          title: job.title,
+          company: job.company,
+          postedBy: job.postedBy,
+          poster_name: job.poster_name,
+          posted_by_id: job.posted_by_id
+        })
         setJob(job)
-        // Track job view after successfully loading the job
-        try {
-          await fetch(`/api/jobs/${jobId}/view`, {
-            method: 'POST',
+        
+        // Check if this device has already viewed this job today
+        const hasViewedToday = () => {
+          const viewKey = `job_view_${jobId}_${new Date().toDateString()}`
+          return localStorage.getItem(viewKey) === 'true'
+        }
+
+        // Mark this device as having viewed this job today
+        const markAsViewed = () => {
+          const viewKey = `job_view_${jobId}_${new Date().toDateString()}`
+          localStorage.setItem(viewKey, 'true')
+        }
+        
+        // Increment view count only if not already viewed today and not already tracked in this session
+        if (!hasViewedToday() && !viewTrackedRef.current) {
+          viewTrackedRef.current = true
+          markAsViewed()
+          
+          fetch(`/api/jobs/${jobId}`, {
+            method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+              action: 'increment_view'
+            })
+          }).catch(error => {
+            console.error('Failed to increment view count:', error)
           })
-        } catch {
-          // Silently fail view tracking - it's not critical
         }
       } catch (error) {
         console.error('Error fetching job:', error)
@@ -86,6 +116,13 @@ export function JobDetails({ jobId }: JobDetailsProps) {
 
   const handleApply = async () => {
     if (!job) return
+    
+    // Check if user is a client
+    if (user?.role === 'client') {
+      toast.error(t('jobs.errors.clientCannotApply'))
+      return
+    }
+    
     // Check if user is the owner of this job
     if (isOwner) {
       toast.error(t('jobs.errors.cannotApplyToOwnJob'))
@@ -215,11 +252,13 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
                 <span className="text-lg font-bold text-primary">
-                  {job.company ? job.company.charAt(0).toUpperCase() : 'C'}
+                  {job.company ? job.company.charAt(0).toUpperCase() : 'U'}
                 </span>
               </div>
               <div>
-                <p className="text-xl font-semibold text-foreground">{job.company}</p>
+                <p className="text-xl font-semibold text-foreground">
+                  {job.company || job.postedBy?.name || 'Individual'}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   {job.posted_at ? formatDate(job.posted_at) : ''}
                 </p>
@@ -234,11 +273,6 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                   {t('jobs.card.featured')}
                 </Badge>
               )}
-              {!isOwner && !hasApplied && (
-                <Button onClick={handleApply} size="default" className="ml-2 rounded-[var(--radius)]">
-                  {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
-                </Button>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -249,6 +283,11 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                   {t('jobs.form.labels.applied')}
                 </span>
               </div>
+            )}
+            {!isOwner && !hasApplied && user?.role !== 'client' && (
+              <Button onClick={handleApply} size="default" className="rounded-[var(--radius)]">
+                {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
+              </Button>
             )}
             {isOwner && (
               <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-[var(--radius)]">
@@ -275,9 +314,21 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             </div>
           )}
           
+          {job.subcategory_id && (() => {
+            const subcategory = getCategoryByKey(job.subcategory_id);
+            return subcategory ? (
+              <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/30 rounded-[var(--radius)]">
+                <Tag className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-700 dark:text-purple-400">
+                  {locale === 'bs' ? subcategory.name_bs || subcategory.name : subcategory.name_en || subcategory.name}
+                </span>
+              </div>
+            ) : null;
+          })()}
+          
           {formatSalary(job) && (
             <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <Banknote className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)}</span>
             </div>
           )}
@@ -411,61 +462,61 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               )}
             </div>
           </div>
-          {/* Location Group */}
-          <div className="mb-8">
-            <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.location')}</h3>
-            <div className="space-y-4">
-              {/* Job Location */}
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                <div className="w-8 h-8 rounded-[var(--radius)] bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.location')}</span>
-                  <p className="text-sm font-medium text-foreground">{job.city?.name || t('common.jobTypes.remote')}</p>
-                </div>
-              </div>
-              
-              {/* Address */}
-              {job.job_address ? (
-                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                  <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
-                    <MapPin className="h-4 w-4 text-green-600" />
+          {/* Location Group - Map Only */}
+          {(job.job_address || (job.job_latitude && job.job_longitude)) && (
+            <div className="mb-8">
+              <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.locationMap')}</h3>
+              <div className={`space-y-4 ${!job.isSelectedTasker && !isOwner ? 'relative' : ''}`}>
+                {/* Blur overlay for non-authorized users */}
+                {!job.isSelectedTasker && !isOwner && (
+                  <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/95 to-background/90 backdrop-blur-[8px] rounded-[var(--radius)] z-10 flex items-center justify-center">
+                    <div className="text-center p-6 bg-white/95 dark:bg-gray-900/95 rounded-lg border border-yellow-200 dark:border-yellow-800 shadow-lg backdrop-blur-sm">
+                      <MapPin className="h-8 w-8 text-yellow-600 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-1">
+                        {t('jobs.privacy.locationRestricted')}
+                      </p>
+                      <p className="text-xs text-yellow-600 dark:text-yellow-500">
+                        {t('jobs.privacy.availableAfterSelection')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.address')}</span>
-                    <p className="text-sm font-medium text-foreground">{job.job_address}</p>
-                  </div>
-                </div>
-              ) : (
-                !job.isSelectedTasker && !isOwner && (
-                  <div className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-[var(--radius)] border border-yellow-200 dark:border-yellow-800">
-                    <div className="w-8 h-8 rounded-[var(--radius)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
-                      <MapPin className="h-4 w-4 text-yellow-600" />
+                )}
+                
+                {/* Job Address - Display above map if available */}
+                {job.job_address && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                    <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                      <MapPin className="h-4 w-4 text-green-600" />
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">{t('jobs.form.labels.address')}</span>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-400">{t('jobs.privacy.addressHidden')}</p>
-                      <p className="text-xs text-yellow-600 dark:text-yellow-500">{t('jobs.privacy.availableAfterSelection')}</p>
+                      <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.address')}</span>
+                      <p className="text-sm font-medium text-foreground">{job.job_address}</p>
                     </div>
                   </div>
-                )
-              )}
-              
-              {/* Interactive Map with job location */}
-              {(job.job_latitude && job.job_longitude && (job.isSelectedTasker || isOwner)) && (
-                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)] p-3">
-                  <div className="mb-3">
-                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.locationMap')}</span>
+                )}
+                
+                {/* Interactive Map with job location */}
+                {job.job_latitude && job.job_longitude && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)] p-3">
+                    {(job.isSelectedTasker || isOwner) ? (
+                      <GoogleJobLocationMap 
+                        latitude={job.job_latitude}
+                        longitude={job.job_longitude}
+                      />
+                    ) : (
+                      <div className="h-[250px] rounded-[var(--radius)] bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                          <MapPin className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-sm font-medium">{t('jobs.privacy.mapHidden')}</p>
+                          <p className="text-xs">{t('jobs.privacy.availableAfterSelection')}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <GoogleJobLocationMap 
-                    latitude={job.job_latitude}
-                    longitude={job.job_longitude}
-                  />
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </section>
         {/* Contact Information */}
         <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
@@ -482,36 +533,52 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             <div className="space-y-3">
               {/* Email */}
               <div className="flex items-center gap-3 text-sm py-2">
-                <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="font-medium min-w-[120px]">{t('jobs.form.labels.email')}:</span>
-                {job.email === 'Contact information available after job assignment' ? (
+                {isOwner || job.isSelectedTasker ? (
+                  <span className="text-muted-foreground">{job.email || t('common.messages.notSpecified')}</span>
+                ) : (
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground bg-muted px-2 py-1 rounded text-xs">
                       {t('jobs.privacy.contactHidden')}
                     </span>
                     <span className="text-xs text-muted-foreground">{t('jobs.privacy.availableAfterSelection')}</span>
                   </div>
-                ) : (
-                  <span className="text-muted-foreground">{job.email}</span>
                 )}
               </div>
               
               {/* Alternative Email */}
               {job.contact_email && job.contact_email !== job.email && (
                 <div className="flex items-center gap-3 text-sm py-2">
-                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium min-w-[120px]">{t('jobs.form.labels.altEmail')}:</span>
-                  <span className="text-muted-foreground">{job.contact_email}</span>
+                  {isOwner || job.isSelectedTasker ? (
+                    <span className="text-muted-foreground">{job.contact_email}</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground bg-muted px-2 py-1 rounded text-xs">
+                        {t('jobs.privacy.contactHidden')}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{t('jobs.privacy.availableAfterSelection')}</span>
+                    </div>
+                  )}
                 </div>
               )}
               {/* Phone Number from User Profile */}
-              {job.postedBy?.phone && (
-                <div className="flex items-center gap-3 text-sm py-2">
-                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium min-w-[120px]">{t('jobs.form.labels.phone')}:</span>
-                  <span className="text-muted-foreground">{job.postedBy.phone}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-3 text-sm py-2">
+                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium min-w-[120px]">{t('jobs.form.labels.phone')}:</span>
+                {isOwner || job.isSelectedTasker ? (
+                  <span className="text-muted-foreground">{job.postedBy?.phone || t('common.messages.notSpecified')}</span>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground bg-muted px-2 py-1 rounded text-xs">
+                      {t('jobs.privacy.contactHidden')}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{t('jobs.privacy.availableAfterSelection')}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           

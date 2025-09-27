@@ -73,21 +73,38 @@ export function UnifiedMessagingInterface({
   const activeConversationId = conversationId || currentConversationId
   const [showConversationList, setShowConversationList] = useState(!activeConversationId)
 
+  // Hook for all conversations (to get totalUnreadCount and conversations list)
+  const {
+    conversations,
+    totalUnreadCount,
+    clearError: clearGlobalError
+  } = useSupabaseRealtimeChat({
+    conversationId: undefined, // Get all conversations
+    enabled: !!user?.id
+  })
+
+  // Hook for specific conversation messages (when a conversation is active)
   const {
     messages,
-    conversations,
-    loading,
-    error,
+    loading: messagesLoading,
+    error: messagesError,
     typingUsers,
-    totalUnreadCount,
     sendMessage,
     startTyping,
     stopTyping,
-    clearError
+    clearError: clearMessagesError
   } = useSupabaseRealtimeChat({
     conversationId: activeConversationId || undefined,
-    enabled: !!user?.id
+    enabled: !!user?.id && !!activeConversationId
   })
+
+  // Combine loading states and errors
+  const loading = messagesLoading
+  const error = messagesError
+  const clearError = () => {
+    clearGlobalError()
+    clearMessagesError()
+  }
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -221,9 +238,9 @@ export function UnifiedMessagingInterface({
   }
 
   return (
-    <div className={cn('flex flex-col h-96 border rounded-lg overflow-hidden', className)}>
+    <div className={cn('flex flex-col h-96 border border-border rounded-[var(--radius)] overflow-hidden bg-card', className)}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-muted/50">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
         {activeConversationId && !showConversationList ? (
           <>
             <div className="flex items-center gap-2">
@@ -236,7 +253,7 @@ export function UnifiedMessagingInterface({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h3 className="font-medium text-sm">
+                <h3 className="font-medium text-sm text-foreground">
                   {conversations.find(c => c.id === activeConversationId)?.title || t('conversation.defaultTitle')}
                 </h3>
                 {typingUsers.length > 0 && (
@@ -258,10 +275,12 @@ export function UnifiedMessagingInterface({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              <h3 className="font-medium">{t('title')}</h3>
+              <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center">
+                <MessageCircle className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="font-medium text-foreground">{t('title')}</h3>
               {totalUnreadCount > 0 && (
-                <Badge variant="destructive" className="text-xs">
+                <Badge variant="destructive" className="text-xs rounded-[var(--radius)]">
                   {totalUnreadCount}
                 </Badge>
               )}
@@ -284,10 +303,12 @@ export function UnifiedMessagingInterface({
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : conversations.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-center p-4">
+            <div className="text-center py-8 text-muted-foreground">
               <div>
-                <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">
+                <div className="w-12 h-12 rounded-[var(--radius)] bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <Users className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">
                   {t('conversations.noConversations')}
                 </p>
               </div>
@@ -299,22 +320,22 @@ export function UnifiedMessagingInterface({
                   <Button
                     key={conversation.id}
                     variant="ghost"
-                    className="w-full justify-start text-left h-auto p-3 hover:bg-muted"
+                    className="w-full justify-start text-left h-auto p-3 hover:bg-muted/80 rounded-[var(--radius)]"
                     onClick={() => handleConversationSelect(conversation.id)}
                   >
                     <div className="flex items-start gap-3 w-full">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <MessageCircle className="h-5 w-5 text-primary" />
+                      <div className="w-10 h-10 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MessageCircle className="h-4 w-4 text-primary" />
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-medium text-sm truncate">
+                          <h4 className="font-medium text-sm truncate text-foreground">
                             {conversation.title || t('conversationTypes.jobChat')}
                           </h4>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {(conversation.unread_count || 0) > 0 && (
-                              <Badge variant="destructive" className="text-xs px-2 py-1">
+                              <Badge variant="destructive" className="text-xs px-2 py-1 rounded-[var(--radius)]">
                                 {conversation.unread_count}
                               </Badge>
                             )}
@@ -368,10 +389,10 @@ export function UnifiedMessagingInterface({
                       )}
                       
                       <div
-                        className={`rounded-lg px-3 py-2 text-sm ${
+                        className={`rounded-[var(--radius)] px-3 py-2 text-sm ${
                           message.isOwn
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-foreground'
+                            : 'bg-muted text-foreground border border-border'
                         }`}
                       >
                         {message.content}
@@ -385,7 +406,7 @@ export function UnifiedMessagingInterface({
           </ScrollArea>
 
           {/* Message Input */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t">
+          <form onSubmit={handleSendMessage} className="p-4 border-t border-border bg-card">
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
@@ -394,12 +415,13 @@ export function UnifiedMessagingInterface({
                 onKeyPress={handleKeyPress}
                 placeholder={t('messages.typeMessage')}
                 disabled={loading}
-                className="flex-1"
+                className="flex-1 rounded-[var(--radius)]"
               />
               <Button 
                 type="submit" 
                 disabled={!newMessage.trim() || loading}
                 size="sm"
+                className="rounded-[var(--radius)]"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

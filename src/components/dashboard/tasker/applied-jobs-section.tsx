@@ -14,7 +14,7 @@ import {
   MapPin,
   Calendar,
   User,
-  MessageSquare,
+  MessageCircle,
   Eye
 } from 'lucide-react'
 import { Job } from '@/types/job'
@@ -163,7 +163,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
             
             {(application.status === 'SHORTLISTED' || application.status === 'SELECTED') && (
               <Button variant="outline" size="sm">
-                <MessageSquare className="h-3 w-3 mr-1" />
+                <MessageCircle className="h-3 w-3 mr-1" />
                 {t('message')}
               </Button>
             )}

@@ -87,7 +87,7 @@ export function RealtimeChat({
   }
 
   return (
-    <div className={cn('flex flex-col h-full max-h-[600px] border rounded-lg', className)}>
+    <div className={cn('flex flex-col h-full max-h-[600px] border border-border bg-card rounded-[var(--radius)]', className)}>
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-1">
@@ -109,7 +109,7 @@ export function RealtimeChat({
       </ScrollArea>
 
       {/* Message Input */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t">
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-border bg-card">
         <div className="flex gap-2">
           <Input
             value={newMessage}
@@ -117,12 +117,13 @@ export function RealtimeChat({
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={loading || disabled}
-            className="flex-1"
+            className="flex-1 rounded-[var(--radius)]"
           />
           <Button 
             type="submit" 
             disabled={!newMessage.trim() || loading || disabled}
             size="sm"
+            className="rounded-[var(--radius)]"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

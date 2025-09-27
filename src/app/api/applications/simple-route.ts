@@ -50,6 +50,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get user profile to check role
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    // Check if user is a client (clients cannot apply to jobs)
+    if (userProfile?.role === 'client') {
+      return NextResponse.json(
+        { success: false, error: 'Clients cannot apply to jobs' },
+        { status: 403 }
+      )
+    }
+
     // Check if user already applied
     const { data: existingApplication, error: checkError } = await supabase
       .from('applications')

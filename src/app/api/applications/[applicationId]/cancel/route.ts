@@ -301,6 +301,36 @@ export async function DELETE(
       )
     }
 
+    // Update job application count after successful deletion
+    if (deletedData && deletedData.length > 0 && application.job_id) {
+      console.log('🔢 Updating job application count after deletion')
+      
+      const { data: jobData, error: jobFetchError } = await supabaseService
+        .from('job_listings')
+        .select('application_count')
+        .eq('id', application.job_id)
+        .single()
+      
+      if (jobFetchError) {
+        console.error('❌ Failed to fetch job data for count update:', jobFetchError)
+      } else {
+        const newCount = Math.max(0, (jobData.application_count || 0) - 1)
+        
+        const { error: updateError } = await supabaseService
+          .from('job_listings')
+          .update({ 
+            application_count: newCount 
+          })
+          .eq('id', application.job_id)
+        
+        if (updateError) {
+          console.error('❌ Failed to update job application count:', updateError)
+        } else {
+          console.log('✅ Job application count decremented successfully')
+        }
+      }
+    }
+
     if (!deletedData || deletedData.length === 0) {
       console.error('❌ No application was deleted. Application may not exist or user lacks permission.')
       return NextResponse.json(

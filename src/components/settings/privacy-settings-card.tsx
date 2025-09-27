@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Shield, Eye, Users, MessageSquare, Info } from 'lucide-react'
+import { Shield, Eye, Users, MessageCircle, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
@@ -266,7 +266,7 @@ export function PrivacySettingsCard() {
         {/* Communication Privacy Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
+            <MessageCircle className="h-4 w-4" />
             <h3 className="text-lg font-medium">{t('communication.title')}</h3>
           </div>
 

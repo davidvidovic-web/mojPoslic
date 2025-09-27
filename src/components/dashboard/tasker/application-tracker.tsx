@@ -19,7 +19,7 @@ import {
   XCircle,
   Star,
   Eye,
-  MessageSquare,
+  MessageCircle,
   X
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -345,7 +345,7 @@ export function TaskerApplicationTracker() {
                                 View Job
                               </Button>
                               <Button size="sm" variant="outline">
-                                <MessageSquare className="h-4 w-4 mr-1" />
+                                <MessageCircle className="h-4 w-4 mr-1" />
                                 Message Employer
                               </Button>
                               {(application.status === ApplicationStatus.PENDING || 

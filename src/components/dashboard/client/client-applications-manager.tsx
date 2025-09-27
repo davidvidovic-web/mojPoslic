@@ -14,7 +14,7 @@ import {
   FileText,
   Search,
   Filter,
-  MessageSquare,
+  MessageCircle,
   Calendar,
   Star,
   UserCheck
@@ -364,7 +364,7 @@ export function ClientApplicationsManager({
                       onClick={() => onMessageApplicant(application.id, application.user?.id || application.userId)}
                       className="rounded-sm"
                     >
-                      <MessageSquare className="h-4 w-4 mr-1" />
+                      <MessageCircle className="h-4 w-4 mr-1" />
                       {t('dashboard.applications.message') || 'Message'}
                     </Button>
                   )}

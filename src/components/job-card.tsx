@@ -98,7 +98,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
         
         <div className="relative flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <div className="flex items-start justify-start mb-4">
+            <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge className="px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20 text-xs">
                   {formatJobType(job.type || job.job_type)}
@@ -143,27 +143,28 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
           </div>
           
             <div className="flex flex-col justify-between md:items-end gap-4 md:min-w-[200px] h-full">
-              <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex flex-col items-end gap-2">
+                {/* Applied badge - top right corner using flexbox */}
+                {hasApplied && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-[var(--radius)] shadow-sm flex-shrink-0">
+                    <CheckCircle className="h-3 w-3" />
+                    <span className="text-xs font-medium">{t('card.applied')}</span>
+                  </div>
+                )}
                 {job.is_featured && (
                   <Badge className="bg-yellow-500 text-yellow-50 px-2.5 py-1 rounded-[var(--radius)] border-0 text-xs">
                     <Star className="h-3 w-3 fill-current mr-1" />
                     {t('card.featured')}
                   </Badge>
                 )}
-                {hasApplied && (
-                  <Badge className="bg-green-500 text-green-50 px-2.5 py-1 rounded-[var(--radius)] border-0 text-xs">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {t('card.applied')}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex flex-col justify-between h-full gap-4 items-end">
                 <span className="text-xs text-muted-foreground">
                   {getRelativeTimeString(job.posted_at || job.created_at)}
                 </span>
-                <Button asChild variant={hasApplied ? "outline" : "default"} className="rounded-[var(--radius)] mt-auto">
+              </div>
+              <div className="flex flex-col justify-between h-full gap-4 items-end">
+                <Button asChild variant="default" className="rounded-[var(--radius)] mt-auto">
                   <Link href={`/jobs/${job.id}`}>
-                    {hasApplied ? t('card.viewApplication') : t('card.viewJob')}
+                    {t('card.viewDetails')}
                   </Link>
                 </Button>
               </div>
@@ -195,21 +196,20 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
                 </div>
               )}
             </div>
-            <span className="text-xs text-muted-foreground flex-shrink-0">
-              {getRelativeTimeString(job.posted_at || job.created_at)}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              {/* Applied badge - top right corner using flexbox */}
+              {hasApplied && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-[var(--radius)] shadow-sm flex-shrink-0">
+                  <CheckCircle className="h-3 w-3" />
+                  <span className="text-xs font-medium">{t('card.applied')}</span>
+                </div>
+              )}
+              <span className="text-xs text-muted-foreground flex-shrink-0">
+                {getRelativeTimeString(job.posted_at || job.created_at)}
+              </span>
+            </div>
           </div>
         
-          
-          <div className="flex items-center justify-end mb-3">
-            {hasApplied && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs font-medium text-green-700 dark:text-green-400">Applied</span>
-              </div>
-            )}
-          </div>
-          
           <h3 className="text-lg font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors">
             <Link href={`/jobs/${job.id}`} className="hover:underline">
               {job.title}
@@ -235,8 +235,8 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
                 <span>{job.application_count || 0}</span>
               </div>
             </div>
-            {job.poster_name && (
-              <span className="truncate max-w-[120px]">by {job.poster_name}</span>
+            {(job.company || job.postedBy?.name) && (
+              <span className="truncate max-w-[120px]">by {job.company || job.postedBy?.name}</span>
             )}
           </div>
           
@@ -249,9 +249,9 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
             )}
           </div>
           
-          <Button asChild className="w-full mt-auto rounded-[var(--radius)]" variant={hasApplied ? "outline" : "default"}>
+          <Button asChild className="w-full mt-auto rounded-[var(--radius)]" variant="default">
             <Link href={`/jobs/${job.id}`}>
-              {hasApplied ? t('card.viewApplication') : t('card.viewDetails')}
+              {t('card.viewDetails')}
             </Link>
           </Button>
         </div>

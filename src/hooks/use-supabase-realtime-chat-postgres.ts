@@ -193,6 +193,16 @@ export function useSupabaseRealtimeChat({
                 .eq('id', message.id)
             )
           )
+          
+          // Immediately update the conversation's unread count in local state
+          setConversations(prev => prev.map(conv => 
+            conv.id === convId 
+              ? { ...conv, unread_count: Math.max(0, (conv.unread_count || 0) - unreadMessages.length) }
+              : conv
+          ))
+          
+          // Reload conversations to ensure accuracy (but async to not block UI)
+          loadConversations()
         }
       }
     } catch (err) {
@@ -201,7 +211,7 @@ export function useSupabaseRealtimeChat({
     } finally {
       setLoading(false)
     }
-  }, [user?.id, enabled])
+  }, [user?.id, enabled, loadConversations])
 
   // Send message with optimistic updates
   const sendMessage = useCallback(async (content: string, convId?: string) => {
@@ -379,7 +389,7 @@ export function useSupabaseRealtimeChat({
             conversation_id: dbMessage.conversation_id,
             sender_id: dbMessage.sender_id,
             content: dbMessage.content,
-            message_type: dbMessage.message_type || 'text',
+            message_type: (dbMessage.message_type as 'text' | 'image' | 'file') || 'text',
             sender_name: dbMessage.sender_name,
             sender_avatar_url: dbMessage.sender_avatar_url || undefined,
             read_by: dbMessage.read_by || [],
@@ -444,63 +454,114 @@ export function useSupabaseRealtimeChat({
       return
     }
 
-    // Create channel for conversations with user-specific naming
-    const channel = supabase.channel(`conversations:user:${user.id}`)
-    conversationsChannelRef.current = channel
+    let retryTimeout: NodeJS.Timeout | null = null
 
-    channel
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'conversations'
-      }, (payload) => {
-        const newConversation = payload.new as ConversationRecord
-        console.log('📋 New conversation:', newConversation)
+    const setupConversationsSubscription = () => {
+      // Clean up existing channel
+      if (conversationsChannelRef.current) {
+        supabase.removeChannel(conversationsChannelRef.current)
+        conversationsChannelRef.current = null
+      }
+
+      // Create channel for conversations with user-specific naming
+      const channel = supabase.channel(`conversations:user:${user.id}`)
+      conversationsChannelRef.current = channel
+
+      channel
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations'
+        }, (payload) => {
+          const newConversation = payload.new as ConversationRecord
+          console.log('📋 New conversation:', newConversation)
+          
+          // Only process if user is a participant
+          if (Array.isArray(newConversation.participant_ids) && 
+              newConversation.participant_ids.includes(user.id)) {
+            loadConversations() // Reload to get proper data
+          }
+        })
         
-        // Only process if user is a participant
-        if (Array.isArray(newConversation.participant_ids) && 
-            newConversation.participant_ids.includes(user.id)) {
-          loadConversations() // Reload to get proper data
-        }
-      })
-      
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'conversations'
-      }, (payload) => {
-        const updatedConversation = payload.new as ConversationRecord
-        console.log('📋 Updated conversation:', updatedConversation)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations'
+        }, (payload) => {
+          const updatedConversation = payload.new as ConversationRecord
+          console.log('📋 Updated conversation:', updatedConversation)
+          
+          // Only process if user is a participant
+          if (Array.isArray(updatedConversation.participant_ids) && 
+              updatedConversation.participant_ids.includes(user.id)) {
+            // For conversation updates, just reload to get fresh data
+            loadConversations()
+          }
+        })
         
-        // Only process if user is a participant
-        if (Array.isArray(updatedConversation.participant_ids) && 
-            updatedConversation.participant_ids.includes(user.id)) {
-          // For conversation updates, just reload to get fresh data
-          loadConversations()
-        }
-      })
-      
-      .subscribe((status, err) => {
-        console.log('📡 Conversations realtime status:', status)
-        if (err) {
-          console.error('📡 Conversations realtime error details:', err)
-        }
-        if (status === 'SUBSCRIBED') {
-          // Conversations realtime connected
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Conversations realtime error:', err)
-          // Don't set error state immediately, let it retry
-        } else if (status === 'TIMED_OUT') {
-          console.error('⏰ Conversations realtime timed out')
-        } else if (status === 'CLOSED') {
-          // Conversations realtime closed
-        }
-      })
+        .subscribe((status, err) => {
+          console.log('📡 Conversations realtime status:', status, 'User:', user.id)
+          if (err) {
+            console.error('📡 Conversations realtime error details:', {
+              error: err,
+              message: err?.message,
+              userId: user.id,
+              channelName: `conversations:user:${user.id}`,
+              timestamp: new Date().toISOString()
+            })
+          }
+          if (status === 'SUBSCRIBED') {
+            // Conversations realtime connected
+            // Clear any pending retry
+            if (retryTimeout) {
+              clearTimeout(retryTimeout)
+              retryTimeout = null
+            }
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Conversations realtime error:', {
+              error: err,
+              userId: user.id,
+              channelName: `conversations:user:${user.id}`
+            })
+            
+            // Retry after 3 seconds if not already retrying
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                console.log('🔄 Retrying conversations realtime connection...')
+                setupConversationsSubscription()
+              }, 3000)
+            }
+          } else if (status === 'TIMED_OUT') {
+            console.error('⏰ Conversations realtime timed out:', {
+              userId: user.id,
+              channelName: `conversations:user:${user.id}`
+            })
+            
+            // Retry after 5 seconds if not already retrying
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                console.log('🔄 Retrying conversations realtime connection after timeout...')
+                setupConversationsSubscription()
+              }, 5000)
+            }
+          } else if (status === 'CLOSED') {
+            console.log('🔌 Conversations realtime closed')
+          }
+        })
+    }
+
+    // Initial setup
+    setupConversationsSubscription()
 
     return () => {
       console.log('🧹 Cleaning up conversations realtime')
-      supabase.removeChannel(channel)
-      conversationsChannelRef.current = null
+      if (retryTimeout) {
+        clearTimeout(retryTimeout)
+      }
+      if (conversationsChannelRef.current) {
+        supabase.removeChannel(conversationsChannelRef.current)
+        conversationsChannelRef.current = null
+      }
     }
   }, [user?.id, enabled, loadConversations])
 

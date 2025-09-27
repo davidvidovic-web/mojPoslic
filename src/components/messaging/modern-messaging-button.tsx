@@ -7,6 +7,7 @@ import { MessageCircle } from 'lucide-react'
 import { useSupabaseRealtimeChat } from '@/hooks/use-supabase-realtime-chat-postgres'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
+import { cn } from '@/lib/utils'
 
 interface ModernMessagingButtonProps {
   conversationId?: string
@@ -28,8 +29,9 @@ export function ModernMessagingButton({
   const { user } = useSupabaseAuth()
   const { openMessagingDialog } = useDialogStore()
   
+  // Don't pass conversationId to get totalUnreadCount across all conversations
   const { totalUnreadCount } = useSupabaseRealtimeChat({
-    conversationId,
+    conversationId: undefined, // Get all conversations for total unread count
     enabled: !!user?.id
   })
 
@@ -46,7 +48,7 @@ export function ModernMessagingButton({
       variant={variant}
       size={size}
       onClick={handleClick}
-      className={`relative ${className || ''}`}
+      className={cn('relative', className)}
     >
       {iconOnly ? (
         <>

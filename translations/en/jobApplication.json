@@ -50,6 +50,7 @@
   "mixed": "Mixed",
   "applyForPosition": "Apply for this position",
   "ownerMessage": "This is your job posting. You can view applications in your dashboard.",
+  "clientCannotApply": "Clients cannot apply to jobs. You need to have a job seeker account to apply for positions.",
   "viewApplicationPortal": "View Application Portal",
   "applyNow": "Apply Now",
   "loginToApply": "You need to log in to apply for this job",
