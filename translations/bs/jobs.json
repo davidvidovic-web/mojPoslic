@@ -153,7 +153,20 @@
   "messages": {
     "loadingJobDetails": "Učitavanje detalja posla...",
     "jobNotFound": "Posao nije pronađen",
-    "errorLoadingJob": "Greška pri učitavanju detalja posla"
+    "errorLoadingJob": "Greška pri učitavanju detalja posla",
+    "jobFeaturedSuccess": "Oglas \"{jobTitle}\" je uspješno istaknut! 6 konekcija je oduzeto sa vašeg računa.",
+    "jobFeatureRemovedSuccess": "Istaknutost oglasa \"{jobTitle}\" je uspješno uklonjena!",
+    "jobUpdatedWithFeature": "Oglas je uspješno ažuriran! 6 konekcija je oduzeto za isticanje.",
+    "jobUpdatedSuccess": "Oglas je uspješno ažuriran!",
+    "insufficientConnections": "Nemate dovoljno konekcija. Potrebno vam je 6 konekcija da istaknete oglas.",
+    "connectionCheckFailed": "Neuspješna provjera stanja konekcija",
+    "connectionDeductFailed": "Neuspješno oduzimanje konekcija",
+    "authRequired": "Potrebna je autentifikacija",
+    "featureJobFailed": "Neuspješno ažuriranje statusa isticanja oglasa",
+    "yourConnections": "Vaše konekcije: {connections}",
+    "requiredConnections": "Potrebno: 6 konekcija",
+    "noConnectionCost": "Nema troška konekcija za uklanjanje istaknutosti",
+    "insufficientConnectionsWarning": "Nemate dovoljno konekcija da istaknete ovaj oglas."
   },
   "errors": {
     "jobNotFound": "Posao nije pronađen",
@@ -295,16 +308,21 @@
       "titleTooShort": "Naziv posla mora imati najmanje 5 karaktera",
       "titleTooLong": "Naziv posla mora imati manje od 100 karaktera",
       "descriptionTooShort": "Opis posla mora imati najmanje 50 karaktera",
-      "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera"
+      "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera",
+      "deleteError": "Greška prilikom brisanja posla. Molimo pokušajte ponovo."
     },
     "success": {
       "jobPosted": "Posao uspješno objavljen!",
       "jobUpdated": "Posao uspješno ažuriran!",
+      "jobDeleted": "Posao uspješno obrisan!",
       "redirecting": "Preusmjeravanje na vaš posao..."
     }
   },
   "sections": {
-    "compensationTransportation": "Kompenzacija i transport"
+    "compensationTransportation": "Kompenzacija i transport",
+    "featuredJobs": "Istaknuti Oglasi ({count})",
+    "regularJobs": "Svi Oglasi ({count})",
+    "allJobs": "Svi Oglasi ({count})"
   },
   "labels": {
     "salary": "Plata"
@@ -348,6 +366,16 @@
     "postJobDialog": "Objavi Novi Posao",
     "postJobDescription": "Kreirajte novi oglas za posao da pronađete kvalifikovane kandidate.",
     "editJobDialog": "Uredi Oglas za Posao",
-    "editJobDescription": "Ažurirajte detalje vašeg oglasa za posao."
+    "editJobDescription": "Ažurirajte detalje vašeg oglasa za posao.",
+    "featureJobDialog": "Istaknite Oglas",
+    "removeFeatureDialog": "Uklonite Istaknutost",
+    "featureJobDescription": "Jeste li sigurni da želite istaknuti \"{jobTitle}\"? Istaknuti oglasi su označeni i prikazani su prominentnije potencijalnim kandidatima.\n\nOvo će koštati 6 konekcija.",
+    "removeFeatureDescription": "Jeste li sigurni da želite ukloniti istaknutost oglasa \"{jobTitle}\"? Ovaj oglas više neće biti označen za potencijalne kandidate.",
+    "featureJobConfirm": "Istaknuti Oglas",
+    "removeFeatureConfirm": "Ukloni Istaknutost",
+    "deleteJobDialog": "Obriši Oglas za Posao",
+    "deleteJobDescription": "Jeste li sigurni da želite obrisati \"{jobTitle}\"? Ova akcija se ne može poništiti i trajno će ukloniti oglas za posao i sve povezane prijave.",
+    "deleteJobConfirm": "Obriši Oglas",
+    "cancel": "Otkaži"
   }
 } 

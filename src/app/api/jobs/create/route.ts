@@ -83,7 +83,8 @@ export async function POST(request: Request) {
       contact_email,
       job_address,
       job_latitude,
-      job_longitude
+      job_longitude,
+      is_featured
     } = body
 
     // Validate required fields
@@ -206,7 +207,7 @@ export async function POST(request: Request) {
       latitude: job_latitude || null,
       longitude: job_longitude || null,
       is_active: true,
-      is_featured: false,
+      is_featured: is_featured || false,
       status: 'active' as const,
       // Cached city data for performance
       city_name: cityName,
@@ -225,6 +226,42 @@ export async function POST(request: Request) {
     }
 
     console.log('Jobs Create API: Final job data:', jobData)
+
+    // If the job is featured, deduct 6 connections from the user's balance
+    if (is_featured) {
+      const { data: userProfile, error: profileError } = await authenticatedSupabase
+        .from('users')
+        .select('connections')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !userProfile) {
+        return NextResponse.json(
+          { success: false, error: 'Failed to check user connections' },
+          { status: 500 }
+        )
+      }
+
+      if (userProfile.connections < 6) {
+        return NextResponse.json(
+          { success: false, error: 'Insufficient connections. You need 6 connections to feature a job.' },
+          { status: 400 }
+        )
+      }
+
+      // Deduct 6 connections
+      const { error: deductError } = await authenticatedSupabase
+        .from('users')
+        .update({ connections: userProfile.connections - 6 })
+        .eq('id', user.id)
+
+      if (deductError) {
+        return NextResponse.json(
+          { success: false, error: 'Failed to deduct connections' },
+          { status: 500 }
+        )
+      }
+    }
 
     // Insert the job into Supabase using the authenticated client
     const { data: insertedJob, error: insertError } = await authenticatedSupabase

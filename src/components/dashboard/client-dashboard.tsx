@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useUserJobsQuery, useDeleteJobMutation } from '@/hooks/queries/useJobs'
+import { useUserJobsQuery, useDeleteJobMutation, useFeatureJobMutation } from '@/hooks/queries/useJobs'
 import { queryKeys } from '@/lib/query-keys'
 import { useMultipleJobApplicantCounts, useUpdateApplication } from '@/hooks/use-applications'
 import { useClientApplications } from '@/hooks/use-client-applications'
@@ -9,6 +9,8 @@ import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
 import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { JobEditDialog } from '@/components/core/job-edit-dialog'
+import { FeatureJobDialog } from './client/feature-job-dialog'
+import { DeleteJobDialog } from './client/delete-job-dialog'
 import { ClientJobsManager } from './client/client-jobs-manager'
 import { ClientApplicationsManager } from './client/client-applications-manager'
 import { ConnectionsWidget } from './connections/connections-widget'
@@ -22,15 +24,26 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 import { Job } from '@/types/job'
 import { ApplicationStatus } from '@/types/application'
 export function ClientDashboard() {
   const t = useTranslations()
+  const tJobs = useTranslations('jobs.messages')
   const queryClient = useQueryClient()
   
   // Local state for edit dialog
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  
+  // State for feature job dialog
+  const [featuringJob, setFeaturingJob] = useState<Job | null>(null)
+  const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false)
+  
+  // State for delete job dialog
+  const [deletingJob, setDeletingJob] = useState<Job | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   
   // State for collapsible connection history
   const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
@@ -44,7 +57,24 @@ export function ClientDashboard() {
   // TanStack Query hooks for job data
   const { data: jobs = [], isLoading } = useUserJobsQuery(user?.id || '')
   const deleteJobMutation = useDeleteJobMutation()
+  const featureJobMutation = useFeatureJobMutation()
   const updateApplicationMutation = useUpdateApplication()
+  
+  // Query for user's connection count
+  const { data: userConnections = 0 } = useQuery({
+    queryKey: ['user-connections', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0
+      const { data, error } = await supabase
+        .from('users')
+        .select('connections')
+        .eq('id', user.id)
+        .single()
+      if (error || !data) return 0
+      return data.connections || 0
+    },
+    enabled: !!user?.id
+  })
   
   // Get real applicant counts for user's jobs
   const jobIds = jobs.map(job => job.id)
@@ -85,14 +115,60 @@ export function ClientDashboard() {
   }
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm(t('jobs.deleteConfirm'))) return
+    const job = jobs.find(j => j.id === jobId)
+    if (!job) return
+    
+    setDeletingJob(job as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDeleteJob = async () => {
+    if (!deletingJob) return
 
     try {
-      await deleteJobMutation.mutateAsync(jobId)
-      toast.success(t('jobs.deleteSuccess'))
+      await deleteJobMutation.mutateAsync(deletingJob.id)
+      toast.success(t('jobs.success.jobDeleted') || 'Job deleted successfully')
+      setIsDeleteDialogOpen(false)
+      setDeletingJob(null)
     } catch (error) {
       console.error('Error deleting job:', error)
-      toast.error(t('jobs.deleteError'))
+      toast.error(t('jobs.errors.deleteError') || 'Failed to delete job')
+    }
+  }
+
+  const handleFeatureJob = (jobId: string, _isFeatured: boolean) => {
+    const job = jobs.find(j => j.id === jobId)
+    if (!job) return
+    
+    setFeaturingJob(job)
+    setIsFeatureDialogOpen(true)
+  }
+
+  const handleConfirmFeatureJob = async () => {
+    if (!featuringJob) return
+
+    try {
+      const newFeaturedState = !featuringJob.is_featured
+      await featureJobMutation.mutateAsync({
+        jobId: featuringJob.id,
+        isFeatured: newFeaturedState
+      })
+      
+      const successMessage = newFeaturedState 
+        ? tJobs('jobFeaturedSuccess', { jobTitle: featuringJob.title })
+        : tJobs('jobFeatureRemovedSuccess', { jobTitle: featuringJob.title })
+      
+      toast.success(successMessage)
+      
+      // Invalidate user connections query to refresh the count
+      queryClient.invalidateQueries({ queryKey: ['user-connections', user?.id] })
+      
+      setIsFeatureDialogOpen(false)
+      setFeaturingJob(null)
+    } catch (error) {
+      console.error('Error featuring job:', error)
+      const errorMessage = error instanceof Error ? error.message : tJobs('featureJobFailed')
+      toast.error(errorMessage)
     }
   }
 
@@ -257,7 +333,7 @@ export function ClientDashboard() {
               applicationCounts={applicationCounts}
               onEdit={handleEditJob}
               onDelete={handleDeleteJob}
-              onFeature={() => {}} // TODO: Implement feature job functionality
+              onFeature={handleFeatureJob}
               onPostNewJob={openJobPostDialog}
               loading={isLoading}
             />
@@ -338,6 +414,28 @@ export function ClientDashboard() {
           isOpen={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onJobUpdated={handleJobUpdated}
+        />
+      )}
+
+      {/* Feature Job Dialog */}
+      {featuringJob && (
+        <FeatureJobDialog
+          isOpen={isFeatureDialogOpen}
+          onOpenChange={setIsFeatureDialogOpen}
+          onConfirm={handleConfirmFeatureJob}
+          jobTitle={featuringJob.title}
+          currentlyFeatured={featuringJob.is_featured || false}
+          userConnections={userConnections}
+        />
+      )}
+
+      {/* Delete Job Dialog */}
+      {deletingJob && (
+        <DeleteJobDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleConfirmDeleteJob}
+          jobTitle={deletingJob.title}
         />
       )}
 

@@ -41,6 +41,15 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
     // Final fallback
     return job.category_name || ''
   }
+
+  const getSubcategoryName = () => {
+    // Use the subcategory object that comes from API enrichment
+    if (job.subcategory) {
+      return locale === 'bs' ? job.subcategory.name_bs : job.subcategory.name_en || job.subcategory.name
+    }
+    
+    return ''
+  }
   
   // Get relative time string for job posting date
   const getRelativeTimeString = (date: string) => {
@@ -111,6 +120,12 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
                   <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/50 rounded-[var(--radius)]">
                     <Tag className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">{getCategoryName()}</span>
+                  </div>
+                )}
+                {getSubcategoryName() && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-50 dark:bg-purple-900/50 rounded-[var(--radius)]">
+                    <Tag className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">{getSubcategoryName()}</span>
                   </div>
                 )}
               </div>
@@ -193,6 +208,12 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false }: JobCardP
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/50 rounded-[var(--radius)]">
                   <Tag className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">{getCategoryName()}</span>
+                </div>
+              )}
+              {getSubcategoryName() && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-50 dark:bg-purple-900/50 rounded-[var(--radius)]">
+                  <Tag className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{getSubcategoryName()}</span>
                 </div>
               )}
             </div>

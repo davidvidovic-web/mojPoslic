@@ -104,6 +104,7 @@ export interface Job {
   company?: string // Use poster_name instead
   city?: City // Use cached city_name_* instead
   category?: Category // Use cached category_name_* instead
+  subcategory?: Category // Enriched subcategory data
   email?: string // Use poster_email instead
   website?: string // Use application_url instead
   salary?: string // Use salary_* fields instead

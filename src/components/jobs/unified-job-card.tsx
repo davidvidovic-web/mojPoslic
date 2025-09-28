@@ -208,7 +208,7 @@ export function UnifiedJobCard({ job }: UnifiedJobCardProps) {
           {job.is_featured && (
             <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
               <Star className="h-3 w-3 fill-current" />
-              Featured
+              {t('featured')}
             </Badge>
           )}
           
@@ -219,6 +219,12 @@ export function UnifiedJobCard({ job }: UnifiedJobCardProps) {
           {job.category && (
             <Badge variant="secondary" className="text-xs">
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
+            </Badge>
+          )}
+
+          {job.subcategory && (
+            <Badge variant="outline" className="text-xs">
+              {locale === 'bs' ? job.subcategory.name_bs || job.subcategory.name : job.subcategory.name_en || job.subcategory.name}
             </Badge>
           )}
 

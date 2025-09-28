@@ -152,7 +152,20 @@
   "messages": {
     "loadingJobDetails": "Loading job details...",
     "jobNotFound": "Job not found",
-    "errorLoadingJob": "Error loading job details"
+    "errorLoadingJob": "Error loading job details",
+    "jobFeaturedSuccess": "Job \"{jobTitle}\" has been featured successfully! 6 connections were deducted from your balance.",
+    "jobFeatureRemovedSuccess": "Featured status removed from \"{jobTitle}\" successfully!",
+    "jobUpdatedWithFeature": "Job updated successfully! 6 connections were deducted for featuring.",
+    "jobUpdatedSuccess": "Job updated successfully!",
+    "insufficientConnections": "Insufficient connections. You need 6 connections to feature a job.",
+    "connectionCheckFailed": "Failed to check connection balance",
+    "connectionDeductFailed": "Failed to deduct connections",
+    "authRequired": "Authentication required",
+    "featureJobFailed": "Failed to update job feature status",
+    "yourConnections": "Your connections: {connections}",
+    "requiredConnections": "Required: 6 connections",
+    "noConnectionCost": "No connection cost to remove featured status",
+    "insufficientConnectionsWarning": "You don't have enough connections to feature this job."
   },
   "errors": {
     "jobNotFound": "Job not found",
@@ -295,16 +308,21 @@
       "titleTooShort": "Job title must be at least 5 characters",
       "titleTooLong": "Job title must be less than 100 characters",
       "descriptionTooShort": "Job description must be at least 50 characters",
-      "descriptionTooLong": "Job description must be less than 5000 characters"
+      "descriptionTooLong": "Job description must be less than 5000 characters",
+      "deleteError": "Failed to delete job. Please try again."
     },
     "success": {
       "jobPosted": "Job posted successfully!",
       "jobUpdated": "Job updated successfully!",
+      "jobDeleted": "Job deleted successfully!",
       "redirecting": "Redirecting to your job..."
     }
   },
   "sections": {
-    "compensationTransportation": "Compensation & Transportation"
+    "compensationTransportation": "Compensation & Transportation",
+    "featuredJobs": "Featured Jobs ({count})",
+    "regularJobs": "All Jobs ({count})",
+    "allJobs": "All Jobs ({count})"
   },
   "review": {
     "title": "Review Your Job Posting",
@@ -341,6 +359,16 @@
     "postJobDialog": "Post New Job",
     "postJobDescription": "Create a new job posting to find qualified candidates.",
     "editJobDialog": "Edit Job Posting",
-    "editJobDescription": "Update your job posting details."
+    "editJobDescription": "Update your job posting details.",
+    "featureJobDialog": "Feature Job",
+    "removeFeatureDialog": "Remove Featured Status",
+    "featureJobDescription": "Are you sure you want to feature \"{jobTitle}\"? Featured jobs are highlighted and shown more prominently to potential applicants.\n\nThis will cost 6 connections.",
+    "removeFeatureDescription": "Are you sure you want to remove the featured status from \"{jobTitle}\"? This job will no longer be highlighted to potential applicants.",
+    "featureJobConfirm": "Feature Job",
+    "removeFeatureConfirm": "Remove Featured",
+    "deleteJobDialog": "Delete Job Posting",
+    "deleteJobDescription": "Are you sure you want to delete \"{jobTitle}\"? This action cannot be undone and will permanently remove the job posting and all associated applications.",
+    "deleteJobConfirm": "Delete Job",
+    "cancel": "Cancel"
   }
 }

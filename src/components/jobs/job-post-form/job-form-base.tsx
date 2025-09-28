@@ -21,6 +21,7 @@ interface JobFormBaseProps {
   submitButtonText?: string
   submittingText?: string
   showCard?: boolean
+  isEditMode?: boolean
 }
 
 export function JobFormBase({
@@ -29,7 +30,8 @@ export function JobFormBase({
   onCancel,
   submitButtonText,
   submittingText,
-  showCard = true
+  showCard = true,
+  isEditMode = false
 }: JobFormBaseProps) {
   const t = useTranslations('jobPost.validation')
   const tNav = useTranslations('jobPost.form.navigation')
@@ -156,6 +158,7 @@ export function JobFormBase({
             formData={formData}
             onValidation={handleReviewValidation}
             onChange={handleFormDataUpdate}
+            isEditMode={isEditMode}
           />
         )
       default:

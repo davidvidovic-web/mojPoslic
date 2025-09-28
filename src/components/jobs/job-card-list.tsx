@@ -9,7 +9,6 @@ import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Car } from "luci
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
-import { useData } from '@/hooks/use-data'
 
 interface JobCardListProps {
   job: Job
@@ -21,7 +20,6 @@ export function JobCardList({ job }: JobCardListProps) {
   const tCommon = useTranslations('common')
   const t = useTranslations('jobApplication')
   const locale = useLocale()
-  const { getCategoryByKey } = useData()
 
   // Check if the current user owns this job
   const isOwner = user && job.posted_by === user.id
@@ -146,14 +144,11 @@ export function JobCardList({ job }: JobCardListProps) {
             </Badge>
           )}
 
-          {job.subcategory_id && (() => {
-            const subcategory = getCategoryByKey(job.subcategory_id);
-            return subcategory ? (
-              <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400">
-                {locale === 'bs' ? subcategory.name_bs || subcategory.name : subcategory.name_en || subcategory.name}
-              </Badge>
-            ) : null;
-          })()}
+          {job.subcategory && (
+            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400">
+              {locale === 'bs' ? job.subcategory.name_bs || job.subcategory.name : job.subcategory.name_en || job.subcategory.name}
+            </Badge>
+          )}
           
           {job.transportation && (
             <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-200 dark:border-gray-700">

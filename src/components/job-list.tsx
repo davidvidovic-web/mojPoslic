@@ -11,11 +11,13 @@ import { JobsViewControls } from '@/components/job-list/jobs-view-controls'
 import { JobsEmptyState } from '@/components/job-list/jobs-empty-state'
 import { JobsPagination } from '@/components/job-list/jobs-pagination'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Star, Briefcase } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { Job } from '@/types/job'
 
 export function JobList() {
   const t = useTranslations('common.messages')
+  const tJobs = useTranslations('jobs')
   const { user } = useSupabaseAuth()
   const {
     viewMode,
@@ -32,6 +34,10 @@ export function JobList() {
   
   // Fetch user's applied jobs for display indication (only if user is logged in and auth is loaded)
   const { data: appliedJobIds = new Set() } = useUserAppliedJobsQuery(user?.id)
+
+  // Separate featured and regular jobs
+  const featuredJobs = jobs?.filter((job: Job) => job.is_featured) || []
+  const regularJobs = jobs?.filter((job: Job) => !job.is_featured) || []
 
   return (
     <div className="space-y-6">
@@ -62,20 +68,67 @@ export function JobList() {
         <JobsEmptyState />
       ) : (
         <>
-          <div className={
-            viewMode === 'grid'
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
-              : "flex flex-col gap-3"
-          }>
-            {jobs.map((job: Job) => (
-              <JobCard 
-                key={job.id} 
-                job={job} 
-                viewMode={viewMode} 
-                hasApplied={user ? appliedJobIds.has(job.id) : false}
-              />
-            ))}
-          </div>
+          {/* Featured Jobs Section */}
+          {featuredJobs.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 dark:bg-yellow-950/30 rounded-full">
+                  <Star className="w-4 h-4 text-yellow-600 fill-current" />
+                </div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {tJobs('sections.featuredJobs', { count: featuredJobs.length })}
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-r from-yellow-500/20 to-transparent"></div>
+              </div>
+              
+              <div className={
+                viewMode === 'grid'
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
+                  : "flex flex-col gap-3"
+              }>
+                {featuredJobs.map((job: Job) => (
+                  <JobCard 
+                    key={job.id} 
+                    job={job} 
+                    viewMode={viewMode} 
+                    hasApplied={user ? appliedJobIds.has(job.id) : false}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Regular Jobs Section */}
+          {regularJobs.length > 0 && (
+            <div className="space-y-4">
+              {featuredJobs.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
+                    <Briefcase className="w-4 h-4 text-primary" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {tJobs('sections.allJobs', { count: regularJobs.length })}
+                  </h2>
+                  <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent"></div>
+                </div>
+              )}
+              
+              <div className={
+                viewMode === 'grid'
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
+                  : "flex flex-col gap-3"
+              }>
+                {regularJobs.map((job: Job) => (
+                  <JobCard 
+                    key={job.id} 
+                    job={job} 
+                    viewMode={viewMode} 
+                    hasApplied={user ? appliedJobIds.has(job.id) : false}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           
           {/* Pagination */}
           <JobsPagination totalItems={jobs.length} />

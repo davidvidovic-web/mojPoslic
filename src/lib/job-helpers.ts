@@ -36,6 +36,15 @@ export interface JobWithStaticData extends BaseJob {
     is_popular: boolean
     parent_id?: string | null
   } | null
+  subcategory?: {
+    id: string
+    key: string
+    name_bs: string
+    name_en: string
+    name: string
+    is_popular: boolean
+    parent_id?: string | null
+  } | null
 }
 
 /**
@@ -80,6 +89,24 @@ export async function enrichJobWithStaticData(job: BaseJob): Promise<JobWithStat
         }
       }
     }
+
+    // Find subcategory - if subcategory_id is provided
+    let subcategory = null
+    const subcategoryId = 'subcategory_id' in job ? job.subcategory_id as string : null
+    if (subcategoryId) {
+      // Search in all subcategories across all categories
+      for (const cat of data.categories) {
+        if (cat.subcategories) {
+          const subcat = cat.subcategories.find((sub: StaticCategory) => 
+            sub.key === subcategoryId || sub.id === subcategoryId
+          )
+          if (subcat) {
+            subcategory = subcat
+            break
+          }
+        }
+      }
+    }
     
     return {
       ...job,
@@ -100,12 +127,21 @@ export async function enrichJobWithStaticData(job: BaseJob): Promise<JobWithStat
         name: category.name_bs, // Default to Bosnian for compatibility
         is_popular: category.is_popular,
         parent_id: category.parent_id
+      } : null,
+      subcategory: subcategory ? {
+        id: subcategory.id,
+        key: subcategory.key,
+        name_bs: subcategory.name_bs,
+        name_en: subcategory.name_en,
+        name: subcategory.name_bs, // Default to Bosnian for compatibility
+        is_popular: subcategory.is_popular,
+        parent_id: subcategory.parent_id
       } : null
     }
   } catch (error) {
     console.error('Error enriching job with static data:', error)
     // Return job as-is if enrichment fails
-    return { ...job, city: null, category: null }
+    return { ...job, city: null, category: null, subcategory: null }
   }
 }
 
@@ -124,6 +160,7 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
     return jobs.map((job) => {
       let city = null
       let category = null
+      let subcategory = null
       
       // Find city - check both by key (new format) and by id (legacy format)
       if (job.cityId) {
@@ -158,6 +195,23 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
           }
         }
       }
+
+      // Find subcategory - if subcategory_id is provided
+      const subcategoryId = 'subcategory_id' in job ? job.subcategory_id as string : null
+      if (subcategoryId) {
+        // Search in all subcategories across all categories
+        for (const cat of data.categories) {
+          if (cat.subcategories) {
+            const subcat = cat.subcategories.find((sub: StaticCategory) => 
+              sub.key === subcategoryId || sub.id === subcategoryId
+            )
+            if (subcat) {
+              subcategory = subcat
+              break
+            }
+          }
+        }
+      }
       
       return {
         ...job,
@@ -186,13 +240,22 @@ export async function enrichJobsWithStaticData(jobs: BaseJob[]): Promise<JobWith
           name: category.name_bs, // Default to Bosnian for compatibility
           is_popular: category.is_popular,
           parent_id: category.parent_id
+        } : null,
+        subcategory: subcategory ? {
+          id: subcategory.id,
+          key: subcategory.key,
+          name_bs: subcategory.name_bs,
+          name_en: subcategory.name_en,
+          name: subcategory.name_bs, // Default to Bosnian for compatibility
+          is_popular: subcategory.is_popular,
+          parent_id: subcategory.parent_id
         } : null
       }
     })
   } catch (error) {
     console.error('Error enriching jobs with static data:', error)
     // Return jobs as-is if enrichment fails
-    return jobs.map(job => ({ ...job, city: null, category: null }))
+    return jobs.map(job => ({ ...job, city: null, category: null, subcategory: null }))
   }
 }
 

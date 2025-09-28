@@ -6,6 +6,7 @@ import { JobFormBase } from './job-form-base'
 import { useTranslations } from 'next-intl'
 import { useData } from '@/hooks/use-data'
 import { useUpdateJobMutation } from '@/hooks/queries/useJobs'
+import { supabase } from '@/lib/supabase'
 import type { Database } from '@/types/supabase'
 
 type JobUpdate = Database['public']['Tables']['job_listings']['Update']
@@ -151,6 +152,7 @@ export function JobEditForm({
   const { cities, categories, loading, error } = useData()
   const updateJobMutation = useUpdateJobMutation()
   const t = useTranslations('jobs.review')
+  const tMessages = useTranslations('jobs.messages')
   
   // Add loading and error state debugging
   console.log('JobEditForm useData state:', {
@@ -229,6 +231,50 @@ export function JobEditForm({
         return
       }
       
+      // Check if we're changing from non-featured to featured and handle connection cost
+      const wasAlreadyFeatured = job.is_featured || false
+      const willBeFeatured = formData.is_featured || false
+      
+      if (!wasAlreadyFeatured && willBeFeatured) {
+        // If featuring the job, check and deduct connections
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        if (!currentUser) {
+          toast.error(tMessages('authRequired'))
+          return
+        }
+
+        // Check user's connection balance
+        const { data: userProfile, error: profileError } = await supabase
+          .from('users')
+          .select('connections')
+          .eq('id', currentUser.id)
+          .single()
+
+        if (profileError || !userProfile) {
+          toast.error(tMessages('connectionCheckFailed'))
+          return
+        }
+
+        const currentConnections = userProfile.connections || 0
+        if (currentConnections < 6) {
+          toast.error(tMessages('insufficientConnections'))
+          return
+        }
+
+        // Deduct 6 connections
+        const { error: deductError } = await supabase
+          .from('users')
+          .update({ connections: currentConnections - 6 })
+          .eq('id', currentUser.id)
+
+        if (deductError) {
+          toast.error(tMessages('connectionDeductFailed'))
+          return
+        }
+
+        console.log('6 connections deducted for featuring job')
+      }
+      
       // Prepare the update data for Supabase
       const updateData: JobUpdate = {
         title: formData.title,
@@ -247,6 +293,7 @@ export function JobEditForm({
         exact_location: formData.job_address || null,
         latitude: formData.job_latitude || null,
         longitude: formData.job_longitude || null,
+        is_featured: formData.is_featured || false,
         updated_at: new Date().toISOString(),
       }
 
@@ -257,7 +304,11 @@ export function JobEditForm({
       })
       
       // Show success message
-      toast.success(t('jobUpdated') || 'Job updated successfully')
+      const successMessage = (!wasAlreadyFeatured && willBeFeatured) 
+        ? tMessages('jobUpdatedWithFeature')
+        : tMessages('jobUpdatedSuccess')
+      
+      toast.success(successMessage)
       
       // Add a small delay to ensure backend transaction is complete
       setTimeout(() => {
@@ -285,6 +336,7 @@ export function JobEditForm({
       submitButtonText={t('updateJobPosting') || 'Update Job Posting'}
       submittingText={t('updating') || 'Updating...'}
       showCard={showCard}
+      isEditMode={true}
     />
   )
 }

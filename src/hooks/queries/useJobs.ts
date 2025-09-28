@@ -498,6 +498,71 @@ export function useDeleteJobMutation() {
     },
   })
 }
+
+export function useFeatureJobMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ jobId, isFeatured }: { jobId: string; isFeatured: boolean }) => {
+      // If featuring the job, check connections first
+      if (isFeatured) {
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+          throw new Error('User not authenticated')
+        }
+
+        // Check user's connection balance
+        const { data: userProfile, error: profileError } = await supabase
+          .from('users')
+          .select('connections')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError || !userProfile) {
+          throw new Error('Failed to check connection balance')
+        }
+
+        if (userProfile.connections < 6) {
+          throw new Error('Insufficient connections. You need 6 connections to feature a job.')
+        }
+
+        // Deduct 6 connections
+        const { error: deductError } = await supabase
+          .from('users')
+          .update({ connections: userProfile.connections - 6 })
+          .eq('id', user.id)
+
+        if (deductError) {
+          throw new Error('Failed to deduct connections')
+        }
+      }
+
+      // Update the job
+      const { data, error } = await supabase
+        .from('job_listings')
+        .update({ is_featured: isFeatured, updated_at: new Date().toISOString() })
+        .eq('id', jobId)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: (updatedJob) => {
+      // Update cache
+      queryClient.setQueryData(queryKeys.jobs.detail(updatedJob.id), updatedJob)
+      
+      // Invalidate job lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      
+      // Invalidate user's jobs if posted_by_id exists
+      if (updatedJob.posted_by_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: queryKeys.jobs.list({ postedBy: updatedJob.posted_by_id }) 
+        })
+      }
+    },
+  })
+}
 export function useSaveJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
