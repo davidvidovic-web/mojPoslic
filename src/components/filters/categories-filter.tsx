@@ -2,7 +2,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslations, useLocale } from 'next-intl'
-import { useCategories } from '@/hooks/use-static-data'
+import { useData } from '@/hooks/use-data'
 
 interface CategoriesFilterProps {
   value: string
@@ -27,19 +27,26 @@ export function CategoriesFilter({
   showSubcategories = false,
   stackOnMobile = false
 }: CategoriesFilterProps) {
-  const { categories, loading } = useCategories()
+  const { categories, loading } = useData()
   const t = useTranslations('filters')
   const locale = useLocale()
   
   const defaultPlaceholder = placeholder || t('allCategories')
 
-  // Get only main categories (no parent)
-  const mainCategories = categories.filter(cat => !cat.parent_id)
+  // Get only main categories (categories are already hierarchical, so just use them directly)
+  const mainCategories = categories || []
+  
+  // Get subcategories based on selected category
+  const getSubcategoriesForCategory = (categoryKey: string) => {
+    const selectedCategory = mainCategories.find(cat => cat.key === categoryKey)
+    return selectedCategory?.children || selectedCategory?.subcategories || []
+  }
   
   // Get subcategories based on selected category or all subcategories
   const relevantSubcategories = value && value !== 'all' 
-    ? categories.filter(cat => cat.parent_id === value)
-    : categories.filter(cat => cat.parent_id) // Get all subcategories when no parent is selected
+    ? getSubcategoriesForCategory(value)
+    : // Get all subcategories from all main categories when no parent is selected
+      mainCategories.flatMap(cat => cat.children || cat.subcategories || [])
 
   // Helper function to get category name based on locale
   const getCategoryName = (category: {

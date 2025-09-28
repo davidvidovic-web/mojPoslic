@@ -71,13 +71,7 @@ export function JobFilters({
           
           <CategoriesFilter
             value={categoryFilter}
-            onChange={(value) => {
-              setCategoryFilter(value)
-              // Reset subcategory when main category changes
-              if (setSubcategoryFilter) {
-                setSubcategoryFilter("all")
-              }
-            }}
+            onChange={setCategoryFilter}
             placeholder={t('allCategories')}
             className="w-52 flex-shrink-0"
             showSubcategories={true}
@@ -147,13 +141,7 @@ export function JobFilters({
                 
                 <CategoriesFilter
                   value={categoryFilter}
-                  onChange={(value) => {
-                    setCategoryFilter(value)
-                    // Reset subcategory when main category changes
-                    if (setSubcategoryFilter) {
-                      setSubcategoryFilter("all")
-                    }
-                  }}
+                  onChange={setCategoryFilter}
                   placeholder={t('allCategories')}
                   className="w-full"
                   showSubcategories={true}

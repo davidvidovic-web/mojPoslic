@@ -88,7 +88,7 @@ export const useFilterStore = create<FilterState>()(
       setJobCityFilter: (city) => set({ jobCityFilter: city, currentPage: 1 }),
       setJobCategoryFilter: (category) => set({ 
         jobCategoryFilter: category, 
-        jobSubcategoryFilter: 'all', // Reset subcategory when main category changes
+        // Don't reset subcategory - allow independent filtering
         currentPage: 1 
       }),
       setJobSubcategoryFilter: (subcategory) => set({ 

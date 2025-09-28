@@ -1,30 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { enrichJobsWithStaticData } from '@/lib/job-helpers'
-import fs from 'fs'
-import path from 'path'
-
-// Server-side helper to load static data
-async function loadStaticCategories() {
-  const categoriesPath = path.join(process.cwd(), 'public', 'static', 'categories.json')
-  const categoriesFile = fs.readFileSync(categoriesPath, 'utf8')
-  const categoriesData = JSON.parse(categoriesFile)
-  return categoriesData.categories || []
-}
-
-// Helper to find category by key or ID
-function findCategoryRecursive(categories: Record<string, unknown>[], keyOrId: string): Record<string, unknown> | null {
-  for (const category of categories) {
-    if (category.id === keyOrId || category.key === keyOrId) {
-      return category
-    }
-    if (category.subcategories && Array.isArray(category.subcategories)) {
-      const found = findCategoryRecursive(category.subcategories as Record<string, unknown>[], keyOrId)
-      if (found) return found
-    }
-  }
-  return null
-}
 
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient()
@@ -39,27 +15,12 @@ export async function GET(request: NextRequest) {
     const subcategory = searchParams.get('subcategory')
     const type = searchParams.get('type')
 
-    // Convert category and subcategory keys to IDs if needed
-    let categoryId = category
-    let subcategoryId = subcategory
+    // Use category and subcategory keys directly for filtering
+    const categoryId = category
+    const subcategoryId = subcategory
 
-    if (category && category !== 'all') {
-      // Load static categories and find the category
-      const categories = await loadStaticCategories()
-      const categoryData = findCategoryRecursive(categories, category)
-      if (categoryData && typeof categoryData.id === 'string') {
-        categoryId = categoryData.id
-      }
-    }
-
-    if (subcategory && subcategory !== 'all') {
-      // Load static categories and find the subcategory
-      const categories = await loadStaticCategories()
-      const subcategoryData = findCategoryRecursive(categories, subcategory)
-      if (subcategoryData && typeof subcategoryData.id === 'string') {
-        subcategoryId = subcategoryData.id
-      }
-    }
+    // No conversion needed - the database stores keys directly
+    // The UI sends keys like "majstorski-radovi" and the database has keys, so we can filter directly
     
     // Build query
     let query = supabase

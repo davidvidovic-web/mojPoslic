@@ -18,7 +18,7 @@ import {
   getJobTypeBadgeVariant,
   formatTimeAgo,
 } from "@/lib/job-utils";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 interface UnifiedJobCardProps {
   job: Job;

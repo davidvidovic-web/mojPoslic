@@ -27,6 +27,7 @@ import {
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
 import { toast } from "sonner";
 import { useTranslations, useLocale } from 'next-intl';
+import { useData } from '@/hooks/use-data';
 
 interface JobCardProps {
   job: Job;
@@ -39,6 +40,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
   const { user } = useSupabaseAuth();
   const t = useTranslations('jobCard');
   const locale = useLocale();
+  const { getCategoryByKey } = useData();
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isJobSaved, setIsJobSaved] = useState(isSaved);
@@ -341,7 +343,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
           )}
           
           <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20">
-            {getTranslatedJobType(job.type)}
+            {getTranslatedJobType(job.type || 'quick_job')}
           </Badge>
 
           {job.category && (
@@ -349,6 +351,15 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
             </Badge>
           )}
+
+          {job.subcategory_id && (() => {
+            const subcategory = getCategoryByKey(job.subcategory_id);
+            return subcategory ? (
+              <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400">
+                {locale === 'bs' ? subcategory.name_bs || subcategory.name : subcategory.name_en || subcategory.name}
+              </Badge>
+            ) : null;
+          })()}
 
           {job.transportation && (
             <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-200 dark:border-gray-700">
