@@ -42,7 +42,8 @@
     "save": "Save Job",
     "feature": "Feature",
     "unfeature": "Unfeature",
-    "backToJobs": "Back to Jobs"
+    "backToJobs": "Back to Jobs",
+    "openInNewWindow": "Open in new window"
   },
   "emptyStates": {
     "noJobs": "No jobs found",
@@ -77,7 +78,12 @@
     "applied": "Applied",
     "viewJob": "View Job",
     "viewDetails": "View Details",
-    "viewApplication": "View Application"
+    "viewApplication": "View Application",
+    "view": "view",
+    "views": "views",
+    "application": "application",
+    "applications": "applications",
+    "timePosted": "Time posted:"
   },
   "form": {
     "sections": {
@@ -130,7 +136,17 @@
       "transportationAndLocation": "Transportation & Location",
       "contactInformation": "Contact Information",
       "scheduleAndTimeline": "Schedule & Timeline",
-      "locationMap": "Location Map"
+      "locationMap": "Location Map",
+      "transportationProvided": "Provided by client",
+      "transportationCompensated": "Compensated",
+      "applicationDeadline": "Application Deadline",
+      "priority": "Priority",
+      "urgent": "Urgent",
+      "negotiable": "Negotiable",
+      "performanceBonus": "Performance Bonus",
+      "oneDay": "1 day",
+      "multipleDays": "{days} days",
+      "exactLocation": "Exact Location"
     },
     "placeholders": {
       "jobTitleExample": "e.g., Web Developer, Graphic Designer",
@@ -182,6 +198,7 @@
     "startDate": "Start Date",
     "expires": "Expires",
     "payment": "Payment",
+    "compensation": "Compensation",
     "salary": "Salary",
     "transportation": "Transportation",
     "transportationNotProvided": "Transportation not provided",

@@ -42,7 +42,8 @@
     "save": "Sačuvaj posao",
     "feature": "Istakni",
     "unfeature": "Ukloni istaknutost",
-    "backToJobs": "Nazad na poslove"
+    "backToJobs": "Nazad na poslove",
+    "openInNewWindow": "Otvori u novom prozoru"
   },
   "emptyStates": {
     "noJobs": "Nema pronađenih poslića",
@@ -74,10 +75,15 @@
     "type": "Tip",
     "experience": "Iskustvo",
     "featured": "Istaknuto",
-    "applied": "Prijavljeno",
+        "applied": "Aplicirao",
     "viewJob": "Pogledaj posao",
     "viewDetails": "Pogledaj detalje",
-    "viewApplication": "Pogledaj prijavu"
+    "viewApplication": "Pogledaj prijavu",
+    "view": "pregled",
+    "views": "pregleda",
+    "application": "prijava",
+    "applications": "prijave",
+    "timePosted": "Vrijeme objave:"
   },
   "form": {
     "sections": {
@@ -130,8 +136,18 @@
       "links": "Linkovi",
       "transportationAndLocation": "Prijevoz i lokacija",
       "contactInformation": "Kontakt informacije",
-      "scheduleAndTimeline": "Raspored i vremenski okvir",
-      "locationMap": "Mapa lokacije"
+      "scheduleAndTimeline": "Raspored i vrijeme",
+      "locationMap": "Mapa lokacije",
+      "transportationProvided": "Osigurava klijent",
+      "transportationCompensated": "Kompenzovano",
+      "applicationDeadline": "Rok za prijavu",
+      "priority": "Prioritet",
+      "urgent": "Hitno",
+      "negotiable": "Po dogovoru",
+      "performanceBonus": "Bonus za performanse",
+      "oneDay": "1 dan",
+      "multipleDays": "{days} dana",
+      "exactLocation": "Tačna lokacija"
     },
     "placeholders": {
       "jobTitleExample": "npr., Web Developer, Graphic Designer",
@@ -183,6 +199,7 @@
     "startDate": "Datum početka",
     "expires": "Ističe",
     "payment": "Plaćanje",
+    "compensation": "Kompenzacija",
     "salary": "Plata",
     "transportation": "Prevoz",
     "address": "Adresa",

@@ -88,6 +88,7 @@ export function JobsListSection({
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onFeature={onFeature}
+                hideFeaturedBadge={true}
               />
             ))}
           </div>

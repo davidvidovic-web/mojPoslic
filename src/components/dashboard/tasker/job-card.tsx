@@ -13,9 +13,10 @@ interface JobCardProps {
   applicationCount: number
   onEdit: (job: Job) => void
   onDelete: (jobId: string) => void
+  hideFeaturedBadge?: boolean
 }
 
-export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProps) {
+export function JobCard({ job, applicationCount, onEdit, onDelete, hideFeaturedBadge = false }: JobCardProps) {
   const locale = useLocale()
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
@@ -28,7 +29,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold">{job.title}</h3>
-              {job.is_featured && (
+              {job.is_featured && !hideFeaturedBadge && (
                 <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
                   <Star className="h-3 w-3 fill-current" />
                   Featured

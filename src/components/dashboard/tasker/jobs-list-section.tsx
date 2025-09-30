@@ -69,6 +69,7 @@ export function JobsListSection({
                       applicationCount={applicationCounts[job.id] || 0}
                       onEdit={onEdit}
                       onDelete={onDelete}
+                      hideFeaturedBadge={true}
                     />
                   ))}
                 </div>

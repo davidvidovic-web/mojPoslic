@@ -1,18 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import {
   Card,
-  CardHeader,
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  MapPin,
-  Clock,
-  DollarSign,
   Car,
   Star,
   Users,
@@ -21,24 +16,25 @@ import {
 } from "lucide-react";
 import { Job } from "@/types/job";
 import {
-  getJobTypeBadgeVariant,
   formatTimeAgo,
 } from "@/lib/job-utils";
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
 import { toast } from "sonner";
 import { useTranslations, useLocale } from 'next-intl';
+import { useJobDetailsDrawer } from "@/hooks/use-job-details-drawer";
 
 interface JobCardProps {
   job: Job;
   isSaved?: boolean;
   onSaveToggle?: (jobId: string, isSaved: boolean) => void;
+  hideFeaturedBadge?: boolean;
 }
 
-export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
-  const router = useRouter();
+export function JobCard({ job, isSaved = false, onSaveToggle, hideFeaturedBadge = false }: JobCardProps) {
   const { user } = useSupabaseAuth();
   const t = useTranslations('jobCard');
   const locale = useLocale();
+  const { openDrawer } = useJobDetailsDrawer();
   const [applicationCount, setApplicationCount] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isJobSaved, setIsJobSaved] = useState(isSaved);
@@ -76,17 +72,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
     }
   };
 
-  const getTranslatedDuration = (duration?: string): string => {
-    if (!duration) return '';
-    
-    // Check if we have a translation for this duration
-    try {
-      return t(`duration.${duration}`);
-    } catch {
-      // Fallback to replacing underscores with spaces
-      return duration.replace('_', ' ');
-    }
-  };
+
 
   // Update saved state when prop changes
   useEffect(() => {
@@ -212,7 +198,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
   };
 
   const handleViewDetails = () => {
-    router.push(`/jobs/${job.id}`);
+    openDrawer(job.id);
   };
 
   const toggleDescription = (e: React.MouseEvent) => {
@@ -237,24 +223,11 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
-      <CardHeader className="relative p-6 pb-4">
-        {/* Header with time and actions */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-3">
-            {/* Company Avatar */}
-            <div className="w-10 h-10 rounded-[var(--radius)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
-              <span className="text-sm font-semibold text-primary">
-                {job.company ? job.company.charAt(0).toUpperCase() : 'J'}
-              </span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                {job.company || t('noCompany')}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {job.posted_at ? formatTimeAgo(job.posted_at) : ''}
-              </p>
-            </div>
+      <CardContent className="relative p-6 space-y-4">
+        {/* Time Posted (12px font) */}
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-muted-foreground" style={{ fontSize: '12px' }}>
+            {t('timePosted')} {job.posted_at ? formatTimeAgo(job.posted_at) : ''}
           </div>
           
           <div className="flex items-center gap-2">
@@ -265,7 +238,7 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
                 size="sm"
                 onClick={handleSaveToggle}
                 disabled={isSaving}
-                className="h-9 w-9 p-0 rounded-[var(--radius)] hover:bg-primary/10 transition-colors opacity-60 group-hover:opacity-100"
+                className="h-8 w-8 p-0 rounded-[var(--radius)] hover:bg-primary/10 transition-colors opacity-60 group-hover:opacity-100"
               >
                 {isJobSaved ? (
                   <BookmarkCheck className="h-4 w-4 text-primary" />
@@ -276,46 +249,26 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
             )}
             {/* Application count for owners */}
             {isOwner && applicationCount !== null && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-[var(--radius)]">
-                <Users className="h-3.5 w-3.5 text-primary" />
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 rounded-[var(--radius)]">
+                <Users className="h-3 w-3 text-primary" />
                 <span className="text-xs font-medium text-primary">{applicationCount}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Job Title */}
-        <h3 className="text-xl font-bold leading-tight mb-5 line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+        {/* Title */}
+        <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {job.title}
         </h3>
 
-        {/* Key Information Pills */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {/* Location */}
-          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{job.city?.name || t('jobTypes.remote')}</span>
+        {/* Payment Type - Payment Amount */}
+        {formatSalary(job) && (
+          <div className="text-sm font-medium text-green-600">
+            {getTranslatedJobType(job.type || 'quick_job')} - {formatSalary(job)} KM
           </div>
-          
-          {/* Payment */}
-          {formatSalary(job) && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
-              <DollarSign className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-sm font-medium text-green-600">{formatSalary(job)}</span>
-            </div>
-          )}
+        )}
 
-          {/* Duration */}
-          {job.duration && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-[var(--radius)]">
-              <Clock className="h-3.5 w-3.5 text-blue-600" />
-              <span className="text-sm text-blue-600">{getTranslatedDuration(job.duration)}</span>
-            </div>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="relative flex-1 px-6 pb-6 pt-0 space-y-4">
         {/* Description */}
         <div>
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
@@ -331,33 +284,20 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
           )}
         </div>
 
-        {/* Tags and Badges */}
+        {/* Category and Subcategory Bubbles */}
         <div className="flex flex-wrap gap-2">
-          {job.is_featured && (
+          {job.is_featured && !hideFeaturedBadge && (
             <Badge className="bg-yellow-500 hover:bg-yellow-600 text-yellow-50 text-xs px-2.5 py-1 rounded-[var(--radius)] border-0">
               <Star className="h-3 w-3 fill-current mr-1" />
               {t('featured')}
             </Badge>
           )}
-          
-          <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20">
-            {getTranslatedJobType(job.type || 'quick_job')}
-          </Badge>
 
           {job.category && (
-            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+            <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-black dark:bg-white text-white dark:text-black">
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
             </Badge>
           )}
-
-          {/* Temporary debug to see what data we have */}
-          <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-red-300 text-red-600">
-            subcategory_id: {job.subcategory_id || 'null'}
-          </Badge>
-
-          <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-blue-300 text-blue-600">
-            subcategory: {job.subcategory ? 'exists' : 'null'}
-          </Badge>
 
           {job.subcategory && (
             <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400">
@@ -376,17 +316,11 @@ export function JobCard({ job, isSaved = false, onSaveToggle }: JobCardProps) {
           )}
         </div>
 
-        {/* Application count for non-owners */}
-        {!isOwner && applicationCount !== null && (
-          <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-            <div className="w-6 h-6 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center">
-              <Users className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {applicationCount} {applicationCount === 1 ? t('person') : t('people')} {t('applied')}
-            </span>
-          </div>
-        )}
+        {/* Views and Applications */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span>{job.view_count || 0} {(job.view_count || 0) === 1 ? (t('view') || 'view') : (t('views') || 'views')}</span>
+          <span>{job.application_count || 0} {(job.application_count || 0) === 1 ? (t('application') || 'application') : (t('applications') || 'applications')}</span>
+        </div>
       </CardContent>
     </Card>
   );

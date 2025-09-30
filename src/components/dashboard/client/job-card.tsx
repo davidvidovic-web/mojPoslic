@@ -12,9 +12,10 @@ interface JobCardProps {
   onDelete: (jobId: string) => void
   onEdit?: (job: Job) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
+  hideFeaturedBadge?: boolean
 }
 
-export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: JobCardProps) {
+export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature, hideFeaturedBadge = false }: JobCardProps) {
   const t = useTranslations('dashboard.jobCard')
   const locale = useLocale()
   
@@ -112,7 +113,7 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature }: 
           {/* Title and Badges */}
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors truncate">{job.title}</h3>
-            {job.is_featured && (
+            {job.is_featured && !hideFeaturedBadge && (
               <Badge className="bg-yellow-500 text-yellow-50 border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs flex-shrink-0">
                 {t('featured')}
               </Badge>

@@ -92,6 +92,7 @@ export function JobList() {
                     job={job} 
                     viewMode={viewMode} 
                     hasApplied={user ? appliedJobIds.has(job.id) : false}
+                    hideFeaturedBadge={true}
                   />
                 ))}
               </div>
