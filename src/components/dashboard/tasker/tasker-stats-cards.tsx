@@ -27,7 +27,7 @@ export function TaskerStatsCards({
   completedJobs = 0, 
   totalEarnings = 0 
 }: TaskerStatsCardsProps) {
-  const activeJobs = applications.filter(app => app.status === 'accepted').length
+  const activeJobs = applications.filter(app => app.status === 'SELECTED').length
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

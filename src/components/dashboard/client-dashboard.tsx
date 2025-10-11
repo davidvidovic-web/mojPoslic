@@ -31,6 +31,7 @@ import { ApplicationStatus } from '@/types/application'
 export function ClientDashboard() {
   const t = useTranslations()
   const tJobs = useTranslations('jobs.messages')
+  const tDashboard = useTranslations('dashboard')
   const queryClient = useQueryClient()
   
   // Local state for edit dialog
@@ -96,7 +97,7 @@ export function ClientDashboard() {
     queryClient.invalidateQueries({ queryKey: queryKeys.jobs.list({ postedBy: user?.id || '' }) })
     queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
     // Show success message
-    toast.success(t('jobs.success.jobPosted'))
+    toast.success(tJobs('success.jobPosted'))
   }
 
   const handleJobUpdated = () => {
@@ -106,7 +107,7 @@ export function ClientDashboard() {
     queryClient.invalidateQueries({ queryKey: queryKeys.jobs.list({ postedBy: user?.id || '' }) })
     queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
     // Show success message
-    toast.success(t('jobs.success.jobUpdated') || 'Job updated successfully')
+    toast.success(tJobs('success.jobUpdated'))
   }
 
   const handleEditJob = (job: Job) => {
@@ -127,12 +128,12 @@ export function ClientDashboard() {
 
     try {
       await deleteJobMutation.mutateAsync(deletingJob.id)
-      toast.success(t('jobs.success.jobDeleted') || 'Job deleted successfully')
+      toast.success(tJobs('success.jobDeleted'))
       setIsDeleteDialogOpen(false)
       setDeletingJob(null)
     } catch (error) {
       console.error('Error deleting job:', error)
-      toast.error(t('jobs.errors.deleteError') || 'Failed to delete job')
+      toast.error(tJobs('errors.deleteError'))
     }
   }
 
@@ -174,12 +175,13 @@ export function ClientDashboard() {
 
   const handleUpdateApplicationStatus = async (applicationId: string, status: string) => {
     try {
-      // Convert lowercase string to ApplicationStatus enum
+      // Convert UI strings to ApplicationStatus enum values
       const statusMapping: Record<string, ApplicationStatus> = {
-        'pending': ApplicationStatus.PENDING,
-        'accepted': ApplicationStatus.SELECTED, // In UI 'accepted' maps to 'SELECTED' in enum
+        'accepted': ApplicationStatus.SELECTED, // UI button uses 'accepted' but enum is 'SELECTED'
         'rejected': ApplicationStatus.REJECTED,
-        'completed': ApplicationStatus.SELECTED,
+        'pending': ApplicationStatus.PENDING,
+        'reviewed': ApplicationStatus.REVIEWED,
+        'shortlisted': ApplicationStatus.SHORTLISTED,
         'withdrawn': ApplicationStatus.WITHDRAWN
       }
       
@@ -256,29 +258,7 @@ export function ClientDashboard() {
     }
   }
 
-  const handleViewProfile = (userId: string, applicationId: string) => {
-    console.log('Viewing profile for user:', userId, 'application:', applicationId)
-    
-    // Find the application to get user details
-    const application = allApplications.find(app => app.id === applicationId)
-    if (!application || !application.user) {
-      toast.error('User information not found')
-      return
-    }
 
-    // For now, show user information in a toast
-    // TODO: Implement proper profile view modal/page
-    const user = application.user
-    const userInfo = [
-      `Name: ${user.name}`,
-      `Email: ${user.email}`,
-      user.location && `Location: ${user.location}`,
-      user.bio && `Bio: ${user.bio}`,
-      user.skills && Array.isArray(user.skills) && user.skills.length > 0 && `Skills: ${user.skills.join(', ')}`
-    ].filter(Boolean).join('\n')
-
-    toast.info(`User Profile:\n${userInfo}`, { duration: 10000 })
-  }
 
   // const handleFeatureJob = async (jobId: string, isFeatured: boolean) => {
   //   try {
@@ -295,7 +275,7 @@ export function ClientDashboard() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t('dashboard.loading.jobs')}</p>
+            <p className="text-muted-foreground">{tDashboard('loading.jobs')}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -321,10 +301,10 @@ export function ClientDashboard() {
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                  {t('dashboard.tabs.myJobs') || 'My Jobs'}
+                  {tDashboard('tabs.myJobs') || 'My Jobs'}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  {t('dashboard.client.jobs.description') || 'Manage your job postings and track applications'}
+                  {tDashboard('client.jobs.description') || 'Manage your job postings and track applications'}
                 </p>
               </div>
             </div>
@@ -349,10 +329,10 @@ export function ClientDashboard() {
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                  {t('dashboard.tabs.applications') || 'Applications'}
+                  {tDashboard('tabs.applications') || 'Applications'}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  {t('dashboard.client.applications.description') || 'Review and manage applications for your jobs'}
+                  {tDashboard('client.applications.description') || 'Review and manage applications for your jobs'}
                 </p>
               </div>
             </div>
@@ -360,7 +340,6 @@ export function ClientDashboard() {
               applications={allApplications}
               onUpdateApplicationStatus={handleUpdateApplicationStatus}
               onMessageApplicant={handleMessageApplicant}
-              onViewProfile={handleViewProfile}
               loading={applicationsLoading}
             />
           </CardContent>
@@ -380,7 +359,7 @@ export function ClientDashboard() {
                       <History className="h-4 w-4 text-purple-600" />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {t('dashboard.connections.fullHistory') || 'Connection History'}
+                      {tDashboard('connections.fullHistory') || 'Connection History'}
                     </h2>
                   </div>
                   {isConnectionHistoryOpen ? (

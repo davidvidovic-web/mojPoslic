@@ -86,7 +86,7 @@
       "whenStart": "When do you want to start this job?",
       "dontKnowExactTime": "I don't know the exact time",
       "startDate": "Start Date *",
-      "startTime": "Start Time (Optional)",
+      "startTime": "Start Time *",
       "duration": "Expected Duration",
       "durationOptions": {
         "1_hour": "1 hour",

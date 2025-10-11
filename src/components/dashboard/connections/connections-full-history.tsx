@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,10 +15,12 @@ import {
   Calendar,
   TrendingDown,
   Plus,
-  ShoppingCart
+  ShoppingCart,
+  Zap
 } from 'lucide-react'
-import { toast } from 'sonner'
+
 import { useTranslations } from 'next-intl'
+import { useConnectionsManager } from '@/hooks/use-connections'
 
 interface ConnectionHistoryEntry {
   id: string
@@ -38,16 +40,37 @@ interface ConnectionsFullHistoryProps {
 
 export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProps) {
   const t = useTranslations('dashboard.connections')
-  const [history, setHistory] = useState<ConnectionHistoryEntry[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'positive' | 'negative'>('all')
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
+  
+  // Use the same hook as connections widget
+  const { 
+    connections, 
+    history: rawHistory, 
+    isLoading: loading,
+    error,
+    refetchAll 
+  } = useConnectionsManager()
+
+  // Transform history data to match the expected interface
+  const history: ConnectionHistoryEntry[] = rawHistory.map(item => ({
+    id: item.id,
+    action: item.action,
+    actionLabel: item.action, // Use action as actionLabel
+    amount: Math.abs(item.amountChanged),
+    description: item.reason || null,
+    jobId: null, // Not available in the new structure
+    createdAt: item.createdAt,
+    isPositive: item.amountChanged > 0,
+    isNegative: item.amountChanged < 0
+  }))
 
   // Function to translate action labels
   const getTranslatedActionLabel = (actionLabel: string) => {
-    // Map common action labels to translation keys
+    // Map common action labels to translation keys (both formatted and raw backend types)
     const actionMap: Record<string, string> = {
+      // Formatted action labels
       'Job Application': 'jobApplication',
       'Job Application (Professional)': 'jobApplicationProfessional',
       'Quick Job Posting': 'quickJobPosting',
@@ -58,7 +81,17 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
       'Monthly Refresh': 'monthlyRefresh',
       'Bonus': 'bonus',
       'Refund': 'refund',
-      'Initial Signup': 'initialSignup'
+      'Initial Signup': 'initialSignup',
+      
+      // Backend action types (underscore format)
+      'MONTHLY_REFRESH': 'monthlyRefresh',
+      'INITIAL_SIGNUP': 'initialSignup',
+      'ROLE_CHANGE': 'roleChange',
+      'JOB_APPLICATION': 'jobApplication',
+      'JOB_POST_CLIENT': 'jobPostClient',
+      'JOB_POST_COMPANY': 'jobPostCompany',
+      'ADMIN_ADJUSTMENT': 'adminAdjustment',
+      'PURCHASE': 'purchase'
     }
     
     // Return translated label if exists, otherwise return original
@@ -78,27 +111,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
     return descriptionMap[description] ? t(descriptionMap[description]) : description
   }
 
-  useEffect(() => {
-    fetchConnectionHistory()
-  }, [])
 
-  const fetchConnectionHistory = async () => {
-    try {
-      setLoading(true)
-      // Temporarily disabled - connection history API removed during auth cleanup
-      const data = { history: [] }
-      
-      // Ensure we always have an array
-      const historyArray = Array.isArray(data) ? data : (data?.history || [])
-      setHistory(historyArray)
-    } catch (error) {
-      console.error('Error fetching connection history:', error)
-      toast.error('Failed to load connection history')
-      setHistory([]) // Ensure we set an empty array on error
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Filter and sort history - ensure history is always an array
   const filteredHistory = (Array.isArray(history) ? history : [])
@@ -124,7 +137,7 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
 
   // Get summary stats with more detailed breakdown
   const totalReceived = history.filter(h => h.isPositive).reduce((sum, h) => sum + h.amount, 0)
-  const totalBought = history.filter(h => h.isPositive && h.actionLabel === 'Purchase').reduce((sum, h) => sum + h.amount, 0)
+  const totalBought = history.filter(h => h.isPositive && (h.actionLabel === 'Purchase' || h.actionLabel === 'PURCHASE')).reduce((sum, h) => sum + h.amount, 0)
   const totalSpent = history.filter(h => h.isNegative).reduce((sum, h) => sum + h.amount, 0)
 
   const exportHistory = () => {
@@ -157,9 +170,45 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
             {t('fullHistory')}
           </CardTitle>
         </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Filters skeleton */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="flex gap-2">
+              <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
+              <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
+              <div className="w-24 h-10 bg-muted rounded animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* History skeleton */}
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" />
+            {t('fullHistory')}
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="text-center py-8">
+            <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold">{t('errorTitle')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button onClick={refetchAll} variant="outline">
+              {t('tryAgain')}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -175,7 +224,15 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         </CardTitle>
         
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <div className="bg-yellow-50 dark:bg-yellow-950/30 p-3 rounded-[var(--radius)] border border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-yellow-600" />
+              <span className="text-sm font-medium">{t('currentBalance')}</span>
+            </div>
+            <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400">{connections}</p>
+          </div>
+          
           <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-[var(--radius)] border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-blue-600" />
@@ -295,8 +352,8 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
         ) : (
           <div className="text-center py-8">
             <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">{t('noTransactionsFound')}</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-lg font-semibold">{t('noTransactionsFound')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               {searchTerm || filterType !== 'all' 
                 ? t('tryAdjustingSearch')
                 : t('connectionHistoryWillAppear')}

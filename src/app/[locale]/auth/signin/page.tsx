@@ -126,7 +126,11 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
       })
 
       if (error) {
-        showToast.error(error.message || t('signInFailed'))
+        if (error.message && error.message.toLowerCase().includes('signups not allowed')) {
+          showToast.error(t('signupsNotAllowed') || 'OTP authentication is currently disabled. Please use password login.')
+        } else {
+          showToast.error(error.message || t('signInFailed'))
+        }
       } else {
         setOtpSent(true)
         showToast.success(t('otpSent') || 'Verification code sent to your email')
@@ -195,7 +199,7 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
-              {otpSent ? (t('verifyEmail') || 'Verify Your Email') : t('signIn')}
+              {otpSent ? (t('verifyEmail.title') || 'Verify Your Email') : t('signIn')}
             </CardTitle>
             <CardDescription className="text-center">
               {otpSent 

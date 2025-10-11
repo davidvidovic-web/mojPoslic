@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaš kod za prijavu - mojPoslic</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .code-container {
+            background-color: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .code {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #1e40af;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .expiry-info {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .button-alternative {
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">mojPoslic</div>
+            <h1>Vaš kod za prijavu</h1>
+            <p>Koristite ovaj kod da se prijavite na svoj nalog</p>
+        </div>
+
+        <div class="code-container">
+            <p style="margin: 0 0 10px 0; font-size: 18px;">Vaš 6-cifreni kod:</p>
+            <div class="code">{{ .Token }}</div>
+            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;">
+                Jednostavno ukucajte ovaj kod na stranici za prijavu
+            </p>
+        </div>
+
+        <div class="expiry-info">
+            <strong>⏰ Važno:</strong> Ovaj kod važi samo 10 minuta. Ako kod istekne, možete zatražiti novi.
+        </div>
+
+        <p>Ako niste zatražili ovaj kod, jednostavno ignorišite ovaj email. Vaš nalog ostaje siguran.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <p style="margin-bottom: 15px;">Ili kliknite na dugme ispod za direktnu prijavu:</p>
+            <a href="{{ .ConfirmationURL }}" class="button-alternative">Prijavite se direktno</a>
+        </div>
+
+        <div class="footer">
+            <p>Ovaj email je poslat sa <strong>mojPoslic</strong> platforme.</p>
+            <p>Ako imate pitanja, kontaktirajte našu podršku.</p>
+        </div>
+    </div>
+</body>
+</html>

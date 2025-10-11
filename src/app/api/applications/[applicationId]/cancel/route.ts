@@ -156,9 +156,7 @@ export async function DELETE(
     }
 
     // Check if application can be cancelled (only pending applications)
-    // Handle both uppercase and lowercase status values due to database inconsistencies
-    const status = application.status?.toLowerCase()
-    if (status !== 'pending') {
+    if (application.status !== 'PENDING') {
       console.error('❌ Application cannot be cancelled - invalid status:', application.status)
       return NextResponse.json(
         { success: false, error: 'Application cannot be cancelled at this stage' },

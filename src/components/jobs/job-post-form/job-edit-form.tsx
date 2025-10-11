@@ -303,13 +303,6 @@ export function JobEditForm({
         updates: updateData
       })
       
-      // Show success message
-      const successMessage = (!wasAlreadyFeatured && willBeFeatured) 
-        ? tMessages('jobUpdatedWithFeature')
-        : tMessages('jobUpdatedSuccess')
-      
-      toast.success(successMessage)
-      
       // Add a small delay to ensure backend transaction is complete
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('refresh-connections'))

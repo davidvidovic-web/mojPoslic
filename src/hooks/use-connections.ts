@@ -16,6 +16,7 @@ interface UseConnectionsManagerReturn {
   connections: number
   history: ConnectionHistoryItem[]
   isLoading: boolean
+  error: string | null
   refetchAll: () => void
 }
 
@@ -24,6 +25,7 @@ export function useConnectionsManager(): UseConnectionsManagerReturn {
   const [connections, setConnections] = useState(0)
   const [history, setHistory] = useState<ConnectionHistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchConnections = useCallback(async () => {
     if (!user) return
@@ -40,6 +42,7 @@ export function useConnectionsManager(): UseConnectionsManagerReturn {
       }
     } catch (error) {
       console.error('Error fetching connections:', error)
+      setError('Failed to load connections')
     }
   }, [user])
 
@@ -68,11 +71,13 @@ export function useConnectionsManager(): UseConnectionsManagerReturn {
       }
     } catch (error) {
       console.error('Error fetching connection history:', error)
+      setError('Failed to load connection history')
     }
   }, [user])
 
   const refetchAll = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
     await Promise.all([fetchConnections(), fetchHistory()])
     setIsLoading(false)
   }, [fetchConnections, fetchHistory])
@@ -91,6 +96,7 @@ export function useConnectionsManager(): UseConnectionsManagerReturn {
     connections,
     history,
     isLoading,
+    error,
     refetchAll
   }
 }

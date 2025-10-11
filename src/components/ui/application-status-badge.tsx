@@ -22,27 +22,27 @@ export function ApplicationStatusBadge({
 }: ApplicationStatusBadgeProps) {
   const config = {
     [ApplicationStatus.PENDING]: {
-      className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      className: 'bg-yellow-100 text-yellow-800 border-0 rounded-full px-2 py-1 text-xs font-medium',
       icon: Clock,
       label: 'Pending'
     },
     [ApplicationStatus.REVIEWED]: {
-      className: 'bg-blue-100 text-blue-800 border-blue-200',
+      className: 'bg-blue-100 text-blue-800 border-0 rounded-full px-2 py-1 text-xs font-medium',
       icon: Eye,
       label: 'Reviewed'
     },
     [ApplicationStatus.SHORTLISTED]: {
-      className: 'bg-purple-100 text-purple-800 border-purple-200',
+      className: 'bg-purple-100 text-purple-800 border-0 rounded-full px-2 py-1 text-xs font-medium',
       icon: Star,
       label: 'Shortlisted'
     },
     [ApplicationStatus.SELECTED]: {
-      className: 'bg-green-100 text-green-800 border-green-200',
+      className: 'bg-green-100 text-green-800 border-0 rounded-full px-2 py-1 text-xs font-medium',
       icon: CheckCircle,
       label: 'Selected'
     },
     [ApplicationStatus.REJECTED]: {
-      className: 'bg-red-100 text-red-800 border-red-200',
+      className: 'bg-red-100 text-red-800 border-0 rounded-full px-2 py-1 text-xs font-medium',
       icon: XCircle,
       label: 'Rejected'
     },

@@ -27,7 +27,7 @@ interface Job {
 interface JobApplication {
   id: string
   job_id: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  status: 'PENDING' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   appliedAt: string
   job: Job
   clientNotes?: string
@@ -116,21 +116,21 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
     switch (status) {
       case 'SHORTLISTED':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+          <Badge className="bg-yellow-100 text-yellow-800 border-0 rounded-full px-2 py-1 text-xs font-medium">
             <Star className="h-3 w-3 mr-1" />
             {t('shortlistedJobs.statuses.shortlisted')}
           </Badge>
         )
       case 'INTERVIEW_SCHEDULED':
         return (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+          <Badge className="bg-blue-100 text-blue-800 border-0 rounded-full px-2 py-1 text-xs font-medium">
             <Calendar className="h-3 w-3 mr-1" />
             {t('shortlistedJobs.statuses.interviewScheduled')}
           </Badge>
         )
       default:
         return (
-          <Badge variant="secondary">
+          <Badge className="rounded-full px-2 py-1 text-xs font-medium" variant="secondary">
             {status}
           </Badge>
         )
@@ -144,7 +144,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
           <CardTitle className="flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
             {t('shortlistedJobs.title')}
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-2 rounded-full px-2 py-1 text-xs font-medium">
               {filteredApplications.length}
             </Badge>
           </CardTitle>
@@ -198,7 +198,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
                   })()}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                     {application.job.type}
                   </Badge>
                 </div>
@@ -223,12 +223,12 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-1">
                   {application.job.tags?.slice(0, 3).map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
+                    <Badge key={index} variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                       {tag}
                     </Badge>
                   ))}
                   {application.job.tags && application.job.tags.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                       +{application.job.tags.length - 3} more
                     </Badge>
                   )}

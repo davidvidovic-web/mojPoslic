@@ -39,6 +39,7 @@
     "edit": "Uredi",
     "delete": "Obriši",
     "apply": "Prijavi se",
+    "applyForJob": "Prijavi se za posao",
     "save": "Sačuvaj posao",
     "feature": "Istakni",
     "unfeature": "Ukloni istaknutost",
@@ -182,7 +183,13 @@
     "yourConnections": "Vaše konekcije: {connections}",
     "requiredConnections": "Potrebno: 6 konekcija",
     "noConnectionCost": "Nema troška konekcija za uklanjanje istaknutosti",
-    "insufficientConnectionsWarning": "Nemate dovoljno konekcija da istaknete ovaj oglas."
+    "insufficientConnectionsWarning": "Nemate dovoljno konekcija da istaknete ovaj oglas.",
+    "success": {
+      "jobPosted": "Posao uspješno objavljen!",
+      "jobUpdated": "Posao uspješno ažuriran!",
+      "jobDeleted": "Posao uspješno obrisan!",
+      "redirecting": "Preusmjeravanje na vaš posao..."
+    }
   },
   "errors": {
     "jobNotFound": "Posao nije pronađen",
@@ -327,12 +334,6 @@
       "descriptionTooShort": "Opis posla mora imati najmanje 50 karaktera",
       "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera",
       "deleteError": "Greška prilikom brisanja posla. Molimo pokušajte ponovo."
-    },
-    "success": {
-      "jobPosted": "Posao uspješno objavljen!",
-      "jobUpdated": "Posao uspješno ažuriran!",
-      "jobDeleted": "Posao uspješno obrisan!",
-      "redirecting": "Preusmjeravanje na vaš posao..."
     }
   },
   "sections": {
@@ -362,6 +363,7 @@
     "willCostConnections": "Ovo će koštati {connections} konekcija",
     "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
     "readyToPost": "Spremno za Objavu",
+    "postedBy": "Objavio",
     "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave.",
     "connectionCostNotice": "Obavještenje o Trošku Konekcija",
     "alreadyPostedToday": "Već ste objavili {count} posao{plural} danas.",

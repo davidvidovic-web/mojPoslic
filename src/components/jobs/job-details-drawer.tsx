@@ -29,7 +29,9 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(false)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
+  const [showMobileButton, setShowMobileButton] = useState(false)
   const viewTrackedRef = useRef(false)
+  const desktopApplyButtonRef = useRef<HTMLDivElement>(null)
   
   // Check if user has already applied to this job
   const { data: appliedJobIds = new Set(), refetch: refetchAppliedJobs } = useUserAppliedJobs(user?.id || '')
@@ -40,6 +42,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
     if (!isOpen) {
       setJob(null)
       setShowApplicationForm(false)
+      setShowMobileButton(false)
       viewTrackedRef.current = false
       return
     }
@@ -102,6 +105,30 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
 
     fetchJob(jobId)
   }, [jobId, isOpen, t, user, authLoading, onClose])
+
+  // Scroll listener to show/hide mobile apply button
+  useEffect(() => {
+    if (!isOpen || !job) return
+
+    const handleScroll = () => {
+      if (desktopApplyButtonRef.current) {
+        const rect = desktopApplyButtonRef.current.getBoundingClientRect()
+        const isDesktopButtonVisible = rect.bottom > 0 && rect.top < window.innerHeight
+        setShowMobileButton(!isDesktopButtonVisible)
+      }
+    }
+
+    const scrollContainer = document.querySelector('.drawer-content')
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll)
+      // Initial check
+      handleScroll()
+      
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleScroll)
+      }
+    }
+  }, [isOpen, job])
 
   const handleApply = async () => {
     if (!job) return
@@ -224,7 +251,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto drawer-content">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -266,7 +293,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-4">
+                  <div className="flex flex-col items-end gap-4" ref={desktopApplyButtonRef}>
                     {hasApplied && (
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
                         <div className="w-2 h-2 bg-gray-700 dark:bg-gray-300 rounded-full"></div>
@@ -747,11 +774,26 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
             </div>
           )}
         </div>
+
+        {/* Fixed Mobile Apply Button */}
+        {job && !isOwner && !hasApplied && user && user.role !== 'client' && (
+          <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 z-50 md:hidden transition-all duration-300 ease-out transform ${
+            showMobileButton ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-full scale-95 opacity-0'
+          }`}>
+            <Button 
+              onClick={handleApply} 
+              size="lg"
+              className="w-full rounded-[var(--radius)] transition-transform duration-200 ease-out active:scale-95"
+            >
+              {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Application Form Modal */}
       {showApplicationForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
           <div className="bg-white dark:bg-gray-900 rounded-[var(--radius)] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="p-6">
               <JobApplicationForm

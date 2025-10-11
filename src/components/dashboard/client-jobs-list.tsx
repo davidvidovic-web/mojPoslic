@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Users } from 'lucide-react'
+import { Eye, Users, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { useUserJobsQuery } from '@/hooks/queries/useJobs'
@@ -82,7 +82,10 @@ export function ClientJobsList() {
             <h3 className="text-lg font-semibold mb-2">No job postings yet</h3>
             <p className="text-gray-600 mb-4">Start by posting your first job to find great candidates.</p>
             <Link href="/jobs/post">
-              <Button>Post a Job</Button>
+              <Button>
+                <Plus className="h-4 w-4 mr-1" />
+                Post a Job
+              </Button>
             </Link>
           </div>
         </CardContent>

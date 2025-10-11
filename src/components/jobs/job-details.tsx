@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Users, Clock, Mail, Phone }
+import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone }
  from "lucide-react"
 import { Job } from "@/types/job"
 import { toast } from "sonner"
@@ -11,7 +11,7 @@ import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
-import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
+import { formatJobType } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
@@ -155,6 +155,35 @@ export function JobDetails({ jobId }: JobDetailsProps) {
     setShowApplicationForm(false)
   }
 
+  const handleGoBack = () => {
+    // Check if this page was opened in a new tab/window (no history)
+    if (window.history.length <= 1) {
+      // No browser history, navigate to appropriate dashboard
+      if (user?.user_metadata?.role === 'tasker') {
+        router.push('/dashboard/tasker')
+      } else if (user?.user_metadata?.role === 'client') {
+        router.push('/dashboard/client')
+      } else {
+        router.push('/')
+      }
+    } else {
+      // Check if user came from within our app
+      const referrer = document.referrer
+      if (referrer && referrer.includes(window.location.origin)) {
+        router.back()
+      } else {
+        // External referrer, navigate to appropriate dashboard
+        if (user?.user_metadata?.role === 'tasker') {
+          router.push('/dashboard/tasker')
+        } else if (user?.user_metadata?.role === 'client') {
+          router.push('/dashboard/client')
+        } else {
+          router.push('/')
+        }
+      }
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return formatRelativeDate(dateString, locale)
   }
@@ -238,20 +267,21 @@ export function JobDetails({ jobId }: JobDetailsProps) {
       {/* Back Button */}
       <Button 
         variant="ghost" 
-        onClick={() => router.back()}
+        onClick={handleGoBack}
         className="mb-6"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         {t('common.buttons.back')}
       </Button>
-      {/* Job Header - Modern Flat Design */}
+      
+      {/* Job Header */}
       <div className="mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-start justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
-                <span className="text-lg font-bold text-primary">
+              <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
                   {job.company ? job.company.charAt(0).toUpperCase() : 'U'}
                 </span>
               </div>
@@ -265,21 +295,21 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant={getJobTypeBadgeVariant(job.type)} className="px-3 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary">
+              <Badge variant="outline" className="px-3 py-1 rounded-[var(--radius)] border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                 {formatJobType(job.type, locale)}
               </Badge>
               {job.is_featured && (
-                <Badge className="bg-yellow-500 text-yellow-50 px-3 py-1 rounded-[var(--radius)] border-0">
+                <Badge className="bg-black dark:bg-white text-white dark:text-black px-3 py-1 rounded-[var(--radius)] border-0">
                   {t('jobs.card.featured')}
                 </Badge>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end gap-4">
             {hasApplied && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
+                <div className="w-2 h-2 bg-gray-700 dark:bg-gray-300 rounded-full"></div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('jobs.form.labels.applied')}
                 </span>
               </div>
@@ -290,15 +320,16 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               </Button>
             )}
             {isOwner && (
-              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-[var(--radius)]">
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+              <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('jobs.form.labels.yourJob')}
                 </span>
               </div>
             )}
           </div>
         </div>
-        {/* Job Meta Information - Enhanced Pills Layout */}
+
+        {/* Job Meta Information */}
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
             <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -306,9 +337,9 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           </div>
           
           {job.category && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/30 rounded-[var(--radius)]">
-              <Tag className="h-4 w-4 text-purple-600" />
-              <span className="text-sm font-medium text-purple-700 dark:text-purple-400">
+            <div className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white rounded-[var(--radius)]">
+              <Tag className="h-4 w-4 text-white dark:text-black" />
+              <span className="text-sm font-medium text-white dark:text-black">
                 {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
               </span>
             </div>
@@ -317,9 +348,9 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           {job.subcategory_id && (() => {
             const subcategory = getCategoryByKey(job.subcategory_id);
             return subcategory ? (
-              <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/30 rounded-[var(--radius)]">
-                <Tag className="h-4 w-4 text-purple-600" />
-                <span className="text-sm font-medium text-purple-700 dark:text-purple-400">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-[var(--radius)]">
+                <Tag className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {locale === 'bs' ? subcategory.name_bs || subcategory.name : subcategory.name_en || subcategory.name}
                 </span>
               </div>
@@ -329,19 +360,16 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           {formatSalary(job) && (
             <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
               <Banknote className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)}</span>
+              <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)} KM</span>
             </div>
           )}
         </div>
       </div>
-      {/* Job Content - Modern Flat Sections */}
+      {/* Job Content */}
       <div className="space-y-8">
         {/* Description */}
-        <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-3 text-foreground">
-            <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center">
-              <Briefcase className="h-4 w-4 text-primary" />
-            </div>
+        <section>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">
             {t('jobs.content.jobDescription')}
           </h2>
           <div 
@@ -351,17 +379,66 @@ export function JobDetails({ jobId }: JobDetailsProps) {
         </section>
         {/* Requirements */}
         {job.requirements && (
-          <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-3 text-foreground">
-              <div className="w-8 h-8 rounded-[var(--radius)] bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
-                <Users className="h-4 w-4 text-orange-600" />
-              </div>
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-foreground">
               {t('jobs.content.requirements')}
             </h2>
             <div 
               className="prose max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground"
               dangerouslySetInnerHTML={{ __html: job.requirements }}
             />
+          </section>
+        )}
+
+        {/* Benefits */}
+        {job.benefits && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-foreground">
+              {t('jobs.content.benefits')}
+            </h2>
+            <div 
+              className="prose max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: job.benefits }}
+            />
+          </section>
+        )}
+
+        {/* Skills & Tags */}
+        {job.tags && job.tags.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-foreground">{t('jobs.content.skillsAndTechnologies')}</h2>
+            <div className="flex flex-wrap gap-2">
+              {job.tags.map((tag, index) => (
+                <Badge key={index} className="px-3 py-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-300 text-sm">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Compensation Details */}
+        {(formatSalary(job) || user) && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4 text-foreground">
+              {t('jobs.details.compensation')}
+            </h2>
+            
+            <div className="space-y-4">
+              {(formatSalary(job) || user) && (
+                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/30 rounded-xl">
+                  <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                    <Banknote className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.details.salary')}</span>
+                    <p className="text-lg font-semibold text-green-700 dark:text-green-400">
+                      {formatSalary(job) ? `${formatSalary(job)}` : t('common.messages.notSpecified')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </section>
         )}
         {/* Benefits */}
@@ -393,11 +470,8 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           </section>
         )}
         {/* Job Details */}
-        <section className="bg-white dark:bg-gray-950 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-foreground">
-            <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-blue-600" />
-            </div>
+        <section>
+          <h2 className="text-2xl font-bold mb-6 text-foreground">
             {t('jobs.details.jobDetails')}
           </h2>
           
@@ -407,8 +481,8 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Start Date */}
               <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
                   <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.startDate')}</span>
@@ -422,8 +496,8 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               
               {/* Start Time */}
               <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-purple-600" />
+                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
                   <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.startTime')}</span>
@@ -436,14 +510,22 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               </div>
               
               {/* Duration */}
-              {job.duration && (
+              {(job.duration || job.duration_days || user) && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                  <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-green-600" />
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.duration')}</span>
-                    <p className="text-sm font-medium text-foreground">{job.duration}</p>
+                    {job.duration ? (
+                      <p className="text-sm font-medium text-foreground">{job.duration}</p>
+                    ) : job.duration_days ? (
+                      <p className="text-sm font-medium text-foreground">
+                        {job.duration_days} {job.duration_days === 1 ? t('jobs.form.labels.day') : t('jobs.form.labels.days')}
+                      </p>
+                    ) : (
+                      <p className="text-sm font-medium text-foreground">{t('common.messages.notSpecified')}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -451,8 +533,8 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               {/* Expires */}
               {job.expires_at && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                  <div className="w-8 h-8 rounded-[var(--radius)] bg-red-100 dark:bg-red-950/30 flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-red-600" />
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
@@ -485,8 +567,8 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                 {/* Job Address - Display above map if available */}
                 {job.job_address && (
                   <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                    <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
-                      <MapPin className="h-4 w-4 text-green-600" />
+                    <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <MapPin className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                     </div>
                     <div>
                       <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.address')}</span>
@@ -519,11 +601,8 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           )}
         </section>
         {/* Contact Information */}
-        <section className="bg-white dark:bg-gray-950 p-6 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-foreground">
-            <div className="w-8 h-8 rounded-[var(--radius)] bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
-              <Users className="h-4 w-4 text-green-600" />
-            </div>
+        <section>
+          <h2 className="text-2xl font-bold mb-6 text-foreground">
             {t('jobs.form.labels.contactInformation')}
           </h2>
           
@@ -615,7 +694,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
       </div>
       {/* Application Form Modal/Overlay */}
       {showApplicationForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
           <div className="bg-white dark:bg-gray-900 rounded-[var(--radius)] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl thin-scrollbar">
             <div className="p-6">
               <JobApplicationForm

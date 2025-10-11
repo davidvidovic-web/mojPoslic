@@ -30,14 +30,14 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, hideFeaturedB
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold">{job.title}</h3>
               {job.is_featured && !hideFeaturedBadge && (
-                <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+                <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1 rounded-full px-2 py-1 font-medium">
                   <Star className="h-3 w-3 fill-current" />
                   Featured
                 </Badge>
               )}
-              <Badge variant="secondary">{formatJobType(job.type, locale)}</Badge>
+              <Badge variant="secondary" className="rounded-full px-2 py-1 text-xs font-medium">{formatJobType(job.type, locale)}</Badge>
               {job.transportation && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                   <Car className="h-3 w-3 mr-1" />
                   {formatTransportation(job.transportation, job.transportation_amount)}
                 </Badge>
@@ -45,7 +45,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, hideFeaturedB
               {typeof applicationCount === 'number' && (
                 <Badge 
                   variant={applicationCount > 0 ? "default" : "outline"}
-                  className="text-xs"
+                  className="text-xs rounded-full px-2 py-1 font-medium"
                 >
                   {applicationCount} application{applicationCount !== 1 ? 's' : ''}
                 </Badge>
@@ -77,12 +77,12 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, hideFeaturedB
             {job.tags && job.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
                 {job.tags.slice(0, 3).map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                     {tag}
                   </Badge>
                 ))}
                 {job.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                     +{job.tags.length - 3} more
                   </Badge>
                 )}

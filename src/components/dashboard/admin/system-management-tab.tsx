@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/ui/pagination'
-import { Shield, Users } from 'lucide-react'
+import { Shield, Users, Edit, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import ConnectionGrantHistory from './connection-grant-history'
@@ -205,8 +205,14 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                           <p className="text-sm text-muted-foreground">Key: {category.key}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Edit</Button>
-                          <Button variant="outline" size="sm" className="text-destructive flex-1 sm:flex-none">Delete</Button>
+                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-destructive flex-1 sm:flex-none">
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -243,8 +249,14 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                         <p className="text-sm text-muted-foreground">Key: {city.key}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
-                        <Button variant="outline" size="sm" className="text-destructive">Delete</Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive">
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   ))}

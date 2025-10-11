@@ -91,7 +91,7 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
                   </p>
                 )}
               </div>
-              <Badge className={getStatusColor(application.status)}>
+              <Badge className={`${getStatusColor(application.status)} rounded-full px-2 py-1 text-xs font-medium`}>
                 {getStatusLabel(application.status)}
               </Badge>
             </div>

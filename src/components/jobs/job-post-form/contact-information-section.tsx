@@ -29,12 +29,12 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Contact Information</h3>
+      <h3 className="text-lg md:text-xl font-semibold">Contact Information</h3>
       
       {isCompany && (
         <>
           <div className="space-y-2">
-            <Label htmlFor="contact-email">Contact Email *</Label>
+            <Label htmlFor="contact-email" className="text-base md:text-sm">Contact Email *</Label>
             <Input
               id="contact-email"
               type="email"
@@ -44,12 +44,13 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
                 email: e.target.value,
                 contact_email: e.target.value 
               })}
+              className="text-base md:text-sm"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm md:text-xs text-muted-foreground">
               This email will be shown to candidates for job applications and inquiries.
             </p>
             {user?.email && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <p className="text-sm md:text-xs text-muted-foreground flex items-center gap-1">
                 <Lightbulb className="h-4 w-4" />
                 We&apos;ve pre-filled this with your account email ({user.email}).
               </p>
@@ -57,7 +58,7 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website">
+            <Label htmlFor="website" className="text-base md:text-sm">
               Company Website <span className="text-muted-foreground">(Optional)</span>
             </Label>
             <Input
@@ -66,8 +67,9 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
               placeholder="https://company.com"
               value={formData.website || ''}
               onChange={(e) => onChange({ website: e.target.value })}
+              className="text-base md:text-sm"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm md:text-xs text-muted-foreground">
               Your company website for additional information.
             </p>
           </div>
@@ -75,11 +77,11 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
       )}
 
       <div className="p-4 bg-secondary/50 rounded-[var(--radius)]">
-        <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+        <h4 className="text-base md:text-sm font-medium mb-2 flex items-center gap-1">
           <Mail className="h-4 w-4" />
           Application Process
         </h4>
-        <ul className="text-xs text-muted-foreground space-y-1">
+        <ul className="text-sm md:text-xs text-muted-foreground space-y-1">
           {isCompany ? (
             <>
               <li>• Candidates will contact you at the email address above</li>

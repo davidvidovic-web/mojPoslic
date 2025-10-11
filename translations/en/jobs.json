@@ -39,6 +39,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "apply": "Apply",
+    "applyForJob": "Apply for Job",
     "save": "Save Job",
     "feature": "Feature",
     "unfeature": "Unfeature",
@@ -181,7 +182,13 @@
     "yourConnections": "Your connections: {connections}",
     "requiredConnections": "Required: 6 connections",
     "noConnectionCost": "No connection cost to remove featured status",
-    "insufficientConnectionsWarning": "You don't have enough connections to feature this job."
+    "insufficientConnectionsWarning": "You don't have enough connections to feature this job.",
+    "success": {
+      "jobPosted": "Job posted successfully!",
+      "jobUpdated": "Job updated successfully!",
+      "jobDeleted": "Job deleted successfully!",
+      "redirecting": "Redirecting to your job..."
+    }
   },
   "errors": {
     "jobNotFound": "Job not found",
@@ -327,12 +334,6 @@
       "descriptionTooShort": "Job description must be at least 50 characters",
       "descriptionTooLong": "Job description must be less than 5000 characters",
       "deleteError": "Failed to delete job. Please try again."
-    },
-    "success": {
-      "jobPosted": "Job posted successfully!",
-      "jobUpdated": "Job updated successfully!",
-      "jobDeleted": "Job deleted successfully!",
-      "redirecting": "Redirecting to your job..."
     }
   },
   "sections": {
@@ -359,6 +360,7 @@
     "willCostConnections": "This will cost {connections} connections",
     "willBeFeatured": "This job will be featured for 7 days",
     "readyToPost": "Ready to Post",
+    "postedBy": "Posted By",
     "jobLooksGreat": "Your job posting looks great! Click submit to publish it and start receiving applications.",
     "connectionCostNotice": "Connection Cost Notice",
     "alreadyPostedToday": "You have already posted {count} job{plural} today.",

@@ -49,7 +49,11 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
       })
 
       if (error) {
-        showToast.error(error.message || t('registrationFailed'))
+        if (error.message && error.message.toLowerCase().includes('signups not allowed')) {
+          showToast.error(t('signupsNotAllowed') || 'Signups are currently disabled. Please contact support.')
+        } else {
+          showToast.error(error.message || t('registrationFailed'))
+        }
       } else {
         setOtpSent(true)
         showToast.success(t('otpSent') || 'Verification code sent to your email')
@@ -139,7 +143,7 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">
-              {otpSent ? t('verifyEmail') || 'Verify Your Email' : t('createAccount')}
+              {otpSent ? t('verifyEmail.title') || 'Verify Your Email' : t('createAccount')}
             </CardTitle>
             <CardDescription className="text-center">
               {otpSent 

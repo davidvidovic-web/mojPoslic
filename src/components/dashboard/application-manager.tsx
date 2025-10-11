@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ApplicationStatus } from '@prisma/client'
+import { useTranslations } from 'next-intl'
 
 interface User {
   id: string
@@ -71,6 +72,7 @@ export default function ApplicationManager({
   onApplicationUpdate, 
   onBulkStatusUpdate 
 }: ApplicationManagerProps) {
+  const tDashboard = useTranslations('dashboard')
   const [activeTab, setActiveTab] = useState('all')
   const [selectedApplications, setSelectedApplications] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -178,7 +180,7 @@ export default function ApplicationManager({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">Loading applications...</span>
+        <span className="ml-2">{tDashboard('applications.loading')}</span>
       </div>
     )
   }

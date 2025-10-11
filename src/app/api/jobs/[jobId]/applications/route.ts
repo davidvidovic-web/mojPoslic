@@ -119,7 +119,7 @@ export async function GET(
       )
     }
 
-    // Get applications for this job
+    // Get applications for this job - using both cached and live data for reliability
     const { data: applications, error } = await supabase
       .from('applications')
       .select(`
@@ -129,6 +129,12 @@ export async function GET(
         updated_at,
         cover_letter,
         client_notes,
+        user_id,
+        applicant_name,
+        applicant_email,
+        applicant_avatar_url,
+        applicant_rating,
+        applicant_location,
         user:users(
           id,
           name,
@@ -137,7 +143,8 @@ export async function GET(
           bio,
           location,
           skills,
-          experience
+          experience,
+          average_rating
         )
       `)
       .eq('job_id', jobId)
@@ -152,33 +159,59 @@ export async function GET(
     }
 
     // Transform the data to match the JobApplication interface
-    const transformedApplications = (applications as any)?.map((app: any) => ({
-      id: app.id,
-      jobId: jobId,
-      userId: app.user?.id,
-      status: app.status,
-      message: app.cover_letter, // Map cover_letter to message
-      clientNotes: app.client_notes,
-      appliedAt: new Date(app.applied_at),
-      createdAt: new Date(app.applied_at),
-      updatedAt: new Date(app.updated_at),
-      user: app.user ? {
-        id: app.user.id,
-        name: app.user.name,
-        email: app.user.email,
-        avatar_url: app.user.avatar_url,
-        bio: app.user.bio,
-        location: app.user.location,
-        skills: app.user.skills,
-        experience: app.user.experience
-      } : undefined
-    })) || []
+    // Use live data from users table with cached data as fallback for reliability
+    const transformedApplications = (applications as any)?.map((app: any) => {
+      // Prefer live user data from the join, fallback to cached data
+      const userName = app.user?.name || app.applicant_name || 'Anonymous User'
+      const userEmail = app.user?.email || app.applicant_email || null
+      const avatarUrl = app.user?.avatar_url || app.applicant_avatar_url || null
+      const userRating = app.user?.average_rating || app.applicant_rating || null
+      const userLocation = app.user?.location || app.applicant_location || null
+      
+      return {
+        id: app.id,
+        jobId: jobId,
+        userId: app.user?.id || app.user_id,
+        status: app.status,
+        message: app.cover_letter, // Map cover_letter to message
+        clientNotes: app.client_notes,
+        appliedAt: new Date(app.applied_at),
+        createdAt: new Date(app.applied_at),
+        updatedAt: new Date(app.updated_at),
+        user: {
+          id: app.user?.id || app.user_id,
+          name: userName,
+          email: userEmail,
+          avatarUrl: avatarUrl, // Ensure we're using the correct field name
+          bio: app.user?.bio,
+          location: userLocation,
+          skills: app.user?.skills,
+          experience: app.user?.experience,
+          averageRating: userRating
+        }
+      }
+    }) || []
 
     console.log('📊 Applications API result:', {
       jobId,
       rawCount: applications?.length || 0,
       transformedCount: transformedApplications.length,
-      sampleApp: transformedApplications[0]
+      sampleRawApp: applications?.[0] ? {
+        id: applications[0].id,
+        user_id: applications[0].user_id,
+        applicant_name: applications[0].applicant_name,
+        applicant_avatar_url: applications[0].applicant_avatar_url,
+        liveUserData: applications[0].user ? {
+          name: applications[0].user.name,
+          avatar_url: applications[0].user.avatar_url
+        } : 'No live user data'
+      } : 'No applications',
+      sampleTransformedApp: transformedApplications[0] ? {
+        id: transformedApplications[0].id,
+        userId: transformedApplications[0].userId,
+        userName: transformedApplications[0].user?.name,
+        userAvatar: transformedApplications[0].user?.avatarUrl
+      } : 'No transformed applications'
     })
 
     return NextResponse.json({

@@ -28,6 +28,51 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
   
   const recentHistory = showFullHistory ? history : history.slice(0, 5)
 
+  // Function to translate action labels (same as full history component)
+  const getTranslatedActionLabel = (actionLabel: string) => {
+    // Map common action labels to translation keys (both formatted and raw backend types)
+    const actionMap: Record<string, string> = {
+      // Formatted action labels
+      'Job Application': 'jobApplication',
+      'Job Application (Professional)': 'jobApplicationProfessional',
+      'Quick Job Posting': 'quickJobPosting',
+      'Part-time Job Posting': 'partTimeJobPosting',
+      'Full-time Job Posting': 'fullTimeJobPosting',
+      'Remote Job Posting': 'remoteJobPosting',
+      'Purchase': 'purchase',
+      'Monthly Refresh': 'monthlyRefresh',
+      'Bonus': 'bonus',
+      'Refund': 'refund',
+      'Initial Signup': 'initialSignup',
+      
+      // Backend action types (underscore format)
+      'MONTHLY_REFRESH': 'monthlyRefresh',
+      'INITIAL_SIGNUP': 'initialSignup',
+      'ROLE_CHANGE': 'roleChange',
+      'JOB_APPLICATION': 'jobApplication',
+      'JOB_POST_CLIENT': 'jobPostClient',
+      'JOB_POST_COMPANY': 'jobPostCompany',
+      'ADMIN_ADJUSTMENT': 'adminAdjustment',
+      'PURCHASE': 'purchase'
+    }
+    
+    // Return translated label if exists, otherwise return original
+    return actionMap[actionLabel] ? t(actionMap[actionLabel]) : actionLabel
+  }
+
+  // Function to translate descriptions
+  const getTranslatedDescription = (description: string) => {
+    // Map common descriptions to translation keys
+    const descriptionMap: Record<string, string> = {
+      'Welcome bonus connections (monthly refresh eligible)': 'welcomeBonusDescription',
+      'Welcome bonus connections': 'welcomeBonusDescriptionNoRefresh',
+      'Role changed to tasker (monthly refresh eligible)': 'roleChangeDescription'
+    }
+    
+    // Return translated description if exists, otherwise return original
+    return descriptionMap[description] ? t(descriptionMap[description]) : description
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -65,9 +110,9 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
                 className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-muted/50"
               >
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{entry.action}</p>
+                  <p className="text-sm font-medium">{getTranslatedActionLabel(entry.action)}</p>
                   {entry.reason && (
-                    <p className="text-xs text-muted-foreground">{entry.reason}</p>
+                    <p className="text-xs text-muted-foreground">{getTranslatedDescription(entry.reason)}</p>
                   )}
                 </div>
                 <div className="text-right">
@@ -85,7 +130,7 @@ export function ConnectionActivity({ history }: ConnectionActivityProps) {
           </div>
         </ScrollArea>
       ) : (
-        <p className="text-sm text-muted-foreground">No recent activity</p>
+        <p className="text-sm text-muted-foreground">{t('activity.noActivity')}</p>
       )}
     </div>
   )

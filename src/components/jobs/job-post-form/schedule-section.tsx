@@ -23,7 +23,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+      <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2">
         <Calendar className="h-5 w-5" />
         {t('title')}
       </h3>
@@ -33,7 +33,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
         onClick={() => setShowTips(!showTips)}
       >
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium flex items-center gap-1">
+          <h4 className="text-base md:text-sm font-medium flex items-center gap-1">
             <Clock className="h-4 w-4" />
             {t('tips.title')}
           </h4>
@@ -44,7 +44,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
           )}
         </div>
         {showTips && (
-          <ul className="text-xs text-muted-foreground space-y-1 mt-2">
+          <ul className="text-sm md:text-xs text-muted-foreground space-y-1 mt-2">
             <li>• {t('tips.clear')}</li>
             <li>• {t('tips.flexible')}</li>
             <li>• {t('tips.ongoing')}</li>
@@ -56,7 +56,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Date Section */}
         <div className="space-y-2">
-          <Label>{t('startDate')} *</Label>
+          <Label className="text-base md:text-sm">{t('startDate')} *</Label>
           {!dontKnowExactDate ? (
             <DatePicker
               value={formData.start_date ? new Date(formData.start_date) : undefined}
@@ -75,7 +75,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
             />
           ) : (
             <div className="p-3 bg-muted rounded-md">
-              <span className="text-sm">{t('byAgreement')}</span>
+              <span className="text-base md:text-sm">{t('byAgreement')}</span>
             </div>
           )}
           <div className="flex items-center space-x-2">
@@ -91,13 +91,13 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
                 }
               }}
             />
-            <Label htmlFor="no-start-date" className="text-sm">{t('dontKnowExactDate')}</Label>
+            <Label htmlFor="no-start-date" className="text-base md:text-sm">{t('dontKnowExactDate')}</Label>
           </div>
         </div>
 
         {/* Time Section */}
         <div className="space-y-2">
-          <Label>{t('startTime')} *</Label>
+          <Label className="text-base md:text-sm">{t('startTime')} *</Label>
           {!dontKnowExactTime ? (
             <TimePicker
               value={formData.start_time}
@@ -110,7 +110,7 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
             />
           ) : (
             <div className="p-3 bg-muted rounded-md">
-              <span className="text-sm">{t('byAgreement')}</span>
+              <span className="text-base md:text-sm">{t('byAgreement')}</span>
             </div>
           )}
           <div className="flex items-center space-x-2">
@@ -126,21 +126,22 @@ export function ScheduleSection({ formData, onChange }: ScheduleSectionProps) {
                 }
               }}
             />
-            <Label htmlFor="no-start-time" className="text-sm">{t('dontKnowExactTime')}</Label>
+            <Label htmlFor="no-start-time" className="text-base md:text-sm">{t('dontKnowExactTime')}</Label>
           </div>
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="duration">
+        <Label htmlFor="duration" className="text-base md:text-sm">
           {t('duration')} <span className="text-muted-foreground">{t('optional')}</span>
         </Label>
         <DurationPicker
           value={formData.duration}
           onChange={(duration) => onChange({ duration })}
           placeholder={t('durationPlaceholder')}
+          className="text-base md:text-sm"
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm md:text-xs text-muted-foreground">
           {t('durationHelp')}
         </p>
       </div>

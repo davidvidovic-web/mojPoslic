@@ -133,20 +133,21 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
         {/* <h3 className="text-lg font-semibold">{t('sections.basicInformation')}</h3> */}
         
         <div className="space-y-2">
-          <Label htmlFor="job-title">{t('labels.jobTitle')} *</Label>
+          <Label htmlFor="job-title" className="text-base md:text-sm">{t('labels.jobTitle')} *</Label>
           <Input
             id="job-title"
             placeholder={t('placeholders.jobTitleExample')}
             value={formData.title}
             onChange={(e) => onChange({ title: e.target.value })}
+            className="text-base md:text-sm"
           />
         </div>
 
         {canPostAllJobTypes && (
           <div className="space-y-2">
-            <Label htmlFor="job-type">{t('labels.jobType')} *</Label>
+            <Label htmlFor="job-type" className="text-base md:text-sm">{t('labels.jobType')} *</Label>
             <Select value={formData.type || ''} onValueChange={(value) => onChange({ type: value as 'quick_job' | 'full_time' | 'part_time' | 'remote' })}>
-              <SelectTrigger>
+              <SelectTrigger className="text-base md:text-sm">
                 <SelectValue placeholder={t('placeholders.selectJobType')} />
               </SelectTrigger>
               <SelectContent>
@@ -162,10 +163,10 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
       {/* Category Selection */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{t('sections.category')}</h3>
+        <h3 className="text-lg md:text-xl font-semibold">{t('sections.category')}</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="parent-category">{t('labels.jobCategory')} *</Label>
+          <Label htmlFor="parent-category" className="text-base md:text-sm">{t('labels.jobCategory')} *</Label>
           <Select 
             value={selectedParentCategory} 
             onValueChange={(value) => {
@@ -175,7 +176,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
             }}
             disabled={categories.length === 0}
           >
-            <SelectTrigger>
+            <SelectTrigger className="text-base md:text-sm">
               <SelectValue placeholder={categories.length === 0 ? t('placeholders.loadingCategories') : t('placeholders.selectCategory')} />
             </SelectTrigger>              <SelectContent>
                 {categories.map((category) => (
@@ -191,7 +192,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
         {selectedParentCategory && availableSubcategories.length > 0 && (
           <div className="space-y-2">
-            <Label htmlFor="child-category">{t('labels.subcategory')}</Label>
+            <Label htmlFor="child-category" className="text-base md:text-sm">{t('labels.subcategory')}</Label>
             <Select 
               value={
                 availableSubcategories.find((child: StaticCategory) => child.id === formData.category_id) ? formData.category_id : '__none__'
@@ -205,7 +206,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
                 }
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="text-base md:text-sm">
                 <SelectValue placeholder={t('placeholders.selectSubcategory')} />
               </SelectTrigger>
               <SelectContent>
@@ -222,7 +223,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
         {selectedParentCategory && availableSubcategories.length === 0 && (
           <div className="p-3 bg-secondary/50 rounded-[var(--radius)]">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base md:text-sm text-muted-foreground">
               {t('messages.categorySelectedNoSubcategories')}
             </p>
           </div>
@@ -231,17 +232,17 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
       {/* Job Description */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{t('sections.jobDescription')}</h3>
+        <h3 className="text-lg md:text-xl font-semibold">{t('sections.jobDescription')}</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="description">{t('labels.description')} *</Label>
+          <Label htmlFor="description" className="text-base md:text-sm">{t('labels.description')} *</Label>
           <SimpleRichTextEditor
             value={formData.description || ''}
             onChange={(value) => onChange({ description: value })}
             placeholder={t('placeholders.describeJob')}
-            className="min-h-[150px]"
+            className="min-h-[150px] text-base md:text-sm"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm md:text-xs text-muted-foreground">
             {t('messages.descriptionTimeline')}
           </p>
         </div>
@@ -250,26 +251,26 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
         {canPostAllJobTypes && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="requirements">
+              <Label htmlFor="requirements" className="text-base md:text-sm">
                 {t('labels.requirements')} <span className="text-muted-foreground">(Optional)</span>
               </Label>
               <SimpleRichTextEditor
                 value={formData.requirements || ''}
                 onChange={(value) => onChange({ requirements: value })}
                 placeholder={t('placeholders.requirementsExample')}
-                className="min-h-[100px]"
+                className="min-h-[100px] text-base md:text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="benefits">
+              <Label htmlFor="benefits" className="text-base md:text-sm">
                 {t('labels.benefits')} <span className="text-muted-foreground">(Optional)</span>
               </Label>
               <SimpleRichTextEditor
                 value={formData.benefits || ''}
                 onChange={(value) => onChange({ benefits: value })}
                 placeholder={t('placeholders.benefitsExample')}
-                className="min-h-[100px]"
+                className="min-h-[100px] text-base md:text-sm"
               />
             </div>
           </>

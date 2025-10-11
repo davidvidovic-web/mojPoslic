@@ -185,7 +185,7 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(application.status)}>
+                      <Badge className={`${getStatusColor(application.status)} rounded-full px-2 py-1 text-xs font-medium`}>
                         {getStatusIcon(application.status)}
                         <span className="ml-1 capitalize">{application.status.toLowerCase()}</span>
                       </Badge>

@@ -2,6 +2,9 @@
  * Utility functions for formatting dates with proper localization
  */
 
+import { formatDistanceToNow } from 'date-fns'
+import { bs, enUS } from 'date-fns/locale'
+
 /**
  * Format date for display with proper locale handling
  * @param date - Date string or Date object
@@ -128,5 +131,32 @@ export function formatRelativeDate(
     if (diffInDays === 1) return 'Yesterday'
     if (diffInDays < 7) return `${diffInDays} days ago`
     return formatDate(date, locale, { format: 'short' })
+  }
+}
+
+/**
+ * Format distance to now with proper localization using date-fns
+ * @param date - Date string or Date object
+ * @param locale - Locale for formatting ('bs' for Bosnian, 'en' for English)
+ * @param options - Additional formatting options
+ * @returns Localized relative time string (e.g., "prije oko mjesec dana", "about 1 month ago")
+ */
+export function formatDistanceToNowLocalized(
+  date: string | Date,
+  locale: 'bs' | 'en' = 'en',
+  options: { addSuffix?: boolean } = { addSuffix: true }
+): string {
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    
+    if (isNaN(dateObj.getTime())) {
+      return locale === 'bs' ? 'Neispravan datum' : 'Invalid date'
+    }
+
+    const localeObj = locale === 'bs' ? bs : enUS
+    return formatDistanceToNow(dateObj, { ...options, locale: localeObj })
+  } catch (error) {
+    console.error('Error formatting distance to now:', error)
+    return locale === 'bs' ? 'Neispravan datum' : 'Invalid date'
   }
 }

@@ -88,9 +88,6 @@ export function JobPostForm({
       // Use the Supabase-based mutation
       await createJobMutation.mutateAsync(supabaseData)
       
-      // Show success message
-      toast.success(t('jobPosted'))
-      
       // Add a small delay to ensure backend transaction is complete
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('refresh-connections'))

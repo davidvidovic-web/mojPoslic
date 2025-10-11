@@ -86,7 +86,7 @@
       "whenStart": "Kada želite početi ovaj posao?",
       "dontKnowExactTime": "Ne znam tačno vrijeme",
       "startDate": "Datum početka *",
-      "startTime": "Vrijeme početka (Opcionalno)",
+      "startTime": "Vrijeme početka *",
       "duration": "Očekivano trajanje",
       "durationOptions": {
         "1_hour": "1 sat",
