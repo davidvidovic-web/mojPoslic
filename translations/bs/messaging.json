@@ -15,9 +15,29 @@
     "archive": "Arhiviraj",
     "unarchive": "Ukloni iz arhive",
     "delete": "Obriši",
+    "deleteMessage": "Obriši poruku",
+    "deleteMessageForMe": "Obriši za mene",
+    "deleteConversation": "Obriši razgovor",
+    "clearConversation": "Očisti razgovor za mene",
     "block": "Blokiraj",
     "unblock": "Odblokiraj",
     "report": "Prijavi"
+  },
+  "deleteMessageDialog": {
+    "title": "Obrisati poruku?",
+    "description": "Ova poruka će biti obrisana samo iz vašeg prikaza. Drugi učesnici će je i dalje vidjeti.",
+    "confirm": "Obriši za mene",
+    "cancel": "Otkaži",
+    "success": "Poruka obrisana",
+    "error": "Neuspjelo brisanje poruke"
+  },
+  "clearConversationDialog": {
+    "title": "Očistiti razgovor?",
+    "description": "Sve poruke u ovom razgovoru će biti obrisane samo iz vašeg prikaza. Drugi učesnici će ih i dalje vidjeti.",
+    "confirm": "Očisti za mene",
+    "cancel": "Otkaži",
+    "success": "Razgovor očišćen",
+    "error": "Neuspjelo čišćenje razgovora"
   },
   "conversation": {
     "defaultTitle": "Razgovor"

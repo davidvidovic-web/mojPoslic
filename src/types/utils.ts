@@ -120,7 +120,7 @@ export function formatJobSalary(job: Job, locale: 'bs' | 'en' = 'en'): string {
     return locale === 'bs' ? 'Po dogovoru' : 'Negotiable'
   }
   
-  return locale === 'bs' ? 'Plata nije navedena' : 'Salary not specified'
+  return locale === 'bs' ? 'Budžet nije naveden' : 'Salary not specified'
 }
 
 /**

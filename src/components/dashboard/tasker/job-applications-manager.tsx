@@ -94,14 +94,9 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
         <div className="space-y-8">
           {/* Pending Applications Section */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-yellow-500/10 to-yellow-600/20 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-yellow-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {tCommon('pending')} ({pendingApplications.length})
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {tCommon('pending')} ({pendingApplications.length})
+            </h3>
             
             {pendingApplications.length === 0 ? (
               <div className="text-center py-8">
@@ -150,14 +145,9 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
 
           {/* Reviewed Applications Section */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-green-500/10 to-green-600/20 flex items-center justify-center">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {tCommon('reviewed')} ({reviewedApplications.length})
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {tCommon('reviewed')} ({reviewedApplications.length})
+            </h3>
             
             {reviewedApplications.length === 0 ? (
               <div className="text-center py-8">

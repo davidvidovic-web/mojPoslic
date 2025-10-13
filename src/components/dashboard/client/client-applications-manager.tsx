@@ -58,8 +58,13 @@ export function ClientApplicationsManager({
     }
   }
   
-  // Filter applications
+  // Filter applications - exclude withdrawn/cancelled applications
   const filteredApplications = applications.filter(application => {
+    // Exclude withdrawn applications
+    if (application.status === ApplicationStatus.WITHDRAWN) {
+      return false
+    }
+    
     // Debug user data structure - enhanced logging
     if (process.env.NODE_ENV === 'development' && application.user) {
       console.log('🔍 Client Applications - User data for application:', application.id, {
@@ -87,11 +92,12 @@ export function ClientApplicationsManager({
     return matchesSearch && matchesStatus
   })
 
-  // Calculate statistics
-  const totalApplications = applications.length
-  const pendingApplications = applications.filter(app => app.status === ApplicationStatus.PENDING).length
-  const acceptedApplications = applications.filter(app => app.status === ApplicationStatus.SELECTED).length
-  const rejectedApplications = applications.filter(app => app.status === ApplicationStatus.REJECTED).length
+  // Calculate statistics - exclude withdrawn applications
+  const activeApplications = applications.filter(app => app.status !== ApplicationStatus.WITHDRAWN)
+  const totalApplications = activeApplications.length
+  const pendingApplications = activeApplications.filter(app => app.status === ApplicationStatus.PENDING).length
+  const acceptedApplications = activeApplications.filter(app => app.status === ApplicationStatus.SELECTED).length
+  const rejectedApplications = activeApplications.filter(app => app.status === ApplicationStatus.REJECTED).length
 
   if (loading) {
     return (
@@ -175,9 +181,6 @@ export function ClientApplicationsManager({
               <SelectItem value="PENDING">{t('pending')}</SelectItem>
               <SelectItem value="SELECTED">{t('accepted')}</SelectItem>
               <SelectItem value="REJECTED">{t('rejected')}</SelectItem>
-              <SelectItem value="REVIEWED">{t('reviewed')}</SelectItem>
-              <SelectItem value="SHORTLISTED">{t('shortlisted')}</SelectItem>
-              <SelectItem value="WITHDRAWN">{t('withdrawn')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

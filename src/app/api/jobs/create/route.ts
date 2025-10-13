@@ -4,10 +4,10 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log('📝 Job Create API - Request body:', JSON.stringify(body, null, 2))
     
     // Check for Authorization header first
     const authHeader = request.headers.get('authorization')
-    console.log('Jobs Create API: Authorization header:', authHeader ? 'present' : 'missing')
     
     let user = null
     let authenticatedSupabase = null
@@ -36,7 +36,6 @@ export async function POST(request: Request) {
       const { data: authData, error: authError } = await supabaseWithAuth.auth.getUser()
       
       if (authError || !authData.user) {
-        console.log('Jobs Create API: Auth header auth failed:', authError)
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
@@ -45,14 +44,12 @@ export async function POST(request: Request) {
       
       user = authData.user
       authenticatedSupabase = supabaseWithAuth
-      console.log('Jobs Create API: Authenticated user via auth header:', user.email)
     } else {
       // Fall back to cookie-based auth
       const supabaseServer = await createServerSupabaseClient()
       const { data: authData, error: authError } = await supabaseServer.auth.getUser()
       
       if (authError || !authData.user) {
-        console.log('Jobs Create API: Cookie auth failed:', authError)
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
@@ -61,10 +58,7 @@ export async function POST(request: Request) {
       
       user = authData.user
       authenticatedSupabase = supabaseServer
-      console.log('Jobs Create API: Authenticated user via cookies:', user.email)
     }
-
-    console.log('Jobs Create API: Request body:', body)
 
     const {
       title,
@@ -89,7 +83,7 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!title || !description || !city_id || !category_id) {
-      console.log('Jobs Create API: Missing required fields:', { title: !!title, description: !!description, city_id: !!city_id, category_id: !!category_id })
+      console.error('❌ Missing required fields:', { title: !!title, description: !!description, city_id, category_id })
       return NextResponse.json(
         { success: false, error: 'Missing required fields: title, description, city_id, category_id' },
         { status: 400 }
@@ -147,7 +141,7 @@ export async function POST(request: Request) {
     }
 
     if (!cityFromStatic) {
-      console.log('Jobs Create API: Invalid city_id:', city_id)
+      console.error('❌ Invalid city_id:', city_id, 'Available cities:', citiesData.cities.map((c: { id: string; key: string }) => ({ id: c.id, key: c.key })))
       return NextResponse.json(
         { success: false, error: `Invalid city_id: ${city_id}` },
         { status: 400 }
@@ -155,7 +149,7 @@ export async function POST(request: Request) {
     }
 
     if (!categoryFromStatic) {
-      console.log('Jobs Create API: Invalid category_id:', category_id)
+      console.error('❌ Invalid category_id:', category_id, 'Available categories:', categoriesData.categories.map((c: { id: string; key: string }) => ({ id: c.id, key: c.key })))
       return NextResponse.json(
         { success: false, error: `Invalid category_id: ${category_id}` },
         { status: 400 }
@@ -174,11 +168,6 @@ export async function POST(request: Request) {
     const categoryName = categoryFromStatic.name_en || categoryFromStatic.name_bs || categoryFromStatic.name || categoryKey
     const categoryNameBs = categoryFromStatic.name_bs || categoryFromStatic.name_en || categoryFromStatic.name || categoryKey
     const categoryNameEn = categoryFromStatic.name_en || categoryFromStatic.name_bs || categoryFromStatic.name || categoryKey
-
-    console.log('Jobs Create API: Using keys and cached names:', {
-      city: { key: cityKey, name: cityName, name_bs: cityNameBs, name_en: cityNameEn },
-      category: { key: categoryKey, name: categoryName, name_bs: categoryNameBs, name_en: categoryNameEn }
-    })
 
     // Prepare job data for insertion
     const jobData = {
@@ -225,10 +214,9 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     }
 
-    console.log('Jobs Create API: Final job data:', jobData)
-
     // If the job is featured, deduct 6 connections from the user's balance
     if (is_featured) {
+      console.log('🌟 Featured job requested, checking connections...')
       const { data: userProfile, error: profileError } = await authenticatedSupabase
         .from('users')
         .select('connections')
@@ -236,13 +224,16 @@ export async function POST(request: Request) {
         .single()
 
       if (profileError || !userProfile) {
+        console.error('❌ Failed to fetch user profile:', profileError)
         return NextResponse.json(
           { success: false, error: 'Failed to check user connections' },
           { status: 500 }
         )
       }
 
+      console.log('💰 User connections:', userProfile.connections)
       if (userProfile.connections < 6) {
+        console.error('❌ Insufficient connections:', userProfile.connections, '< 6')
         return NextResponse.json(
           { success: false, error: 'Insufficient connections. You need 6 connections to feature a job.' },
           { status: 400 }
@@ -286,8 +277,6 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
-
-    console.log('Jobs Create API: Job created successfully:', insertedJob.id)
 
     return NextResponse.json({
       success: true,

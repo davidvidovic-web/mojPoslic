@@ -29,8 +29,12 @@ export function mapFormDataToCreateAPI(
     job_longitude: formData.job_longitude || null,
     duration: formData.duration || null, // Keep legacy field for compatibility
     transportation: formData.transportation || null,
+    transportation_amount: formData.transportation_amount || null,
+    has_parking: formData.has_parking ?? null,
+    public_transport_info: formData.public_transport_info || null,
     requirements: formData.requirements || null,
     benefits: formData.benefits || null,
+    tags: formData.tags || null,
     application_url: formData.application_url || formData.website || null,
     contact_email: formData.contact_email || formData.email || userEmail,
     is_featured: formData.is_featured || false

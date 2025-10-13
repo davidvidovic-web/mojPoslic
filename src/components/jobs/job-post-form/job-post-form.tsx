@@ -30,6 +30,19 @@ export function JobPostForm({
 
   const handleSubmit = async (formData: CreateJobData) => {
     try {
+      // Check if user has enough connections for featured job
+      if (formData.is_featured) {
+        const userConnections = (user as unknown as { connections?: number })?.connections || 0
+        if (userConnections < 6) {
+          toast.error(t('insufficientConnections', { 
+            required: 6, 
+            current: userConnections,
+            needed: 6 - userConnections 
+          }))
+          return
+        }
+      }
+
       // Convert city_id to city key
       const selectedCity = formData.city_id ? cities.find(c => c.id === formData.city_id) : null
       const cityKey = selectedCity?.key
@@ -82,6 +95,14 @@ export function JobPostForm({
         job_address: requestData.job_address || undefined,
         job_latitude: requestData.job_latitude || undefined,
         job_longitude: requestData.job_longitude || undefined,
+        start_date: requestData.start_date || undefined,
+        start_time: requestData.start_time || undefined,
+        duration: requestData.duration || undefined,
+        transportation: requestData.transportation || undefined,
+        transportation_amount: requestData.transportation_amount || undefined,
+        has_parking: requestData.has_parking ?? undefined,
+        public_transport_info: requestData.public_transport_info || undefined,
+        tags: requestData.tags || undefined,
         posted_by_id: user?.id || ''
       }
 
@@ -106,8 +127,6 @@ export function JobPostForm({
       initialData={initialData}
       onSubmit={handleSubmit}
       onCancel={onCancel}
-      submitButtonText={t('submitJobPosting')}
-      submittingText={t('submitting')}
       showCard={showCard}
     />
   )

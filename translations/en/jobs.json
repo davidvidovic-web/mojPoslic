@@ -187,6 +187,7 @@
       "jobPosted": "Job posted successfully!",
       "jobUpdated": "Job updated successfully!",
       "jobDeleted": "Job deleted successfully!",
+      "jobFinished": "Job marked as finished! The tasker will be notified.",
       "redirecting": "Redirecting to your job..."
     }
   },
@@ -195,7 +196,9 @@
     "loadFailed": "Failed to load job details",
     "cannotApplyToOwnJob": "You cannot apply to your own job",
     "alreadyApplied": "You have already applied to this job",
-    "clientCannotApply": "Clients cannot apply to jobs. Switch to job seeker role to apply for positions."
+    "clientCannotApply": "Clients cannot apply to jobs. Switch to job seeker role to apply for positions.",
+    "deleteError": "Failed to delete job. Please try again.",
+    "finishError": "Failed to finish job. Please try again."
   },
   "details": {
     "jobDetails": "Job Details",
@@ -372,7 +375,8 @@
     "submitting": "Submitting...",
     "updating": "Updating...",
     "alternateContact": "alternate contact",
-    "applicationUrl": "application URL"
+    "applicationUrl": "application URL",
+    "insufficientConnections": "Insufficient connections. You have {current} connections but need {required} to feature a job. You need {needed} more connection(s)."
   },
   "dialogs": {
     "postJobDialog": "Post New Job",
@@ -388,6 +392,17 @@
     "deleteJobDialog": "Delete Job Posting",
     "deleteJobDescription": "Are you sure you want to delete \"{jobTitle}\"? This action cannot be undone and will permanently remove the job posting and all associated applications.",
     "deleteJobConfirm": "Delete Job",
+    "finishJobDialog": "Finish Job & Leave Review",
+    "finishJobDescription": "Mark \"{jobTitle}\" as finished and review {taskerName}.",
+    "rateTasker": "Rate the tasker's work",
+    "ratingRequired": "Please select a rating",
+    "reviewComment": "Review (optional)",
+    "reviewPlaceholder": "Share your experience working with this tasker...",
+    "reviewNote": "Your review will be visible to other clients and the tasker can respond to it.",
+    "finishJobNote": "Note:",
+    "finishJobNoteText": "After you submit this review, the tasker will be notified and can leave a review for you as well. The job will be marked as completed.",
+    "finishing": "Finishing...",
+    "finishJobConfirm": "Finish Job & Submit Review",
     "cancel": "Cancel"
   }
 }

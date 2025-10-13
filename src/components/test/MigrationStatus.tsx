@@ -153,26 +153,28 @@ export default function MigrationStatus() {
         
         <div className="space-y-4">
           <div className="p-4 border rounded-lg">
+            {/* Hardcoded in Bosnian - test component */}
             <h3 className="font-medium mb-2">Job Manager Test</h3>
             {jobsLoading ? (
-              <div className="text-yellow-600">Loading jobs...</div>
+              <div className="text-yellow-600">Učitavanje poslova...</div>
             ) : jobsError ? (
-              <div className="text-red-600">❌ Error loading jobs</div>
+              <div className="text-red-600">❌ Greška pri učitavanju poslova</div>
             ) : (
-              <div className="text-green-600">✅ Jobs loaded successfully ({jobs?.length || 0} jobs)</div>
+              <div className="text-green-600">✅ Poslovi uspješno učitani ({jobs?.length || 0} poslova)</div>
             )}
           </div>
 
           <div className="p-4 border rounded-lg">
+            {/* Hardcoded in Bosnian - test component */}
             <h3 className="font-medium mb-2">Static Data Test</h3>
             {staticLoading ? (
-              <div className="text-yellow-600">Loading static data...</div>
+              <div className="text-yellow-600">Učitavanje statičkih podataka...</div>
             ) : staticError ? (
-              <div className="text-red-600">❌ Error loading static data</div>
+              <div className="text-red-600">❌ Greška pri učitavanju statičkih podataka</div>
             ) : (
               <div className="text-green-600">
-                ✅ Static data loaded successfully 
-                ({cities?.length || 0} cities, {categories?.length || 0} categories)
+                ✅ Statički podaci uspješno učitani
+                ({cities?.length || 0} gradova, {categories?.length || 0} kategorija)
               </div>
             )}
           </div>

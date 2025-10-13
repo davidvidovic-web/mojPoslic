@@ -361,3 +361,40 @@ export const formatDuration = (duration?: string): string => {
 
   return durationMap[duration] || duration.replace("_", " ");
 };
+
+/**
+ * Calculates the expiration date for a job
+ * - If job has a start_date, use that as the deadline
+ * - Otherwise, use created_at + 14 days (constant)
+ * @param job - The job object with created_at and optional start_date
+ * @returns The expiration date
+ */
+export function getJobExpirationDate(job: {
+  created_at: string | Date;
+  start_date?: string | null;
+}): Date {
+  // If start_date is set, use it as the application deadline
+  if (job.start_date) {
+    return new Date(job.start_date);
+  }
+  
+  // Otherwise, calculate expiration as created_at + 14 days (constant)
+  const createdDate = new Date(job.created_at);
+  const expirationDate = new Date(createdDate);
+  expirationDate.setDate(createdDate.getDate() + 14);
+  
+  return expirationDate;
+}
+
+/**
+ * Checks if a job is expired based on start_date or 14 days from creation
+ * @param job - The job object
+ * @returns true if the job is expired, false otherwise
+ */
+export function isJobExpired(job: {
+  created_at: string | Date;
+  start_date?: string | null;
+}): boolean {
+  const expirationDate = getJobExpirationDate(job);
+  return expirationDate < new Date();
+}

@@ -15,9 +15,29 @@
     "archive": "Archive",
     "unarchive": "Unarchive",
     "delete": "Delete",
+    "deleteMessage": "Delete message",
+    "deleteMessageForMe": "Delete for me",
+    "deleteConversation": "Delete conversation",
+    "clearConversation": "Clear conversation for me",
     "block": "Block",
     "unblock": "Unblock",
     "report": "Report"
+  },
+  "deleteMessageDialog": {
+    "title": "Delete message?",
+    "description": "This message will be deleted from your view only. Other participants will still see it.",
+    "confirm": "Delete for me",
+    "cancel": "Cancel",
+    "success": "Message deleted",
+    "error": "Failed to delete message"
+  },
+  "clearConversationDialog": {
+    "title": "Clear conversation?",
+    "description": "All messages in this conversation will be deleted from your view only. Other participants will still see them.",
+    "confirm": "Clear for me",
+    "cancel": "Cancel",
+    "success": "Conversation cleared",
+    "error": "Failed to clear conversation"
   },
   "conversation": {
     "defaultTitle": "Conversation"

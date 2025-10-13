@@ -47,7 +47,8 @@ export async function GET() {
           company_name
         )
       `)
-      .eq('status', 'ACTIVE')
+      .eq('is_active', true)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
 
     // If user has preferred job types, filter by them

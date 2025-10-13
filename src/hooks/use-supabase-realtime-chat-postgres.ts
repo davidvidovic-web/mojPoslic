@@ -14,6 +14,7 @@ export interface Message {
   sender_name: string
   sender_avatar_url?: string
   read_by: string[]
+  deleted_by_users?: string[] // Track which users deleted this message from their view
   created_at: string
 }
 
@@ -25,10 +26,14 @@ export interface Conversation {
   created_by_id: string
   participant_ids: string[]
   participant_names: string[]
+  participant_avatars?: (string | null)[]
   is_active: boolean
   created_at: string
   updated_at: string
   unread_count?: number
+  last_message_preview?: string
+  last_message_at?: string
+  last_sender_id?: string
 }
 
 // Database types for realtime payloads
@@ -40,6 +45,7 @@ interface ConversationRecord {
   created_by_id: string
   participant_ids: string[]
   participant_names: string[]
+  participant_avatars?: (string | null)[]
   is_active: boolean
   created_at: string
   updated_at: string
@@ -175,7 +181,7 @@ export function useSupabaseRealtimeChat({
 
       setMessages(filteredMessages)
 
-      // Mark messages as read
+      // Mark messages as read and clear unread count
       if (filteredMessages.length > 0) {
         const unreadMessages = filteredMessages.filter(msg => 
           msg.sender_id !== user.id && 
@@ -194,16 +200,30 @@ export function useSupabaseRealtimeChat({
             )
           )
           
-          // Immediately update the conversation's unread count in local state
+          // Immediately clear the conversation's unread count in local state
           setConversations(prev => prev.map(conv => 
             conv.id === convId 
-              ? { ...conv, unread_count: Math.max(0, (conv.unread_count || 0) - unreadMessages.length) }
+              ? { ...conv, unread_count: 0 }
               : conv
           ))
           
           // Reload conversations to ensure accuracy (but async to not block UI)
           loadConversations()
+        } else {
+          // Even if no unread messages, ensure unread count is 0 when opening conversation
+          setConversations(prev => prev.map(conv => 
+            conv.id === convId 
+              ? { ...conv, unread_count: 0 }
+              : conv
+          ))
         }
+      } else {
+        // No messages yet, but still clear unread count when opening conversation
+        setConversations(prev => prev.map(conv => 
+          conv.id === convId 
+            ? { ...conv, unread_count: 0 }
+            : conv
+        ))
       }
     } catch (err) {
       console.error('Failed to load messages:', err)
@@ -381,7 +401,6 @@ export function useSupabaseRealtimeChat({
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
         const dbMessage = payload.new as MessageRecord
-        console.log('📝 Message updated via postgres_changes:', dbMessage)
         
         if (dbMessage.conversation_id && dbMessage.sender_id && dbMessage.created_at) {
           const updatedMessage: Message = {
@@ -404,8 +423,7 @@ export function useSupabaseRealtimeChat({
       
       // Listen for typing indicators via broadcast
       .on('broadcast', { event: 'typing' }, (payload) => {
-        const { user_id, typing, user_name } = payload.payload
-        console.log('⌨️ Typing indicator:', { user_id, typing, user_name })
+        const { user_id, typing } = payload.payload
         
         if (user_id !== user.id) { // Don't show own typing
           setTypingUsers(prev => {
@@ -427,13 +445,10 @@ export function useSupabaseRealtimeChat({
         } else if (status === 'TIMED_OUT') {
           console.error('⏰ Message realtime timed out')
           setError('Realtime connection timed out')
-        } else if (status === 'CLOSED') {
-          console.log('🔌 Message realtime closed')
         }
       })
 
     return () => {
-      console.log('🧹 Cleaning up message realtime')
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
         typingTimeoutRef.current = null
@@ -474,7 +489,6 @@ export function useSupabaseRealtimeChat({
           table: 'conversations'
         }, (payload) => {
           const newConversation = payload.new as ConversationRecord
-          console.log('📋 New conversation:', newConversation)
           
           // Only process if user is a participant
           if (Array.isArray(newConversation.participant_ids) && 
@@ -489,7 +503,6 @@ export function useSupabaseRealtimeChat({
           table: 'conversations'
         }, (payload) => {
           const updatedConversation = payload.new as ConversationRecord
-          console.log('📋 Updated conversation:', updatedConversation)
           
           // Only process if user is a participant
           if (Array.isArray(updatedConversation.participant_ids) && 
@@ -499,8 +512,65 @@ export function useSupabaseRealtimeChat({
           }
         })
         
+        // Listen for new messages globally to update unread counts
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        }, (payload) => {
+          const newMessage = payload.new as MessageRecord
+          
+          // If this message is not sent by current user
+          if (newMessage.sender_id !== user.id && newMessage.conversation_id) {
+            // Increment unread count for this conversation
+            setConversations(prev => {
+              // Check if this conversation exists in our list
+              const conversation = prev.find(c => c.id === newMessage.conversation_id)
+              if (conversation) {
+                return prev.map(conv => 
+                  conv.id === newMessage.conversation_id
+                    ? { 
+                        ...conv, 
+                        unread_count: (conv.unread_count || 0) + 1,
+                        last_message_preview: newMessage.content?.substring(0, 100),
+                        last_message_at: newMessage.created_at,
+                        last_sender_id: newMessage.sender_id,
+                        updated_at: newMessage.created_at
+                      }
+                    : conv
+                )
+              }
+              return prev
+            })
+          }
+        })
+        
+        // Listen for message updates globally to handle read status changes
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        }, (payload) => {
+          const updatedMessage = payload.new as MessageRecord
+          const oldMessage = payload.old as MessageRecord
+          
+          // Check if this message was just marked as read by current user
+          if (updatedMessage.conversation_id && updatedMessage.sender_id !== user.id) {
+            const wasUnread = oldMessage.read_by && !oldMessage.read_by.includes(user.id)
+            const isNowRead = updatedMessage.read_by && updatedMessage.read_by.includes(user.id)
+            
+            if (wasUnread && isNowRead) {
+              // Decrement unread count for this conversation
+              setConversations(prev => prev.map(conv => 
+                conv.id === updatedMessage.conversation_id
+                  ? { ...conv, unread_count: Math.max(0, (conv.unread_count || 1) - 1) }
+                  : conv
+              ))
+            }
+          }
+        })
+        
         .subscribe((status, err) => {
-          console.log('📡 Conversations realtime status:', status, 'User:', user.id)
           if (err) {
             console.error('📡 Conversations realtime error details:', {
               error: err,
@@ -527,7 +597,6 @@ export function useSupabaseRealtimeChat({
             // Retry after 3 seconds if not already retrying
             if (!retryTimeout) {
               retryTimeout = setTimeout(() => {
-                console.log('🔄 Retrying conversations realtime connection...')
                 setupConversationsSubscription()
               }, 3000)
             }
@@ -540,12 +609,9 @@ export function useSupabaseRealtimeChat({
             // Retry after 5 seconds if not already retrying
             if (!retryTimeout) {
               retryTimeout = setTimeout(() => {
-                console.log('🔄 Retrying conversations realtime connection after timeout...')
                 setupConversationsSubscription()
               }, 5000)
             }
-          } else if (status === 'CLOSED') {
-            console.log('🔌 Conversations realtime closed')
           }
         })
     }
@@ -554,7 +620,6 @@ export function useSupabaseRealtimeChat({
     setupConversationsSubscription()
 
     return () => {
-      console.log('🧹 Cleaning up conversations realtime')
       if (retryTimeout) {
         clearTimeout(retryTimeout)
       }

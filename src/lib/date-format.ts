@@ -139,7 +139,7 @@ export function formatRelativeDate(
  * @param date - Date string or Date object
  * @param locale - Locale for formatting ('bs' for Bosnian, 'en' for English)
  * @param options - Additional formatting options
- * @returns Localized relative time string (e.g., "prije oko mjesec dana", "about 1 month ago")
+ * @returns Localized relative time string (e.g., "prije mjesec dana", "about 1 month ago")
  */
 export function formatDistanceToNowLocalized(
   date: string | Date,
@@ -154,7 +154,14 @@ export function formatDistanceToNowLocalized(
     }
 
     const localeObj = locale === 'bs' ? bs : enUS
-    return formatDistanceToNow(dateObj, { ...options, locale: localeObj })
+    let result = formatDistanceToNow(dateObj, { ...options, locale: localeObj })
+    
+    // Remove "oko" (about) from Bosnian locale for cleaner output
+    if (locale === 'bs') {
+      result = result.replace(/\boko\s+/gi, '')
+    }
+    
+    return result
   } catch (error) {
     console.error('Error formatting distance to now:', error)
     return locale === 'bs' ? 'Neispravan datum' : 'Invalid date'

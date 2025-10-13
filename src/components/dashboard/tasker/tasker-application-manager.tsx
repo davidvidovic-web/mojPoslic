@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Search, Building2, MessageCircle, ExternalLink, X } from 'lucide-react'
+import { Search, MessageCircle, ExternalLink, X } from 'lucide-react'
 import { formatDistanceToNowLocalized } from '@/lib/date-format'
 import { useTranslations, useLocale } from 'next-intl'
 import { useDialogStore } from '@/stores/dialog-store'
@@ -184,8 +184,6 @@ export default function TaskerApplicationManager({
               <SelectItem value="all">{t('allStatuses')}</SelectItem>
               <SelectItem value="PENDING">{t('pending')}</SelectItem>
               <SelectItem value="SELECTED">{t('accepted')}</SelectItem>
-              <SelectItem value="REJECTED">{t('cancelledByClient')}</SelectItem>
-              <SelectItem value="WITHDRAWN">{t('withdrawn')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -224,16 +222,16 @@ export default function TaskerApplicationManager({
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    {/* Company Avatar */}
+                    {/* Client Avatar */}
                     <Avatar className="h-8 w-8">
                       <AvatarImage 
-                        src={undefined} 
+                        src={(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url || undefined} 
                         alt={application.job?.posted_by?.name || t('unknownCompany')}
                       />
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {application.job?.posted_by?.name 
                           ? application.job.posted_by.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-                          : <Building2 className="h-4 w-4" />
+                          : '??'
                         }
                       </AvatarFallback>
                     </Avatar>
@@ -269,7 +267,7 @@ export default function TaskerApplicationManager({
                       {application.job.salary_min && application.job.salary_max 
                         ? `${application.job.salary_min} - ${application.job.salary_max} BAM`
                         : application.job.salary_min 
-                        ? `${application.job.salary_min}+ BAM`
+                        ? `${application.job.salary_min} BAM`
                         : `Up to ${application.job.salary_max} BAM`}
                     </span>
                   </div>
@@ -287,27 +285,29 @@ export default function TaskerApplicationManager({
               )}
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(`/jobs/${application.job?.id}`, '_blank')}
-                  className="hover:bg-accent hover:text-accent-foreground"
-                  disabled={!application.job?.id}
-                >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  {t('viewJob')}
-                </Button>
+              <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-border">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/jobs/${application.job?.id}`, '_blank')}
+                    className="hover:bg-accent hover:text-accent-foreground whitespace-nowrap"
+                    disabled={!application.job?.id}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{t('viewJob')}</span>
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleMessage(application)}
-                  className="hover:bg-accent hover:text-accent-foreground"
-                >
-                  <MessageCircle className="h-4 w-4 mr-1" />
-                  {t('messages')}
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleMessage(application)}
+                    className="hover:bg-accent hover:text-accent-foreground whitespace-nowrap"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{t('messages')}</span>
+                  </Button>
+                </div>
 
                 {application.status === ApplicationStatus.PENDING && (
                   <Button
@@ -315,10 +315,10 @@ export default function TaskerApplicationManager({
                     size="sm"
                     onClick={() => handleWithdraw(application.id)}
                     disabled={updateApplicationMutation.isPending}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                    className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
                   >
-                    <X className="h-4 w-4 mr-1" />
-                    {t('withdrawApplication')}
+                    <X className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{t('cancelApplication')}</span>
                   </Button>
                 )}
               </div>

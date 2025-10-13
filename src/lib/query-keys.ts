@@ -112,6 +112,8 @@ export const queryKeys = {
     all: ['reviews'] as const,
     lists: () => [...queryKeys.reviews.all, 'list'] as const,
     list: (userId: string) => [...queryKeys.reviews.lists(), userId] as const,
+    details: () => [...queryKeys.reviews.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.reviews.details(), id] as const,
     byUser: (userId: string) => [...queryKeys.reviews.all, 'user', userId] as const,
     byJob: (jobId: string) => [...queryKeys.reviews.all, 'job', jobId] as const,
   },

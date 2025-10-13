@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Job } from '@/types/job'
-import { formatJobType } from '@/lib/job-utils'
+import { formatJobType, getJobExpirationDate, isJobExpired } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
 import { useTranslations, useLocale } from 'next-intl'
 
@@ -89,10 +89,8 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature, hi
   }
 
   const getJobStatus = () => {
-    const now = new Date()
-    const expiresAt = job.expires_at ? new Date(job.expires_at) : null
-    
-    if (expiresAt && expiresAt < now) {
+    // Check if job is expired based on application_deadline or 14 days from creation
+    if (isJobExpired(job)) {
       return { status: 'expired', color: 'text-red-600', bgColor: 'bg-red-50 border-red-200', text: t('expired') }
     }
     
@@ -194,10 +192,10 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature, hi
             <span className="font-medium">{t('duration')}: </span>
             <span>{job.duration}</span>
           </div>
-        ) : job.expires_at && (
+        ) : (
           <div>
             <span className="font-medium">{t('expires')}: </span>
-            <span>{formatDate(job.expires_at)}</span>
+            <span>{formatDate(getJobExpirationDate(job).toISOString())}</span>
           </div>
         )}
       </div>

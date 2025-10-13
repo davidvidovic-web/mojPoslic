@@ -8,9 +8,28 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { Send, MessageCircle, ArrowLeft, Users, Loader2, X } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Send, MessageCircle, ArrowLeft, Users, Loader2, X, Trash2, MoreVertical } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { useDeleteMessageForUserMutation, useDeleteConversationForUserMutation } from '@/hooks/queries/useMessages'
+import { toast } from 'sonner'
 
 // Hook to safely use translations with fallbacks
 function useMessagingTranslations() {
@@ -68,10 +87,17 @@ export function UnifiedMessagingInterface({
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null)
+  const [clearConversationDialogOpen, setClearConversationDialogOpen] = useState(false)
   
   // Use conversationId from props or dialog store
   const activeConversationId = conversationId || currentConversationId
   const [showConversationList, setShowConversationList] = useState(!activeConversationId)
+  
+  // Delete message mutation
+  const deleteMessageMutation = useDeleteMessageForUserMutation()
+  const clearConversationMutation = useDeleteConversationForUserMutation()
 
   // Hook for all conversations (to get totalUnreadCount and conversations list)
   const {
@@ -97,6 +123,69 @@ export function UnifiedMessagingInterface({
     conversationId: activeConversationId || undefined,
     enabled: !!user?.id && !!activeConversationId
   })
+
+  // Helper function to get conversation display name (participant name only)
+  const getConversationDisplayName = (conversation: typeof conversations[0]) => {
+    // If we have participant_names and participant_ids, show the OTHER participant's name
+    if (conversation.participant_ids && conversation.participant_names && user?.id) {
+      const otherParticipantIndex = conversation.participant_ids.findIndex(id => id !== user.id)
+      if (otherParticipantIndex !== -1 && conversation.participant_names[otherParticipantIndex]) {
+        const otherName = conversation.participant_names[otherParticipantIndex]
+        // Don't show generic "Client" or "Tasker" labels
+        if (otherName !== 'Client' && otherName !== 'Tasker') {
+          return otherName
+        }
+      }
+    }
+    
+    // Try to extract name from title (format: "Name - Job Title")
+    if (conversation.title) {
+      const parts = conversation.title.split(' - ')
+      if (parts.length > 0 && parts[0] !== 'Applicant' && parts[0] !== 'Client' && parts[0] !== 'Tasker') {
+        return parts[0]
+      }
+    }
+    
+    // Fall back to default
+    return t('conversationTypes.jobChat')
+  }
+
+  // Helper function to get job title from conversation
+  const getJobTitle = (conversation: typeof conversations[0]) => {
+    // Try to extract job title from conversation title (format: "Name - Job Title")
+    if (conversation.title) {
+      const parts = conversation.title.split(' - ')
+      if (parts.length > 1) {
+        return parts.slice(1).join(' - ') // Join back in case job title has " - " in it
+      }
+    }
+    return null
+  }
+
+  // Helper function to get participant avatar URL
+  const getParticipantAvatar = (conversation: typeof conversations[0]) => {
+    // If we have participant_avatars and participant_ids, get the OTHER participant's avatar
+    if (conversation.participant_ids && conversation.participant_avatars && user?.id) {
+      const otherParticipantIndex = conversation.participant_ids.findIndex(id => id !== user.id)
+      if (otherParticipantIndex !== -1 && conversation.participant_avatars[otherParticipantIndex]) {
+        return conversation.participant_avatars[otherParticipantIndex]
+      }
+    }
+    return null
+  }
+
+  // Helper function to get participant initials for fallback avatar
+  const getParticipantInitials = (conversation: typeof conversations[0]) => {
+    const name = getConversationDisplayName(conversation)
+    if (name && name !== 'conversationTypes.jobChat') {
+      const parts = name.split(' ')
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+      }
+      return name.substring(0, 2).toUpperCase()
+    }
+    return '?'
+  }
 
   // Combine loading states and errors
   const loading = messagesLoading
@@ -133,10 +222,34 @@ export function UnifiedMessagingInterface({
     }
   }
 
-  // Group messages by sender and date for better UI
+  // Filter and group messages by sender and date for better UI
   const messageGroups = useMemo(() => {
-    return messages.map((message, index) => {
-      const prevMessage = messages[index - 1]
+    if (!user?.id) return []
+    
+    // Check if user has deleted any messages in this conversation
+    const userHasDeletedMessages = messages.some(msg => 
+      msg.deleted_by_users?.includes(user.id)
+    )
+    
+    // Check if there's a new message from the other person (not deleted yet)
+    const hasUnseenMessageFromOther = messages.some(msg => 
+      msg.sender_id !== user.id && 
+      (!msg.deleted_by_users || !msg.deleted_by_users.includes(user.id))
+    )
+    
+    // If user cleared conversation but received a new message, restore ALL messages
+    // This "restarts" the conversation when the other person replies
+    const shouldRestoreConversation = userHasDeletedMessages && hasUnseenMessageFromOther
+    
+    const visibleMessages = shouldRestoreConversation
+      ? messages // Show all messages to restart conversation
+      : messages.filter(msg => { // Otherwise, respect deleted status
+          if (!msg.deleted_by_users) return true
+          return !msg.deleted_by_users.includes(user.id)
+        })
+    
+    return visibleMessages.map((message, index) => {
+      const prevMessage = visibleMessages[index - 1]
       const showHeader = !prevMessage || 
         prevMessage.sender_id !== message.sender_id ||
         new Date(message.created_at).getDate() !== new Date(prevMessage.created_at).getDate()
@@ -218,6 +331,42 @@ export function UnifiedMessagingInterface({
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
   }
 
+  // Handle message deletion
+  const handleDeleteMessage = async () => {
+    if (!messageToDelete || !user?.id) return
+
+    try {
+      await deleteMessageMutation.mutateAsync({
+        messageId: messageToDelete,
+        userId: user.id
+      })
+      toast.success(t('deleteMessageDialog.success'))
+      setDeleteDialogOpen(false)
+      setMessageToDelete(null)
+    } catch (error) {
+      console.error('Failed to delete message:', error)
+      toast.error(t('deleteMessageDialog.error'))
+    }
+  }
+
+  // Handle clearing entire conversation
+  const handleClearConversation = async () => {
+    if (!activeConversationId || !user?.id) return
+
+    try {
+      const result = await clearConversationMutation.mutateAsync({
+        conversationId: activeConversationId,
+        userId: user.id
+      })
+      toast.success(t('clearConversationDialog.success'))
+      setClearConversationDialogOpen(false)
+      console.log(`✅ Cleared ${result.deletedCount} messages from conversation`)
+    } catch (error) {
+      console.error('Failed to clear conversation:', error)
+      toast.error(t('clearConversationDialog.error'))
+    }
+  }
+
   if (!user) {
     return (
       <div className={cn('flex items-center justify-center h-96 border rounded-lg', className)}>
@@ -253,9 +402,29 @@ export function UnifiedMessagingInterface({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h3 className="font-medium text-sm text-foreground">
-                  {conversations.find(c => c.id === activeConversationId)?.title || t('conversation.defaultTitle')}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-sm text-foreground">
+                    {(() => {
+                      const conv = conversations.find(c => c.id === activeConversationId)
+                      return conv ? getConversationDisplayName(conv) : t('conversation.defaultTitle')
+                    })()}
+                  </h3>
+                  {(() => {
+                    const conv = conversations.find(c => c.id === activeConversationId)
+                    const jobTitle = conv ? getJobTitle(conv) : null
+                    if (jobTitle) {
+                      return (
+                        <>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-sm text-muted-foreground">
+                            {jobTitle}
+                          </span>
+                        </>
+                      )
+                    }
+                    return null
+                  })()}
+                </div>
                 {typingUsers.length > 0 && (
                   <p className="text-xs text-muted-foreground">
                     {typingUsers.length === 1 ? 
@@ -266,11 +435,42 @@ export function UnifiedMessagingInterface({
                 )}
               </div>
             </div>
-            {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('actions.close')}>
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex items-center gap-1">
+              {/* Conversation options dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-9 w-9"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setClearConversationDialogOpen(true)}
+                    className="text-red-600 focus:text-red-600 cursor-pointer"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {t('actions.clearConversation')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Close button - matches style and height of options button */}
+              {onClose && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={onClose} 
+                  aria-label={t('actions.close')}
+                  className="h-9 w-9"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </>
         ) : (
           <>
@@ -286,7 +486,13 @@ export function UnifiedMessagingInterface({
               )}
             </div>
             {onClose && (
-              <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('actions.close')}>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={onClose} 
+                aria-label={t('actions.close')}
+                className="h-9 w-9"
+              >
                 <X className="h-4 w-4" />
               </Button>
             )}
@@ -324,16 +530,29 @@ export function UnifiedMessagingInterface({
                     onClick={() => handleConversationSelect(conversation.id)}
                   >
                     <div className="flex items-start gap-3 w-full">
-                      <div className="w-10 h-10 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <MessageCircle className="h-4 w-4 text-primary" />
-                      </div>
+                      <Avatar className="w-10 h-10 flex-shrink-0">
+                        <AvatarImage src={getParticipantAvatar(conversation) || undefined} alt={getConversationDisplayName(conversation)} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {getParticipantInitials(conversation)}
+                        </AvatarFallback>
+                      </Avatar>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-medium text-sm truncate text-foreground">
-                            {conversation.title || t('conversationTypes.jobChat')}
-                          </h4>
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <h4 className="font-medium text-sm text-foreground shrink-0">
+                              {getConversationDisplayName(conversation)}
+                            </h4>
+                            {getJobTitle(conversation) && (
+                              <>
+                                <span className="text-muted-foreground shrink-0">•</span>
+                                <span className="text-sm text-muted-foreground truncate">
+                                  {getJobTitle(conversation)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                             {(conversation.unread_count || 0) > 0 && (
                               <Badge variant="destructive" className="text-xs px-2 py-1 rounded-[var(--radius)]">
                                 {conversation.unread_count}
@@ -345,8 +564,8 @@ export function UnifiedMessagingInterface({
                           </div>
                         </div>
                         
-                        <p className="text-xs text-muted-foreground">
-                          {t('conversationTypes.jobChat')}
+                        <p className="text-xs text-muted-foreground truncate">
+                          {conversation.last_message_preview || t('conversationTypes.jobChat')}
                         </p>
                       </div>
                     </div>
@@ -374,7 +593,7 @@ export function UnifiedMessagingInterface({
                 {messageGroups.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
+                    className={`flex group ${message.isOwn ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[80%] ${message.isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
                       {message.showHeader && (
@@ -388,14 +607,41 @@ export function UnifiedMessagingInterface({
                         </div>
                       )}
                       
-                      <div
-                        className={`rounded-[var(--radius)] px-3 py-2 text-sm ${
-                          message.isOwn
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-foreground border border-border'
-                        }`}
-                      >
-                        {message.content}
+                      <div className="relative flex items-start gap-1">
+                        <div
+                          className={`rounded-[var(--radius)] px-3 py-2 text-sm ${
+                            message.isOwn
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-foreground border border-border'
+                          }`}
+                        >
+                          {message.content}
+                        </div>
+                        
+                        {/* Delete button - shows on hover */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setMessageToDelete(message.id)
+                                setDeleteDialogOpen(true)
+                              }}
+                              className="text-red-600 focus:text-red-600 cursor-pointer"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              {t('actions.deleteMessageForMe')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
@@ -433,6 +679,50 @@ export function UnifiedMessagingInterface({
           </form>
         </div>
       )}
+
+      {/* Delete Message Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteMessageDialog.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteMessageDialog.description')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('deleteMessageDialog.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMessage}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteMessageMutation.isPending}
+            >
+              {deleteMessageMutation.isPending ? 'Deleting...' : t('deleteMessageDialog.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear Conversation Confirmation Dialog */}
+      <AlertDialog open={clearConversationDialogOpen} onOpenChange={setClearConversationDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('clearConversationDialog.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('clearConversationDialog.description')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('clearConversationDialog.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearConversation}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={clearConversationMutation.isPending}
+            >
+              {clearConversationMutation.isPending ? 'Clearing...' : t('clearConversationDialog.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

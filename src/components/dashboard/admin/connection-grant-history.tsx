@@ -152,7 +152,8 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading connection history...</p>
+              {/* Hardcoded in Bosnian - admin component without translation setup */}
+              <p className="text-muted-foreground">Učitavanje historije konekcija...</p>
             </div>
           </div>
         </CardContent>

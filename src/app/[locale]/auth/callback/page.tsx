@@ -7,17 +7,20 @@ import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 export default function AuthCallback() {
   const router = useRouter()
   const { user, loading } = useSupabaseAuth()
-  const [message, setMessage] = useState('Processing authentication...')
+  // Hardcoded in Bosnian - legacy callback page without translation context
+  const [message, setMessage] = useState('Obrada autentifikacije...')
 
   useEffect(() => {
     // This callback is for legacy implicit flow
     // New registrations should use /auth/confirm with PKCE flow
     if (!loading) {
       if (user) {
-        setMessage('Authentication successful! Redirecting...')
+        // Hardcoded in Bosnian - legacy callback page
+        setMessage('Autentifikacija uspješna! Preusmjeravanje...')
         router.push('/dashboard')
       } else {
-        setMessage('Authentication failed. Redirecting to sign in...')
+        // Hardcoded in Bosnian - legacy callback page
+        setMessage('Autentifikacija neuspješna. Preusmjeravanje na prijavu...')
         router.push('/auth/signin?error=auth_callback_failed')
       }
     }

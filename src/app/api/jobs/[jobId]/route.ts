@@ -52,9 +52,6 @@ export async function GET(
       .eq('id', jobId)
       .single()
 
-    console.log('Job query params:', { jobId })
-    console.log('Job query result:', { job: job ? { id: job.id, title: job.title, posted_by_id: job.posted_by_id } : null, error })
-
     if (error) {
       console.error('Error fetching job:', error)
       if (error.code === 'PGRST116') {
@@ -69,12 +66,6 @@ export async function GET(
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
-
-    console.log('Raw job data from DB:', {
-      id: job.id,
-      title: job.title,
-      posted_by_id: job.posted_by_id
-    })
 
     // Transform job to match expected structure
     const baseJob = {
@@ -129,15 +120,12 @@ export async function GET(
 
     // Fetch poster information
     if (job.posted_by_id) {
-      console.log('Attempting to fetch poster with ID:', job.posted_by_id, 'Type:', typeof job.posted_by_id)
-      
       // Use the public profile API to get user information with proper privacy handling
       try {
         const publicProfileResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/users/${job.posted_by_id}/public-profile?forJobContact=true`)
         
         if (publicProfileResponse.ok) {
           const publicProfile = await publicProfileResponse.json()
-          console.log('Public profile fetched:', publicProfile)
           
           // Use the public profile data
           const displayName = publicProfile.name || publicProfile.email || 'Unknown'
@@ -152,12 +140,6 @@ export async function GET(
           enrichedJob.company = companyName
           enrichedJob.poster_name = displayName
           enrichedJob.email = publicProfile.showEmail ? publicProfile.email : enrichedJob.contact_email
-          
-          console.log('Set enrichedJob poster info from public profile:', {
-            postedBy: enrichedJob.postedBy,
-            company: enrichedJob.company,
-            poster_name: enrichedJob.poster_name
-          })
         } else {
           console.error('Failed to fetch public profile:', publicProfileResponse.status)
           // Set fallback values
@@ -171,7 +153,6 @@ export async function GET(
         enrichedJob.poster_name = 'Unknown'
       }
     } else {
-      console.log('No posted_by_id found for job:', job.id)
       // Set fallback values when no posted_by_id
       enrichedJob.company = 'Individual'
       enrichedJob.poster_name = 'Unknown'

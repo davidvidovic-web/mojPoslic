@@ -1,31 +1,33 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useUserJobsQuery, useDeleteJobMutation, useFeatureJobMutation } from '@/hooks/queries/useJobs'
+import { useUserJobsQuery, useDeleteJobMutation, useFeatureJobMutation, useFinishJobMutation } from '@/hooks/queries/useJobs'
 import { queryKeys } from '@/lib/query-keys'
 import { useMultipleJobApplicantCounts, useUpdateApplication } from '@/hooks/use-applications'
 import { useClientApplications } from '@/hooks/use-client-applications'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
+import { useConnectionsManager } from '@/hooks/use-connections'
+import { supabase } from '@/lib/supabase'
 import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { JobEditDialog } from '@/components/core/job-edit-dialog'
 import { FeatureJobDialog } from './client/feature-job-dialog'
 import { DeleteJobDialog } from './client/delete-job-dialog'
+import { FinishJobDialog } from './client/finish-job-dialog'
 import { ClientJobsManager } from './client/client-jobs-manager'
 import { ClientApplicationsManager } from './client/client-applications-manager'
+import { ClientQuickStats } from './client/client-quick-stats'
 import { ConnectionsWidget } from './connections/connections-widget'
 import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
 import { MessagingInterface } from '@/components/messaging/messaging-interface'
-import { Briefcase, Users, History, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
-import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 import { Job } from '@/types/job'
 import { ApplicationStatus } from '@/types/application'
 export function ClientDashboard() {
@@ -46,6 +48,11 @@ export function ClientDashboard() {
   const [deletingJob, setDeletingJob] = useState<Job | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   
+  // State for finish job dialog
+  const [finishingJob, setFinishingJob] = useState<Job | null>(null)
+  const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false)
+  const [taskerInfo, setTaskerInfo] = useState<{ id: string; name: string } | null>(null)
+  
   // State for collapsible connection history
   const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
   
@@ -56,26 +63,15 @@ export function ClientDashboard() {
   const { user, session } = useSupabaseAuth()
 
   // TanStack Query hooks for job data
-  const { data: jobs = [], isLoading } = useUserJobsQuery(user?.id || '')
+  const { data: jobsData = [], isLoading } = useUserJobsQuery(user?.id || '')
+  const jobs = jobsData as unknown as Job[] // Cast to Job[] for type compatibility
   const deleteJobMutation = useDeleteJobMutation()
   const featureJobMutation = useFeatureJobMutation()
+  const finishJobMutation = useFinishJobMutation()
   const updateApplicationMutation = useUpdateApplication()
   
-  // Query for user's connection count
-  const { data: userConnections = 0 } = useQuery({
-    queryKey: ['user-connections', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return 0
-      const { data, error } = await supabase
-        .from('users')
-        .select('connections')
-        .eq('id', user.id)
-        .single()
-      if (error || !data) return 0
-      return data.connections || 0
-    },
-    enabled: !!user?.id
-  })
+  // Get user connections for feature job dialog
+  const { connections: userConnections } = useConnectionsManager()
   
   // Get real applicant counts for user's jobs
   const jobIds = jobs.map(job => job.id)
@@ -127,17 +123,24 @@ export function ClientDashboard() {
     if (!deletingJob) return
 
     try {
+      console.log('🗑️ Attempting to delete job:', deletingJob.id, deletingJob.title)
       await deleteJobMutation.mutateAsync(deletingJob.id)
       toast.success(tJobs('success.jobDeleted'))
       setIsDeleteDialogOpen(false)
       setDeletingJob(null)
     } catch (error) {
-      console.error('Error deleting job:', error)
-      toast.error(tJobs('errors.deleteError'))
+      console.error('❌ Error deleting job:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        jobId: deletingJob.id,
+        jobTitle: deletingJob.title
+      })
+      const errorMessage = error instanceof Error ? error.message : tJobs('errors.deleteError')
+      toast.error(errorMessage)
     }
   }
 
-  const handleFeatureJob = (jobId: string, _isFeatured: boolean) => {
+  const handleFeatureJob = (jobId: string) => {
     const job = jobs.find(j => j.id === jobId)
     if (!job) return
     
@@ -170,6 +173,106 @@ export function ClientDashboard() {
       console.error('Error featuring job:', error)
       const errorMessage = error instanceof Error ? error.message : tJobs('featureJobFailed')
       toast.error(errorMessage)
+    }
+  }
+
+  const handleAcceptJob = async (jobId: string) => {
+    try {
+      // Accept logic - could mark job as accepted or accept top applicant
+      console.log('Accepting job:', jobId)
+      toast.success(tJobs('success.jobAccepted') || 'Job accepted successfully')
+      // TODO: Implement actual accept logic
+    } catch (error) {
+      console.error('Error accepting job:', error)
+      toast.error(tJobs('errors.acceptError') || 'Failed to accept job')
+    }
+  }
+
+  const handleRejectJob = async (jobId: string) => {
+    try {
+      // Reject logic - could reject all pending applicants
+      console.log('Rejecting job:', jobId)
+      toast.success(tJobs('success.jobRejected') || 'Job rejected successfully')
+      // TODO: Implement actual reject logic
+    } catch (error) {
+      console.error('Error rejecting job:', error)
+      toast.error(tJobs('errors.rejectError') || 'Failed to reject job')
+    }
+  }
+
+  const handleCloseJob = async (jobId: string) => {
+    const job = jobs.find(j => j.id === jobId)
+    if (!job || !user) return
+    
+    // Fetch the tasker info from job assignments
+    try {
+      const { data: assignment, error } = await supabase
+        .from('job_assignments')
+        .select(`
+          tasker_id,
+          tasker:users!job_assignments_tasker_id_fkey (
+            id,
+            name,
+            email
+          )
+        `)
+        .eq('job_id', jobId)
+        .eq('client_id', user.id)
+        .single()
+      
+      if (error || !assignment) {
+        console.error('Error fetching tasker info:', error)
+        toast.error('Could not find the tasker for this job')
+        return
+      }
+      
+      const tasker = assignment.tasker as { id: string; name: string; email: string } | null
+      if (!tasker) {
+        toast.error('Could not find the tasker for this job')
+        return
+      }
+      
+      setTaskerInfo({
+        id: tasker.id,
+        name: tasker.name || tasker.email || 'Tasker'
+      })
+      
+      // Open finish job dialog to collect review
+      setFinishingJob(job)
+      setIsFinishDialogOpen(true)
+    } catch (error) {
+      console.error('Error preparing to finish job:', error)
+      toast.error('Failed to load job information')
+    }
+  }
+
+  const handleConfirmFinishJob = async (rating: number, comment: string, taskerId: string) => {
+    if (!finishingJob || !user) return
+
+    try {
+      console.log('🏁 Finishing job:', finishingJob.id, 'with review for tasker:', taskerId)
+      
+      // Create review and mark job as finished
+      await finishJobMutation.mutateAsync({
+        jobId: finishingJob.id,
+        taskerId,
+        reviewerId: user.id,
+        reviewerName: user.name || user.email || 'Client',
+        reviewerAvatarUrl: user.avatarUrl || undefined,
+        rating,
+        comment,
+      })
+      
+      toast.success(tJobs('success.jobFinished') || 'Job marked as finished!')
+      setIsFinishDialogOpen(false)
+      setFinishingJob(null)
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+    } catch (error) {
+      console.error('❌ Error finishing job:', error)
+      const errorMessage = error instanceof Error ? error.message : tJobs('errors.finishError')
+      toast.error(errorMessage || 'Failed to finish job')
     }
   }
 
@@ -291,22 +394,25 @@ export function ClientDashboard() {
         </div>
       }
     >
+      {/* Quick Stats - collapsed on mobile */}
+      <div className="hidden md:block mb-8">
+        <ClientQuickStats 
+          jobs={jobs} 
+          applicationCounts={applicationCounts}
+        />
+      </div>
+      
       <div className="space-y-12 lg:space-y-20">
         {/* Jobs Section */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
-                <Briefcase className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                  {tDashboard('tabs.myJobs') || 'My Jobs'}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  {tDashboard('client.jobs.description') || 'Manage your job postings and track applications'}
-                </p>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                {tDashboard('tabs.myJobs') || 'My Jobs'}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                {tDashboard('client.jobs.description') || 'Manage your job postings and track applications'}
+              </p>
             </div>
             <ClientJobsManager
               jobs={jobs}
@@ -314,6 +420,9 @@ export function ClientDashboard() {
               onEdit={handleEditJob}
               onDelete={handleDeleteJob}
               onFeature={handleFeatureJob}
+              onAccept={handleAcceptJob}
+              onReject={handleRejectJob}
+              onClose={handleCloseJob}
               onPostNewJob={openJobPostDialog}
               loading={isLoading}
             />
@@ -323,18 +432,13 @@ export function ClientDashboard() {
         {/* Applications Section */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/20 flex items-center justify-center">
-                <Users className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                  {tDashboard('tabs.applications') || 'Applications'}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  {tDashboard('client.applications.description') || 'Review and manage applications for your jobs'}
-                </p>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                {tDashboard('tabs.applications') || 'Applications'}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                {tDashboard('client.applications.description') || 'Review and manage applications for your jobs'}
+              </p>
             </div>
             <ClientApplicationsManager
               applications={allApplications}
@@ -354,14 +458,9 @@ export function ClientDashboard() {
                   variant="ghost"
                   className="w-full flex items-center justify-between p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
-                      <History className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {tDashboard('connections.fullHistory') || 'Connection History'}
-                    </h2>
-                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {tDashboard('connections.fullHistory') || 'Connection History'}
+                  </h2>
                   {isConnectionHistoryOpen ? (
                     <ChevronUp className="h-5 w-5 text-gray-500" />
                   ) : (
@@ -415,6 +514,18 @@ export function ClientDashboard() {
           onOpenChange={setIsDeleteDialogOpen}
           onConfirm={handleConfirmDeleteJob}
           jobTitle={deletingJob.title}
+        />
+      )}
+
+      {/* Finish Job Dialog */}
+      {finishingJob && taskerInfo && (
+        <FinishJobDialog
+          isOpen={isFinishDialogOpen}
+          onOpenChange={setIsFinishDialogOpen}
+          onConfirm={handleConfirmFinishJob}
+          jobTitle={finishingJob.title}
+          taskerName={taskerInfo.name}
+          taskerId={taskerInfo.id}
         />
       )}
 

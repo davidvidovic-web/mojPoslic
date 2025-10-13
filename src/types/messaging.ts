@@ -42,6 +42,7 @@ export interface Message {
   replyToMessageId?: string
   editedAt?: string
   deletedAt?: string
+  deletedByUsers?: string[] // Array of user IDs who deleted this message from their view
   createdAt: string
   updatedAt?: string
   isRead?: boolean

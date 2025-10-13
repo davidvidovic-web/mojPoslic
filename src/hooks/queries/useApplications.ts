@@ -48,7 +48,7 @@ export function useUserApplicationsQuery(userId?: string) {
           *,
           job:job_listings(
             *,
-            posted_by:users(name, company_name)
+            posted_by:users(name, company_name, avatar_url)
           )
         `)
         .eq('user_id', userId)

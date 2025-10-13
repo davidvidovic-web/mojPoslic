@@ -56,7 +56,7 @@ export function FeatureJobDialog({
               <Coins className="h-4 w-4 text-yellow-600" />
               <div className="text-sm">
                 {currentlyFeatured ? (
-                  <span>Nema troška konekcija za uklanjanje istaknutosti</span>
+                  <span>Nema troška konekcija za uklanjanje promocije</span>
                 ) : (
                   <div>
                     <div className="font-medium">Vaše konekcije: {userConnections}</div>
@@ -70,7 +70,7 @@ export function FeatureJobDialog({
             
             {hasInsufficientConnections && (
               <div className="text-destructive text-sm font-medium">
-                ⚠️ Nemate dovoljno konekcija da istaknete ovaj oglas.
+                ⚠️ Nemate dovoljno konekcija da promovirate ovaj oglas.
               </div>
             )}
           </AlertDialogDescription>

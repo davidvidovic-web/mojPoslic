@@ -436,45 +436,41 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
         </Card>
       </div>
 
-      {/* Feature Job Option - show for both creating and editing */}
-      <Card className="border-2 border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Star className="h-4 w-4 text-yellow-600" />
-            {t('review.featureYourJob')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{t('review.makeJobFeatured')}</p>
-              <p className="text-xs text-muted-foreground">
-                {t('review.featuredJobsAppear')}
-              </p>
-              {!isEditMode && (
+      {/* Feature Job Option - ONLY show when creating new jobs, NOT in edit mode */}
+      {/* Featured status should be managed through dedicated feature/unfeature actions in dashboard */}
+      {!isEditMode && (
+        <Card className="border-2 border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Star className="h-4 w-4 text-yellow-600" />
+              {t('review.featureYourJob')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t('review.makeJobFeatured')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('review.featuredJobsAppear')}
+                </p>
                 <p className="text-xs font-medium text-yellow-600 mt-1">
                   {t('review.willCostConnections', { connections: 6 })}
                 </p>
-              )}
-              {isEditMode && !formData.is_featured && (
-                <p className="text-xs font-medium text-yellow-600 mt-1">
-                  {t('review.willCostConnections', { connections: 6 })}
-                </p>
-              )}
+              </div>
+              <Switch
+                checked={formData.is_featured || false}
+                onCheckedChange={(checked) => onChange?.({ is_featured: checked })}
+              />
             </div>
-            <Switch
-              checked={formData.is_featured || false}
-              onCheckedChange={(checked) => onChange?.({ is_featured: checked })}
-            />
-          </div>
-          {formData.is_featured && (
-            <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded">
-              <Star className="h-3 w-3 inline mr-1" />
-              {t('review.willBeFeatured')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {formData.is_featured && (
+              <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded">
+                <Star className="h-3 w-3 inline mr-1" />
+                {t('review.willBeFeatured')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Error message if date/time has passed */}
       {isDateTimePassed() && (

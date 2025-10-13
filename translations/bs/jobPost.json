@@ -5,7 +5,7 @@
   "steps": {
     "basic": "Osnovne info",
     "details": "Detalji posla",
-    "salary": "Plata",
+    "salary": "Budžet",
     "contact": "Kontakt",
     "review": "Pregled"
   },
@@ -123,8 +123,8 @@
       }
     },
     "compensation": {
-      "title": "Plata i kompenzacija",
-      "salaryType": "Kako želite strukturirati platu?",
+      "title": "Budžet i kompenzacija",
+      "salaryType": "Kako želite strukturirati budžet?",
       "salaryTypes": {
         "hourly": "Satnica",
         "fixed": "Fiksna cijena",
@@ -253,7 +253,7 @@
         "description": "Osnovne informacije o poslu i zahtjevi"
       },
       "locationCompensation": {
-        "title": "Lokacija i Plata",
+        "title": "Lokacija i Budžet",
         "description": "Detalji lokacije i kompenzacije"
       },
       "review": {
@@ -291,7 +291,7 @@
     "requirements": "Zahtjevi",
     "benefits": "Prednosti",
     "transportation": "Transport",
-    "salary": "Plata"
+    "salary": "Budžet"
   },
   "review": {
     "title": "Pregledaj Svoj Oglas",
@@ -302,11 +302,11 @@
       "locationSchedule": "Lokacija i raspored",
       "contactInformation": "Kontakt informacije"
     },
-    "featureYourJob": "Istaknite Vaš Oglas",
-    "makeJobFeatured": "Učinite ovaj oglas istaknutim",
-    "featuredJobsAppear": "Istaknuti oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
+    "featureYourJob": "Promoviši Vaš Oglas",
+    "makeJobFeatured": "Učinite ovaj oglas promovisanim",
+    "featuredJobsAppear": "Promovisani oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
     "willCostConnections": "Ovo će koštati {connections} konekcija",
-    "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
+    "willBeFeatured": "Ovaj oglas će biti promovisan 7 dana",
     "readyToPost": "Spremno za Objavu",
     "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave."
   },

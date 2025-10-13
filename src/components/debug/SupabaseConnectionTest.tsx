@@ -6,8 +6,9 @@ export function SupabaseConnectionTest() {
   if (isLoading) {
     return (
       <div className="p-4 border rounded-lg">
-        <h3 className="font-semibold mb-2">🔄 Testing Supabase Connection...</h3>
-        <p className="text-sm text-muted-foreground">Loading cities from Supabase...</p>
+        {/* Hardcoded in Bosnian - debug component */}
+        <h3 className="font-semibold mb-2">🔄 Testiranje Supabase konekcije...</h3>
+        <p className="text-sm text-muted-foreground">Učitavanje gradova iz Supabase...</p>
       </div>
     )
   }

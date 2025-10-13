@@ -2,8 +2,9 @@
 
 import { Job } from '@/types/job'
 import { Button } from '@/components/ui/button'
-import { useTranslations } from 'next-intl'
-import { Plus, Edit, Star, Trash2 } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
+import { Plus, Edit, Star, Trash2, CheckCircle, XCircle, CircleCheckBig } from 'lucide-react'
+import { getJobExpirationDate, isJobExpired } from '@/lib/job-utils'
 
 interface ClientJobsManagerProps {
   jobs: Job[]
@@ -12,6 +13,9 @@ interface ClientJobsManagerProps {
   onDelete: (jobId: string) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
   onPostNewJob?: () => void
+  onAccept?: (jobId: string) => void
+  onReject?: (jobId: string) => void
+  onClose?: (jobId: string) => void
   loading?: boolean
 }
 
@@ -22,13 +26,38 @@ export function ClientJobsManager({
   onDelete, 
   onFeature,
   onPostNewJob,
+  onAccept,
+  onReject,
+  onClose,
   loading = false 
 }: ClientJobsManagerProps) {
   const t = useTranslations('dashboard.jobManagement')
+  const locale = useLocale()
+  
+  // Helper function to get localized category name
+  const getCategoryName = (job: Job) => {
+    if (locale === 'bs') {
+      return job.category_name_bs || job.category_name
+    }
+    return job.category_name_en || job.category_name
+  }
+  
+  // Helper function to get localized city name
+  const getCityName = (job: Job) => {
+    if (locale === 'bs') {
+      return job.city_name_bs || job.city_name
+    }
+    return job.city_name_en || job.city_name
+  }
+  
+  // Separate active and expired jobs
+  const activeJobsList = jobs.filter(job => !isJobExpired(job))
+  const expiredJobsList = jobs.filter(job => isJobExpired(job))
   
   // Calculate statistics
   const totalJobs = jobs.length
-  const activeJobs = jobs.filter(job => job.is_active !== false).length
+  const activeJobs = activeJobsList.length
+  const expiredJobs = expiredJobsList.length
   const totalApplications = Object.values(applicationCounts).reduce((sum, count) => sum + count, 0)
   const featuredJobs = jobs.filter(job => job.is_featured).length
 
@@ -71,10 +100,8 @@ export function ClientJobsManager({
   }
 
   const getJobStatus = (job: Job) => {
-    const now = new Date()
-    const expiresAt = job.expires_at ? new Date(job.expires_at) : null
-    
-    if (expiresAt && expiresAt < now) return t('expired')
+    // Check if job is expired based on application_deadline or 14 days from creation
+    if (isJobExpired(job)) return t('expired')
     if (!job.is_active) return t('inactive')
     return t('active')
   }
@@ -105,7 +132,7 @@ export function ClientJobsManager({
         <div>
           <h2 className="text-lg font-medium text-foreground">{t('title')}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {totalJobs} {t('totalJobs')} • {activeJobs} {t('activeJobs')} • {featuredJobs} {t('featuredJobs')} • {totalApplications} {t('applications')}
+            {totalJobs} {t('totalJobs')} • {activeJobs} {t('activeJobs')} • {expiredJobs} {t('expiredJobs')} • {featuredJobs} {t('featuredJobs')} • {totalApplications} {t('applications')}
           </p>
         </div>
         <Button 
@@ -119,21 +146,30 @@ export function ClientJobsManager({
       </div>
 
       {/* Jobs List */}
-      <div className="space-y-4">
-        {jobs.length === 0 ? (
-          <div className="text-center py-12 border border-border bg-muted/30">
-            <p className="text-muted-foreground mb-4">{t('noJobsYet')}</p>
-            <Button 
-              onClick={onPostNewJob}
-              variant="outline" 
-              className="border-input hover:bg-accent hover:text-accent-foreground"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {t('postFirstJob')}
-            </Button>
-          </div>
-        ) : (
-          jobs.map((job) => (
+      {jobs.length === 0 ? (
+        <div className="text-center py-12 border border-border bg-muted/30">
+          <p className="text-muted-foreground mb-4">{t('noJobsYet')}</p>
+          <Button 
+            onClick={onPostNewJob}
+            variant="outline" 
+            className="border-input hover:bg-accent hover:text-accent-foreground"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('postFirstJob')}
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Active Jobs Section */}
+          {activeJobsList.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
+                <h3 className="text-base font-semibold text-foreground">{t('activeJobsSection')}</h3>
+                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full">
+                  {activeJobsList.length}
+                </span>
+              </div>
+              {activeJobsList.map((job) => (
             <div key={job.id} className="border border-border bg-card p-4 space-y-3 hover:shadow-sm transition-shadow">
               {/* Job Title and Status */}
               <div className="flex justify-between items-start">
@@ -151,10 +187,10 @@ export function ClientJobsManager({
               {/* Job Details */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">{t('category')}:</span> <span className="text-foreground">{job.category_name || t('notSpecified')}</span>
+                  <span className="text-muted-foreground">{t('category')}:</span> <span className="text-foreground">{getCategoryName(job) || t('notSpecified')}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">{t('location')}:</span> <span className="text-foreground">{job.city_name || t('notSpecified')}</span>
+                  <span className="text-muted-foreground">{t('location')}:</span> <span className="text-foreground">{getCityName(job) || t('notSpecified')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">{t('salary')}:</span> <span className="text-foreground">{formatSalary(job)}</span>
@@ -166,7 +202,7 @@ export function ClientJobsManager({
                   <span className="text-muted-foreground">{t('posted')}:</span> <span className="text-foreground">{formatDate(job.created_at)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">{t('expires')}:</span> <span className="text-foreground">{formatDate(job.expires_at)}</span>
+                  <span className="text-muted-foreground">{t('expires')}:</span> <span className="text-foreground">{formatDate(getJobExpirationDate(job).toISOString())}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">{t('views')}:</span> <span className="text-foreground">{job.view_count || 0}</span>
@@ -179,10 +215,10 @@ export function ClientJobsManager({
                   onClick={() => onEdit(job)}
                   variant="outline" 
                   size="sm"
-                  className="hover:bg-accent hover:text-accent-foreground"
+                  className="hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap"
                 >
-                  <Edit className="h-4 w-4 mr-2" />
-                  {t('edit')}
+                  <Edit className="h-4 w-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">{t('edit')}</span>
                 </Button>
                 
                 {onFeature && (
@@ -190,10 +226,46 @@ export function ClientJobsManager({
                     onClick={() => onFeature(job.id, !job.is_featured)}
                     variant="outline" 
                     size="sm"
-                    className="hover:bg-accent hover:text-accent-foreground"
+                    className="hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap"
                   >
-                    <Star className="h-4 w-4 mr-2" />
-                    {job.is_featured ? t('removeFeatured') : t('makeFeatured')}
+                    <Star className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{job.is_featured ? t('removeFeatured') : t('makeFeatured')}</span>
+                  </Button>
+                )}
+                
+                {onAccept && (
+                  <Button 
+                    onClick={() => onAccept(job.id)}
+                    variant="outline" 
+                    size="sm"
+                    className="border-green-500/50 text-green-600 dark:text-green-400 dark:border-green-500/50 hover:!bg-green-500 hover:!text-white hover:!border-green-500 dark:hover:!bg-green-600 dark:hover:!text-white dark:hover:!border-green-600 transition-all duration-200 whitespace-nowrap"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{t('accept')}</span>
+                  </Button>
+                )}
+                
+                {onReject && (
+                  <Button 
+                    onClick={() => onReject(job.id)}
+                    variant="outline" 
+                    size="sm"
+                    className="border-orange-500/50 text-orange-600 dark:text-orange-400 dark:border-orange-500/50 hover:!bg-orange-500 hover:!text-white hover:!border-orange-500 dark:hover:!bg-orange-600 dark:hover:!text-white dark:hover:!border-orange-600 transition-all duration-200 whitespace-nowrap"
+                  >
+                    <XCircle className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{t('reject')}</span>
+                  </Button>
+                )}
+                
+                {onClose && (
+                  <Button 
+                    onClick={() => onClose(job.id)}
+                    variant="outline" 
+                    size="sm"
+                    className="border-emerald-500/50 text-emerald-600 dark:text-emerald-400 dark:border-emerald-500/50 hover:!bg-emerald-500 hover:!text-white hover:!border-emerald-500 dark:hover:!bg-emerald-600 dark:hover:!text-white dark:hover:!border-emerald-600 transition-all duration-200 whitespace-nowrap font-medium"
+                  >
+                    <CircleCheckBig className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{t('finishJob')}</span>
                   </Button>
                 )}
                 
@@ -201,16 +273,94 @@ export function ClientJobsManager({
                   onClick={() => onDelete(job.id)}
                   variant="outline" 
                   size="sm"
-                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors whitespace-nowrap"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {t('delete')}
+                  <Trash2 className="h-4 w-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">{t('delete')}</span>
                 </Button>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+            </div>
+          )}
+
+          {/* Expired Jobs Section */}
+          {expiredJobsList.length > 0 && (
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
+                <h3 className="text-base font-semibold text-muted-foreground">{t('expiredJobsSection')}</h3>
+                <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">
+                  {expiredJobsList.length}
+                </span>
+              </div>
+              {expiredJobsList.map((job) => (
+            <div key={job.id} className="border border-border bg-card/50 p-4 space-y-3 opacity-60 hover:opacity-80 transition-opacity">
+              {/* Job Title and Status */}
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="font-medium text-card-foreground">
+                    {job.title}
+                    {job.is_featured && <span className="ml-2 text-xs text-muted-foreground">[{t('featured')}]</span>}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('status')}: {getJobStatus(job)} • {t('applications')}: {applicationCounts[job.id] || 0}
+                  </p>
+                </div>
+              </div>
+
+              {/* Job Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t('category')}:</span> <span className="text-foreground">{getCategoryName(job) || t('notSpecified')}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('location')}:</span> <span className="text-foreground">{getCityName(job) || t('notSpecified')}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('salary')}:</span> <span className="text-foreground">{formatSalary(job)}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t('posted')}:</span> <span className="text-foreground">{formatDate(job.created_at)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('expires')}:</span> <span className="text-foreground">{formatDate(getJobExpirationDate(job).toISOString())}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('views')}:</span> <span className="text-foreground">{job.view_count || 0}</span>
+                </div>
+              </div>
+
+              {/* Job Actions - Limited for expired jobs */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+                <Button 
+                  onClick={() => onEdit(job)}
+                  variant="outline" 
+                  size="sm"
+                  className="hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap"
+                >
+                  <Edit className="h-4 w-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">{t('edit')}</span>
+                </Button>
+                
+                <Button 
+                  onClick={() => onDelete(job.id)}
+                  variant="outline" 
+                  size="sm"
+                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors whitespace-nowrap"
+                >
+                  <Trash2 className="h-4 w-4 mr-1 flex-shrink-0" />
+                  <span className="truncate">{t('delete')}</span>
+                </Button>
+              </div>
+            </div>
+          ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

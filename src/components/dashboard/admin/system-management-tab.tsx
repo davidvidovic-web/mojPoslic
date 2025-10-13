@@ -358,7 +358,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                   
                   {loadingConnections ? (
                     <div className="text-center py-8">
-                      <div className="text-muted-foreground">Loading users...</div>
+                      <div className="text-muted-foreground">{t('loadingUsers')}</div>
                     </div>
                   ) : (
                     <div className="space-y-2">

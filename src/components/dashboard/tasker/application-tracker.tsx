@@ -36,9 +36,9 @@ export function TaskerApplicationTracker() {
 
   // For now, calculate basic stats from the applications
   const stats = useMemo(() => {
-    // Exclude withdrawn applications from stats
+    // Exclude withdrawn and rejected applications from stats
     const visibleApplications = applications.filter(
-      (app) => app.status !== ApplicationStatus.WITHDRAWN
+      (app) => app.status !== ApplicationStatus.WITHDRAWN && app.status !== ApplicationStatus.REJECTED
     );
     return {
       total: visibleApplications.length,
@@ -48,9 +48,6 @@ export function TaskerApplicationTracker() {
       selected: visibleApplications.filter(
         (app) => app.status === ApplicationStatus.SELECTED
       ).length,
-      rejected: visibleApplications.filter(
-        (app) => app.status === ApplicationStatus.REJECTED
-      ).length,
     };
   }, [applications]);
 
@@ -58,17 +55,15 @@ export function TaskerApplicationTracker() {
 
   // Filter applications by status
   const filteredApplications = useMemo(() => {
-    // Exclude withdrawn applications from display
+    // Exclude withdrawn and rejected applications from display
     const filtered = applications.filter((app) => {
-      // Never show withdrawn applications
-      if (app.status === ApplicationStatus.WITHDRAWN) return false;
+      // Never show withdrawn or rejected applications
+      if (app.status === ApplicationStatus.WITHDRAWN || app.status === ApplicationStatus.REJECTED) return false;
 
       if (activeTab === "pending")
         return app.status === ApplicationStatus.PENDING;
       if (activeTab === "selected")
         return app.status === ApplicationStatus.SELECTED;
-      if (activeTab === "rejected")
-        return app.status === ApplicationStatus.REJECTED;
       return true;
     });
 
@@ -260,11 +255,10 @@ export function TaskerApplicationTracker() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
               <TabsTrigger value="selected">Selected</TabsTrigger>
-              <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-6">
@@ -316,7 +310,7 @@ export function TaskerApplicationTracker() {
                                     <div className="flex items-center gap-1">
                                       <DollarSign className="h-4 w-4" />
                                       {application.job.salary ||
-                                        `${application.job.salaryMin}${application.job.salaryMax ? `-${application.job.salaryMax}` : "+"} BAM`}
+                                        `${application.job.salaryMin}${application.job.salaryMax ? `-${application.job.salaryMax}` : ""} BAM`}
                                     </div>
                                   )}
                                 </div>

@@ -72,7 +72,7 @@ export function Providers({ children }) {
 ### Form Labels
 | Key | English | Bosnian |
 |-----|---------|---------|
-| `jobs.form.labels.salary` | Salary | Plata |
+| `jobs.form.labels.salary` | Salary | Budžet |
 | `jobs.form.labels.negotiable` | Negotiable | Po dogovoru |
 | `jobs.form.labels.performanceBonus` | Performance Bonus | Bonus za performanse |
 | `jobs.form.labels.startDate` | Start Date | Datum početka |

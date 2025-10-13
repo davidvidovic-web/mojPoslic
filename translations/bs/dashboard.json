@@ -22,7 +22,7 @@
     "jobsPosted": "Objavljenih poslova",
     "thisMonth": "Ovaj mjesec",
     "totalViews": "Ukupno pregleda",
-    "featuredJobs": "Istaknuti poslovi",
+    "featuredJobs": "Promovisani poslovi",
     "averageViews": "Prosječno pregleda",
     "responseRate": "Stopa odgovora",
     "topPerformingJob": "Najbolji posao",
@@ -128,7 +128,7 @@
     "jobs": "Učitavanje poslova..."
   },
   "jobCard": {
-    "featured": "Istaknuto",
+    "featured": "Promovisano",
     "applications": "prijava",
     "application": "prijava",
     "applicants": "kandidata",
@@ -142,7 +142,7 @@
     "startDate": "Datum početka",
     "startTime": "Vrijeme početka",
     "duration": "Trajanje",
-    "salary": "Plata",
+    "salary": "Budžet",
     "location": "Lokacija",
     "remote": "Udaljen",
     "active": "Aktivan",
@@ -155,15 +155,18 @@
   "jobManagement": {
     "title": "Upravljanje poslovima",
     "totalJobs": "ukupno",
-    "activeJobs": "aktivnih", 
-    "featuredJobs": "istaknutih",
+    "activeJobs": "aktivnih",
+    "expiredJobs": "isteklih",
+    "featuredJobs": "promovisanih",
     "applications": "prijave",
+    "activeJobsSection": "Aktivni poslovi",
+    "expiredJobsSection": "Istekli poslovi",
     "postNewJob": "Objavi novi posao",
     "postFirstJob": "Objavi svoj prvi posao",
     "noJobsYet": "Još nema objavljenih poslova",
     "category": "Kategorija",
     "location": "Lokacija",
-    "salary": "Plata",
+    "salary": "Budžet",
     "posted": "Objavljeno",
     "expires": "Ističe", 
     "views": "Pregledi",
@@ -171,13 +174,17 @@
     "notAvailable": "Nije dostupno",
     "invalidDate": "Nevažeći datum",
     "edit": "Uredi",
-    "makeFeatured": "Istakni",
-    "removeFeatured": "Ukloni isticanje",
+    "makeFeatured": "Promoviši",
+    "removeFeatured": "Ukloni promociju",
+    "accept": "Prihvati",
+    "reject": "Odbij",
+    "close": "Zatvori",
+    "finishJob": "Završi Posao",
     "delete": "Obriši",
     "active": "Aktivan",
     "inactive": "Neaktivan",
     "expired": "Istekao",
-    "featured": "ISTAKNUTO",
+    "featured": "PROMOVISANO",
     "status": "Status",
     "negotiable": "Prema dogovoru"
   },
@@ -193,6 +200,7 @@
     "pending": "Na čekanju",
     "accepted": "Prihvaćeno",
     "rejected": "Odbačeno",
+    "cancelledByClient": "Odbačeno",
     "reviewed": "Pregledano",
     "noApplications": "Još nema prijava",
     "noApplicationsTitle": "Još nema prijava",
@@ -202,6 +210,7 @@
     "appliedFor": "Prijavio se za:",
     "unknownJob": "Nepoznat posao",
     "unknownTime": "Nepoznato vrijeme",
+    "unknownCompany": "Nepoznata kompanija",
     "anonymousTasker": "Anoniman izvršilac",
     "status": "Status",
     "clearFilters": "Očisti filtere",
@@ -224,7 +233,7 @@
     "messageLabel": "Poruka",
     "withdraw": "Povuci",
     "viewJob": "Pogledaj posao",
-    "salaryLabel": "Plata",
+    "salaryLabel": "Budžet",
     "withdrawApplication": "Povuci prijavu",
     "confirmWithdraw": "Da li ste sigurni da želite povući ovu prijavu?",
     "messages": "Poruke",
@@ -274,6 +283,13 @@
       "noJobsPostedYet": "Još nema objavljenih poslova"
     },
     "stats": {
+      "totalApplications": "Sve poslate prijave",
+      "pendingApplications": "Prijave na čekanju",
+      "awaitingResponse": "Čeka odgovor klijenta",
+      "selectedApplications": "Odabrane prijave",
+      "readyToWork": "Spremno za početak rada",
+      "successRate": "Stopa uspjeha",
+      "selectionRate": "Odabrane prijave",
       "pendingReview": "{count} na čekanju pregleda",
       "shortlisted": "Na užem izboru",
       "waitingForInterview": "Čeka razgovor",
@@ -413,6 +429,12 @@
     }
   },
   "client": {
+    "stats": {
+      "avgApplications": "Prosj. prijave",
+      "perJob": "Po poslu",
+      "jobsWithApplications": "Aktivni poslovi",
+      "receivingApplications": "Primaju prijave"
+    },
     "messages": {
       "title": "Poruke",
       "unreadMessages": "Nepročitane poruke",
@@ -602,5 +624,11 @@
       "title": "Preporučeno za vas",
       "description": "Poslovi prilagođeni vašim vještinama i preferencijama"
     }
+  },
+  "jobCompletion": {
+    "markingComplete": "Označavam kao završeno...",
+    "markComplete": "Označi rad kao završen",
+    "confirming": "Potvrđujem...",
+    "confirmComplete": "Potvrdi da je rad završen"
   }
 }

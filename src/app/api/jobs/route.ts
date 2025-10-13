@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
         application_count
       `)
       .eq('is_active', true)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
 
     // Search filter - search in title and description

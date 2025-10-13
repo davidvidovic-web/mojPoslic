@@ -13,11 +13,6 @@ export async function DELETE(
     // Get auth header for token-based auth or use cookie-based auth
     const authHeader = request.headers.get('authorization')
     
-    console.log('🚫 Cancel API - Auth check:', {
-      hasAuthHeader: !!authHeader,
-      authHeaderPreview: authHeader ? authHeader.substring(0, 20) + '...' : 'none'
-    })
-    
     // Create supabase client with proper auth handling
     const supabaseAuth = authHeader 
       ? createServerClient<Database>(
@@ -41,12 +36,6 @@ export async function DELETE(
     // Get the current user
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
     
-    console.log('🚫 Cancel API - User check:', {
-      hasUser: !!user,
-      userId: user?.id,
-      authError: authError?.message
-    })
-    
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -54,28 +43,12 @@ export async function DELETE(
       )
     }
 
-    console.log('🚫 User attempting to cancel application:', {
-      userId: user.id,
-      applicationId: applicationId
-    })
-
     // First, verify the application exists and belongs to the user
-    console.log('🔍 Checking if application exists and belongs to user:', {
-      applicationId,
-      userId: user.id
-    })
-    
     const { data: existingApplication, error: fetchError } = await supabaseAuth
       .from('applications')
       .select('id, user_id, job_id, status')
       .eq('id', applicationId)
       .single()
-
-    console.log('🔍 Application fetch result:', {
-      existingApplication,
-      fetchError,
-      userOwnsApplication: existingApplication?.user_id === user.id
-    })
 
     if (fetchError) {
       console.error('❌ Failed to fetch application:', fetchError)
@@ -86,18 +59,12 @@ export async function DELETE(
     }
 
     if (!existingApplication || existingApplication.user_id !== user.id) {
-      console.error('❌ Application not found or user does not own it:', {
-        applicationId,
-        userId: user.id,
-        applicationUserId: existingApplication?.user_id
-      })
+      console.error('❌ Application not found or user does not own it')
       return NextResponse.json(
         { success: false, error: 'Application not found or access denied' },
         { status: 403 }
       )
     }
-
-    console.log('✅ Application ownership verified, proceeding with deletion...')
 
     // Create a service role client to bypass RLS for debugging
     const supabaseService = createServerClient<Database>(
@@ -111,16 +78,6 @@ export async function DELETE(
         }
       }
     )
-
-    console.log('🔍 Using service role client for deletion to bypass any RLS issues')
-
-    // Double-check that we have all the necessary data before deletion
-    console.log('🔍 Pre-deletion verification:', {
-      applicationId,
-      userId: user.id,
-      applicationExists: !!existingApplication,
-      hasServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY
-    })
 
     // Get the application to verify ownership and current status
     const { data: application, error: appError } = await supabaseAuth
@@ -145,10 +102,7 @@ export async function DELETE(
 
     // Verify user owns this application
     if (application.user_id !== user.id) {
-      console.error('❌ User does not own this application:', {
-        applicationUserId: application.user_id,
-        currentUserId: user.id
-      })
+      console.error('❌ User does not own this application')
       return NextResponse.json(
         { success: false, error: 'Unauthorized to cancel this application' },
         { status: 403 }

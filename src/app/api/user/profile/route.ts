@@ -6,7 +6,6 @@ export async function PUT(request: NextRequest) {
   try {
     // Check for Authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('Profile API PUT: Authorization header:', authHeader ? 'present' : 'missing')
     
     // Create Supabase client with request cookies and auth header
     const supabase = createServerClient<Database>(
@@ -37,7 +36,7 @@ export async function PUT(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('Profile API PUT: Auth failed:', authError)
+      console.error('Profile API PUT: Auth failed:', authError)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -185,7 +184,6 @@ export async function GET(request: NextRequest) {
   try {
     // Check for Authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('Profile API GET: Authorization header:', authHeader ? 'present' : 'missing')
     
     // Create Supabase client with request cookies and auth header
     const supabase = createServerClient<Database>(
@@ -216,7 +214,7 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('Profile API GET: Auth failed:', authError)
+      console.error('Profile API GET: Auth failed:', authError)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

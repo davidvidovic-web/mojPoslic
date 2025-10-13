@@ -8,11 +8,9 @@ export async function GET(
 ) {
   try {
     const { jobId } = await params
-    console.log('📥 Applications API called for job:', jobId)
     
     // Check for Authorization header first
     const authHeader = request.headers.get('authorization')
-    console.log('Job Applications API: Authorization header:', authHeader ? 'present' : 'missing')
     
     let user = null
     
@@ -40,7 +38,6 @@ export async function GET(
       const { data: authData, error: authError } = await supabaseWithAuth.auth.getUser()
       
       if (authError || !authData.user) {
-        console.log('Job Applications API: Auth header auth failed:', authError)
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
@@ -48,14 +45,12 @@ export async function GET(
       }
       
       user = authData.user
-      console.log('Job Applications API: Authenticated user via auth header:', user.email)
     } else {
       // Fall back to cookie-based auth
       const supabaseServer = await createServerSupabaseClient()
       const { data: authData, error: authError } = await supabaseServer.auth.getUser()
       
       if (authError || !authData.user) {
-        console.log('Job Applications API: Cookie auth failed:', authError)
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
@@ -63,11 +58,9 @@ export async function GET(
       }
       
       user = authData.user
-      console.log('Job Applications API: Authenticated user via cookies:', user.email)
     }
 
     if (!user) {
-      console.log('Job Applications API: No authenticated user found')
       return NextResponse.json(
         { success: false, error: 'Not authenticated' },
         { status: 401 }
@@ -191,28 +184,6 @@ export async function GET(
         }
       }
     }) || []
-
-    console.log('📊 Applications API result:', {
-      jobId,
-      rawCount: applications?.length || 0,
-      transformedCount: transformedApplications.length,
-      sampleRawApp: applications?.[0] ? {
-        id: applications[0].id,
-        user_id: applications[0].user_id,
-        applicant_name: applications[0].applicant_name,
-        applicant_avatar_url: applications[0].applicant_avatar_url,
-        liveUserData: applications[0].user ? {
-          name: applications[0].user.name,
-          avatar_url: applications[0].user.avatar_url
-        } : 'No live user data'
-      } : 'No applications',
-      sampleTransformedApp: transformedApplications[0] ? {
-        id: transformedApplications[0].id,
-        userId: transformedApplications[0].userId,
-        userName: transformedApplications[0].user?.name,
-        userAvatar: transformedApplications[0].user?.avatarUrl
-      } : 'No transformed applications'
-    })
 
     return NextResponse.json({
       success: true,

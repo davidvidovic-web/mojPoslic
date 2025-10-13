@@ -81,19 +81,30 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get job title and application info for conversation
+    // Get job title for conversation
     const { data: job } = await supabase
       .from('job_listings')
       .select('title')
       .eq('id', jobId)
       .single()
 
-    // Get application details to get applicant name
-    const { data: application } = await supabase
-      .from('job_applications')
-      .select('applicant_name')
-      .eq('id', applicationId)
+    // Get both client and tasker names and avatars from users table
+    const { data: clientUser } = await supabase
+      .from('users')
+      .select('full_name, username, avatar_url')
+      .eq('id', clientId)
       .single()
+
+    const { data: taskerUser } = await supabase
+      .from('users')
+      .select('full_name, username, avatar_url')
+      .eq('id', taskerId)
+      .single()
+
+    const clientName = clientUser?.full_name || clientUser?.username || 'Client'
+    const taskerName = taskerUser?.full_name || taskerUser?.username || 'Tasker'
+    const clientAvatar = clientUser?.avatar_url || null
+    const taskerAvatar = taskerUser?.avatar_url || null
 
     // Create new conversation
     const { data: newConversation, error: insertError } = await supabase
@@ -102,11 +113,11 @@ export async function POST(request: NextRequest) {
         application_id: applicationId,
         job_id: jobId,
         created_by_id: user.id,
-        title: `${application?.applicant_name || 'Applicant'} - ${job?.title || 'Job'}`,
+        title: `${taskerName} - ${job?.title || 'Job'}`,
         is_active: true,
         participant_ids: [clientId, taskerId],
-        participant_names: ['Client', 'Tasker'], // Will be updated by trigger
-        participant_avatars: [null, null] // Will be updated by trigger
+        participant_names: [clientName, taskerName],
+        participant_avatars: [clientAvatar, taskerAvatar]
       })
       .select()
       .single()

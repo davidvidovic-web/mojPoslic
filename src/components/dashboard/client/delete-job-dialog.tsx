@@ -36,20 +36,22 @@ export function DeleteJobDialog({
             <Trash2 className="h-5 w-5" />
             {t('deleteJobDialog')}
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
-            <div>{t('deleteJobDescription', { jobTitle })}</div>
-            
-            {/* Warning Section */}
-            <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-destructive">
-                <div className="font-medium mb-1">Ova akcija će trajno:</div>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Obrisati oglas za posao</li>
-                  <li>Ukloniti sve prijave</li>
-                  <li>Otkazati aktuelne razgovore</li>
-                  <li>Ova akcija se ne može poništiti</li>
-                </ul>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{t('deleteJobDescription', { jobTitle })}</p>
+              
+              {/* Warning Section */}
+              <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-destructive">
+                  <div className="font-medium mb-1">Ova akcija će trajno:</div>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Obrisati oglas za posao</li>
+                    <li>Ukloniti sve prijave</li>
+                    <li>Ova akcija se ne može poništiti</li>
+                  </ul>
+                  <p className="mt-2 text-xs">Napomena: Poruke će ostati dostupne za pregled.</p>
+                </div>
               </div>
             </div>
           </AlertDialogDescription>

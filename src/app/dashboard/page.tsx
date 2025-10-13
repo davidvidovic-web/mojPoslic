@@ -209,7 +209,8 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">
-            {translationsLoaded ? getLoadingMessage() : "Loading..."}
+            {/* Hardcoded in Bosnian - translations not yet loaded */}
+            {translationsLoaded ? getLoadingMessage() : 'Učitavanje...'}
           </p>
         </div>
       </div>

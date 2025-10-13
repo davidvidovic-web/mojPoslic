@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone }
+import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award }
  from "lucide-react"
 import { Job } from "@/types/job"
 import { toast } from "sonner"
@@ -11,7 +11,7 @@ import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
-import { formatJobType } from "@/lib/job-utils"
+import { formatJobType, getJobExpirationDate } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
@@ -226,7 +226,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t('common.status.loading')}</p>
         </div>
       </div>
     )
@@ -241,7 +241,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">{t('jobs.messages.loadingJobDetails')}</p>
         </div>
       </div>
@@ -360,7 +360,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           {formatSalary(job) && (
             <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
               <Banknote className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)} KM</span>
+              <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)}</span>
             </div>
           )}
         </div>
@@ -418,7 +418,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
         )}
 
         {/* Compensation Details */}
-        {(formatSalary(job) || user) && (
+        {(formatSalary(job) || job.performance_bonus !== undefined || user) && (
           <section>
             <h2 className="text-2xl font-bold mb-4 text-foreground">
               {t('jobs.details.compensation')}
@@ -434,6 +434,20 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                     <span className="text-sm font-medium text-muted-foreground">{t('jobs.details.salary')}</span>
                     <p className="text-lg font-semibold text-green-700 dark:text-green-400">
                       {formatSalary(job) ? `${formatSalary(job)}` : t('common.messages.notSpecified')}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {(job.performance_bonus !== undefined || user) && (
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Award className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.performanceBonus')}</span>
+                    <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                      {job.performance_bonus ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
                     </p>
                   </div>
                 </div>
@@ -513,7 +527,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               {(job.duration || job.duration_days || user) && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
                   <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    <Timer className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.duration')}</span>
@@ -521,7 +535,10 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                       <p className="text-sm font-medium text-foreground">{job.duration}</p>
                     ) : job.duration_days ? (
                       <p className="text-sm font-medium text-foreground">
-                        {job.duration_days} {job.duration_days === 1 ? t('jobs.form.labels.day') : t('jobs.form.labels.days')}
+                        {job.duration_days === 1 ? 
+                          t('jobs.form.labels.oneDay') : 
+                          t('jobs.form.labels.multipleDays', { days: job.duration_days })
+                        }
                       </p>
                     ) : (
                       <p className="text-sm font-medium text-foreground">{t('common.messages.notSpecified')}</p>
@@ -530,20 +547,103 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                 </div>
               )}
               
-              {/* Expires */}
-              {job.expires_at && (
+              {/* Application Deadline */}
+              {(job.application_deadline || user) && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
                   <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    <CalendarDays className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
-                    <p className="text-sm font-medium text-foreground">{formatDate(job.expires_at)}</p>
+                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.applicationDeadline')}</span>
+                    <p className="text-sm font-medium text-foreground">
+                      {job.application_deadline ? formatDate(job.application_deadline) : t('common.messages.notSpecified')}
+                    </p>
                   </div>
                 </div>
               )}
+              
+              {/* Expires */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
+                  <p className="text-sm font-medium text-foreground">
+                    {formatDate(getJobExpirationDate(job).toISOString())}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Transportation & Additional Details */}
+          <div className="mb-8">
+            <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.transportationAndLocation')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Transportation */}
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Car className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.transportation')}</span>
+                    <p className="text-sm font-medium text-foreground">
+                      {job.transportation === 'provided' && t('jobs.form.labels.transportationProvided')}
+                      {job.transportation === 'compensated' && (
+                        <>
+                          {t('jobs.form.labels.transportationCompensated')}
+                          {job.transportation_amount && ` (${job.transportation_amount} BAM)`}
+                        </>
+                      )}
+                      {(!job.transportation || job.transportation === 'not_provided') && t('jobs.form.labels.transportationNotProvided')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Parking */}
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <ParkingCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.parking')}</span>
+                    <p className="text-sm font-medium text-foreground">
+                      {job.has_parking ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Public Transport Info */}
+                {(job.public_transport_info || user) && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)] md:col-span-2">
+                    <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <Bus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.publicTransport')}</span>
+                      <p className="text-sm font-medium text-foreground">
+                        {job.public_transport_info || t('common.messages.notSpecified')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Urgency */}
+                {job.is_urgent && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                    <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <AlertCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.priority')}</span>
+                      <p className="text-sm font-medium text-foreground">{t('jobs.form.labels.urgent')}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
           {/* Location Group - Map Only */}
           {(job.job_address || (job.job_latitude && job.job_longitude)) && (
             <div className="mb-8">
@@ -573,6 +673,19 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                     <div>
                       <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.address')}</span>
                       <p className="text-sm font-medium text-foreground">{job.job_address}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Exact Location */}
+                {job.exact_location && job.exact_location !== job.job_address && (
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                    <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <MapPinned className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.exactLocation')}</span>
+                      <p className="text-sm font-medium text-foreground">{job.exact_location}</p>
                     </div>
                   </div>
                 )}

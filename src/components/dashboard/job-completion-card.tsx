@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +36,7 @@ interface JobCompletionCardProps {
 }
 
 export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobCompletionCardProps) {
+  const t = useTranslations('dashboard')
   const [completionNotes, setCompletionNotes] = useState('')
   const [clientNotes, setClientNotes] = useState('')
   const [loading, setLoading] = useState(false)
@@ -142,7 +144,7 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
               className="w-full"
             >
               <Flag className="h-4 w-4 mr-2" />
-              {loading ? 'Marking Complete...' : 'Mark Work as Completed'}
+              {loading ? t('jobCompletion.markingComplete') : t('jobCompletion.markComplete')}
             </Button>
           </div>
         )}
@@ -167,7 +169,7 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
               className="w-full"
             >
               <ThumbsUp className="h-4 w-4 mr-2" />
-              {loading ? 'Confirming...' : 'Confirm Work is Completed'}
+              {loading ? t('jobCompletion.confirming') : t('jobCompletion.confirmComplete')}
             </Button>
           </div>
         )}

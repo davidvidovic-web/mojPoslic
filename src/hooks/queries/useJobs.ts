@@ -51,6 +51,7 @@ export function useJobsQuery(filters: JobFilters = {}) {
           ${JOB_LISTING_COLUMNS},
           posted_by:users(name, avatar_url)
         `)
+        .eq('is_active', true)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
       // Apply filters
@@ -323,6 +324,7 @@ export function useFeaturedJobsQuery() {
           posted_by:users(name, avatar_url)
         `)
         .eq('is_featured', true)
+        .eq('is_active', true)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(10)
@@ -449,9 +451,14 @@ export function useUpdateJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: JobUpdate }) => {
-      const { data, error } = await supabase
+      // Filter out null and undefined values to match database schema
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([, value]) => value !== null && value !== undefined)
+      )
+      
+      const { data, error} = await supabase
         .from('job_listings')
-        .update(updates)
+        .update(cleanUpdates as Record<string, unknown>) // Type assertion to bypass schema mismatch
         .eq('id', id)
         .select(`
           *,
@@ -482,11 +489,47 @@ export function useDeleteJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (jobId: string) => {
+      console.log('🗑️ Attempting to delete job:', jobId)
+      
+      // Check if there are any active job assignments
+      const { data: assignments, error: assignmentsCheckError } = await supabase
+        .from('job_assignments')
+        .select('id, status')
+        .eq('job_id', jobId)
+      
+      if (assignmentsCheckError) {
+        console.error('❌ Error checking assignments:', assignmentsCheckError)
+        throw new Error('Failed to check job assignments')
+      }
+      
+      // If there are active assignments, prevent deletion
+      if (assignments && assignments.length > 0) {
+        const activeAssignments = assignments.filter(a => 
+          a.status === 'ACCEPTED' || 
+          a.status === 'WORK_COMPLETED' || 
+          a.status === 'CONFIRMED_COMPLETED'
+        )
+        if (activeAssignments.length > 0) {
+          throw new Error('This job has active work assignments. Please finish the job first before deleting it.')
+        }
+      }
+      
+      console.log('✅ No active assignments, proceeding with deletion')
+      
+      // Delete the job itself
+      // CASCADE deletes: applications, saved_jobs, job_assignments, reviews, job_search_vectors
+      // SET NULL preserves: conversations (job_id→NULL), connection_history (job_id→NULL - audit trail)
       const { error } = await supabase
         .from('job_listings')
         .delete()
         .eq('id', jobId)
-      if (error) throw error
+      
+      if (error) {
+        console.error('❌ Delete job error:', error)
+        throw new Error(error.message || 'Failed to delete job')
+      }
+      
+      console.log('✅ Job deleted successfully (conversations preserved):', jobId)
       return jobId
     },
     onSuccess: (jobId) => {
@@ -495,6 +538,153 @@ export function useDeleteJobMutation() {
       
       // Invalidate job lists
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      
+      // Invalidate applications
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      
+      // Invalidate connection history
+      queryClient.invalidateQueries({ queryKey: ['connections'] })
+    },
+    onError: (error) => {
+      console.error('❌ Delete mutation error:', error)
+    }
+  })
+}
+
+/**
+ * Hook to finish a job with review
+ * This marks the job as completed and creates a review for the tasker
+ */
+export function useFinishJobMutation() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ 
+      jobId, 
+      taskerId, 
+      reviewerId,
+      reviewerName,
+      reviewerAvatarUrl,
+      rating, 
+      comment 
+    }: { 
+      jobId: string
+      taskerId: string
+      reviewerId: string
+      reviewerName: string
+      reviewerAvatarUrl?: string
+      rating: number
+      comment?: string
+    }) => {
+      console.log('🏁 Starting finish job process for:', jobId)
+      
+      // 1. Get the job assignment
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('job_assignments')
+        .select('id, status')
+        .eq('job_id', jobId)
+        .eq('tasker_id', taskerId)
+        .single()
+      
+      if (assignmentError || !assignment) {
+        throw new Error('No assignment found for this job')
+      }
+      
+      console.log('📋 Found assignment:', assignment.id, 'with status:', assignment.status)
+      
+      // 2. Create the review
+      const { data: review, error: reviewError } = await supabase
+        .from('reviews')
+        .insert({
+          job_id: jobId,
+          reviewer_id: reviewerId,
+          reviewee_id: taskerId,
+          assignment_id: assignment.id,
+          rating,
+          comment: comment || null,
+          reviewer_name: reviewerName,
+          reviewer_avatar_url: reviewerAvatarUrl || null,
+        })
+        .select()
+        .single()
+      
+      if (reviewError) {
+        console.error('❌ Error creating review:', reviewError)
+        throw new Error('Failed to create review')
+      }
+      
+      console.log('⭐ Review created:', review.id)
+      
+      // 3. Update job assignment status to COMPLETED
+      const { error: updateAssignmentError } = await supabase
+        .from('job_assignments')
+        .update({ 
+          status: 'COMPLETED',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', assignment.id)
+      
+      if (updateAssignmentError) {
+        console.error('❌ Error updating assignment:', updateAssignmentError)
+        throw new Error('Failed to update assignment status')
+      }
+      
+      console.log('✅ Assignment marked as COMPLETED')
+      
+      // 4. Keep conversations active - users can manage their own messages
+      // Conversations remain accessible after job completion
+      console.log('💬 Conversations kept active - users can delete their own messages')
+      
+      // 5. Update job status to completed
+      const { error: jobUpdateError } = await supabase
+        .from('job_listings')
+        .update({ 
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId)
+      
+      if (jobUpdateError) {
+        console.error('❌ Error updating job status:', jobUpdateError)
+        throw new Error('Failed to update job status')
+      }
+      
+      console.log('✅ Job marked as completed')
+      
+      // 6. Create notification for tasker
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: taskerId,
+            type: 'NEW_REVIEW',
+            title: 'Job Completed - Review Received',
+            message: `The client has marked the job as completed and left you a ${rating}-star review. You can now leave your own review.`,
+            data: {
+              job_id: jobId,
+              review_id: review.id,
+              rating,
+            },
+          })
+        
+        if (notificationError) {
+          console.warn('⚠️ Warning creating notification:', notificationError)
+          // Don't throw - notification is not critical
+        } else {
+          console.log('🔔 Notification sent to tasker')
+        }
+      } catch (notifError) {
+        console.warn('⚠️ Non-critical notification error:', notifError)
+      }
+      
+      return { review, assignment }
+    },
+    onSuccess: () => {
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      queryClient.invalidateQueries({ queryKey: ['job_assignments'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all })
     },
   })
 }
@@ -522,18 +712,39 @@ export function useFeatureJobMutation() {
           throw new Error('Failed to check connection balance')
         }
 
-        if (userProfile.connections < 6) {
+        const currentConnections = userProfile.connections ?? 0
+
+        if (currentConnections < 6) {
           throw new Error('Insufficient connections. You need 6 connections to feature a job.')
         }
 
         // Deduct 6 connections
         const { error: deductError } = await supabase
           .from('users')
-          .update({ connections: userProfile.connections - 6 })
+          .update({ connections: currentConnections - 6 })
           .eq('id', user.id)
 
         if (deductError) {
           throw new Error('Failed to deduct connections')
+        }
+
+        // Create connection history entry for featuring the job
+        const { error: historyError } = await supabase
+          .from('connection_history')
+          .insert({
+            user_id: user.id,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            action: 'JOB_FEATURE' as any, // Type will be updated when database types are regenerated
+            connections_before: currentConnections,
+            connections_after: currentConnections - 6,
+            amount_changed: -6,
+            reason: 'Featured job',
+            job_id: jobId
+          })
+
+        if (historyError) {
+          console.error('Failed to create connection history entry:', historyError)
+          // Don't throw - the main operation succeeded
         }
       }
 
@@ -567,9 +778,30 @@ export function useSaveJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ userId, jobId }: { userId: string; jobId: string }) => {
+      // First, fetch the job to get required details
+      const { data: job, error: jobError } = await supabase
+        .from('job_listings')
+        .select('title, city_name, category_name, salary_min, salary_max, status, created_at')
+        .eq('id', jobId)
+        .single()
+
+      if (jobError || !job) {
+        throw new Error('Failed to fetch job details')
+      }
+
       const { data, error } = await supabase
         .from('saved_jobs')
-        .insert([{ user_id: userId, job_id: jobId }])
+        .insert({
+          user_id: userId,
+          job_id: jobId,
+          job_title: job.title,
+          job_city_name: job.city_name || 'Unknown',
+          job_category_name: job.category_name || 'Unknown',
+          job_salary_min: job.salary_min,
+          job_salary_max: job.salary_max,
+          job_status: job.status || 'active',
+          job_posted_at: job.created_at || new Date().toISOString(),
+        })
         .select()
         .single()
       if (error) throw error
@@ -602,17 +834,14 @@ export function useUnsaveJobMutation() {
 export function useJobViewMutation() {
   return useMutation({
     mutationFn: async ({ jobId, userId }: { jobId: string; userId?: string }) => {
-      const { data, error } = await supabase
-        .from('job_views')
-        .insert([{ 
-          job_id: jobId, 
-          user_id: userId || null,
-          viewed_at: new Date().toISOString()
-        }])
-        .select()
-        .single()
-      if (error) throw error
-      return data
+      // TODO: Create job_views table in database
+      // For now, just update the view_count on the job_listings table
+      const { error } = await supabase.rpc('increment_job_view_count', { job_id: jobId })
+      if (error) {
+        console.warn('Failed to increment view count:', error)
+        // Don't throw - view tracking is non-critical
+      }
+      return { jobId, userId }
     },
     // Don't need onSuccess for view tracking - it's fire and forget
   })

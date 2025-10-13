@@ -10,7 +10,7 @@ import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
-import { formatJobType, getJobTypeBadgeVariant } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, getJobExpirationDate } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
@@ -348,7 +348,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                   {formatSalary(job) && (
                     <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-[var(--radius)]">
                       <Banknote className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)} KM</span>
+                      <span className="text-sm font-medium text-green-700 dark:text-green-400">{formatSalary(job)}</span>
                     </div>
                   )}
                 </div>
@@ -423,7 +423,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                           <div>
                             <span className="text-sm font-medium text-muted-foreground">{t('jobs.details.salary')}</span>
                             <p className="text-lg font-semibold text-green-700 dark:text-green-400">
-                              {formatSalary(job) ? `${formatSalary(job)} KM` : t('common.messages.notSpecified')}
+                              {formatSalary(job) || t('common.messages.notSpecified')}
                             </p>
                           </div>
                         </div>
@@ -526,67 +526,56 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                       )}
 
                       {/* Expires */}
-                      {(job.expires_at || user) && (
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                          <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                            <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
-                            <p className="text-sm font-medium text-foreground">
-                              {job.expires_at ? formatDate(job.expires_at) : t('common.messages.notSpecified')}
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                        <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                          <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                         </div>
-                      )}
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
+                          <p className="text-sm font-medium text-foreground">
+                            {formatDate(getJobExpirationDate(job).toISOString())}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Transportation & Additional Details */}
-                  {(job.transportation || job.has_parking !== undefined || job.public_transport_info || job.is_urgent || user) && (
-                    <div className="mb-8">
-                      <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.transportationAndLocation')}</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mb-8">
+                    <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.transportationAndLocation')}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Transportation */}
-                        {(job.transportation || user) && (
-                          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                            <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                              <Car className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                            </div>
-                            <div>
-                              <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.transportation')}</span>
-                              <p className="text-sm font-medium text-foreground">
-                                {job.transportation === 'provided' && t('jobs.form.labels.transportationProvided')}
-                                {job.transportation === 'not_provided' && t('jobs.form.labels.transportationNotProvided')}
-                                {job.transportation === 'compensated' && (
-                                  <>
-                                    {t('jobs.form.labels.transportationCompensated')}
-                                    {job.transportation_amount && ` (${job.transportation_amount} KM)`}
-                                  </>
-                                )}
-                                {!job.transportation && t('common.messages.notSpecified')}
-                              </p>
-                            </div>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                          <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                            <Car className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                           </div>
-                        )}
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.transportation')}</span>
+                            <p className="text-sm font-medium text-foreground">
+                              {job.transportation === 'provided' && t('jobs.form.labels.transportationProvided')}
+                              {job.transportation === 'compensated' && (
+                                <>
+                                  {t('jobs.form.labels.transportationCompensated')}
+                                  {job.transportation_amount && ` (${job.transportation_amount} BAM)`}
+                                </>
+                              )}
+                              {(!job.transportation || job.transportation === 'not_provided') && t('jobs.form.labels.transportationNotProvided')}
+                            </p>
+                          </div>
+                        </div>
 
                         {/* Parking */}
-                        {(job.has_parking !== undefined || user) && (
-                          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                            <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                              <ParkingCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                            </div>
-                            <div>
-                              <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.parking')}</span>
-                              <p className="text-sm font-medium text-foreground">
-                                {job.has_parking !== undefined ? 
-                                  (job.has_parking ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')) :
-                                  t('common.messages.notSpecified')
-                                }
-                              </p>
-                            </div>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
+                          <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                            <ParkingCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                           </div>
-                        )}
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.parking')}</span>
+                            <p className="text-sm font-medium text-foreground">
+                              {job.has_parking ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
+                            </p>
+                          </div>
+                        </div>
 
                         {/* Public Transport Info */}
                         {(job.public_transport_info || user) && (
@@ -617,8 +606,6 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                         )}
                       </div>
                     </div>
-                  )}
-                
 
                   {/* Location Group - Map Only */}
                   {(job.job_address || (job.job_latitude && job.job_longitude)) && (
