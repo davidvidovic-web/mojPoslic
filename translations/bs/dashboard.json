@@ -508,6 +508,7 @@
   "connections": {
     "title": "Konekcije",
     "subtitle": "Upravljajte konekcijama i pregledajte istoriju transakcija",
+    "description": "Pogledajte stanje konekcija i istoriju transakcija",
     "overview": "Pregled konekcija",
     "availableConnections": "Dostupne konekcije",
     "connectionCosts": "Troškovi konekcija",

@@ -1,19 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
 import { ApplicationStatus } from '@/types/application'
 import TaskerApplicationManager from './tasker/tasker-application-manager'
 import { TaskerQuickStats } from '@/components/dashboard/tasker/tasker-quick-stats'
 import { ConnectionsWidget } from '@/components/dashboard/connections/connections-widget'
-import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useUserApplications } from '@/hooks/use-applications'
 import { useJobAcceptanceManager } from '@/hooks/useQueryManagers'
 import type { ActiveJob } from '@/hooks/use-job-acceptance'
@@ -30,9 +25,6 @@ export function TaskerDashboard() {
   
   // Translation hooks
   const tDashboard = useTranslations('dashboard')
-  
-  // State for collapsible sections
-  const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
   
   // Use Supabase hooks for user-specific data
   const { data: applications = [], isLoading: applicationsLoading } = useUserApplications(user?.id)
@@ -142,34 +134,6 @@ export function TaskerDashboard() {
               showOnlyHistorical={false}
             />
           </CardContent>
-        </Card>
-
-        {/* Collapsible Connections History Section */}
-        <Card>
-          <Collapsible open={isConnectionHistoryOpen} onOpenChange={setIsConnectionHistoryOpen}>
-            <div>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-lg"
-                >
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {tDashboard('connections.fullHistory') || 'Connection History'}
-                  </h2>
-                  {isConnectionHistoryOpen ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-6 pb-6">
-                  <ConnectionsFullHistory />
-                </div>
-              </CollapsibleContent>
-            </div>
-          </Collapsible>
         </Card>
       </div>
     </DashboardLayout>

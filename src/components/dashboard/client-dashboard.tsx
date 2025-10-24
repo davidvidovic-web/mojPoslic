@@ -18,13 +18,9 @@ import { ClientJobsManager } from './client/client-jobs-manager'
 import { ClientApplicationsManager } from './client/client-applications-manager'
 import { ClientQuickStats } from './client/client-quick-stats'
 import { ConnectionsWidget } from './connections/connections-widget'
-import { ConnectionsFullHistory } from './connections/connections-full-history'
 import { DashboardLayout } from './dashboard-layout'
 import { MessagingInterface } from '@/components/messaging/messaging-interface'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
@@ -52,9 +48,6 @@ export function ClientDashboard() {
   const [finishingJob, setFinishingJob] = useState<Job | null>(null)
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false)
   const [taskerInfo, setTaskerInfo] = useState<{ id: string; name: string } | null>(null)
-  
-  // State for collapsible connection history
-  const [isConnectionHistoryOpen, setIsConnectionHistoryOpen] = useState(false)
   
   // State for messaging
   const [messagingConversationId, setMessagingConversationId] = useState<string | null>(null)
@@ -447,34 +440,6 @@ export function ClientDashboard() {
               loading={applicationsLoading}
             />
           </CardContent>
-        </Card>
-
-        {/* Collapsible Connections History Section */}
-        <Card>
-          <Collapsible open={isConnectionHistoryOpen} onOpenChange={setIsConnectionHistoryOpen}>
-            <div>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-lg"
-                >
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {tDashboard('connections.fullHistory') || 'Connection History'}
-                  </h2>
-                  {isConnectionHistoryOpen ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-6 pb-6">
-                  <ConnectionsFullHistory />
-                </div>
-              </CollapsibleContent>
-            </div>
-          </Collapsible>
         </Card>
       </div>
 

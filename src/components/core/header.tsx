@@ -6,7 +6,8 @@ import {
   Settings,
   User,
   LayoutDashboard,
-  UserPlus
+  UserPlus,
+  Coins
 } from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
@@ -210,6 +211,15 @@ export const Header = React.memo(function Header() {
                     </Link>
 
                     <Link
+                      href="/connections"
+                      className={getMobileMenuItemClass('/connections')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <Coins className="mr-4 h-6 w-6" />
+                      {tNavigation('connections')}
+                    </Link>
+
+                    <Link
                       href="/settings"
                       className={getMobileMenuItemClass('/settings')}
                       onClick={handleCloseMobileMenu}
@@ -385,6 +395,12 @@ export const Header = React.memo(function Header() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href="/connections" className={getMenuItemClass('/connections')}>
+                              <Coins className="mr-2 h-6 w-6" />
+                              {tNavigation('connections')}
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/settings" className={getMenuItemClass('/settings')}>
                               <Settings className="mr-2 h-6 w-6" />

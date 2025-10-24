@@ -508,6 +508,7 @@
   "connections": {
     "title": "Connections",
     "subtitle": "Manage your connections and view transaction history",
+    "description": "View your connection balance and transaction history",
     "overview": "Connections Overview",
     "availableConnections": "Available connections",
     "connectionCosts": "Connection Costs",

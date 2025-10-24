@@ -137,6 +137,9 @@
     "title": "CV / Životopis",
     "upload": "Otpremi CV",
     "uploadTitle": "Otpremi CV",
+    "uploadDescription": "Otpremite vaš CV u PDF formatu (max 2MB)",
+    "selectFile": "Odaberi fajl",
+    "uploadNew": "Otpremi novi",
     "change": "Promijeni CV",
     "remove": "Ukloni CV",
     "uploading": "Otpremanje...",
@@ -151,6 +154,7 @@
       "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 2MB.",
       "uploadFailed": "Greška pri otpremanju. Molimo pokušajte ponovo.",
       "removeFailed": "Greška pri uklanjanju CV-a. Molimo pokušajte ponovo.",
+      "downloadFailed": "Greška pri preuzimanju CV-a. Molimo pokušajte ponovo.",
       "notAuthenticated": "Niste prijavljeni. Molimo prijavite se."
     }
   }

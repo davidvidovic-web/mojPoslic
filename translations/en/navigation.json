@@ -2,6 +2,7 @@
   "main": {
     "home": "Home",
     "dashboard": "Dashboard",
+    "connections": "Connections",
     "settings": "Settings",
     "profile": "Profile",
     "applications": "Applications",

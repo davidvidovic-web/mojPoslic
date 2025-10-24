@@ -51,21 +51,38 @@ export function DatePicker({
           {value ? format(value, "PPP", { locale: dateLocale }) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={value}
-          onSelect={(date) => {
-            // Prevent deselection - only call onChange if a valid date is selected
-            if (date) {
-              onChange?.(date)
-              setOpen(false)
-            }
-          }}
-          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-          initialFocus
-          locale={dateLocale}
-        />
+      <PopoverContent 
+        className="w-auto p-0 pointer-events-auto" 
+        align="start"
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking on the calendar
+          const target = e.target as HTMLElement
+          if (target.closest('[data-slot="calendar"]')) {
+            e.preventDefault()
+          }
+        }}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+        onMouseDown={(e) => {
+          e.stopPropagation()
+        }}
+      >
+        <div className="pointer-events-auto">
+          <Calendar
+            mode="single"
+            selected={value}
+            onSelect={(date) => {
+              if (date) {
+                onChange?.(date)
+                setOpen(false)
+              }
+            }}
+            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+            initialFocus
+            locale={dateLocale}
+          />
+        </div>
       </PopoverContent>
     </Popover>
   )

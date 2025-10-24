@@ -55,7 +55,6 @@ export function useConnectionsManager(): UseConnectionsManagerReturn {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10)
 
       if (historyData) {
         const formattedHistory: ConnectionHistoryItem[] = historyData.map((item) => ({
