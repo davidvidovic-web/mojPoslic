@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     
     console.log('Building Supabase query...')
     
-    // Build query
+    // Build query with timeout and retry logic
     let query = supabase
       .from('job_listings')
       .select(`
@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
+      .limit(100) // Add limit to reduce initial load
 
     // Search filter - search in title and description
     if (search && search.trim() !== '') {

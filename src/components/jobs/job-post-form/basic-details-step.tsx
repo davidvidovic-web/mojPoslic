@@ -1,3 +1,5 @@
+
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -20,6 +22,7 @@ interface BasicDetailsStepProps {
 export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDetailsStepProps) {
   const { user } = useSupabaseAuth()
   const t = useTranslations('jobPost.types')
+  const tCommon = useTranslations('common')
   const locale = useLocale()
   const { categories } = useData()
   const [selectedParentCategory, setSelectedParentCategory] = useState('')
@@ -237,7 +240,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
           <>
             <div className="space-y-2">
               <Label htmlFor="requirements" className="text-base md:text-sm">
-                {t('labels.requirements')} <span className="text-muted-foreground">(Optional)</span>
+                {t('labels.requirements')} <span className="text-muted-foreground">({tCommon('forms.optional')})</span>
               </Label>
               <SimpleRichTextEditor
                 value={formData.requirements || ''}
@@ -249,7 +252,7 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
 
             <div className="space-y-2">
               <Label htmlFor="benefits" className="text-base md:text-sm">
-                {t('labels.benefits')} <span className="text-muted-foreground">(Optional)</span>
+                {t('labels.benefits')} <span className="text-muted-foreground">({tCommon('forms.optional')})</span>
               </Label>
               <SimpleRichTextEditor
                 value={formData.benefits || ''}

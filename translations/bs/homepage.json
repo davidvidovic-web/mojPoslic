@@ -1,24 +1,24 @@
 {
   "hero": {
-    "title": "Objavite ili pronađite",
-    "subtitle": "Povežite se s prilikama koje odgovaraju vašim vještinama i vremenu",
-    "searchPlaceholder": "Pretraži poslove, kompanije ili vještine...",
-    "browseJobs": "Pregledaj poslove",
-    "postJob": "Objavi posao",
-    "badge": "Brzo • Sigurno • Jednostavno",
-    "titleHighlight": "svoje poslove",
-    "registerButton": "Registruj se besplatno"
+    "title": "Tražiš posao",
+    "subtitle": "Digitalna platforma koja povezuje poslodavce i radnike u BiH. Objavite oglase, aplicirajte na pozicije i komunicirajte direktno!",
+    "searchPlaceholder": "Pretraži oglase za posao...",
+    "browseJobs": "Pregledaj oglase",
+    "postJob": "Objavi oglas",
+    "badge": "Direktno porukovanje • Sistem konekcija • Upravljanje aplikacijama",
+    "titleHighlight": "ili tražiš radnike?",
+    "registerButton": "Registruj se"
   },
   "browseJobs": {
-    "title": "Pregledaj dostupne poslove",
-    "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i vremenu"
+    "title": "Dostupni oglasi za posao",
+    "subtitle": "Pretraži oglase po kategorijama i lokacijama, apliciraj direktno kroz platformu"
   },
   "siteStats": {
-    "title": "Statistika platforme",
-    "subtitle": "Pridružite se sa korisnicima koji već koriste našu platformu",
+    "title": "Početna faza razvoja",
+    "subtitle": "Nova platforma koja tek počinje sa radom - budite među prvima",
     "jobsPosted": "Objavljenih poslova",
     "activeUsers": "Aktivnih korisnika",
-    "successfulHires": "Uspješnih zapošljavanja",
+    "successfulHires": "Uspješnih zapošljavanja", 
     "companies": "Kompanija",
     "activeJobs": "Aktivnih poslova",
     "registeredClients": "Registriranih klijenata",
@@ -26,48 +26,45 @@
     "finishedJobs": "Završenih poslova"
   },
   "features": {
-    "title": "Zašto odabrati nas",
-    "quickHiring": "Brzo zapošljavanje",
-    "qualityCandidates": "Kvalitetni kandidati",
-    "securePlatform": "Sigurna platforma",
-    "easyManagement": "Lako upravljanje"
+    "title": "Funkcionalnosti platforme mojPoslić",
+    "quickHiring": "Objavljuj oglase za posao",
+    "qualityCandidates": "Aplikacije u realnom vremenu", 
+    "securePlatform": "Direktno komuniciranje",
+    "easyManagement": "Sistem konekcija"
   },
   "howItWorks": {
-    "title": "Kako funkcioniše",
-    "step1": "Kreiraj račun",
-    "step2": "Objavi ili pronađi poslove",
-    "step3": "Poveži se i zaposli"
+    "title": "Kako funkcioniše platforma",
+    "step1": "Registracija",
+    "step2": "Pretraži",
+    "step3": "Komuniciraj",
+    "step4": "Aplikacija"
   },
-  "testimonials": {
-    "title": "Šta kažu naši korisnici",
-    "clientTestimonial": "Pronašao sam savršenog kandidata za samo 2 dana!",
-    "taskerTestimonial": "Odlična platforma za pronalaženje kvalitetnih poslova."
-  },
+
   "cta": {
     "title": "Spremni da počnete?",
-    "subtitle": "Pridružite se hiljadama korisnika koji pronalaze svoj savršen spoj",
+    "subtitle": "Pridružite se novoj digitalnoj platformi za povezivanje poslodavaca i radnika",
     "getStarted": "Započnite",
     "learnMore": "Saznajte više"
   },
   "footer": {
-    "description": "Povežite se s prilikama koje odgovaraju vašim vještinama i aspiracijama",
+    "description": "Digitalna platforma koja povezuje poslodavce i radnike u BiH",
     "forWorkers": {
       "title": "Za radnike",
-      "findJobs": "Pronađi poslove",
-      "dailyWork": "Dnevni poslovi",
-      "hourlyJobs": "Poslovi po satu"
+      "findJobs": "Pretraži oglase",
+      "dailyWork": "Upravljaj aplikacijama",
+      "hourlyJobs": "Kreiraj profil"
     },
     "forClients": {
-      "title": "Za klijente",
-      "postJobs": "Objavi posao",
-      "findWorkers": "Pronađi radnike",
-      "free": "Besplatno"
+      "title": "Za poslodavce",
+      "postJobs": "Objavi oglas",
+      "findWorkers": "Upravljaj aplikacijama",
+      "free": "Dashboard"
     },
     "services": {
-      "title": "Usluge",
-      "jobPosting": "Objavljivanje poslova",
-      "candidateSearch": "Pretraga kandidata",
-      "hiringTools": "Alati za zapošljavanje"
+      "title": "Platformske funkcije",
+      "jobPosting": "Objavljivanje oglasa",
+      "candidateSearch": "Pretraga oglasa",
+      "hiringTools": "Sistem konekcija"
     },
     "support": {
       "title": "Podrška",

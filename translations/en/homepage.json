@@ -14,8 +14,8 @@
     "subtitle": "Discover opportunities that match your skills and preferences"
   },
   "siteStats": {
-    "title": "Platform Statistics",
-    "subtitle": "Connect with thousands of users already using our platform",
+    "title": "Early Development Phase",
+    "subtitle": "New platform just starting out - be among the first users",
     "jobsPosted": "Jobs Posted",
     "activeUsers": "Active Users",
     "successfulHires": "Successful Hires",
@@ -38,14 +38,10 @@
     "step2": "Post or Find Jobs",
     "step3": "Connect and Hire"
   },
-  "testimonials": {
-    "title": "What Our Users Say",
-    "clientTestimonial": "Found the perfect candidate in just 2 days!",
-    "taskerTestimonial": "Great platform for finding quality jobs."
-  },
+
   "cta": {
     "title": "Ready to Get Started?",
-    "subtitle": "Join thousands of users finding their perfect match",
+    "subtitle": "Join the new digital platform connecting employers and workers",
     "getStarted": "Get Started",
     "learnMore": "Learn More"
   },

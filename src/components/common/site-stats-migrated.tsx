@@ -32,28 +32,28 @@ const SiteStatsMigrated = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Briefcase className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">100+</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">0</h3>
               <p className="text-gray-600">{t('activeJobs')}</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">500+</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">0</h3>
               <p className="text-gray-600">{t('totalUsers')}</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">50+</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">0</h3>
               <p className="text-gray-600">{t('clients')}</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-orange-600" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">200+</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">0</h3>
               <p className="text-gray-600">{t('completedJobs')}</p>
             </div>
           </div>

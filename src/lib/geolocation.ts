@@ -159,40 +159,49 @@ export class GeolocationService {
           };
         }
       }
-    } catch (cityError) {
-      console.warn('City lookup error:', cityError);
-    }
-    
-    // Try to get detailed address via our proxy API first for better address formatting
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased timeout for better results
       
+      // If not near city center, find closest city for fallback context
+      let closestCity = null;
+      let closestDistance = Infinity;
+      
+      for (const [cityKey, city] of Object.entries(CITY_COORDINATES)) {
+        const distance = Math.sqrt(
+          Math.pow(city.lat - roundedLat, 2) + Math.pow(city.lng - roundedLng, 2)
+        );
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestCity = { cityKey, ...city };
+        }
+      }
+      
+      // Try to get detailed address via our proxy API first for better address formatting
       try {
-        const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased timeout for better results
         
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
+        try {
+          const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
+            signal: controller.signal,
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          });
           
-          if (data && data.display_name) {
-            const result = {
-              address: data.display_name,
-              city: data.address?.city || data.address?.town || data.address?.village,
-              cityKey: undefined as string | undefined
-            };
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            const data = await response.json();
             
-            // Try to match the found city to our city list
-            if (result.city) {
-              try {
-                const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+            if (data && data.display_name) {
+              const result = {
+                address: data.display_name,
+                city: data.address?.city || data.address?.town || data.address?.village,
+                cityKey: undefined as string | undefined
+              };
+              
+              // Try to match the found city to our city list
+              if (result.city) {
                 for (const [cityKey, cityData] of Object.entries(CITY_COORDINATES)) {
                   if (cityData.name.toLowerCase().includes(result.city.toLowerCase()) ||
                       result.city.toLowerCase().includes(cityData.name.toLowerCase())) {
@@ -200,21 +209,31 @@ export class GeolocationService {
                     break;
                   }
                 }
-              } catch (error) {
-                console.warn('City matching error:', error);
               }
+              
+              return result;
             }
-            
-            return result;
           }
+        } catch (error) {
+          console.warn('Detailed geocoding API error:', error);
+        } finally {
+          clearTimeout(timeoutId);
         }
       } catch (error) {
-        console.warn('Detailed geocoding API error:', error);
-      } finally {
-        clearTimeout(timeoutId);
+        console.error('Detailed geocoding error:', error);
       }
-    } catch (error) {
-      console.error('Detailed geocoding error:', error);
+      
+      // If geocoding failed but we have a closest city, provide context
+      if (closestCity && closestDistance <= 0.1) { // Within ~10km radius
+        return {
+          address: `Lokacija blizu ${closestCity.name}`,
+          city: closestCity.name,
+          cityKey: closestCity.cityKey
+        };
+      }
+      
+    } catch (cityError) {
+      console.warn('City lookup error:', cityError);
     }
     
     // Fallback to basic reverse geocoding
@@ -229,9 +248,9 @@ export class GeolocationService {
       console.warn('Basic reverse geocoding failed:', error);
     }
     
-    // Final fallback to coordinates
+    // Final fallback to coordinates with Bosnia context
     return {
-      address: `${roundedLat}, ${roundedLng}`
+      address: `Lokacija u BiH (${roundedLat}, ${roundedLng})`
     };
   }
 }

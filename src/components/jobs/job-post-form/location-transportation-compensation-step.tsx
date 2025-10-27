@@ -8,6 +8,7 @@ import { ScheduleSection } from './schedule-section'
 import { CompensationSection } from './compensation-section'
 import { ContactInformationSection } from './contact-information-section'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
+import { useTranslations } from 'next-intl'
 
 
 
@@ -20,13 +21,14 @@ interface LocationTransportationCompensationStepProps {
 export function LocationTransportationCompensationStep({ formData, onChange, onValidation }: LocationTransportationCompensationStepProps) {
   const { user } = useSupabaseAuth()
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
+  const t = useTranslations('common')
 
   const isCompany = user?.role === 'company'
 
   // Validation - check required fields for this step
   useEffect(() => {
     const hasBlockingLocationError = locationValidationError && 
-      locationValidationError.includes('Location Mismatch:')
+      locationValidationError.includes(t('locationPicker.locationMismatch'))
     
     // Check required fields for this step
     const cityValid = !!(formData.city_id?.trim())
@@ -44,7 +46,7 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
     
     const isValid = cityValid && startDateValid && startTimeValid && emailValid && !hasBlockingLocationError
     onValidation(isValid)
-  }, [formData.city_id, formData.start_date, formData.start_time, formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange])
+  }, [formData.city_id, formData.start_date, formData.start_time, formData.email, locationValidationError, onValidation, isCompany, user?.email, onChange, t])
 
   const handleLocationValidationChange = (error: string | null) => {
     setLocationValidationError(error)
