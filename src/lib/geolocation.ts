@@ -20,6 +20,8 @@ export const GEOLOCATION_ERRORS = {
 } as const
 
 export class GeolocationService {
+  private static _lastErrorLogged: number | null = null
+
   static isSupported(): boolean {
     return 'geolocation' in navigator
   }
@@ -52,7 +54,7 @@ export class GeolocationService {
           let message = 'Unable to retrieve your location'
           switch (error.code) {
             case GEOLOCATION_ERRORS.PERMISSION_DENIED:
-              message = 'Location access denied by user'
+              message = 'Location access denied by user or blocked by browser policy'
               break
             case GEOLOCATION_ERRORS.POSITION_UNAVAILABLE:
               message = 'Location information is unavailable'
@@ -60,6 +62,11 @@ export class GeolocationService {
             case GEOLOCATION_ERRORS.TIMEOUT:
               message = 'Location request timed out'
               break
+          }
+          // Only log the error once per session to avoid spam
+          if (!this._lastErrorLogged || this._lastErrorLogged !== error.code) {
+            console.warn('Geolocation error:', message, error);
+            this._lastErrorLogged = error.code;
           }
           reject({ code: error.code, message })
         },
@@ -128,8 +135,46 @@ export class GeolocationService {
       console.error('Geocoding error:', error);
     }
     
-    // Fallback to coordinate string if everything else fails
-    const fallbackAddress = `${roundedLat}, ${roundedLng}`;
+    // Enhanced fallback: try to estimate city based on proximity to known cities
+    try {
+      const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+      
+      // Find the closest city (within 30km for reasonable approximation)
+      let closestCity = null;
+      let minDistance = Infinity;
+      
+      for (const [, city] of Object.entries(CITY_COORDINATES)) {
+        // More accurate distance calculation using Haversine approximation
+        const latDiff = city.lat - roundedLat;
+        const lngDiff = city.lng - roundedLng;
+        
+        // Simple distance calculation in km (rough approximation for small distances)
+        const a = Math.sin(latDiff * Math.PI / 180 / 2) ** 2 + 
+                  Math.cos(roundedLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) *
+                  Math.sin(lngDiff * Math.PI / 180 / 2) ** 2;
+        const distance = 2 * 6371 * Math.asin(Math.sqrt(a)); // Distance in km
+        
+        if (distance < minDistance && distance < 30) { // 30km radius
+          minDistance = distance;
+          closestCity = city;
+        }
+      }
+      
+      if (closestCity) {
+        // If very close (within 2km), just use the city name
+        // Otherwise, show "near" the city
+        const approximateAddress = minDistance < 2 
+          ? `${closestCity.name}, Bosnia and Herzegovina`
+          : `Near ${closestCity.name}, Bosnia and Herzegovina`;
+        geocodeCache.set(roundedLat, roundedLng, approximateAddress, 'fallback');
+        return approximateAddress;
+      }
+    } catch (error) {
+      console.warn('City approximation error:', error);
+    }
+    
+    // Final fallback to coordinate string with better formatting
+    const fallbackAddress = `Location: ${roundedLat}°N, ${roundedLng}°E`;
     geocodeCache.set(roundedLat, roundedLng, fallbackAddress, 'fallback');
     return fallbackAddress;
   }
@@ -159,49 +204,40 @@ export class GeolocationService {
           };
         }
       }
+    } catch (cityError) {
+      console.warn('City lookup error:', cityError);
+    }
+    
+    // Try to get detailed address via our proxy API first for better address formatting
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased timeout for better results
       
-      // If not near city center, find closest city for fallback context
-      let closestCity = null;
-      let closestDistance = Infinity;
-      
-      for (const [cityKey, city] of Object.entries(CITY_COORDINATES)) {
-        const distance = Math.sqrt(
-          Math.pow(city.lat - roundedLat, 2) + Math.pow(city.lng - roundedLng, 2)
-        );
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestCity = { cityKey, ...city };
-        }
-      }
-      
-      // Try to get detailed address via our proxy API first for better address formatting
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased timeout for better results
+        const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
         
-        try {
-          const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
-            signal: controller.signal,
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache'
-            }
-          });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
           
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const data = await response.json();
+          if (data && data.display_name) {
+            const result = {
+              address: data.display_name,
+              city: data.address?.city || data.address?.town || data.address?.village,
+              cityKey: undefined as string | undefined
+            };
             
-            if (data && data.display_name) {
-              const result = {
-                address: data.display_name,
-                city: data.address?.city || data.address?.town || data.address?.village,
-                cityKey: undefined as string | undefined
-              };
-              
-              // Try to match the found city to our city list
-              if (result.city) {
+            // Try to match the found city to our city list
+            if (result.city) {
+              try {
+                const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
                 for (const [cityKey, cityData] of Object.entries(CITY_COORDINATES)) {
                   if (cityData.name.toLowerCase().includes(result.city.toLowerCase()) ||
                       result.city.toLowerCase().includes(cityData.name.toLowerCase())) {
@@ -209,31 +245,21 @@ export class GeolocationService {
                     break;
                   }
                 }
+              } catch (error) {
+                console.warn('City matching error:', error);
               }
-              
-              return result;
             }
+            
+            return result;
           }
-        } catch (error) {
-          console.warn('Detailed geocoding API error:', error);
-        } finally {
-          clearTimeout(timeoutId);
         }
       } catch (error) {
-        console.error('Detailed geocoding error:', error);
+        console.warn('Detailed geocoding API error:', error);
+      } finally {
+        clearTimeout(timeoutId);
       }
-      
-      // If geocoding failed but we have a closest city, provide context
-      if (closestCity && closestDistance <= 0.1) { // Within ~10km radius
-        return {
-          address: `Lokacija blizu ${closestCity.name}`,
-          city: closestCity.name,
-          cityKey: closestCity.cityKey
-        };
-      }
-      
-    } catch (cityError) {
-      console.warn('City lookup error:', cityError);
+    } catch (error) {
+      console.error('Detailed geocoding error:', error);
     }
     
     // Fallback to basic reverse geocoding
@@ -248,9 +274,50 @@ export class GeolocationService {
       console.warn('Basic reverse geocoding failed:', error);
     }
     
-    // Final fallback to coordinates with Bosnia context
+    // Enhanced fallback: try to find nearest city
+    try {
+      const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+      
+      // Find the closest city within a reasonable distance
+      let closestCity = null;
+      let minDistance = Infinity;
+      
+      for (const [cityKey, city] of Object.entries(CITY_COORDINATES)) {
+        // More accurate distance calculation using Haversine approximation
+        const latDiff = city.lat - roundedLat;
+        const lngDiff = city.lng - roundedLng;
+        
+        // Simple distance calculation in km (rough approximation for small distances)
+        const a = Math.sin(latDiff * Math.PI / 180 / 2) ** 2 + 
+                  Math.cos(roundedLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) *
+                  Math.sin(lngDiff * Math.PI / 180 / 2) ** 2;
+        const distance = 2 * 6371 * Math.asin(Math.sqrt(a)); // Distance in km
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCity = { ...city, cityKey };
+        }
+      }
+      
+      // If within 30km, provide a meaningful address
+      if (closestCity && minDistance < 30) {
+        const approximateAddress = minDistance < 2
+          ? `${closestCity.name}, Bosnia and Herzegovina` // Very close to city center
+          : `Near ${closestCity.name}, Bosnia and Herzegovina`; // Nearby
+          
+        return {
+          address: approximateAddress,
+          city: closestCity.name,
+          cityKey: closestCity.cityKey
+        };
+      }
+    } catch (error) {
+      console.warn('City approximation error in detailed geocoding:', error);
+    }
+    
+    // Final fallback - better formatted coordinates with Bosnia context
     return {
-      address: `Lokacija u BiH (${roundedLat}, ${roundedLng})`
+      address: `Location in Bosnia and Herzegovina (${roundedLat}°N, ${roundedLng}°E)`
     };
   }
 }

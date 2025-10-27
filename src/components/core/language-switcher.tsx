@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useLocale } from 'next-intl';

@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { CreateJobData } from '@/types/job'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { Lightbulb, Mail } from 'lucide-react'
-import { useTranslations } from 'next-intl'
 
 interface ContactInformationSectionProps {
   formData: CreateJobData
@@ -15,7 +14,6 @@ interface ContactInformationSectionProps {
 
 export function ContactInformationSection({ formData, onChange }: ContactInformationSectionProps) {
   const { user } = useSupabaseAuth()
-  const t = useTranslations('common')
 
   // Initialize contact email with user's email if not set
   useEffect(() => {
@@ -61,7 +59,7 @@ export function ContactInformationSection({ formData, onChange }: ContactInforma
 
           <div className="space-y-2">
             <Label htmlFor="website" className="text-base md:text-sm">
-              Company Website <span className="text-muted-foreground">({t('forms.optional')})</span>
+              Company Website <span className="text-muted-foreground">(Optional)</span>
             </Label>
             <Input
               id="website"

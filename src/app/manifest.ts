@@ -2,40 +2,42 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'mojPoslić - Platforma za posao u BiH',
-    short_name: 'mojPoslić',
-    description: 'Pronađite savršen posao ili objavite oglas za posao u Bosni i Hercegovini',
+    name: 'mojPoslić - Platforma za male poslove',
+    short_name: 'mojPoslić - Mali poslovi',
+    description: 'Brza platforma za male poslove u BiH. Majstorski radovi, dostava, čišćenje, baštenske usluge i kratki zadaci po potrebi.',
     start_url: '/',
+    id: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#ffffff',
     theme_color: '#000000',
     lang: 'bs-BA',
+    scope: '/',
     icons: [
       {
-        src: '/icon-192x192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: '/icon-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-      },
-    ],
-    categories: ['business', 'employment', 'productivity'],
-    screenshots: [
-      {
-        src: '/screenshot1.png',
-        sizes: '1280x720',
-        type: 'image/png',
-        form_factor: 'wide'
-      },
-      {
-        src: '/screenshot2.png', 
-        sizes: '750x1334',
-        type: 'image/png',
-        form_factor: 'narrow'
+        src: '/favicon.ico',
+        sizes: '16x16 32x32',
+        type: 'image/x-icon',
+        purpose: 'any'
       }
-    ]
+    ],
+    categories: ['business', 'employment', 'productivity', 'social'],
+    shortcuts: [
+      {
+        name: 'Pretraži male poslove',
+        short_name: 'Mali poslovi',
+        description: 'Pretražite dostupne male poslove u BiH',
+        url: '/jobs',
+        icons: [{ src: '/favicon.ico', sizes: '32x32' }]
+      },
+      {
+        name: 'Objavi mali posao',
+        short_name: 'Objavi',
+        description: 'Objavite novi oglas za mali posao',
+        url: '/dashboard',
+        icons: [{ src: '/favicon.ico', sizes: '32x32' }]
+      }
+    ],
+    // screenshots: [] // Removed until actual screenshots are available
   }
 }

@@ -122,7 +122,12 @@ export async function GET(
     if (job.posted_by_id) {
       // Use the public profile API to get user information with proper privacy handling
       try {
-        const publicProfileResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/users/${job.posted_by_id}/public-profile?forJobContact=true`)
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : process.env.NEXT_PUBLIC_SITE_URL 
+          || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
+        
+        const publicProfileResponse = await fetch(`${baseUrl}/api/users/${job.posted_by_id}/public-profile?forJobContact=true`)
         
         if (publicProfileResponse.ok) {
           const publicProfile = await publicProfileResponse.json()

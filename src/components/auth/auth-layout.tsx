@@ -104,7 +104,7 @@ const getAuthMessages = (locale: string = 'bs') => {
       },
       homepage: {
         footer: {
-          description: "Connect with opportunities that match your skills and aspirations",
+          description: "Platform for small jobs in Bosnia and Herzegovina",
           forWorkers: {
             title: "For Workers",
             findJobs: "Find Jobs",
@@ -242,7 +242,7 @@ const getAuthMessages = (locale: string = 'bs') => {
     },
     homepage: {
       footer: {
-        description: "Povežite se s prilikama koje odgovaraju vašim vještinama i aspiracijama",
+        description: "Platforma za male poslove u Bosni i Hercegovini",
         forWorkers: {
           title: "Za radnike",
           findJobs: "Pronađi poslove",

@@ -363,14 +363,22 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     try {
-      // Get the current locale from the URL or default to 'en'
-      const currentPath = window.location.pathname
-      const locale = currentPath.split('/')[1] || 'en'
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/${locale}/auth/reset-password`
+      // Use the API route for consistency
+      const response = await fetch('/api/auth/supabase/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       })
-      return { error }
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { error: new Error(data.error || 'Failed to send reset email') }
+      }
+
+      return { error: null }
     } catch (error) {
       console.error('Reset password error:', error)
       return { error: error as Error }

@@ -66,7 +66,10 @@ class StaticDataManager {
       if (isServer) {
         // Server-side: use API route to access filesystem data
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+          const baseUrl = process.env.VERCEL_URL 
+            ? `https://${process.env.VERCEL_URL}` 
+            : process.env.NEXT_PUBLIC_SITE_URL 
+            || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
           const response = await fetch(`${baseUrl}/api/static-data`)
           if (response.ok) {
             return await response.json()

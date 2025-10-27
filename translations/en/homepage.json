@@ -1,7 +1,7 @@
 {
   "hero": {
     "title": "Find Your Perfect Job",
-    "subtitle": "Connect with opportunities that match your skills and aspirations",
+    "subtitle": "Platform for small jobs",
     "searchPlaceholder": "Search jobs, companies, or skills...",
     "browseJobs": "Browse Jobs",
     "postJob": "Post Job",
@@ -14,8 +14,8 @@
     "subtitle": "Discover opportunities that match your skills and preferences"
   },
   "siteStats": {
-    "title": "Early Development Phase",
-    "subtitle": "New platform just starting out - be among the first users",
+    "title": "Platform Statistics",
+    "subtitle": "Connect with thousands of users already using our platform",
     "jobsPosted": "Jobs Posted",
     "activeUsers": "Active Users",
     "successfulHires": "Successful Hires",
@@ -38,15 +38,19 @@
     "step2": "Post or Find Jobs",
     "step3": "Connect and Hire"
   },
-
+  "testimonials": {
+    "title": "What Our Users Say",
+    "clientTestimonial": "Found the perfect candidate in just 2 days!",
+    "taskerTestimonial": "Great platform for finding quality jobs."
+  },
   "cta": {
     "title": "Ready to Get Started?",
-    "subtitle": "Join the new digital platform connecting employers and workers",
+    "subtitle": "Join thousands of users finding their perfect match",
     "getStarted": "Get Started",
     "learnMore": "Learn More"
   },
   "footer": {
-    "description": "Connect with opportunities that match your skills and aspirations",
+    "description": "Platform for small jobs in Bosnia and Herzegovina",
     "forWorkers": {
       "title": "For Workers",
       "findJobs": "Find Jobs",

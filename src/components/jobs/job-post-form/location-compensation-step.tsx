@@ -6,7 +6,6 @@ import { LocationSection } from './location-section'
 import { ScheduleSection } from './schedule-section'
 import { CompensationSection } from './compensation-section'
 import { ContactInformationSection } from './contact-information-section'
-import { useTranslations } from 'next-intl'
 
 interface LocationCompensationStepProps {
   formData: CreateJobData
@@ -16,19 +15,18 @@ interface LocationCompensationStepProps {
 
 export function LocationCompensationStep({ formData, onChange, onValidation }: LocationCompensationStepProps) {
   const [locationValidationError, setLocationValidationError] = useState<string | null>(null)
-  const t = useTranslations('common')
 
   // Validation - email is required, only block on high-confidence location errors, start_date and start_time are required
   useEffect(() => {
     const hasBlockingLocationError = locationValidationError && 
-      locationValidationError.includes(t('locationPicker.locationMismatch'))
+      locationValidationError.includes('Location Mismatch:')
     
     const isValid = !!(formData.email?.trim()) && 
                    !hasBlockingLocationError &&
                    !!(formData.start_date?.trim()) &&
                    !!(formData.start_time?.trim())
     onValidation(isValid)
-  }, [formData.email, formData.start_date, formData.start_time, locationValidationError, onValidation, t])
+  }, [formData.email, formData.start_date, formData.start_time, locationValidationError, onValidation])
 
   const handleLocationValidationChange = (error: string | null) => {
     setLocationValidationError(error)

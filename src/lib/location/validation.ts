@@ -19,39 +19,20 @@ export function validateLocationInCity(address: string, cityName: string): {
     return { isValid: true, confidence: 'high', details: 'No validation needed' }
   }
 
-  // Check if address is just coordinates
-  const coordinatePattern = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/
-  if (coordinatePattern.test(address.trim())) {
+  // Check if the address is just coordinates (common when geocoding fails)
+  const coordinatePattern = /^-?\d+\.?\d*,?\s*-?\d+\.?\d*$/;
+  const coordinatePatternDetailed = /^(Location:\s*)?-?\d+\.?\d*[°NS]?,?\s*-?\d+\.?\d*[°EW]?$/;
+  const coordinatePatternLocation = /^(Location in|Near).*(°N|°E).*$/;
+  
+  if (coordinatePattern.test(address.trim()) || 
+      coordinatePatternDetailed.test(address.trim()) ||
+      coordinatePatternLocation.test(address.trim())) {
     return {
-      isValid: true,
-      confidence: 'low',
-      details: `Coordinates provided instead of address. Please verify the location is in ${cityName}.`,
+      isValid: false,
+      confidence: 'high',
+      details: 'Nažalost, nismo mogli pronaći tačnu adresu za vašu lokaciju. Molimo vas da ručno unesete adresu ili pokušajte ponovno sa dugmetom "Pronađi Moju Lokaciju".',
       extractedCities: []
-    }
-  }
-
-  // Check if address contains "Lokacija blizu" (our fallback format)
-  if (address.includes('Lokacija blizu')) {
-    const cityInAddress = address.replace('Lokacija blizu ', '').trim()
-    if (cityInAddress.toLowerCase().includes(cityName.toLowerCase()) || 
-        cityName.toLowerCase().includes(cityInAddress.toLowerCase())) {
-      return {
-        isValid: true,
-        confidence: 'medium',
-        details: `Location near ${cityName} confirmed.`,
-        extractedCities: [cityInAddress]
-      }
-    }
-  }
-
-  // Check if address contains "Lokacija u BiH" (our coordinate fallback)
-  if (address.includes('Lokacija u BiH')) {
-    return {
-      isValid: true,
-      confidence: 'low',
-      details: `Location in Bosnia and Herzegovina. Please verify it's in ${cityName}.`,
-      extractedCities: []
-    }
+    };
   }
 
   // Clean and normalize the address
@@ -140,7 +121,7 @@ export function validateLocationInCity(address: string, cityName: string): {
       return {
         isValid: false,
         confidence: 'high',
-        details: `Neusklađenost lokacije otkrivena. Odabrana adresa se čini da je u "${otherCities[0]}" ali ste odabrali "${cityName}". Ove lokacije ne izgledaju blizu jedna drugoj.`,
+        details: `Location mismatch detected. The selected address appears to be in "${otherCities[0]}" but you have selected "${cityName}". These locations don't seem to be close to one another.`,
         extractedCities
       }
     }
@@ -170,7 +151,7 @@ export function validateLocationInCity(address: string, cityName: string): {
       return {
         isValid: false,
         confidence: 'medium',
-        details: `Molimo unesite specifičniju adresu u okviru ${cityName}a. Trenutna adresa označava samo nivo države.`,
+        details: `Please provide a more specific address within ${cityName}. The current address only indicates the country level.`,
         extractedCities
       }
     }
@@ -180,7 +161,7 @@ export function validateLocationInCity(address: string, cityName: string): {
     return {
       isValid: false,
       confidence: 'medium',
-      details: `Adresa se čini da je u Bosni ali ne označava jasno "${cityName}". Molimo provjerite da se specifična lokacija poklapa s odabranim gradom.`,
+      details: `Address appears to be in Bosnia but doesn't clearly indicate "${cityName}". Please verify the specific location matches your selected city.`,
       extractedCities
     }
   }
@@ -188,7 +169,7 @@ export function validateLocationInCity(address: string, cityName: string): {
   return {
     isValid: false,
     confidence: 'high',
-    details: `Adresa "${cleanedAddress}" se ne čini da je u ${cityName}u. Molimo provjerite da se lokacija poklapa s odabranim gradom.`,
+    details: `Address "${cleanedAddress}" does not appear to be in "${cityName}". Please verify the location matches your selected city.`,
     extractedCities
   }
 }

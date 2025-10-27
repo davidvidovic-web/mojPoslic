@@ -1,0 +1,59 @@
+# Robot exclusion file for mojPoslić
+# https://mojposlic.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Allow indexing of main pages
+Allow: /jobs
+Allow: /jobs/*
+Allow: /api/static/*
+
+# Disallow private and admin areas
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
+Disallow: /auth/
+Disallow: /_next/
+Disallow: /profile-setup
+Disallow: /role-selection
+Disallow: /settings
+Disallow: /messaging
+Disallow: /connections
+Disallow: /test-*
+
+# Allow API endpoints that should be indexed
+Allow: /api/static/cities
+Allow: /api/static/categories
+
+# Crawl delay (be respectful)
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://mojposlic.com/sitemap.xml
+Sitemap: https://en.mojposlic.com/sitemap.xml
+
+# Major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 1

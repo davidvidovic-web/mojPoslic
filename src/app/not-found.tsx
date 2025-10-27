@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Home, Search, ArrowLeft } from 'lucide-react';
+import { BackButton } from '@/components/common/back-button';
+import { Home, Search } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Stranica nije pronađena - 404 | mojPoslić',
@@ -41,15 +42,8 @@ export default function NotFound() {
               </Button>
             </Link>
             
-            <Button
-              variant="ghost" 
-              size="lg"
-              onClick={() => window.history.back()}
-              className="w-full sm:w-auto"
-            >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Vrati se nazad
-            </Button>
+            <BackButton />
+            
           </div>
 
           {/* Popular Links */}

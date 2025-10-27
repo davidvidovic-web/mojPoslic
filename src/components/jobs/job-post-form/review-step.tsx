@@ -477,12 +477,12 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
       {isDateTimePassed() && (
         <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-[var(--radius)]">
           <h4 className="text-sm font-medium mb-2 text-destructive flex items-center gap-1">
-            ⚠️ {tCommon('validation.cannotSubmitJob')}
+            ⚠️ Cannot Submit Job
           </h4>
           <p className="text-xs text-destructive">
             {formData.start_time 
-              ? tCommon('validation.pastDateTimeError')
-              : tCommon('validation.pastDateError')
+              ? 'The start date and time you selected has already passed. Please go back and choose a future date and time.'
+              : 'The start date you selected has already passed. Please go back and choose a future date.'
             }
           </p>
         </div>

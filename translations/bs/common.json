@@ -194,10 +194,7 @@
     "minLength": "Mora biti najmanje {min} karaktera",
     "maxLength": "Ne smije biti više od {max} karaktera",
     "passwordMatch": "Lozinke se moraju poklapati",
-    "invalidFormat": "Neispravan format",
-    "cannotSubmitJob": "Ne mogu poslati posao",
-    "pastDateTimeError": "Datum i vrijeme početka koje ste odabrali je već prošlo. Molimo vratite se i odaberite budući datum i vrijeme.",
-    "pastDateError": "Datum početka koji ste odabrali je već prošao. Molimo vratite se i odaberite budući datum."
+    "invalidFormat": "Neispravan format"
   },
   "locationPicker": {
     "helpText": "Kliknite na mapu da postavite tačnu lokaciju",
@@ -205,6 +202,7 @@
     "findingLocation": "Pronalažim...",
     "locationError": "Nije moguće dobiti vašu lokaciju",
     "locationPermissionDenied": "Pristup lokaciji odbačen",
+    "locationPermissionMessage": "Da biste koristili ovu funkciju, molimo dozvolite pristup lokaciji u vašem pregledniku. Možete to učiniti klikom na ikonu lokacije u adresnoj traci ili odlaskom u postavke pregljednika.",
     "outsideBosniaWarning": "Trenutno radimo samo u Bosni i Hercegovini",
     "cityMismatchTitle": "Otkrivena drugačija lokacija",
     "cityMismatchMessage": "Izgleda da ste daleko od odabranog grada ({selectedCity}). Vaša trenutna lokacija je u {currentCity}. Da li ste sigurni da želite koristiti trenutnu lokaciju?",
@@ -215,16 +213,7 @@
     "understood": "Razumijem",
     "noResults": "Nema pronađenih lokacija za vašu pretragu",
     "searchError": "Nije moguće pretražiti lokaciju. Molimo pokušajte ponovo.",
-    "coordinatesOnly": "Prikazane su samo koordinate",
-    "verifyLocation": "Molimo provjerite da li je lokacija tačna",
-    "locationMismatch": "Neusklađenost lokacije",
-    "possibleLocationIssue": "Mogući problem s lokacijom",
-    "pleaseVerify": "Molimo provjerite",
-    "citiesDetected": "Otkriveni gradovi u adresi",
-    "detected": "Otkriveno",
-    "locationValidationError": "Greška validacije lokacije",
-    "locationWarning": "Upozorenje o lokaciji",
-    "canProceedWarning": "Možete nastaviti, ali provjerite da li je lokacija tačna"
+    "geocodingFailed": "Nismo mogli pronaći tačnu adresu za vašu lokaciju. Molimo ručno unesite adresu."
   },
   "general": {
     "yes": "Da",

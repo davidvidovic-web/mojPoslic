@@ -318,8 +318,27 @@ export function LocationPicker({
       
       // No conflicts, proceed with location update
       await performLocationUpdate(latitude, longitude);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting current location:', error);
+      
+      // Show user-friendly error message based on error code
+      let errorMessage = t('locationPicker.locationError');
+      const geolocationError = error as { code?: number; message?: string };
+      if (geolocationError?.code === 1) { // PERMISSION_DENIED
+        errorMessage = t('locationPicker.locationPermissionDenied');
+        // Show a more helpful message for permission denied
+        showConfirmation({
+          title: t('locationPicker.locationPermissionDenied'),
+          message: t('locationPicker.locationPermissionMessage'),
+          confirmText: t('general.ok'),
+          cancelText: null
+        }, () => {
+          // User acknowledged
+        });
+      } else {
+        // For other errors, show a simple toast
+        setLocationWarning(errorMessage);
+      }
     } finally {
       setIsGettingLocation(false);
     }
@@ -364,14 +383,59 @@ export function LocationPicker({
       onChange?.(location, isConfirmedCrossCity);
     } catch (error) {
       console.error('Reverse geocoding error:', error);
-      // Fallback to coordinates when reverse geocoding fails
+      
+      // Show user-friendly error message instead of raw coordinates
+      setLocationWarning(t('locationPicker.geocodingFailed'));
+      
+      // Try to find at least the nearest city for a better fallback
+      try {
+        // Import city coordinates to find nearest city
+        const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+        
+        let closestCity = null;
+        let minDistance = Infinity;
+        
+        for (const [cityKey, city] of Object.entries(CITY_COORDINATES)) {
+          const latDiff = Math.abs(city.lat - lat);
+          const lngDiff = Math.abs(city.lng - lng);
+          const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestCity = { ...city, cityKey };
+          }
+        }
+        
+        // If within reasonable distance (~50km), use city-based address
+        if (closestCity && minDistance < 0.5) {
+          const fallbackLocation: LocationData = {
+            address: minDistance < 0.05 
+              ? closestCity.name 
+              : `Near ${closestCity.name}, Bosnia and Herzegovina`,
+            latitude: lat,
+            longitude: lng,
+            city: closestCity.name,
+            cityKey: closestCity.cityKey,
+            country: "Bosnia and Herzegovina"
+          };
+          
+          setSearchQuery(fallbackLocation.address);
+          onChange?.(fallbackLocation, isConfirmedCrossCity);
+          return;
+        }
+      } catch (cityError) {
+        console.warn('City fallback error:', cityError);
+      }
+      
+      // Final fallback with better formatting
       const fallbackLocation: LocationData = {
-        address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        address: `Location in Bosnia and Herzegovina`,
         latitude: lat,
-        longitude: lng
+        longitude: lng,
+        country: "Bosnia and Herzegovina"
       };
-      // Update search query immediately for internal updates
-      setSearchQuery(fallbackLocation.address)
+      
+      setSearchQuery(fallbackLocation.address);
       onChange?.(fallbackLocation, isConfirmedCrossCity);
     }
   }, [onChange, t, isInBosniaHerzegovina]) // Dependencies: onChange callback, translations, and boundary check

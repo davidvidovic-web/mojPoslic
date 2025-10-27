@@ -90,10 +90,16 @@ export async function POST(request: Request) {
     }
 
     // Load static data to validate that the keys exist
-    const citiesResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/static/cities.json`)
+    // Use relative paths to avoid localhost issues on Vercel
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_SITE_URL 
+      || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
+    
+    const citiesResponse = await fetch(`${baseUrl}/static/cities.json`)
     const citiesData = await citiesResponse.json()
     
-    const categoriesResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/static/categories.json`)
+    const categoriesResponse = await fetch(`${baseUrl}/static/categories.json`)
     const categoriesData = await categoriesResponse.json()
 
     // Validate the city and category keys exist in static data
