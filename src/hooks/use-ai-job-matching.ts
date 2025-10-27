@@ -113,7 +113,7 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('saved_jobs')
         .upsert({
           user_id: user.id,
@@ -143,7 +143,7 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('applications')
         .insert({
           job_id: jobId,
@@ -177,7 +177,7 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
-      await supabase
+      await (supabase as any)
         .from('job_views')
         .insert({
           job_id: jobId,
@@ -254,7 +254,7 @@ export function useAIJobMatching({
           .single()
 
         if (userProfile) {
-          const userSkills = userProfile.skills?.split(',') || []
+          const userSkills = (typeof userProfile.skills === 'string' ? (userProfile.skills as string).split(',') : userProfile.skills) || []
           const jobTypes = userProfile.preferred_job_types?.split(',') || []
 
           setCriteria({

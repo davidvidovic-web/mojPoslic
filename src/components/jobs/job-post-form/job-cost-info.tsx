@@ -21,8 +21,8 @@ export function JobCostInfo({ className = '' }: JobCostInfoProps) {
   // Calculate cost info using the utility function
   const costInfo = todayCount !== undefined ? {
     count: todayCount,
-    willCostConnections: getJobPostingCost(todayCount) > 0,
-    connectionCost: getJobPostingCost(todayCount)
+    willCostConnections: getJobPostingCost(String(todayCount)) > 0,
+    connectionCost: getJobPostingCost(String(todayCount))
   } : null
 
   if (loading || !costInfo) {

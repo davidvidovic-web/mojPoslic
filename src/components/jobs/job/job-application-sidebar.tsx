@@ -39,7 +39,7 @@ export function JobApplicationSidebar({ job, user, handleApply, showAboutSection
                 {t('ownerMessage')}
               </p>
             </div>
-          ) : user?.role === 'client' ? (
+          ) : (user as any)?.role === 'client' ? (
             <div className="text-center py-4">
               <p className="text-sm text-muted-foreground">
                 {t('clientCannotApply')}

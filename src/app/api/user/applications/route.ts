@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     }
 
     // Transform the data to match expected frontend format with enhanced data
-    const transformedApplications = (applications || []).map(app => ({
+    const transformedApplications = (applications || []).map((app: any) => ({
       id: app.id,
       status: app.status,
       appliedAt: app.applied_at,

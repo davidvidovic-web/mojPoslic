@@ -38,8 +38,11 @@ export async function POST(request: NextRequest) {
     const { reason } = body
 
     // Check if there's already a pending deletion request
-    const { data: existingRequest } = await supabase
-      .from('user_deletion_requests')
+    // supabase types can cause deep instantiation errors in TS here; cast to any as a narrow mitigation
+    const sb = supabase as any
+
+    const { data: existingRequest } = await sb
+      .from('account_deletion_requests')
       .select('id')
       .eq('user_id', user.id)
       .eq('status', 'pending')
@@ -57,8 +60,8 @@ export async function POST(request: NextRequest) {
     scheduledDeletion.setDate(scheduledDeletion.getDate() + 30)
 
     // Create deletion request
-    const { data: deletionRequest, error: insertError } = await supabase
-      .from('user_deletion_requests')
+    const { data: deletionRequest, error: insertError } = await sb
+      .from('account_deletion_requests')
       .insert({
         user_id: user.id,
         scheduled_deletion: scheduledDeletion.toISOString(),
@@ -123,8 +126,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Cancel the deletion request
-    const { error: updateError } = await supabase
-      .from('user_deletion_requests')
+    // Cast to any (sb) to avoid deep type-instantiation errors while migrating types
+    const sb = supabase as any
+
+    const { error: updateError } = await sb
+      .from('account_deletion_requests')
       .update({
         status: 'cancelled',
         cancelled_at: new Date().toISOString()

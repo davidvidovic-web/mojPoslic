@@ -112,7 +112,7 @@ async function toggleSavedJob(userId: string, jobId: string): Promise<boolean> {
     return false
   } else {
     // Add to saved jobs
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('saved_jobs')
       .insert({
         user_id: userId,

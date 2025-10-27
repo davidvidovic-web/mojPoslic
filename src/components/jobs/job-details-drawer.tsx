@@ -415,7 +415,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                 )}
 
                 {/* Compensation Details */}
-                {(formatSalary(job) || job.performance_bonus || user) && (
+                {(formatSalary(job) || (job as any).performance_bonus || user) && (
                   <section>
                     <h2 className="text-2xl font-bold mb-4 text-foreground">
                       {t('jobs.details.compensation')}
@@ -436,7 +436,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                         </div>
                       )}
                       
-                      {(job.performance_bonus !== undefined || user) && (
+                      {((job as any).performance_bonus !== undefined || user) && (
                         <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
                           <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                             <Award className="h-4 w-4 text-gray-600 dark:text-gray-400" />
@@ -444,7 +444,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                           <div>
                             <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.performanceBonus')}</span>
                             <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                              {job.performance_bonus ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
+                              {(job as any).performance_bonus ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
                             </p>
                           </div>
                         </div>

@@ -271,7 +271,7 @@ export function ClientDashboard() {
       
       await updateApplicationMutation.mutateAsync({
         applicationId,
-        updates: { status: applicationStatus }
+        updates: { status: applicationStatus as any }
       })
       toast.success(t('applications.statusUpdated') || 'Application status updated successfully')
     } catch (error) {

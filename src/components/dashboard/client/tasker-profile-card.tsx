@@ -43,9 +43,9 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
     
     // Handle array format (modern)
     if (Array.isArray(skills)) {
-      return skills.map(skill => {
+      return (skills.filter(skill => skill !== null && skill !== undefined) as any[]).map(skill => {
         // Handle object format: {skill: "name", experienceLevel: "..."}
-        if (typeof skill === 'object' && skill !== null && 'skill' in skill) {
+        if (typeof skill === 'object' && 'skill' in skill) {
           return (skill as { skill: string; experienceLevel?: string }).skill
         }
         // Handle simple string format

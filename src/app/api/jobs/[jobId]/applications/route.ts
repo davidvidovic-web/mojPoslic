@@ -68,7 +68,7 @@ export async function GET(
     }
 
     // Create the appropriate supabase client for database operations
-    const supabase = authHeader 
+    const supabase: any = authHeader 
       ? await (async () => {
           const { createServerClient } = await import('@supabase/ssr')
           return createServerClient<Database>(
@@ -142,7 +142,7 @@ export async function GET(
     }
 
     // Fetch user details separately to bypass potential RLS issues with joins
-    const userIds = [...new Set(applications?.map(app => app.user_id).filter(Boolean))] || []
+    const userIds = [...new Set(applications?.map(app => app.user_id).filter(Boolean))] as string[]
     const usersMap = new Map()
     
     
@@ -162,7 +162,7 @@ export async function GET(
       
       const { data: usersData, error: usersError } = await supabaseAdmin
         .from('users')
-        .select('id, name, email, avatar_url, bio, location, skills, experience, average_rating, total_reviews')
+        .select('id, name, email, avatar_url, bio, location, skills, experience')
         .in('id', userIds)
       
       if (!usersError && usersData) {

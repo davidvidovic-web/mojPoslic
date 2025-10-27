@@ -15,8 +15,8 @@ export { MessagingButton } from './messaging-button'
 export { RealtimeChat } from './realtime-chat'
 export { ChatMessageItem } from './chat-message'
 
-// Legacy hooks (deprecated)
-export { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
+// Legacy hooks (deprecated) - commented out missing hook
+// export { useOptimizedMessaging } from '@/hooks/use-optimized-messaging'
 export { useRealtimeChat } from '@/hooks/use-realtime-chat'
 
 // Types

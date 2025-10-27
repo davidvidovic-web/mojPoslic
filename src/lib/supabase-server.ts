@@ -154,11 +154,11 @@ export const requireAuth = async () => {
 export const checkUserRole = async (requiredRole: 'admin' | 'business_owner' | 'client') => {
   const user = await getCurrentUser()
   
-  if (!user?.userData) {
+  if (!(user as any)?.userData) {
     throw new Error('Authentication required')
   }
   
-  if (user.userData.role !== requiredRole && user.userData.role !== 'admin') {
+  if ((user as any).userData.role !== requiredRole && (user as any).userData.role !== 'admin') {
     throw new Error('Insufficient permissions')
   }
   

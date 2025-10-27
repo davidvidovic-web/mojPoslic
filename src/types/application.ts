@@ -9,7 +9,8 @@ export enum ApplicationStatus {
   SHORTLISTED = 'SHORTLISTED',
   SELECTED = 'SELECTED',
   REJECTED = 'REJECTED',
-  WITHDRAWN = 'WITHDRAWN'
+  WITHDRAWN = 'WITHDRAWN',
+  INTERVIEW_SCHEDULED = 'INTERVIEW_SCHEDULED'
 }
 
 export enum ContractStatus {
@@ -83,48 +84,60 @@ export interface JobAssignment {
 // Legacy interface for backward compatibility (will be removed)
 export interface JobApplication {
   id: string
-  jobId: string
-  userId: string
+  // Support both legacy camelCase and new snake_case shapes
+  jobId?: string
+  job_id?: string
+  userId?: string
+  user_id?: string
   status: ApplicationStatus
   message?: string // Cover letter/application message
   resume?: string // Resume URL/file path
   clientNotes?: string // Private client notes
   feedback?: string // Client feedback to applicant
-  appliedAt: Date
+  appliedAt?: Date
+  applied_at?: string | Date
   reviewedAt?: Date
   shortlistedAt?: Date
   selectedAt?: Date
   rejectedAt?: Date
   withdrawnAt?: Date
-  createdAt: Date
-  updatedAt: Date
+  createdAt?: Date
+  created_at?: string | Date
+  updatedAt?: Date
+  updated_at?: string | Date
   
   // Relations
   job?: {
-    id: string
-    title: string
-    company: string
-    type: string
+    id?: string
+    title?: string
+    company?: string
+    // support both type and job_type
+    type?: string
+    job_type?: string
     city?: {
-      id: string
-      nameEN: string
-      nameBS: string
+      id?: string
+      nameEN?: string
+      nameBS?: string
     }
     category?: {
-      id: string
-      nameEN: string
-      nameBS: string
+      id?: string
+      nameEN?: string
+      nameBS?: string
     }
+    // support both salary fields and variants
     salary?: string
     salaryMin?: number
+    salary_min?: number
     salaryMax?: number
+    salary_max?: number
   }
   
   user?: {
-    id: string
-    name: string
-    email: string
+    id?: string
+    name?: string
+    email?: string
     avatarUrl?: string
+    avatar_url?: string
     bio?: string
     skills?: string | string[] // Can be array (from DB) or string (legacy)
     experience?: string

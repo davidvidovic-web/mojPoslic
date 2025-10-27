@@ -4,13 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TrendingUp, Clock, Briefcase, XCircle, Search } from 'lucide-react'
-import { JobApplication, ApplicationStatus } from '@/types/application'
-import { formatClientName } from '@/lib/job-utils'
+import { ApplicationStatus } from '@/types/application'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
 interface ApplicationsSectionProps {
-  applications: JobApplication[]
+  applications: Array<{
+    id: string
+    status: string
+    applied_at: string
+    job?: {
+      id: string
+      title: string
+      job_type?: string
+      posted_by?: { name: string }
+    } | null
+    [key: string]: unknown
+  }>
 }
 
 export function ApplicationsSection({ applications }: ApplicationsSectionProps) {
@@ -53,7 +63,7 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
     app.status === ApplicationStatus.PENDING || app.status === ApplicationStatus.REVIEWED || app.status === ApplicationStatus.SELECTED
   )
 
-  const renderApplicationList = (apps: JobApplication[]) => {
+  const renderApplicationList = (apps: ApplicationsSectionProps['applications']) => {
     if (apps.length === 0) {
       return (
         <div className="text-center py-8">
@@ -79,30 +89,22 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <h4 className="font-semibold flex items-center gap-2">
-                  {getStatusIcon(application.status)}
+                  {getStatusIcon(application.status as any)}
                   {application.job?.title || 'Job Title Not Available'}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {application.job?.company ? formatClientName(application.job.company) : 'Company Not Available'}
+                  {application.job?.posted_by?.name || 'Company Not Available'}
                 </p>
-                {application.job?.city && (
-                  <p className="text-xs text-muted-foreground">
-                    {application.job.city.nameEN || application.job.city.nameBS || 'City Not Available'}
-                  </p>
-                )}
               </div>
-              <Badge className={`${getStatusColor(application.status)} rounded-full px-2 py-1 text-xs font-medium`}>
-                {getStatusLabel(application.status)}
+              <Badge className={`${getStatusColor(application.status as any)} rounded-full px-2 py-1 text-xs font-medium`}>
+                {getStatusLabel(application.status as any)}
               </Badge>
             </div>
             <div className="flex justify-between items-center text-xs text-muted-foreground">
-              <span>{t('dashboard.tasker.applications.applied')} {formatDate(application.appliedAt)}</span>
-              {application.job && (application.job.salaryMin || application.job.salary) && (
+              <span>{t('dashboard.tasker.applications.applied')} {formatDate(new Date(application.applied_at))}</span>
+              {(application.job as any)?.salary_min && (
                 <span className="text-foreground font-medium">
-                  {application.job.salary || 
-                   (application.job.salaryMin && application.job.salaryMax 
-                     ? `${application.job.salaryMin}-${application.job.salaryMax} BAM`
-                     : `${application.job.salaryMin} BAM`)}
+                  {`${(application.job as any).salary_min}${(application.job as any).salary_max ? `-${(application.job as any).salary_max}` : ''} BAM`}
                 </span>
               )}
             </div>

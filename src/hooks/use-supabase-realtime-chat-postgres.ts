@@ -112,14 +112,14 @@ export function useSupabaseRealtimeChat({
       if (fetchError) throw fetchError
 
       // Update each message to add current user to deleted_by_users
-      for (const message of messages || []) {
+      for (const message of (messages || []) as any[]) {
         const deletedBy = message.deleted_by_users || []
         if (!deletedBy.includes(user.id)) {
           deletedBy.push(user.id)
           
           await supabase
             .from('messages')
-            .update({ deleted_by_users: deletedBy })
+            .update({ deleted_by_users: deletedBy } as any)
             .eq('id', message.id)
         }
       }
@@ -148,13 +148,13 @@ export function useSupabaseRealtimeChat({
 
       if (fetchError) throw fetchError
 
-      const hiddenFor = conversation?.hidden_for_users || []
+      const hiddenFor = (conversation as any)?.hidden_for_users || []
       if (!hiddenFor.includes(user.id)) {
         hiddenFor.push(user.id)
         
         const { error: updateError } = await supabase
           .from('conversations')
-          .update({ hidden_for_users: hiddenFor })
+          .update({ hidden_for_users: hiddenFor } as any)
           .eq('id', conversationId)
 
         if (updateError) throw updateError
@@ -184,13 +184,13 @@ export function useSupabaseRealtimeChat({
 
       if (fetchError) throw fetchError
 
-      const deletedBy = message?.deleted_by_users || []
+      const deletedBy = (message as any)?.deleted_by_users || []
       if (!deletedBy.includes(user.id)) {
         deletedBy.push(user.id)
         
         const { error: updateError } = await supabase
           .from('messages')
-          .update({ deleted_by_users: deletedBy })
+          .update({ deleted_by_users: deletedBy } as any)
           .eq('id', messageId)
 
         if (updateError) throw updateError
@@ -237,7 +237,7 @@ export function useSupabaseRealtimeChat({
         (data || [])
           .filter(conv => {
             // Filter out conversations hidden by current user
-            const hiddenForUsers = conv.hidden_for_users || []
+            const hiddenForUsers = (conv as any).hidden_for_users || []
             return !hiddenForUsers.includes(user.id)
           })
           .map(async (conv) => {
@@ -286,7 +286,7 @@ export function useSupabaseRealtimeChat({
       const filteredMessages = (data || [])
         .filter(msg => {
           // Filter out messages where current user has deleted them
-          const deletedByUsers = msg.deleted_by_users || []
+          const deletedByUsers = (msg as any).deleted_by_users || []
           const isDeletedByCurrentUser = deletedByUsers.includes(user.id)
           
           return msg.conversation_id && 

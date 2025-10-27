@@ -10,7 +10,7 @@ type ApplicationUpdate = Database['public']['Tables']['applications']['Update']
 
 export function useApplicationsQuery(jobId?: string) {
   return useQuery({
-    queryKey: jobId ? queryKeys.jobs.applications(jobId) : queryKeys.applications.all,
+    queryKey: jobId ? queryKeys.jobs.applications(jobId as any) : queryKeys.applications.all,
     queryFn: async () => {
       let query = supabase
         .from('applications')
@@ -68,7 +68,7 @@ export function useCreateApplicationMutation() {
     mutationFn: async (applicationData: ApplicationInsert) => {
       const { data, error } = await supabase
         .from('applications')
-        .insert([applicationData])
+        .insert([applicationData as any])
         .select(`
           *,
           user:users(*),
@@ -83,7 +83,7 @@ export function useCreateApplicationMutation() {
       // Invalidate related queries
       if (newApplication.job_id) {
         queryClient.invalidateQueries({ 
-          queryKey: queryKeys.jobs.applications(newApplication.job_id)
+          queryKey: queryKeys.jobs.applications(newApplication.job_id as any)
         })
       }
       if (newApplication.user_id) {
@@ -127,7 +127,7 @@ export function useUpdateApplicationMutation() {
       // Invalidate related queries
       if (updatedApplication.job_id) {
         queryClient.invalidateQueries({ 
-          queryKey: queryKeys.jobs.applications(updatedApplication.job_id)
+          queryKey: queryKeys.jobs.applications(updatedApplication.job_id as any)
         })
       }
       if (updatedApplication.user_id) {
@@ -171,7 +171,7 @@ export function useBulkUpdateApplicationsMutation() {
       jobIds.forEach(jobId => {
         if (jobId) {
           queryClient.invalidateQueries({ 
-            queryKey: queryKeys.jobs.applications(jobId)
+            queryKey: queryKeys.jobs.applications(jobId as any)
           })
         }
       })

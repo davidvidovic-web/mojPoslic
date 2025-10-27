@@ -161,7 +161,7 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
       return {
         ...prev,
         applications: prev.applications.map(app =>
-          applicationIds.includes(app.id) ? { ...app, status } : app
+          applicationIds.includes(app.id) ? { ...app, status: status as any } : app
         )
       }
     })

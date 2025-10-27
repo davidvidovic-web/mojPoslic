@@ -36,6 +36,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     requirements: '',
     benefits: '',
     type: 'quick_job',
+    job_type: 'quick_job',
     city_id: '',
     category_id: '',
     salary: '',
@@ -77,7 +78,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   useEffect(() => {
     if (selectedParentCategory) {
       const parentCategory = categories.find(cat => cat.id === selectedParentCategory)
-      setAvailableChildCategories(parentCategory?.children || [])
+      setAvailableChildCategories((parentCategory?.children || []) as any)
       // Reset child category selection when parent changes
       setFormData(prev => ({ ...prev, category_id: '' }))
     } else {
@@ -181,6 +182,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           requirements: '',
           benefits: '',
           type: 'quick_job',
+          job_type: 'quick_job',
           city_id: '',
           category_id: '',
           salary: '',

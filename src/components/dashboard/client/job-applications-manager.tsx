@@ -20,8 +20,8 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
   const tDashboard = useTranslations('dashboard')
   const { data: applications = [], isLoading } = useApplications()
 
-  const pendingApplications = applications.filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
-  const reviewedApplications = applications.filter((app: JobApplication) => 
+  const pendingApplications = (applications as any[]).filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
+  const reviewedApplications = (applications as any[]).filter((app: JobApplication) => 
     app.status === ApplicationStatus.REVIEWED || 
     app.status === ApplicationStatus.SHORTLISTED || 
     app.status === ApplicationStatus.SELECTED

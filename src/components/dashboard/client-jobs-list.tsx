@@ -37,7 +37,7 @@ export function ClientJobsList() {
     newApplicationsCount: 0,
     shortlistedCount: 0,
     selectedCount: 0,
-  }))
+  })) as unknown as JobWithApplicationStats[]
 
   const getStatusBadge = (job: Job) => {
     // Map the database status to display status

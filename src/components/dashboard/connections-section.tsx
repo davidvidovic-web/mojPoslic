@@ -13,7 +13,7 @@ import { ConnectionActivity } from './connections/connection-activity'
 import { LowConnectionsWarning } from './connections/low-connections-warning'
 import { PurchaseConnectionsSection } from './connections/purchase-connections-section'
 
-interface ConnectionHistoryEntry {
+interface LocalConnectionHistoryEntry {
   id: string
   action: string
   actionLabel: string
@@ -29,9 +29,9 @@ export function ConnectionsSection() {
   const { user, loading: authLoading } = useSupabaseAuth()
   const t = useTranslations('dashboard.connections')
   const [connections, setConnections] = useState<number>(0)
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+  const [history, setHistory] = useState<LocalConnectionHistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [history, setHistory] = useState<ConnectionHistoryEntry[]>([])
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
   const fetchConnections = useCallback(async () => {
     if (!user?.email) {
@@ -179,7 +179,7 @@ export function ConnectionsSection() {
         
         <Separator />
         
-        <ConnectionActivity history={history} />
+        <ConnectionActivity history={history as any} />
         
         <LowConnectionsWarning connections={connections} userRole={user?.role} />
         

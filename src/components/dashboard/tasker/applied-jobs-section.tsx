@@ -153,7 +153,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
               </Link>
             </Button>
             
-            {(application.status === 'SHORTLISTED' || application.status === 'SELECTED') && (
+            {((application.status as any) === 'SHORTLISTED' || (application.status as any) === 'SELECTED') && (
               <Button variant="outline" size="sm">
                 <MessageCircle className="h-3 w-3 mr-1" />
                 {t('message')}

@@ -323,7 +323,7 @@ export function ClientApplicationsManager({
       {/* Profile Card Modal */}
       {selectedApplication && selectedApplication.user && (
         <TaskerProfileCard
-          user={selectedApplication.user}
+          user={selectedApplication.user as any}
           application={{
             id: selectedApplication.id,
             message: selectedApplication.message,

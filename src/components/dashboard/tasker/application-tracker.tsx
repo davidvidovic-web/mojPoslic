@@ -15,7 +15,6 @@ import { ApplicationStatus, JobApplication } from "@/types/application";
 import {
   Briefcase,
   Search,
-  MapPin,
   DollarSign,
   Clock,
   CheckCircle,
@@ -71,7 +70,7 @@ export function TaskerApplicationTracker() {
     return filtered.filter(
       (app) =>
         app.job?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        app.job?.company?.toLowerCase().includes(searchQuery.toLowerCase())
+        app.job?.posted_by?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [applications, activeTab, searchQuery]);
 
@@ -98,6 +97,7 @@ export function TaskerApplicationTracker() {
       [ApplicationStatus.SELECTED]: "bg-green-100 text-green-800",
       [ApplicationStatus.REJECTED]: "bg-red-100 text-red-800",
       [ApplicationStatus.WITHDRAWN]: "bg-gray-100 text-gray-800",
+      [ApplicationStatus.INTERVIEW_SCHEDULED]: "bg-purple-100 text-purple-800",
     };
 
     const icons: Record<ApplicationStatus, React.ElementType> = {
@@ -107,6 +107,7 @@ export function TaskerApplicationTracker() {
       [ApplicationStatus.SELECTED]: CheckCircle,
       [ApplicationStatus.REJECTED]: XCircle,
       [ApplicationStatus.WITHDRAWN]: X,
+      [ApplicationStatus.INTERVIEW_SCHEDULED]: Clock,
     };
 
     const statusText: Record<ApplicationStatus, string> = {
@@ -116,6 +117,7 @@ export function TaskerApplicationTracker() {
       [ApplicationStatus.SELECTED]: "Selected",
       [ApplicationStatus.REJECTED]: "Cancelled by Client",
       [ApplicationStatus.WITHDRAWN]: "Withdrawn",
+      [ApplicationStatus.INTERVIEW_SCHEDULED]: "Interview Scheduled",
     };
 
     const Icon = icons[status];
@@ -138,22 +140,22 @@ export function TaskerApplicationTracker() {
     );
   };
 
-  const getStatusTimeline = (application: JobApplication) => {
+  const getStatusTimeline = (application: any) => {
     const timeline = [];
 
-    if (application.appliedAt) {
+    if (application.applied_at) {
       timeline.push({
         status: "Applied",
-        date: application.appliedAt,
+        date: application.applied_at,
         icon: Briefcase,
         color: "text-blue-600",
       });
     }
 
-    if (application.selectedAt) {
+    if (application.selected_at) {
       timeline.push({
         status: "Selected",
-        date: application.selectedAt,
+        date: application.selected_at,
         icon: CheckCircle,
         color: "text-green-600",
       });
@@ -218,13 +220,13 @@ export function TaskerApplicationTracker() {
             <div className="text-2xl font-bold text-green-600">
               {stats.selected || 0}
             </div>
-            <div className="text-sm text-gray-600">Selected</div>
+                        <div className="text-sm text-gray-600">Selected</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600">
-              {stats.rejected || 0}
+              {(stats as any).rejected || 0}
             </div>
             <div className="text-sm text-gray-600">Rejected</div>
           </CardContent>
@@ -288,40 +290,34 @@ export function TaskerApplicationTracker() {
                                 <h3 className="text-lg font-semibold">
                                   {application.job?.title}
                                 </h3>
-                                <p className="text-gray-600 font-medium">
-                                  {application.job?.company}
-                                </p>
+                                {application.job?.posted_by?.name && (
+                                  <p className="text-gray-600 font-medium">
+                                    {application.job.posted_by.name}
+                                  </p>
+                                )}
 
                                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                                  {application.job?.city && (
-                                    <div className="flex items-center gap-1">
-                                      <MapPin className="h-4 w-4" />
-                                      {application.job.city.nameEN}
-                                    </div>
-                                  )}
-                                  {application.job?.type && (
+                                  {application.job?.job_type && (
                                     <div className="flex items-center gap-1">
                                       <Briefcase className="h-4 w-4" />
-                                      {application.job.type}
+                                      {application.job.job_type}
                                     </div>
                                   )}
-                                  {(application.job?.salaryMin ||
-                                    application.job?.salary) && (
+                                  {application.job?.salary_min && (
                                     <div className="flex items-center gap-1">
                                       <DollarSign className="h-4 w-4" />
-                                      {application.job.salary ||
-                                        `${application.job.salaryMin}${application.job.salaryMax ? `-${application.job.salaryMax}` : ""} BAM`}
+                                      {`${application.job.salary_min}${application.job.salary_max ? `-${application.job.salary_max}` : ""} BAM`}
                                     </div>
                                   )}
                                 </div>
                               </div>
 
                               <div className="text-right">
-                                {getStatusBadge(application.status)}
+                                {getStatusBadge(application.status as any)}
                                 <p className="text-xs text-gray-500 mt-1">
                                   Applied{" "}
                                   {formatDistanceToNow(
-                                    new Date(application.appliedAt)
+                                    new Date(application.applied_at)
                                   )}{" "}
                                   ago
                                 </p>
@@ -366,13 +362,13 @@ export function TaskerApplicationTracker() {
                             </div>
 
                             {/* Feedback */}
-                            {application.feedback && (
-                              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                                <p className="text-sm font-medium text-blue-800 mb-1">
-                                  Employer Feedback:
-                                </p>
-                                <p className="text-sm text-blue-700">
-                                  {application.feedback}
+                            {(application as any).feedback && (
+                              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                <h4 className="font-medium mb-1">
+                                  Feedback
+                                </h4>
+                                <p className="text-sm text-gray-700">
+                                  {(application as any).feedback}
                                 </p>
                               </div>
                             )}

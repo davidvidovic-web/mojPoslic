@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization')
     
     // Create supabase client with proper auth handling
-    const supabase = authHeader 
+    const supabase: any = authHeader 
       ? createServerClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

@@ -116,7 +116,7 @@ export function useRealtimeAnalytics({
           .select('id, created_at, connections, last_login_at'),
           
         // Job views statistics
-        supabase
+        (supabase as any)
           .from('job_views')
           .select('id, job_id, user_id, ip_address, viewed_at'),
           
@@ -187,15 +187,15 @@ export function useRealtimeAnalytics({
             applications: jobApplicationCounts[jobId] || 0
           }
         })
-        .sort((a, b) => (b.views + b.applications * 2) - (a.views + a.applications * 2))
+        .sort((a, b) => ((b.views as number) + b.applications * 2) - ((a.views as number) + a.applications * 2))
         .slice(0, 5)
 
       setJobStats({
         totalViews: views.length,
-        uniqueViews: Object.values(uniqueJobViews).reduce((sum, set) => sum + set.size, 0),
+        uniqueViews: Object.values(uniqueJobViews as Record<string, Set<string>>).reduce((sum: number, set: Set<string>) => sum + set.size, 0),
         applicationsCount: applications.length,
         averageApplicationsPerJob: applications.length / Math.max(jobs.length, 1),
-        topPerformingJobs: topJobs
+        topPerformingJobs: topJobs as any
       })
 
       // Process user engagement
@@ -252,7 +252,7 @@ export function useRealtimeAnalytics({
       const userApplications = userApplicationsData.data || []
 
       // Get views for user's jobs
-      const { data: userJobViews } = await supabase
+      const { data: userJobViews } = await (supabase as any)
         .from('job_views')
         .select('job_id, viewed_at')
         .in('job_id', userJobs.map(j => j.id))

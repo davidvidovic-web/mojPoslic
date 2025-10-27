@@ -38,7 +38,7 @@ export default function JobsPage() {
     <DashboardLayout 
       title={t('title')} 
       subtitle={t('subtitle')}
-      userRole={user?.role}
+      userRole={user?.role as 'admin' | 'client' | 'tasker' | 'company' | undefined}
     >
       <div className="space-y-8 max-w-6xl">
         <Tabs defaultValue="active" className="w-full">
@@ -59,8 +59,6 @@ export default function JobsPage() {
               <CardContent>
                 <TaskerApplicationManager 
                   showOnlyHistorical={false}
-                  title=""
-                  description=""
                 />
               </CardContent>
             </Card>
@@ -77,8 +75,6 @@ export default function JobsPage() {
               <CardContent>
                 <TaskerApplicationManager 
                   showOnlyHistorical={true}
-                  title=""
-                  description=""
                 />
               </CardContent>
             </Card>
@@ -94,7 +90,7 @@ export default function JobsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <SavedJobsSection savedJobs={savedJobs} />
+                  <SavedJobsSection savedJobs={savedJobs as never} />
                 </CardContent>
               </Card>
 
@@ -106,7 +102,7 @@ export default function JobsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+                  <RecommendedJobsSection recommendedJobs={recommendedJobs as never} />
                 </CardContent>
               </Card>
             </div>

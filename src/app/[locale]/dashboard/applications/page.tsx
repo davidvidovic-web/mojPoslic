@@ -52,9 +52,9 @@ export default function ApplicationsPage() {
 
         {/* Content */}
         <div className="space-y-8 max-w-6xl">
-          <ApplicationsSection applications={applications} />
-          <SavedJobsSection savedJobs={savedJobs} />
-          <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+          <ApplicationsSection applications={applications as never} />
+          <SavedJobsSection savedJobs={savedJobs as never} />
+          <RecommendedJobsSection recommendedJobs={recommendedJobs as never} />
         </div>
       </div>
     </div>

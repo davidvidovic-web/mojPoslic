@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     // Get auth header for token-based auth or use cookie-based auth
     const authHeader = request.headers.get('authorization')
     
-    const supabase = authHeader 
+    const supabase: any = authHeader 
       ? await (async () => {
           return createServerClient<Database>(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,

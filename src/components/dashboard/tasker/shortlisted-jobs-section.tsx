@@ -46,7 +46,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
 
   // Filter to only show shortlisted and interview scheduled applications
   const filteredApplications = shortlistedApplications.filter(app => 
-    app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED'
+    (app.status as any) === 'SHORTLISTED' || (app.status as any) === 'INTERVIEW_SCHEDULED'
   )
 
   if (loading) {
@@ -106,8 +106,8 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
     if (job.salaryMin && job.salaryMax) {
       return `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
     }
-    if (job.salary) {
-      return job.salary
+    if ((job as any).salary) {
+      return (job as any).salary
     }
     return tCommon('messages.salaryNotSpecified')
   }

@@ -53,7 +53,7 @@ export async function GET() {
 
     // If user has preferred job types, filter by them
     if (userProfile?.preferred_job_types) {
-      const preferredTypes = userProfile.preferred_job_types.split(', ');
+      const preferredTypes = userProfile.preferred_job_types.split(', ') as ('quick_job' | 'full_time' | 'part_time' | 'remote')[];
       query = query.in('job_type', preferredTypes)
     }
 
@@ -70,13 +70,14 @@ export async function GET() {
 
     // If we have user skills, we could add simple text matching
     let scoredJobs = (jobs || []).map(job => ({
-      ...job,
+      ...(job as any),
       score: 1 // Basic score, could be enhanced with skill matching
     }))
 
     // Enhanced scoring based on user preferences
     if (userProfile?.skills) {
-      const userSkills = userProfile.skills.toLowerCase().split(',').map(s => s.trim())
+      const skillsStr = Array.isArray(userProfile.skills) ? userProfile.skills.join(',') : userProfile.skills
+      const userSkills = skillsStr.toLowerCase().split(',').map((s: string) => s.trim())
       
       scoredJobs = scoredJobs.map(job => {
         let score = 1

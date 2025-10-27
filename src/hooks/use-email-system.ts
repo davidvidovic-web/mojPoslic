@@ -48,9 +48,9 @@ interface UseEmailSystemProps {
   enabled?: boolean
 }
 
-export function useEmailSystem() {
+export function useEmailSystem({ enabled = true }: UseEmailSystemProps = {}) {
   const [isLoading, setIsLoading] = useState(false)
-  const [emailHistory, setEmailHistory] = useState<EmailRecord[]>([])
+  const [emailHistory, setEmailHistory] = useState<any[]>([])
   const { user } = useSupabaseAuth()
 
   // Send email using Edge Function

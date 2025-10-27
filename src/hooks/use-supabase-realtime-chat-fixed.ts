@@ -126,7 +126,7 @@ export function useSupabaseRealtimeChat({
 
       if (fetchError) throw fetchError
 
-      setMessages(data || [])
+      setMessages((data || []) as Message[])
 
       // Mark messages as read
       if (data && data.length > 0) {
@@ -196,7 +196,7 @@ export function useSupabaseRealtimeChat({
 
       // Replace temp message with real message
       setMessages(prev => prev.map(msg => 
-        msg.id === tempMessage.id ? data : msg
+        msg.id === tempMessage.id ? (data as Message) : msg
       ))
 
       // Update conversation's last_message_at

@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Query for active deletion request
-    const { data: deletionRequest, error: queryError } = await supabase
-      .from('user_deletion_requests')
+    const { data: deletionRequest, error: queryError } = await (supabase as any)
+      .from('account_deletion_requests')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'pending')

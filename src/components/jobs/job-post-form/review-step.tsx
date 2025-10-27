@@ -67,7 +67,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
   useEffect(() => {
     if (formData.city_id) {
       const foundCity = cities.find(c => c.id === formData.city_id)
-      setCity(foundCity || null)
+      setCity((foundCity || null) as any)
     }
 
     if (formData.category_id) {
