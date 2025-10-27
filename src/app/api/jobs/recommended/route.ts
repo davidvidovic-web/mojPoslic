@@ -70,6 +70,7 @@ export async function GET() {
 
     // If we have user skills, we could add simple text matching
     let scoredJobs = (jobs || []).map(job => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(job as any),
       score: 1 // Basic score, could be enhanced with skill matching
     }))

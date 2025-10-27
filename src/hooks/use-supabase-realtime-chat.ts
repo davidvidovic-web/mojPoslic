@@ -400,7 +400,7 @@ export function useSupabaseRealtimeChat({
       
       // Listen for typing indicators
       .on('broadcast', { event: 'typing' }, (payload) => {
-        const { user_id, typing, user_name, conversation_id } = payload.payload
+        const { user_id, typing, conversation_id } = payload.payload
         
         if (conversation_id === conversationId && user_id !== user.id) {
           setTypingUsers(prev => {
@@ -472,7 +472,7 @@ export function useSupabaseRealtimeChat({
         }
       })
       
-      .subscribe((status) => {
+      .subscribe(() => {
       })
 
     return () => {

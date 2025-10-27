@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { X, Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Star, ArrowLeft, ExternalLink, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award } from "lucide-react"
+import { Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Star, ArrowLeft, ExternalLink, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award } from "lucide-react"
 import { Job } from "@/types/job"
 import { toast } from "sonner"
 import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
-import { formatJobType, getJobTypeBadgeVariant, getJobExpirationDate } from "@/lib/job-utils"
+import { formatJobType, getJobExpirationDate } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
@@ -415,6 +415,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                 )}
 
                 {/* Compensation Details */}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {(formatSalary(job) || (job as any).performance_bonus || user) && (
                   <section>
                     <h2 className="text-2xl font-bold mb-4 text-foreground">
@@ -436,6 +437,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                         </div>
                       )}
                       
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {((job as any).performance_bonus !== undefined || user) && (
                         <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
                           <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -444,6 +446,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                           <div>
                             <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.performanceBonus')}</span>
                             <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                               {(job as any).performance_bonus ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
                             </p>
                           </div>

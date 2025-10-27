@@ -323,6 +323,7 @@ export function ClientApplicationsManager({
       {/* Profile Card Modal */}
       {selectedApplication && selectedApplication.user && (
         <TaskerProfileCard
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           user={selectedApplication.user as any}
           application={{
             id: selectedApplication.id,

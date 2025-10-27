@@ -47,13 +47,13 @@
     "openInNewWindow": "Otvori u novom prozoru"
   },
   "emptyStates": {
-    "noJobs": "Nema pronađenih poslića",
+    "noJobs": "Nema pronađenih poslova",
     "noJobsDescription": "Pokušajte prilagoditi svoje filtere ili pojmove za pretragu",
     "noSavedJobs": "Nema sačuvanih poslova",
     "noSavedJobsDescription": "Sačuvajte poslove koji vas zanimaju da ih vidite ovdje"
   },
   "list": {
-    "noJobs": "Nema pronađenih poslića",
+    "noJobs": "Nema pronađenih poslova",
     "noJobsMessage": "Trenutno nema dostupnih oglasa za posao. Provjerite kasnije za nove prilike.",
     "noJobsWithFiltersMessage": "Nijedan posao ne odgovara vašim trenutnim filterima. Pokušajte prilagoditi kriterije pretrage.",
     "clearAllFilters": "Očisti sve filtere"

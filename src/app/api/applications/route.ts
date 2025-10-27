@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization')
     
     // Create supabase client with proper auth handling
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase: any = authHeader 
       ? createServerClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -50,11 +50,6 @@ export async function PUT(request: NextRequest) {
       experience,
       preferredJobTypes,
       avatarUrl,
-      // Privacy settings (embedded)
-      privacyEmailVisible,
-      privacyPhoneVisible,
-      privacyProfileVisible,
-      privacyContactFormEnabled,
       // resumeUrl, // TODO: Enable after adding column to database
     } = await request.json();
 

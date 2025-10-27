@@ -125,7 +125,7 @@ export function useRealtimeChat({
     })
 
     // Subscribe to the channel
-    channel.subscribe((status) => {
+    channel.subscribe(() => {
     })
 
     // Cleanup function
@@ -163,7 +163,7 @@ export function useRealtimeChat({
       // Store in database for persistence (if roomName matches a conversation_id)
       if (onMessage) {
         try {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('messages')
             .insert({
               conversation_id: roomName,

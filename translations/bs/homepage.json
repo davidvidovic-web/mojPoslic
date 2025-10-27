@@ -4,13 +4,13 @@
     "subtitle": "Povežite se s prilikama koje odgovaraju vašim vještinama i vremenu",
     "searchPlaceholder": "Pretraži poslove, kompanije ili vještine...",
     "browseJobs": "Pregledaj poslove",
-    "postJob": "Objavi poslić",
+    "postJob": "Objavi posao",
     "badge": "Brzo • Sigurno • Jednostavno",
-    "titleHighlight": "svoje posliće",
+    "titleHighlight": "svoje poslove",
     "registerButton": "Registruj se besplatno"
   },
   "browseJobs": {
-    "title": "Pregledaj dostupne posliće",
+    "title": "Pregledaj dostupne poslove",
     "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i vremenu"
   },
   "siteStats": {
@@ -59,7 +59,7 @@
     },
     "forClients": {
       "title": "Za klijente",
-      "postJobs": "Objavi poslić",
+      "postJobs": "Objavi posao",
       "findWorkers": "Pronađi radnike",
       "free": "Besplatno"
     },

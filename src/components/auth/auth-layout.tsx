@@ -195,7 +195,7 @@ const getAuthMessages = (locale: string = 'bs') => {
       }
     },
     header: {
-      postJob: "Objavi poslić",
+      postJob: "Objavi posao",
       logo: "mojPoslić",
       menu: "Meni",
       close: "Zatvori",
@@ -251,7 +251,7 @@ const getAuthMessages = (locale: string = 'bs') => {
         },
         forClients: {
           title: "Za klijente",
-          postJobs: "Objavi poslić",
+          postJobs: "Objavi posao",
           findWorkers: "Pronađi radnike",
           free: "Besplatno"
         },

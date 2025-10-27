@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { toast } from 'sonner'
-import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export type EmailTemplate = 
@@ -49,10 +47,6 @@ interface UseEmailSystemProps {
 }
 
 export function useEmailSystem({ enabled = true }: UseEmailSystemProps = {}) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [emailHistory, setEmailHistory] = useState<any[]>([])
-  const { user } = useSupabaseAuth()
-
   // Send email using Edge Function
   const sendEmail = useCallback(async (
     to: string,
@@ -85,7 +79,7 @@ export function useEmailSystem({ enabled = true }: UseEmailSystemProps = {}) {
         error: error instanceof Error ? error.message : 'Failed to send email' 
       }
     }
-  }, [enabled, supabase])
+  }, [enabled])
 
   // Send application received notification
   const sendApplicationReceivedEmail = useCallback(async (

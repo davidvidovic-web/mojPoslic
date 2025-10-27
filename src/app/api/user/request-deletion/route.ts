@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Check if there's already a pending deletion request
     // supabase types can cause deep instantiation errors in TS here; cast to any as a narrow mitigation
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
 
     const { data: existingRequest } = await sb
@@ -127,6 +128,7 @@ export async function DELETE(request: NextRequest) {
 
     // Cancel the deletion request
     // Cast to any (sb) to avoid deep type-instantiation errors while migrating types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
 
     const { error: updateError } = await sb

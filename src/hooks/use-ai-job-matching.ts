@@ -91,7 +91,7 @@ export function useAIJobMatching({
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, enabled, criteria, supabase])
+  }, [user?.id, enabled, criteria])
 
   // Update matching criteria
   const updateCriteria = useCallback((newCriteria: Partial<MatchingCriteria>) => {
@@ -113,6 +113,7 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any)
         .from('saved_jobs')
         .upsert({
@@ -132,7 +133,7 @@ export function useAIJobMatching({
     } catch (err) {
       console.error('Failed to save job:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Apply to job directly from matches
   const applyToJob = useCallback(async (jobId: string, applicationData: {
@@ -143,6 +144,7 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('applications')
         .insert({
@@ -170,13 +172,14 @@ export function useAIJobMatching({
       console.error('Failed to apply to job:', err)
       throw err
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Track job view for analytics
   const trackJobView = useCallback(async (jobId: string) => {
     if (!user?.id) return
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any)
         .from('job_views')
         .insert({
@@ -188,7 +191,7 @@ export function useAIJobMatching({
       // Silent fail for analytics
       console.debug('Analytics tracking failed:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Set up real-time updates for new jobs using Broadcast
   useEffect(() => {
@@ -218,7 +221,7 @@ export function useAIJobMatching({
     }
 
     setupChannel()
-  }, [enabled, user?.id, getJobMatches, supabase])
+  }, [enabled, user?.id, getJobMatches])
 
   // Set up auto-refresh
   useEffect(() => {
@@ -275,7 +278,7 @@ export function useAIJobMatching({
     }
 
     loadUserPreferences()
-  }, [user?.id, enabled, supabase, getJobMatches])
+  }, [user?.id, enabled, getJobMatches])
 
   return {
     // Data

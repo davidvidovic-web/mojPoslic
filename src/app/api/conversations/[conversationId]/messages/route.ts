@@ -14,6 +14,7 @@ export async function GET(
     // Get auth header for token-based auth or use cookie-based auth
     const authHeader = request.headers.get('authorization')
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase: any = authHeader 
       ? await (async () => {
           return createServerClient<Database>(
@@ -145,6 +146,7 @@ export async function POST(
     // Get auth header for token-based auth or use cookie-based auth
     const authHeader = request.headers.get('authorization')
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase: any = authHeader 
       ? await (async () => {
           return createServerClient<Database>(
@@ -280,7 +282,7 @@ export async function POST(
     // Create notification for message recipient(s)
     try {
       // Determine who should receive the notification (everyone in conversation except sender)
-      let recipientIds: string[] = []
+      const recipientIds: string[] = []
       
       if (conversation.application_id) {
         // Get application details to find both client and tasker

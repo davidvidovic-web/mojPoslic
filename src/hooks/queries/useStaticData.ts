@@ -12,6 +12,7 @@ export function useCitiesQuery() {
     queryKey: queryKeys.cities.active(),
     queryFn: async (): Promise<City[]> => {
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('cities')
         .select('*')
@@ -22,6 +23,7 @@ export function useCitiesQuery() {
         throw new Error(`Failed to fetch cities: ${error.message}`)
       }
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (data || []) as any
     },
     staleTime: 24 * 60 * 60 * 1000, // 24 hours - cities rarely change
@@ -39,6 +41,7 @@ export function useCategoriesQuery() {
     queryKey: queryKeys.categories.active(),
     queryFn: async () => {
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('categories')
         .select('*')
@@ -65,6 +68,7 @@ export function usePopularCategoriesQuery() {
     queryKey: queryKeys.categories.popular(),
     queryFn: async () => {
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('categories')
         .select('*')

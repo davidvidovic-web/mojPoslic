@@ -179,6 +179,7 @@ export function ConnectionsSection() {
         
         <Separator />
         
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <ConnectionActivity history={history as any} />
         
         <LowConnectionsWarning connections={connections} userRole={user?.role} />

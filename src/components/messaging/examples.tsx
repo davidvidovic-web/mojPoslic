@@ -9,7 +9,6 @@ import React from 'react'
 import { RealtimeChat } from './realtime-chat'
 import { ModernMessagingInterface } from './modern-messaging-interface'
 import { MessagingButton } from './messaging-button'
-import type { ChatMessage } from '@/hooks/use-realtime-chat'
 
 // Example 1: Basic realtime chat (Supabase documentation pattern)
 export function BasicChatExample() {
@@ -49,7 +48,7 @@ export function ChatWithInitialMessagesExample() {
 
 // Example 3: Chat with message persistence (Supabase documentation pattern)
 export function ChatWithPersistenceExample() {
-  const handleMessage = async (messages: ChatMessage[]) => {
+  const handleMessage = async () => {
     // Store messages in your database
     // await storeMessages(messages)
   }

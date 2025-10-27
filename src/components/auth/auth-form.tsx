@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/lib/supabase'
@@ -17,7 +16,6 @@ interface AuthFormProps {
 export default function AuthForm({ redirectTo = '/' }: AuthFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
@@ -34,7 +32,7 @@ export default function AuthForm({ redirectTo = '/' }: AuthFormProps) {
       if (error) {
         setError(error.message)
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -56,7 +54,7 @@ export default function AuthForm({ redirectTo = '/' }: AuthFormProps) {
       if (error) {
         setError(error.message)
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

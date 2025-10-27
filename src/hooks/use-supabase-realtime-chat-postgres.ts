@@ -112,6 +112,7 @@ export function useSupabaseRealtimeChat({
       if (fetchError) throw fetchError
 
       // Update each message to add current user to deleted_by_users
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const message of (messages || []) as any[]) {
         const deletedBy = message.deleted_by_users || []
         if (!deletedBy.includes(user.id)) {
@@ -119,6 +120,7 @@ export function useSupabaseRealtimeChat({
           
           await supabase
             .from('messages')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .update({ deleted_by_users: deletedBy } as any)
             .eq('id', message.id)
         }
@@ -148,12 +150,14 @@ export function useSupabaseRealtimeChat({
 
       if (fetchError) throw fetchError
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hiddenFor = (conversation as any)?.hidden_for_users || []
       if (!hiddenFor.includes(user.id)) {
         hiddenFor.push(user.id)
         
         const { error: updateError } = await supabase
           .from('conversations')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .update({ hidden_for_users: hiddenFor } as any)
           .eq('id', conversationId)
 
@@ -184,12 +188,14 @@ export function useSupabaseRealtimeChat({
 
       if (fetchError) throw fetchError
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const deletedBy = (message as any)?.deleted_by_users || []
       if (!deletedBy.includes(user.id)) {
         deletedBy.push(user.id)
         
         const { error: updateError } = await supabase
           .from('messages')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .update({ deleted_by_users: deletedBy } as any)
           .eq('id', messageId)
 
@@ -237,6 +243,7 @@ export function useSupabaseRealtimeChat({
         (data || [])
           .filter(conv => {
             // Filter out conversations hidden by current user
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const hiddenForUsers = (conv as any).hidden_for_users || []
             return !hiddenForUsers.includes(user.id)
           })
@@ -286,6 +293,7 @@ export function useSupabaseRealtimeChat({
       const filteredMessages = (data || [])
         .filter(msg => {
           // Filter out messages where current user has deleted them
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const deletedByUsers = (msg as any).deleted_by_users || []
           const isDeletedByCurrentUser = deletedByUsers.includes(user.id)
           

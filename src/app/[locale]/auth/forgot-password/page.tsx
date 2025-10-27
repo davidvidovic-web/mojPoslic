@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, use } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,7 +14,6 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 export default function ForgotPasswordPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = use(params)
   const t = useTranslations('auth')
-  const router = useRouter()
   const { resetPassword } = useSupabaseAuth()
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)

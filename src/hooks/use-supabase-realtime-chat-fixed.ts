@@ -216,7 +216,7 @@ export function useSupabaseRealtimeChat({
       setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
       setError(err instanceof Error ? err.message : 'Failed to send message')
     }
-  }, [user?.id, getUserDisplayName, conversationId, enabled])
+  }, [user?.id, user?.user_metadata?.avatar_url, getUserDisplayName, conversationId, enabled])
 
   // Send typing indicator
   const sendTyping = useCallback(async (typing: boolean) => {
@@ -307,7 +307,7 @@ export function useSupabaseRealtimeChat({
       
       // Listen for typing indicators via broadcast
       .on('broadcast', { event: 'typing' }, (payload) => {
-        const { user_id, typing, user_name } = payload.payload
+        const { user_id, typing } = payload.payload
         
         if (user_id !== user.id) { // Don't show own typing
           setTypingUsers(prev => {

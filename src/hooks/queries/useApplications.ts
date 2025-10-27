@@ -10,6 +10,7 @@ type ApplicationUpdate = Database['public']['Tables']['applications']['Update']
 
 export function useApplicationsQuery(jobId?: string) {
   return useQuery({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queryKey: jobId ? queryKeys.jobs.applications(jobId as any) : queryKeys.applications.all,
     queryFn: async () => {
       let query = supabase
@@ -68,6 +69,7 @@ export function useCreateApplicationMutation() {
     mutationFn: async (applicationData: ApplicationInsert) => {
       const { data, error } = await supabase
         .from('applications')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert([applicationData as any])
         .select(`
           *,
@@ -83,6 +85,7 @@ export function useCreateApplicationMutation() {
       // Invalidate related queries
       if (newApplication.job_id) {
         queryClient.invalidateQueries({ 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           queryKey: queryKeys.jobs.applications(newApplication.job_id as any)
         })
       }
@@ -127,6 +130,7 @@ export function useUpdateApplicationMutation() {
       // Invalidate related queries
       if (updatedApplication.job_id) {
         queryClient.invalidateQueries({ 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           queryKey: queryKeys.jobs.applications(updatedApplication.job_id as any)
         })
       }
@@ -171,6 +175,7 @@ export function useBulkUpdateApplicationsMutation() {
       jobIds.forEach(jobId => {
         if (jobId) {
           queryClient.invalidateQueries({ 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             queryKey: queryKeys.jobs.applications(jobId as any)
           })
         }

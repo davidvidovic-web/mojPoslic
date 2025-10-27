@@ -113,7 +113,7 @@ export function useJobFormAutoSave({
     try {
       const timestamp = localStorage.getItem(`${FORM_STORAGE_KEY}_timestamp`)
       return timestamp ? parseInt(timestamp, 10) : null
-    } catch (error) {
+    } catch {
       return null
     }
   }, [])

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Query for active deletion request
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: deletionRequest, error: queryError } = await (supabase as any)
       .from('account_deletion_requests')
       .select('*')

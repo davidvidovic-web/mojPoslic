@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -65,13 +65,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
   const itemsPerPage = 10
 
   // Load users for connections management
-  useEffect(() => {
-    if (systemActiveTab === 'connections') {
-      fetchUsersForConnections()
-    }
-  }, [systemActiveTab])
-
-  const fetchUsersForConnections = async () => {
+  const fetchUsersForConnections = useCallback(async () => {
     setLoadingConnections(true)
     try {
       const response = await fetch('/api/admin/users')
@@ -87,7 +81,13 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
     } finally {
       setLoadingConnections(false)
     }
-  }
+  }, [td])
+
+  useEffect(() => {
+    if (systemActiveTab === 'connections') {
+      void fetchUsersForConnections()
+    }
+  }, [systemActiveTab, fetchUsersForConnections])
 
   const handleGrantConnections = async () => {
     if (!selectedUserId || !connectionAmount || isNaN(Number(connectionAmount))) {

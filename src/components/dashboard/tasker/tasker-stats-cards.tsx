@@ -27,6 +27,8 @@ export function TaskerStatsCards({
   completedJobs = 0, 
   totalEarnings = 0 
 }: TaskerStatsCardsProps) {
+  // Count based on application status
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const activeJobs = applications.filter(app => (app.status as any) === 'SELECTED').length
   
   return (

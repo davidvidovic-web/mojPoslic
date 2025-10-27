@@ -417,6 +417,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
         )}
 
         {/* Compensation Details */}
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {(formatSalary(job) || (job as any).performance_bonus !== undefined || user) && (
           <section>
             <h2 className="text-2xl font-bold mb-4 text-foreground">
@@ -438,6 +439,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                 </div>
               )}
               
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {((job as any).performance_bonus !== undefined || user) && (
                 <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
                   <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -446,6 +448,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.performanceBonus')}</span>
                     <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {(job as any).performance_bonus ? t('jobs.form.labels.available') : t('jobs.form.labels.notAvailable')}
                     </p>
                   </div>

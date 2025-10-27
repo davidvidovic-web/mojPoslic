@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,11 +40,7 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  useEffect(() => {
-    fetchConnectionHistory()
-  }, [])
-
-  const fetchConnectionHistory = async () => {
+  const fetchConnectionHistory = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch('/api/admin/connection-history')
@@ -59,7 +55,11 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
     } finally {
       setLoading(false)
     }
-  }
+  }, [td])
+
+  useEffect(() => {
+    void fetchConnectionHistory()
+  }, [fetchConnectionHistory])
 
   const getActionBadgeVariant = (action: string) => {
     switch (action) {

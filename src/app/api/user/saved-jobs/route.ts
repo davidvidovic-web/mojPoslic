@@ -45,6 +45,7 @@ export async function GET(request: Request) {
 
     // Get all saved jobs for the user
     // Cast to any to avoid Supabase type parser errors with complex joins
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: savedJobs, error: savedJobsError } = await (supabase as any)
       .from('saved_jobs')
       .select(`
@@ -83,6 +84,7 @@ export async function GET(request: Request) {
     }
 
     // Transform the data to match expected frontend format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformedSavedJobs = (savedJobs || []).map((savedJob: any) => ({
       id: savedJob.id,
       saved_at: savedJob.saved_at,
@@ -182,13 +184,16 @@ export async function POST(request: Request) {
     }
 
     // Cast to avoid TypeScript issues with Supabase insert overload
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: savedJob, error: saveError } = await (supabase as any)
       .from('saved_jobs')
       .insert({
         user_id: user.id,
         job_id: jobId,
         job_title: jobDetails.title,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         job_city_name: (jobDetails.cities as any)?.name || 'Unknown',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         job_category_name: (jobDetails.categories as any)?.name || 'Unknown',
         job_salary_min: jobDetails.salary_min,
         job_salary_max: jobDetails.salary_max,

@@ -72,7 +72,7 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
       // For now using supabase directly since we need both password and OTP auth
       const { supabase } = await import("@/lib/supabase")
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       })

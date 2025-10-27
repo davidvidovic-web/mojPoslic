@@ -271,6 +271,7 @@ export function ClientDashboard() {
       
       await updateApplicationMutation.mutateAsync({
         applicationId,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         updates: { status: applicationStatus as any }
       })
       toast.success(t('applications.statusUpdated') || 'Application status updated successfully')

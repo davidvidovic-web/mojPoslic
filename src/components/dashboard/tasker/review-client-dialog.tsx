@@ -22,7 +22,7 @@ interface ReviewClientDialogProps {
   isSubmitting?: boolean
   jobTitle?: string
   clientName?: string
-  clientAvatarUrl?: string | null
+  clientAvatarUrl?: string
 }
 
 export function ReviewClientDialog({
@@ -32,7 +32,6 @@ export function ReviewClientDialog({
   isSubmitting = false,
   jobTitle = "this job",
   clientName = "the client",
-  clientAvatarUrl
 }: ReviewClientDialogProps) {
   const t = useTranslations('jobs.dialogs')
   const [rating, setRating] = useState(0)

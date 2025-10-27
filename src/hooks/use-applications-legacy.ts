@@ -32,7 +32,9 @@ export interface JobApplication {
   applied_at: string
   updated_at?: string
   // Related data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   job?: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user?: any
 }
 

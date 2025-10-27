@@ -67,6 +67,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
   useEffect(() => {
     if (formData.city_id) {
       const foundCity = cities.find(c => c.id === formData.city_id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setCity((foundCity || null) as any)
     }
 

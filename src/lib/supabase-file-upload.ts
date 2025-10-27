@@ -55,7 +55,7 @@ export class SupabaseFileUploadService {
             console.error(`Error creating bucket ${bucketName}:`, error)
           } else {
           }
-        } catch (error) {
+        } catch {
         }
       }
 

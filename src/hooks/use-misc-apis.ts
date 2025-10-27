@@ -112,6 +112,7 @@ async function toggleSavedJob(userId: string, jobId: string): Promise<boolean> {
     return false
   } else {
     // Add to saved jobs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from('saved_jobs')
       .insert({

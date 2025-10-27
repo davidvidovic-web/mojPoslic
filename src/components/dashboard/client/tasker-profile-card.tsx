@@ -43,6 +43,7 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
     
     // Handle array format (modern)
     if (Array.isArray(skills)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (skills.filter(skill => skill !== null && skill !== undefined) as any[]).map(skill => {
         // Handle object format: {skill: "name", experienceLevel: "..."}
         if (typeof skill === 'object' && 'skill' in skill) {

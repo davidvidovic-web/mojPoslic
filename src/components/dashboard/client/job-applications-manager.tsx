@@ -20,7 +20,9 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
   const tDashboard = useTranslations('dashboard')
   const { data: applications = [], isLoading } = useApplications()
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pendingApplications = (applications as any[]).filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reviewedApplications = (applications as any[]).filter((app: JobApplication) => 
     app.status === ApplicationStatus.REVIEWED || 
     app.status === ApplicationStatus.SHORTLISTED || 

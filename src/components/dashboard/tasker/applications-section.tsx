@@ -89,6 +89,7 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <h4 className="font-semibold flex items-center gap-2">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {getStatusIcon(application.status as any)}
                   {application.job?.title || 'Job Title Not Available'}
                 </h4>
@@ -96,14 +97,18 @@ export function ApplicationsSection({ applications }: ApplicationsSectionProps) 
                   {application.job?.posted_by?.name || 'Company Not Available'}
                 </p>
               </div>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <Badge className={`${getStatusColor(application.status as any)} rounded-full px-2 py-1 text-xs font-medium`}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {getStatusLabel(application.status as any)}
               </Badge>
             </div>
             <div className="flex justify-between items-center text-xs text-muted-foreground">
               <span>{t('dashboard.tasker.applications.applied')} {formatDate(new Date(application.applied_at))}</span>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {(application.job as any)?.salary_min && (
                 <span className="text-foreground font-medium">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {`${(application.job as any).salary_min}${(application.job as any).salary_max ? `-${(application.job as any).salary_max}` : ''} BAM`}
                 </span>
               )}

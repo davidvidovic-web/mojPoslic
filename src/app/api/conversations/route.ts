@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
     // Get auth header for token-based auth or use cookie-based auth
     const authHeader = request.headers.get('authorization')
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase: any = authHeader 
       ? await (async () => {
           return createServerClient<Database>(

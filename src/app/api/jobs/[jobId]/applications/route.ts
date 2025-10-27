@@ -68,6 +68,7 @@ export async function GET(
     }
 
     // Create the appropriate supabase client for database operations
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase: any = authHeader 
       ? await (async () => {
           const { createServerClient } = await import('@supabase/ssr')
@@ -176,6 +177,7 @@ export async function GET(
 
     // Transform the data to match the JobApplication interface
     // Use separately fetched user data, then fallback to join data, then cached data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformedApplications = (applications as any)?.map((app: any) => {
       const userData = usersMap.get(app.user_id) || app.user || {}
       

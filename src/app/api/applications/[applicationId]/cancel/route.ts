@@ -225,7 +225,7 @@ export async function DELETE(
     }
 
     // 4. Finally, delete the application itself using service role for debugging
-    const { data: deletedData, error: deleteError, count } = await supabaseService
+    const { data: deletedData, error: deleteError } = await supabaseService
       .from('applications')
       .delete()
       .eq('id', applicationId)

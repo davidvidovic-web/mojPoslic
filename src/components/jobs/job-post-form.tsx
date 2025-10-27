@@ -78,6 +78,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   useEffect(() => {
     if (selectedParentCategory) {
       const parentCategory = categories.find(cat => cat.id === selectedParentCategory)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setAvailableChildCategories((parentCategory?.children || []) as any)
       // Reset child category selection when parent changes
       setFormData(prev => ({ ...prev, category_id: '' }))

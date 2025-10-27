@@ -59,7 +59,7 @@ export async function GET(
           }
         )
 
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId)
         
         if (authUser?.user) {
           const userName = authUser.user.user_metadata?.name || 

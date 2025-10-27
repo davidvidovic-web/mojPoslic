@@ -161,6 +161,7 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
       return {
         ...prev,
         applications: prev.applications.map(app =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           applicationIds.includes(app.id) ? { ...app, status: status as any } : app
         )
       }

@@ -68,7 +68,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Transform the data to match expected frontend format with enhanced data
+    // Transform applications to match frontend interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformedApplications = (applications || []).map((app: any) => ({
       id: app.id,
       status: app.status,

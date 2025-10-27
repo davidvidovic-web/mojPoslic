@@ -83,8 +83,8 @@ export interface Database {
       }
       // Add other tables as needed
     }
-    Views: {}
-    Functions: {}
+    Views: Record<string, never>
+    Functions: Record<string, never>
     Enums: {
       job_type: 'quick_job' | 'full_time' | 'part_time' | 'remote'
       job_status: 'active' | 'inactive' | 'completed' | 'expired'
