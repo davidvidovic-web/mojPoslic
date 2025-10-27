@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Star, CheckCircle } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import { useJobDetailsDrawer } from "@/hooks/use-job-details-drawer"
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 interface JobCardProps {
   job: Job
@@ -18,6 +19,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false, hideFeatur
   const t = useTranslations('jobs')
   const locale = useLocale()
   const { openDrawer } = useJobDetailsDrawer()
+  const { user } = useSupabaseAuth()
 
   // Helper functions for cached data display
 
@@ -96,6 +98,16 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false, hideFeatur
   // Handle opening job details in drawer
   const handleJobClick = (e: React.MouseEvent) => {
     e.preventDefault()
+    
+    // Check if user is logged in
+    if (!user) {
+      // Redirect to login with return URL
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      const returnUrl = `${currentPath}?jobId=${job.id}`;
+      window.location.href = `/auth/signin?returnUrl=${encodeURIComponent(returnUrl)}`;
+      return;
+    }
+    
     openDrawer(job.id)
   }
   

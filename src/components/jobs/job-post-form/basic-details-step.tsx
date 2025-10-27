@@ -98,21 +98,6 @@ export function BasicDetailsStep({ formData, onChange, onValidation }: BasicDeta
       formData.type
     )
     
-    console.log('BasicDetailsStep validation:', {
-      title: !!formData.title?.trim(),
-      description: !!formData.description?.trim(),
-      categoryId: !!formData.category_id,
-      selectedParent: !!selectedParentCategory,
-      categoryOrParent: !!(formData.category_id || selectedParentCategory),
-      type: !!formData.type,
-      isValid,
-      formData: {
-        title: formData.title,
-        category_id: formData.category_id,
-        type: formData.type
-      }
-    })
-    
     onValidation(isValid)
   }, [formData.title, formData.description, formData.category_id, selectedParentCategory, formData.type, onValidation])
 

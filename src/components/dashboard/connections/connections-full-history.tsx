@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -34,11 +34,7 @@ interface ConnectionHistoryEntry {
   isNegative: boolean
 }
 
-interface ConnectionsFullHistoryProps {
-  className?: string
-}
-
-export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProps) {
+export function ConnectionsFullHistory() {
   const t = useTranslations('dashboard.connections')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'positive' | 'negative'>('all')
@@ -163,211 +159,222 @@ export function ConnectionsFullHistory({ className }: ConnectionsFullHistoryProp
 
   if (loading) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
+            <History className="h-6 w-6" />
             {t('fullHistory')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Filters skeleton */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
-            <div className="flex gap-2">
-              <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
-              <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
-              <div className="w-24 h-10 bg-muted rounded animate-pulse"></div>
-            </div>
+          </h2>
+        </div>
+
+        {/* Summary Stats skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-muted rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+        
+        {/* Filters skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
+          <div className="flex gap-2">
+            <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-24 h-10 bg-muted rounded animate-pulse"></div>
           </div>
-          
-          {/* History skeleton */}
-          <div className="space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        {/* History skeleton */}
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
+          ))}
+        </div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <History className="h-6 w-6" />
             {t('fullHistory')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">{t('errorTitle')}</h3>
-            <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <Button onClick={refetchAll} variant="outline">
-              {t('tryAgain')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </h2>
+        </div>
+        <div className="text-center py-12 bg-muted/50 rounded-lg">
+          <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold">{t('errorTitle')}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{error}</p>
+          <Button onClick={refetchAll} variant="outline">
+            {t('tryAgain')}
+          </Button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <History className="h-5 w-5" />
+    <div className="space-y-6">
+      {/* Header with Title */}
+      <div>
+        <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
+          <History className="h-6 w-6" />
           {t('fullHistory')}
-        </CardTitle>
-        
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          <div className="bg-yellow-50 dark:bg-yellow-950/30 p-3 rounded-[var(--radius)] border border-yellow-200 dark:border-yellow-800">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-yellow-600" />
-              <span className="text-sm font-medium">{t('currentBalance')}</span>
-            </div>
-            <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400">{connections}</p>
-          </div>
-          
-          <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-[var(--radius)] border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">{t('totalReceived')}</span>
-            </div>
-            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">+{totalReceived}</p>
-          </div>
-          
-          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-[var(--radius)] border border-emerald-200 dark:border-emerald-800">
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium">{t('totalBought')}</span>
-            </div>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{totalBought}</p>
-          </div>
-          
-          <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-[var(--radius)] border border-red-200 dark:border-red-800">
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-red-600" />
-              <span className="text-sm font-medium">{t('totalSpent')}</span>
-            </div>
-            <p className="text-lg font-bold text-red-600 dark:text-red-400">-{totalSpent}</p>
-          </div>
-        </div>
-      </CardHeader>
+        </h2>
+        <p className="text-muted-foreground">
+          {t('fullHistoryDescription') || 'Complete history of all your connection transactions'}
+        </p>
+      </div>
       
-      <CardContent className="space-y-4">
-        {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('searchTransactions')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-yellow-50 dark:bg-yellow-950/30 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="h-4 w-4 text-yellow-600" />
+            <span className="text-sm font-medium">{t('currentBalance')}</span>
           </div>
-          
-          <div className="flex gap-2">
-            <Select value={filterType} onValueChange={(value: 'all' | 'positive' | 'negative') => setFilterType(value)}>
-              <SelectTrigger className="w-32">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('all')}</SelectItem>
-                <SelectItem value="positive">{t('credits')}</SelectItem>
-                <SelectItem value="negative">{t('debits')}</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={sortOrder} onValueChange={(value: 'newest' | 'oldest') => setSortOrder(value)}>
-              <SelectTrigger className="w-32">
-                <Calendar className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">{t('newest')}</SelectItem>
-                <SelectItem value="oldest">{t('oldest')}</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button variant="outline" size="sm" onClick={exportHistory}>
-              <Download className="h-4 w-4 mr-2" />
-              {t('export')}
-            </Button>
+          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{connections}</p>
+        </div>
+        
+        <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-2 mb-1">
+            <Plus className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium">{t('totalReceived')}</span>
+          </div>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">+{totalReceived}</p>
+        </div>
+        
+        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-lg border border-emerald-200 dark:border-emerald-800">
+          <div className="flex items-center gap-2 mb-1">
+            <ShoppingCart className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium">{t('totalBought')}</span>
+          </div>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">+{totalBought}</p>
+        </div>
+        
+        <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg border border-red-200 dark:border-red-800">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingDown className="h-4 w-4 text-red-600" />
+            <span className="text-sm font-medium">{t('totalSpent')}</span>
+          </div>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">-{totalSpent}</p>
+        </div>
+      </div>
+      
+      {/* Filters and Search */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('searchTransactions')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
         
-        {/* History List */}
-        {filteredHistory.length > 0 ? (
-          <ScrollArea className="h-96">
-            <div className="space-y-2">
-              {filteredHistory.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between p-4 rounded-[var(--radius)] bg-muted/50 hover:bg-muted/70 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">{getTranslatedActionLabel(entry.actionLabel)}</h4>
-                      <Badge variant={entry.isPositive ? 'default' : 'destructive'} className="text-xs">
-                        {entry.isPositive ? '+' : '-'}{entry.amount}
-                      </Badge>
-                    </div>
-                    {entry.description && (
-                      <p className="text-sm text-muted-foreground mb-1">{getTranslatedDescription(entry.description)}</p>
-                    )}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
-                      <span>{new Date(entry.createdAt).toLocaleTimeString()}</span>
-                      {entry.jobId && (
-                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                          Job ID: {entry.jobId.slice(-8)}
-                        </span>
+        <div className="flex gap-2">
+          <Select value={filterType} onValueChange={(value: 'all' | 'positive' | 'negative') => setFilterType(value)}>
+            <SelectTrigger className="w-32">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all')}</SelectItem>
+              <SelectItem value="positive">{t('credits')}</SelectItem>
+              <SelectItem value="negative">{t('debits')}</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={sortOrder} onValueChange={(value: 'newest' | 'oldest') => setSortOrder(value)}>
+            <SelectTrigger className="w-32">
+              <Calendar className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">{t('newest')}</SelectItem>
+              <SelectItem value="oldest">{t('oldest')}</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button variant="outline" size="sm" onClick={exportHistory}>
+            <Download className="h-4 w-4 mr-2" />
+            {t('export')}
+          </Button>
+        </div>
+      </div>
+      
+      {/* History List */}
+      <Card>
+        <CardContent className="p-6">
+          {filteredHistory.length > 0 ? (
+            <ScrollArea className="h-[600px] pr-4">
+              <div className="space-y-3">
+                {filteredHistory.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium">{getTranslatedActionLabel(entry.actionLabel)}</h4>
+                        <Badge variant={entry.isPositive ? 'default' : 'destructive'} className="text-xs">
+                          {entry.isPositive ? '+' : '-'}{entry.amount}
+                        </Badge>
+                      </div>
+                      {entry.description && (
+                        <p className="text-sm text-muted-foreground mb-1">{getTranslatedDescription(entry.description)}</p>
                       )}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
+                        <span>{new Date(entry.createdAt).toLocaleTimeString()}</span>
+                        {entry.jobId && (
+                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                            Job ID: {entry.jobId.slice(-8)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className={`text-lg font-bold ${
+                        entry.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {entry.isPositive ? '+' : '-'}{entry.amount}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {entry.action.replace('_', ' ')}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <p className={`text-lg font-bold ${
-                      entry.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                    }`}>
-                      {entry.isPositive ? '+' : '-'}{entry.amount}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {entry.action.replace('_', ' ')}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="text-center py-12">
+              <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold">{t('noTransactionsFound')}</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {searchTerm || filterType !== 'all' 
+                  ? t('tryAdjustingSearch')
+                  : t('connectionHistoryWillAppear')}
+              </p>
             </div>
-          </ScrollArea>
-        ) : (
-          <div className="text-center py-8">
-            <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">{t('noTransactionsFound')}</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {searchTerm || filterType !== 'all' 
-                ? t('tryAdjustingSearch')
-                : t('connectionHistoryWillAppear')}
-            </p>
-          </div>
-        )}
-        
-        {/* Results count */}
-        {filteredHistory.length > 0 && (
-          <div className="text-sm text-muted-foreground text-center pt-2 border-t">
-            {t('showingTransactions', { count: filteredHistory.length, total: history.length })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+          
+          {/* Results count */}
+          {filteredHistory.length > 0 && (
+            <div className="text-sm text-muted-foreground text-center pt-4 mt-4 border-t">
+              {t('showingTransactions', { count: filteredHistory.length, total: history.length })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }

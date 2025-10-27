@@ -65,14 +65,6 @@ export async function GET(
       )
     }
 
-    console.log('Conversation found:', { 
-      id: conversation.id, 
-      application_id: conversation.application_id, 
-      job_id: conversation.job_id,
-      created_by_id: conversation.created_by_id,
-      current_user: user.id
-    })
-
     // Check if user created the conversation (simple access check for now)
     if (conversation.created_by_id !== user.id) {
       // Check if user is involved through application or job
@@ -98,7 +90,6 @@ export async function GET(
       }
 
       if (!isApplicant && !isJobPoster) {
-        console.log('Access denied:', { isApplicant, isJobPoster })
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 403 }
@@ -216,14 +207,6 @@ export async function POST(
       )
     }
 
-    console.log('POST: Conversation found:', { 
-      id: conversation.id, 
-      application_id: conversation.application_id, 
-      job_id: conversation.job_id,
-      created_by_id: conversation.created_by_id,
-      current_user: user.id
-    })
-
     // Simplified access check - same as GET endpoint
     if (conversation.created_by_id !== user.id) {
       // Additional checks for applicant and job poster
@@ -249,7 +232,6 @@ export async function POST(
       }
 
       if (!isApplicant && !isJobPoster) {
-        console.log('POST: Access denied:', { isApplicant, isJobPoster })
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 403 }

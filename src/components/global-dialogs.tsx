@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -31,6 +32,7 @@ export function GlobalDialogs() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="sr-only">
             <DialogTitle>{jobT('postForm.title')}</DialogTitle>
+            <DialogDescription>{jobT('postForm.title')}</DialogDescription>
           </DialogHeader>
           <JobPostForm 
             onJobPosted={() => {
@@ -44,13 +46,14 @@ export function GlobalDialogs() {
 
       {/* Messaging Dialog */}
       <Dialog open={isMessagingDialogOpen} onOpenChange={() => closeMessagingDialog()}>
-        <DialogContent className="max-w-4xl max-h-[80vh] p-0">
+        <DialogContent className="max-w-4xl max-h-[80vh] p-0 [&>button]:hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>{t('title')}</DialogTitle>
+            <DialogDescription>{t('title')}</DialogDescription>
           </DialogHeader>
           <UnifiedMessagingInterface 
             conversationId={currentConversationId || undefined}
-            onClose={undefined}
+            onClose={closeMessagingDialog}
             className="h-[70vh] max-w-none border-0 rounded-lg"
           />
         </DialogContent>

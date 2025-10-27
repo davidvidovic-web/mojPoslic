@@ -22,8 +22,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
   let refreshedUsers = 0
 
   try {
-    console.log('🔄 Starting automatic monthly connections refresh...')
-
     // Get all tasker users who might need refresh
     const { data: users, error: fetchError } = await supabase
       .from('profiles')
@@ -35,11 +33,8 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
     }
 
     if (!users || users.length === 0) {
-      console.log('📊 No tasker users found')
       return { success: true, refreshedUsers: 0, errors: [] }
     }
-
-    console.log(`📊 Found ${users.length} tasker users to check`)
 
     // Process users in batches of 10 to avoid overwhelming the database
     const batchSize = 10
@@ -54,8 +49,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
               : null
 
             if (isTimeForMonthlyRefresh(lastRefresh)) {
-              console.log(`🔄 Refreshing connections for user ${user.id}`)
-
               // Update user's connections and last refresh date
               const { error: updateError } = await supabase
                 .from('profiles')
@@ -70,9 +63,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
               }
 
               refreshedUsers++
-              console.log(`✅ Refreshed connections for user ${user.id}`)
-            } else {
-              console.log(`⏭️ User ${user.id} not eligible for refresh yet`)
             }
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -87,8 +77,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
         await new Promise(resolve => setTimeout(resolve, 100))
       }
     }
-
-    console.log(`🎉 Monthly refresh completed. Refreshed ${refreshedUsers} users`)
     
     return {
       success: errors.length === 0,
@@ -114,7 +102,6 @@ export async function performAutomaticMonthlyRefresh(): Promise<{
 if (require.main === module) {
   performAutomaticMonthlyRefresh()
     .then((result) => {
-      console.log('📊 Monthly refresh result:', result)
       process.exit(result.success ? 0 : 1)
     })
     .catch((error) => {

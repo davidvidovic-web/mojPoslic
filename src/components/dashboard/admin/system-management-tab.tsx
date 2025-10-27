@@ -52,6 +52,7 @@ interface SystemManagementTabProps {
 
 export function SystemManagementTab({ categories, cities }: SystemManagementTabProps) {
   const t = useTranslations('admin.system')
+  const td = useTranslations('dashboard')
   const [systemActiveTab, setSystemActiveTab] = useState('categories')
   const [connectionUsers, setConnectionUsers] = useState<ConnectionUser[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -78,11 +79,11 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
         const users = await response.json()
         setConnectionUsers(users.data || users)
       } else {
-        toast.error('Failed to load users')
+        toast.error(td('toast.usersLoadFailed'))
       }
     } catch (error) {
       console.error('Error fetching users:', error)
-      toast.error('Failed to load users')
+      toast.error(td('toast.usersLoadFailed'))
     } finally {
       setLoadingConnections(false)
     }
@@ -90,7 +91,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
 
   const handleGrantConnections = async () => {
     if (!selectedUserId || !connectionAmount || isNaN(Number(connectionAmount))) {
-      toast.error('Please select a user and enter a valid connection amount')
+      toast.error(td('toast.selectUserAndAmount'))
       return
     }
 
@@ -109,7 +110,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
       })
 
       if (response.ok) {
-        toast.success('Connections granted successfully')
+        toast.success(td('toast.connectionsGranted'))
         setSelectedUserId('')
         setConnectionAmount('')
         setReason('')
@@ -117,11 +118,11 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
         fetchUsersForConnections()
       } else {
         const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to grant connections')
+        toast.error(errorData.error || td('toast.connectionsGrantFailed'))
       }
     } catch (error) {
       console.error('Error granting connections:', error)
-      toast.error('Failed to grant connections')
+      toast.error(td('toast.connectionsGrantFailed'))
     } finally {
       setGrantingConnections(false)
     }

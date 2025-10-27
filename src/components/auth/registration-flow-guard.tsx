@@ -6,11 +6,13 @@
 import React, { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useTranslations } from 'next-intl'
 
 export function RegistrationFlowGuard({ children }: { children: React.ReactNode }) {
   const { user, loading, refreshUser } = useSupabaseAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useTranslations('auth')
 
   // Check if user just verified email
   const isVerified = searchParams.get('verified') === 'true'
@@ -18,7 +20,6 @@ export function RegistrationFlowGuard({ children }: { children: React.ReactNode 
   // Refresh user context if just verified
   useEffect(() => {
     if (isVerified && !loading) {
-      console.log('User just verified, refreshing auth context...')
       refreshUser()
     }
   }, [isVerified, loading, refreshUser])
@@ -28,7 +29,6 @@ export function RegistrationFlowGuard({ children }: { children: React.ReactNode 
 
     // If just verified, give more time for auth context to refresh
     if (isVerified && !user) {
-      console.log('Just verified but no user yet, waiting...')
       return
     }
     
@@ -59,7 +59,7 @@ export function RegistrationFlowGuard({ children }: { children: React.ReactNode 
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -71,7 +71,7 @@ export function RegistrationFlowGuard({ children }: { children: React.ReactNode 
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Redirecting...</p>
+          <p className="text-muted-foreground">{t('redirecting')}</p>
         </div>
       </div>
     )

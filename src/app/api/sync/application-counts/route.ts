@@ -37,7 +37,6 @@ export async function POST() {
       return acc
     }, {})
 
-    console.log('Calculated application counts:', applicationCounts)
 
     // Get all jobs
     const { data: jobs, error: jobsError } = await supabaseService
@@ -57,7 +56,6 @@ export async function POST() {
     for (const job of jobs || []) {
       const actualCount = applicationCounts[job.id] || 0
       if (job.application_count !== actualCount) {
-        console.log(`Updating job ${job.title}: ${job.application_count} -> ${actualCount}`)
         
         const { error: updateError } = await supabaseService
           .from('job_listings')

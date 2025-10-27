@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { PrismaClient } from '@prisma/client'
 
 export async function GET() {
   try {
@@ -9,16 +8,8 @@ export async function GET() {
     // Get current user from Supabase Auth
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    console.log('Registration status check:', {
-      hasUser: !!user,
-      userId: user?.id,
-      authError: authError?.message,
-      isAuthSessionMissing: authError?.message === 'Auth session missing!'
-    })
-
     // If it's specifically an "Auth session missing" error, handle it gracefully
     if (authError?.message === 'Auth session missing!' || !user) {
-      console.log('No valid auth session - user needs to sign in')
       return NextResponse.json({ 
         error: 'No authentication session',
         needsSignIn: true
@@ -30,18 +21,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Authentication error' }, { status: 401 })
     }
 
-    const prisma = new PrismaClient()
+    const { data: dbUser, error: dbError } = await supabase
+      .from('users')
+      .select('role, profile_setup_completed, email_verified')
+      .eq('id', user.id)
+      .single()
 
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        role: true,
-        profileSetupCompleted: true,
-        emailVerified: true
-      }
-    })
-
-    await prisma.$disconnect()
+    if (dbError && dbError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Database error:', dbError)
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
 
     if (!dbUser) {
       // User doesn't exist in database yet, they need to complete registration
@@ -59,8 +48,8 @@ export async function GET() {
 
     // Determine what the user needs to complete
     const needsRole = !dbUser.role
-    const needsProfile = dbUser.role && !dbUser.profileSetupCompleted
-    const isComplete = dbUser.role && dbUser.profileSetupCompleted && (dbUser.emailVerified || !!user.email_confirmed_at)
+    const needsProfile = dbUser.role && !dbUser.profile_setup_completed
+    const isComplete = dbUser.role && dbUser.profile_setup_completed && (dbUser.email_verified || !!user.email_confirmed_at)
 
     return NextResponse.json({
       needsRole,
@@ -68,8 +57,8 @@ export async function GET() {
       isComplete,
       userState: {
         role: dbUser.role,
-        profileSetupCompleted: dbUser.profileSetupCompleted,
-        emailVerified: dbUser.emailVerified || !!user.email_confirmed_at
+        profileSetupCompleted: dbUser.profile_setup_completed,
+        emailVerified: dbUser.email_verified || !!user.email_confirmed_at
       }
     })
 

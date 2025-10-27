@@ -50,7 +50,6 @@ export function ChatWithInitialMessagesExample() {
 // Example 3: Chat with message persistence (Supabase documentation pattern)
 export function ChatWithPersistenceExample() {
   const handleMessage = async (messages: ChatMessage[]) => {
-    console.log('Storing messages:', messages)
     // Store messages in your database
     // await storeMessages(messages)
   }

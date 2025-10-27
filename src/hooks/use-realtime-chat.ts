@@ -126,12 +126,10 @@ export function useRealtimeChat({
 
     // Subscribe to the channel
     channel.subscribe((status) => {
-      console.log('🔗 Realtime chat connection status:', status)
     })
 
     // Cleanup function
     return () => {
-      console.log('🧹 Cleaning up realtime chat subscription')
       channel.unsubscribe()
       channelRef.current = null
     }

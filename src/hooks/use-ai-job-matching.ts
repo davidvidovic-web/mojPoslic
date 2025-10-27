@@ -190,35 +190,34 @@ export function useAIJobMatching({
     }
   }, [user?.id, supabase])
 
-  // Set up real-time updates for new jobs
+  // Set up real-time updates for new jobs using Broadcast
   useEffect(() => {
     if (!enabled || !user?.id) return
 
-    const channel = supabase
-      .channel(`job_matching_${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'job_listings',
-        filter: 'status=eq.active'
-      }, () => {
-        // Refresh matches when new jobs are posted
-        getJobMatches()
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'users',
-        filter: `id=eq.${user.id}`
-      }, () => {
-        // Refresh matches when user profile updates
-        getJobMatches()
-      })
-      .subscribe()
+    const setupChannel = async () => {
+      // Set auth for private channel
+      await supabase.realtime.setAuth()
 
-    return () => {
-      channel.unsubscribe()
+      const channel = supabase
+        .channel(`topic:applications:user:${user.id}`, {
+          config: { private: true }
+        })
+        .on('broadcast', { event: 'INSERT' }, () => {
+          // Refresh matches when new application is created
+          getJobMatches()
+        })
+        .on('broadcast', { event: 'UPDATE' }, () => {
+          // Refresh matches when application is updated
+          getJobMatches()
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
+
+    setupChannel()
   }, [enabled, user?.id, getJobMatches, supabase])
 
   // Set up auto-refresh

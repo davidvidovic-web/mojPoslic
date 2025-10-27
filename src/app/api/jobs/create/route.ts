@@ -4,7 +4,6 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log('📝 Job Create API - Request body:', JSON.stringify(body, null, 2))
     
     // Check for Authorization header first
     const authHeader = request.headers.get('authorization')
@@ -216,7 +215,6 @@ export async function POST(request: Request) {
 
     // If the job is featured, deduct 6 connections from the user's balance
     if (is_featured) {
-      console.log('🌟 Featured job requested, checking connections...')
       const { data: userProfile, error: profileError } = await authenticatedSupabase
         .from('users')
         .select('connections')
@@ -231,7 +229,6 @@ export async function POST(request: Request) {
         )
       }
 
-      console.log('💰 User connections:', userProfile.connections)
       if (userProfile.connections < 6) {
         console.error('❌ Insufficient connections:', userProfile.connections, '< 6')
         return NextResponse.json(

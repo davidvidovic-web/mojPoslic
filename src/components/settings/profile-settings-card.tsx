@@ -9,7 +9,6 @@ import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 import { AvatarUpload } from '@/components/profile/avatar-upload'
-import { ResumeUpload } from '@/components/profile/resume-upload'
 import { User } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
@@ -372,20 +371,6 @@ export function ProfileSettingsCard() {
                         )
                       })}
                     </div>
-                  </div>
-                )}
-
-                {/* Resume Upload - Only for taskers */}
-                {profile.role === 'tasker' && (
-                  <div className="space-y-2">
-                    <Label>{t('resume')}</Label>
-                    <ResumeUpload
-                      currentResumeUrl={authProfile?.resumeUrl || undefined}
-                      onResumeUploaded={() => {
-                        // Resume upload handles its own profile update, just refresh
-                        refreshUser()
-                      }}
-                    />
                   </div>
                 )}
               </div>

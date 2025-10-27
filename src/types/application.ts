@@ -126,7 +126,7 @@ export interface JobApplication {
     email: string
     avatarUrl?: string
     bio?: string
-    skills?: string
+    skills?: string | string[] // Can be array (from DB) or string (legacy)
     experience?: string
     location?: string
     averageRating?: number

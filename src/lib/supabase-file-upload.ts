@@ -35,7 +35,6 @@ export class SupabaseFileUploadService {
    */
   static async createBucketsIfNeeded(): Promise<void> {
     try {
-      console.log('Checking and creating storage buckets...')
 
       const requiredBuckets = ['avatars', 'resumes', 'message-attachments', 'company-logos']
 
@@ -55,14 +54,11 @@ export class SupabaseFileUploadService {
           if (error && !error.message?.includes('already exists')) {
             console.error(`Error creating bucket ${bucketName}:`, error)
           } else {
-            console.log(`Bucket ${bucketName} ready`)
           }
         } catch (error) {
-          console.log(`Bucket ${bucketName} might already exist or creation failed:`, error)
         }
       }
 
-      console.log('Bucket setup complete')
     } catch (error) {
       console.error('Error setting up buckets:', error)
     }
@@ -73,7 +69,6 @@ export class SupabaseFileUploadService {
    */
   static async testStorageConnection(): Promise<boolean> {
     try {
-      console.log('Testing Supabase storage connection...')
       const { data, error } = await supabase.storage.listBuckets()
 
       if (error) {
@@ -81,7 +76,6 @@ export class SupabaseFileUploadService {
         return false
       }
 
-      console.log('Storage connection successful. Available buckets:', data?.map(b => b.name))
 
       // Check if required buckets exist
       const requiredBuckets = ['avatars', 'resumes', 'message-attachments', 'company-logos']
@@ -93,12 +87,10 @@ export class SupabaseFileUploadService {
           // Try to create the missing bucket
           try {
             await this.createBucketsIfNeeded()
-            console.log(`Attempted to create missing buckets`)
           } catch (createError) {
             console.error(`Failed to create bucket ${bucketName}:`, createError)
           }
         } else {
-          console.log(`✅ Bucket '${bucketName}' exists`)
         }
       }
 
@@ -125,13 +117,6 @@ export class SupabaseFileUploadService {
         throw new Error('No user ID provided')
       }
 
-      console.log('Starting avatar upload for user:', userId)
-      console.log('File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      })
-
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError) {
@@ -142,7 +127,6 @@ export class SupabaseFileUploadService {
         throw new Error('User not authenticated')
       }
 
-      console.log('User authenticated:', user.id)
 
       // Validate file for avatar
       this.validateAvatarFile(file)
@@ -154,7 +138,6 @@ export class SupabaseFileUploadService {
       // Create file path: avatars/userId.ext
       const filePath = `${filename}`
 
-      console.log('Uploading to path:', filePath)
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -166,7 +149,6 @@ export class SupabaseFileUploadService {
 
       // If bucket doesn't exist, try to create it
       if (error && error.message?.includes('Bucket not found')) {
-        console.log('Bucket not found, this might be normal for first upload')
         // Continue with error handling below
       }
 
@@ -193,7 +175,6 @@ export class SupabaseFileUploadService {
         throw new Error('Upload succeeded but no data returned')
       }
 
-      console.log('Upload successful, data:', data)
 
       // Get public URL
       const { data: urlData } = supabase.storage
@@ -204,7 +185,6 @@ export class SupabaseFileUploadService {
         throw new Error('Failed to generate public URL')
       }
 
-      console.log('Public URL generated:', urlData.publicUrl)
 
       return {
         url: urlData.publicUrl,

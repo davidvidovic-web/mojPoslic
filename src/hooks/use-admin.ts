@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useDashboardTranslations } from './use-translations'
 
 // Types
 interface AdminUser {
@@ -216,16 +217,17 @@ export function useAdminCities() {
 // Mutation Hooks
 export function useDeleteAdminJob() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: deleteJob,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.jobs() })
       queryClient.invalidateQueries({ queryKey: adminKeys.stats() })
-      toast.success('Job deleted successfully')
+      toast.success(t('toast.jobDeleted'))
     },
     onError: (error) => {
-      toast.error('Failed to delete job')
+      toast.error(t('toast.jobDeleteFailed'))
       console.error('Job deletion error:', error)
     },
   })
@@ -233,6 +235,7 @@ export function useDeleteAdminJob() {
 
 export function useUpdateJobStatus() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: ({ jobId, isActive }: { jobId: string; isActive: boolean }) =>
@@ -240,10 +243,10 @@ export function useUpdateJobStatus() {
     onSuccess: (_, { isActive }) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.jobs() })
       queryClient.invalidateQueries({ queryKey: adminKeys.stats() })
-      toast.success(`Job ${isActive ? 'activated' : 'deactivated'} successfully`)
+      toast.success(isActive ? t('toast.jobActivated') : t('toast.jobDeactivated'))
     },
     onError: (error) => {
-      toast.error('Failed to update job status')
+      toast.error(t('toast.jobStatusChangeFailed'))
       console.error('Job status update error:', error)
     },
   })
@@ -251,6 +254,7 @@ export function useUpdateJobStatus() {
 
 export function useUpdateJobFeatured() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: ({ jobId, isFeatured }: { jobId: string; isFeatured: boolean }) =>
@@ -258,10 +262,10 @@ export function useUpdateJobFeatured() {
     onSuccess: (_, { isFeatured }) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.jobs() })
       queryClient.invalidateQueries({ queryKey: adminKeys.stats() })
-      toast.success(`Job ${isFeatured ? 'featured' : 'unfeatured'} successfully`)
+      toast.success(isFeatured ? t('toast.jobFeatured') : t('toast.jobUnfeatured'))
     },
     onError: (error) => {
-      toast.error('Failed to update featured status')
+      toast.error(t('toast.jobFeatureUpdateFailed'))
       console.error('Job featured update error:', error)
     },
   })
@@ -269,6 +273,7 @@ export function useUpdateJobFeatured() {
 
 export function useUpdateUserRole() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: string }) =>
@@ -276,10 +281,10 @@ export function useUpdateUserRole() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.users() })
       queryClient.invalidateQueries({ queryKey: adminKeys.stats() })
-      toast.success('User role updated successfully')
+      toast.success(t('toast.userRoleUpdated'))
     },
     onError: (error) => {
-      toast.error(error.message || 'Failed to update user role')
+      toast.error(error.message || t('toast.userRoleUpdateFailed'))
       console.error('User role update error:', error)
     },
   })
@@ -287,16 +292,17 @@ export function useUpdateUserRole() {
 
 export function useDeleteUser() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.users() })
       queryClient.invalidateQueries({ queryKey: adminKeys.stats() })
-      toast.success('User deleted successfully')
+      toast.success(t('toast.userDeleted'))
     },
     onError: (error) => {
-      toast.error('Failed to delete user')
+      toast.error(t('toast.userDeleteFailed'))
       console.error('User deletion error:', error)
     },
   })

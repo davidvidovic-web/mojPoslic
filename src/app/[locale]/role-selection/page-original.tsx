@@ -66,7 +66,6 @@ export default function RoleSelectionPage() {
   const isVerified = searchParams.get('verified') === 'true'
   const verifyToken = searchParams.get('token') // This indicates fresh verification
 
-  console.log('RoleSelection: Component rendered with state:', {
     loading,
     user: user ? { id: user.id, email: user.email } : null,
     isVerified,
@@ -78,17 +77,14 @@ export default function RoleSelectionPage() {
   // CRITICAL: Immediate detection and waiting state setup
   useEffect(() => {
     if (isVerified && verifyToken) {
-      console.log('RoleSelection: Fresh verification detected, setting up waiting state')
       setWaitingForSession(true)
       // Give the auth context some time to initialize, then start refreshing
       setTimeout(() => {
-        console.log('RoleSelection: Starting session refresh attempts')
         let attempts = 0
         const maxAttempts = 30 // Increased attempts
         
         const tryRefresh = async () => {
           attempts++
-          console.log(`RoleSelection: Refresh attempt ${attempts}/${maxAttempts}`)
           
           try {
             await refreshUser()
@@ -97,7 +93,6 @@ export default function RoleSelectionPage() {
             if (attempts < maxAttempts) {
               setTimeout(tryRefresh, 800) // Longer delay between attempts
             } else {
-              console.log('RoleSelection: Max attempts reached, stopping')
               setWaitingForSession(false)
               setInitialCheckDone(true)
             }
@@ -125,7 +120,6 @@ export default function RoleSelectionPage() {
   // Monitor for successful user detection
   useEffect(() => {
     if (waitingForSession && user) {
-      console.log('RoleSelection: User detected! Session established successfully')
       setWaitingForSession(false)
       setInitialCheckDone(true)
     }
@@ -133,7 +127,6 @@ export default function RoleSelectionPage() {
 
   // Debug auth state
   useEffect(() => {
-    console.log('Role selection - Auth state:', { 
       loading, 
       user: user ? { id: user.id, email: user.email, role: user.role } : null, 
       isVerified 
@@ -151,11 +144,9 @@ export default function RoleSelectionPage() {
   useEffect(() => {
     // Don't do any redirects until initial check is done
     if (!initialCheckDone) {
-      console.log('RoleSelection: Initial check not done yet, waiting...')
       return
     }
     
-    console.log('RoleSelection: Redirect logic check:', { 
       loading, 
       user: !!user, 
       waitingForSession, 
@@ -180,52 +171,44 @@ export default function RoleSelectionPage() {
     
     // Don't redirect if we're waiting for session to establish
     if (waitingForSession) {
-      console.log('RoleSelection: Waiting for session to establish, not redirecting yet...')
       return
     }
     
     // Don't redirect if still loading
     if (loading) {
-      console.log('RoleSelection: Still loading, not redirecting yet...')
       return
     }
     
     // Only redirect to signin if we're sure there's no user and we're not in a verification flow
     if (!user && !isVerified) {
-      console.log('RoleSelection: No user found and not in verification flow, redirecting to sign in')
       router.push('/auth/signin')
       return
     }
     
     // Special case: if we were expecting a user from verification but still don't have one
     if (!user && isVerified && verifyToken) {
-      console.log('RoleSelection: Expected user from verification but none found, redirecting to signin with error')
       router.push('/auth/signin?error=verification_session_failed')
       return
     }
 
     // If user exists and profile is complete, redirect to dashboard
     if (user && user.profileSetupCompleted && user.role) {
-      console.log('RoleSelection: User profile already completed with role, redirecting to dashboard')
       router.push('/dashboard')
       return
     }
     
     // If user exists but has no role (regardless of profile setup status), stay on role selection
     if (user && !user.role) {
-      console.log('RoleSelection: User found with no role, showing role selection interface')
       // This is the correct state - user should select role here
       return
     }
     
     // If user has role but profile not complete, redirect to profile setup
     if (user && user.role && !user.profileSetupCompleted) {
-      console.log('RoleSelection: User has role but profile incomplete, redirecting to profile setup')
       router.push('/profile-setup')
       return
     }
     
-    console.log('RoleSelection: All checks passed, showing role selection interface')
   }, [user, loading, router, isVerified, verifyToken, waitingForSession, initialCheckDone])
 
   // Show loading if auth is still loading or if user just verified and we're waiting for session

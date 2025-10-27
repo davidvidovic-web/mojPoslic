@@ -75,14 +75,7 @@ class EmailService {
       const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.RESEND_API_KEY;
       
       if (isDevelopment) {
-        // Simple console log for development
-        console.log('');
-        console.log('🔐 DEVELOPMENT MODE - EMAIL VERIFICATION');
-        console.log('📧 Email:', email);
-        console.log('� Verification Code:', code);
-        console.log('⏰ Code expires in 15 minutes');
-        console.log('');
-        
+        // Return verification code in development mode
         return {
           success: true,
           data: { id: 'dev-mode' },

@@ -20,21 +20,16 @@ export default async function middleware(request: NextRequest) {
 
   // For auth routes, handle them specially to avoid redirect loops
   if (pathname.startsWith('/auth/')) {
-    console.log('Auth route middleware:', pathname);
-    
     // Apply intl middleware but don't cascade to updateSession to avoid loops
-    const intlResponse = intlMiddleware(request);
-    
-    console.log('Intl response status:', intlResponse.status);
-    console.log('Intl response headers:', intlResponse.headers.get('location'));
+    const intlResponse = intlMiddleware(request)
     
     // If intl middleware wants to redirect, let it
     if (intlResponse.status === 307 || intlResponse.status === 301) {
-      return intlResponse;
+      return intlResponse
     }
     
     // Otherwise just return the intl response without session update for auth routes
-    return intlResponse;
+    return intlResponse
   }
 
   // For all other routes, apply both intl and session middleware

@@ -265,7 +265,6 @@ export function useSupabaseRealtimeChat({
       return
     }
 
-    console.log('🔄 Setting up message realtime for conversation:', conversationId)
 
     // Create channel with proper naming convention
     const channel = supabase.channel(`messages:${conversationId}`)
@@ -280,7 +279,6 @@ export function useSupabaseRealtimeChat({
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
         const newMessage = payload.new as Message
-        console.log('📨 New message via postgres_changes:', newMessage)
         
         // Add message if it's not from current user (optimistic updates handle own messages)
         if (newMessage.sender_id !== user.id) {
@@ -301,7 +299,6 @@ export function useSupabaseRealtimeChat({
         filter: `conversation_id=eq.${conversationId}`
       }, (payload) => {
         const updatedMessage = payload.new as Message
-        console.log('📝 Message updated via postgres_changes:', updatedMessage)
         
         setMessages(prev => prev.map(msg => 
           msg.id === updatedMessage.id ? updatedMessage : msg
@@ -311,7 +308,6 @@ export function useSupabaseRealtimeChat({
       // Listen for typing indicators via broadcast
       .on('broadcast', { event: 'typing' }, (payload) => {
         const { user_id, typing, user_name } = payload.payload
-        console.log('⌨️ Typing indicator:', { user_id, typing, user_name })
         
         if (user_id !== user.id) { // Don't show own typing
           setTypingUsers(prev => {
@@ -325,9 +321,7 @@ export function useSupabaseRealtimeChat({
       })
       
       .subscribe((status) => {
-        console.log('📡 Message realtime status:', status)
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Message realtime connected')
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Message realtime error')
           setError('Realtime connection failed')
@@ -335,7 +329,6 @@ export function useSupabaseRealtimeChat({
       })
 
     return () => {
-      console.log('🧹 Cleaning up message realtime')
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
         typingTimeoutRef.current = null
@@ -356,7 +349,6 @@ export function useSupabaseRealtimeChat({
       return
     }
 
-    console.log('🔄 Setting up conversations realtime')
 
     // Create channel for conversations
     const channel = supabase.channel('conversations')
@@ -369,7 +361,6 @@ export function useSupabaseRealtimeChat({
         table: 'conversations'
       }, (payload) => {
         const newConversation = payload.new as Conversation
-        console.log('📋 New conversation:', newConversation)
         
         if (newConversation.participant_ids?.includes(user.id)) {
           loadConversations() // Reload to get proper data
@@ -382,7 +373,6 @@ export function useSupabaseRealtimeChat({
         table: 'conversations'
       }, (payload) => {
         const updatedConversation = payload.new as Conversation
-        console.log('📋 Updated conversation:', updatedConversation)
         
         if (updatedConversation.participant_ids?.includes(user.id)) {
           setConversations(prev => prev.map(conv => 
@@ -392,16 +382,13 @@ export function useSupabaseRealtimeChat({
       })
       
       .subscribe((status) => {
-        console.log('📡 Conversations realtime status:', status)
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Conversations realtime connected')
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Conversations realtime error')
         }
       })
 
     return () => {
-      console.log('🧹 Cleaning up conversations realtime')
       supabase.removeChannel(channel)
       conversationsChannelRef.current = null
     }

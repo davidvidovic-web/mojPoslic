@@ -22,7 +22,7 @@ import {
   FileText
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { ApplicationStatus } from '@prisma/client'
+import { ApplicationStatus } from '@/types/application'
 import { useTranslations } from 'next-intl'
 
 interface User {

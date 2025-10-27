@@ -70,17 +70,14 @@ export function AvatarUpload({
 
     try {
       // Test storage connection first
-      console.log('Testing storage connection...')
       const isConnected = await SupabaseFileUploadService.testStorageConnection()
       if (!isConnected) {
         throw new Error('Storage service is not available. Please try again later.')
       }
 
       // Upload to Supabase Storage
-      console.log('Starting avatar upload...')
       const result = await SupabaseFileUploadService.uploadAvatar(file, user.id)
 
-      console.log('Avatar uploaded successfully:', result)
 
       // Get session for auth header
       const { supabase } = await import("@/lib/supabase")

@@ -11,11 +11,9 @@ interface ClientQuickStatsProps {
 export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsProps) {
   const t = useTranslations()
   
-  const activeJobs = jobs.length // All jobs are considered active for now
+  const activeJobs = jobs.filter(job => job.status === 'active').length
+  const completedJobs = jobs.filter(job => job.status === 'completed').length
   const totalApplications = Object.values(applicationCounts).reduce((sum, count) => sum + count, 0)
-  
-  // Calculate average applications per job
-  const avgApplicationsPerJob = activeJobs > 0 ? Math.round(totalApplications / activeJobs) : 0
   
   // Calculate jobs with active applications (jobs that have received applications)
   const jobsWithApplications = Object.values(applicationCounts).filter(count => count > 0).length
@@ -34,6 +32,18 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
         </div>
       </div>
 
+      {/* Completed Jobs */}
+      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-green-100 dark:border-green-900/30 p-4 hover:shadow-lg hover:shadow-green-500/5 transition-all duration-300">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-green-600 dark:text-green-400">
+            {t('dashboard.stats.completedJobs')}
+          </p>
+          <h3 className="text-2xl font-bold text-green-700 dark:text-green-300">
+            {completedJobs}
+          </h3>
+        </div>
+      </div>
+
       {/* Total Applications */}
       <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between">
@@ -42,18 +52,6 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
           </p>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {totalApplications}
-          </h3>
-        </div>
-      </div>
-
-      {/* Average Applications */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t('dashboard.client.stats.avgApplications')}
-          </p>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {avgApplicationsPerJob}
           </h3>
         </div>
       </div>

@@ -49,7 +49,6 @@ export default function ProfileSetupPage() {
   // Refresh user context if just verified
   useEffect(() => {
     if (isVerified && !loading) {
-      console.log('User just verified, refreshing auth context...')
       refreshUser()
     }
   }, [isVerified, loading, refreshUser])
@@ -73,7 +72,6 @@ export default function ProfileSetupPage() {
 
     // If just verified, give more time for auth context to refresh
     if (isVerified && !user) {
-      console.log('Just verified but no user yet, waiting...')
       return
     }
 

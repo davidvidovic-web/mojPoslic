@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useDashboardTranslations } from './use-translations'
 
 // Types
 interface BillingStats {
@@ -130,6 +131,7 @@ export function useAdminConnectionHistory() {
 // Mutation Hooks
 export function useGrantConnections() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: grantConnections,
@@ -138,10 +140,10 @@ export function useGrantConnections() {
       queryClient.invalidateQueries({ queryKey: adminKeys.connectionHistory() })
       queryClient.invalidateQueries({ queryKey: adminKeys.billingStats() })
       
-      toast.success('Connections granted successfully!')
+      toast.success(t('toast.connectionsGranted'))
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to grant connections: ${error.message}`)
+    onError: () => {
+      toast.error(t('toast.connectionsGrantFailed'))
     },
   })
 }

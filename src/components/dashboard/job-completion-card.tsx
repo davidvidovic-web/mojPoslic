@@ -59,12 +59,12 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
         throw new Error(errorData.error || 'Failed to mark work as completed')
       }
 
-      toast.success('Work marked as completed! Waiting for client confirmation.')
+      toast.success(t('jobCompletion.workMarkedComplete'))
       setCompletionNotes('')
       onUpdate?.()
     } catch (error) {
       console.error('Error marking work as completed:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to mark work as completed')
+      toast.error(error instanceof Error ? error.message : t('jobCompletion.markCompleteFailed'))
     } finally {
       setLoading(false)
     }
@@ -88,12 +88,12 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
         throw new Error(errorData.error || 'Failed to confirm work completion')
       }
 
-      toast.success('Work completion confirmed! The job is now completed and you can rate each other.')
+      toast.success(t('jobCompletion.workCompleteConfirmed'))
       setClientNotes('')
       onUpdate?.()
     } catch (error) {
       console.error('Error confirming work completion:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to confirm work completion')
+      toast.error(error instanceof Error ? error.message : t('jobCompletion.confirmCompleteFailed'))
     } finally {
       setLoading(false)
     }

@@ -153,13 +153,11 @@ export async function DELETE(
       )
     }
 
-    console.log('✅ Application can be cancelled - no messaging started')
 
     // Comprehensive cleanup - Remove ALL data tied to this application
     // We need to clean up in the correct order due to foreign key constraints
     
     // 1. First, check for and delete any conversations and messages related to this application
-    console.log('🧹 Cleaning up conversations and messages for application:', applicationId)
     const { data: conversationToDelete, error: conversationFetchError } = await supabaseService
       .from('conversations')
       .select(`
@@ -177,11 +175,9 @@ export async function DELETE(
     }
 
     if (conversationToDelete) {
-      console.log('🧹 Found conversation to delete:', conversationToDelete.id)
       
       // Delete messages first (foreign key constraint)
       if (conversationToDelete.messages && conversationToDelete.messages.length > 0) {
-        console.log('🧹 Deleting messages:', conversationToDelete.messages.length)
         const { error: messagesError } = await supabaseService
           .from('messages')
           .delete()
@@ -206,7 +202,6 @@ export async function DELETE(
     }
 
     // 2. Delete any notifications related to this application
-    console.log('🧹 Cleaning up notifications for application:', applicationId)
     const { error: notificationDeleteError } = await supabaseService
       .from('notifications')
       .delete()
@@ -218,7 +213,6 @@ export async function DELETE(
     }
 
     // 3. Delete any file uploads related to this application (cover letters, etc.)
-    console.log('🧹 Cleaning up file uploads for application:', applicationId)
     const { error: fileDeleteError } = await supabaseService
       .from('file_uploads')
       .delete()
@@ -231,19 +225,11 @@ export async function DELETE(
     }
 
     // 4. Finally, delete the application itself using service role for debugging
-    console.log('🧹 Deleting the application record:', applicationId)
     const { data: deletedData, error: deleteError, count } = await supabaseService
       .from('applications')
       .delete()
       .eq('id', applicationId)
       .select() // This will return the deleted record to confirm deletion
-
-    console.log('🔍 Delete operation result:', {
-      deletedData,
-      deleteError,
-      count,
-      applicationId
-    })
 
     if (deleteError) {
       console.error('❌ Failed to delete application:', deleteError)
@@ -255,7 +241,6 @@ export async function DELETE(
 
     // Update job application count after successful deletion
     if (deletedData && deletedData.length > 0 && application.job_id) {
-      console.log('🔢 Updating job application count after deletion')
       
       const { data: jobData, error: jobFetchError } = await supabaseService
         .from('job_listings')
@@ -278,7 +263,6 @@ export async function DELETE(
         if (updateError) {
           console.error('❌ Failed to update job application count:', updateError)
         } else {
-          console.log('✅ Job application count decremented successfully')
         }
       }
     }
@@ -290,17 +274,6 @@ export async function DELETE(
         { status: 404 }
       )
     }
-
-    console.log('✅ Application and all related data deleted successfully:', {
-      applicationId: applicationId,
-      deletedAt: new Date().toISOString(),
-      cleanedUp: {
-        conversation: !!conversationToDelete,
-        messages: conversationToDelete?.messages?.length || 0,
-        notifications: 'deleted',
-        fileUploads: 'deleted'
-      }
-    })
 
     return NextResponse.json({
       success: true,

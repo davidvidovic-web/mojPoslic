@@ -19,7 +19,6 @@ export async function GET() {
     const testUserId = 'ba4bd4f1-fa3b-474c-8e25-a2833040df76'
 
     // Test 1: Direct query with service role
-    console.log('Test 1: Direct service role query')
     const { data: test1, error: error1 } = await supabaseService
       .from('users')
       .select('id, email, name, phone')
@@ -27,20 +26,17 @@ export async function GET() {
       .single()
 
     // Test 2: Query all users to see if table is accessible
-    console.log('Test 2: Query all users')
     const { data: test2, error: error2 } = await supabaseService
       .from('users')
       .select('id, email, name, phone')
       .limit(5)
 
     // Test 3: Check table permissions
-    console.log('Test 3: Check if table exists and is accessible')
     const { data: test3, error: error3 } = await supabaseService
       .from('users')
       .select('count(*)', { count: 'exact' })
 
     // Test 4: Try with RLS explicitly disabled (if possible)
-    console.log('Test 4: Direct SQL query via RPC if available')
     const { data: test4, error: error4 } = await supabaseService
       .rpc('get_user_by_id', { user_id: testUserId })
       .single()

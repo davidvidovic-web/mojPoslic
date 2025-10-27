@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { OTPInput } from "@/components/ui/otp-input"
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
@@ -158,17 +159,12 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="otp">{t('verificationCode') || 'Verification Code'}</Label>
-                  <Input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    placeholder={t('enterSixDigitCode') || 'Enter 6-digit code'}
+                  <OTPInput
+                    length={6}
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    required
+                    onChange={setOtp}
                     disabled={loading}
-                    maxLength={6}
-                    className="text-center text-lg tracking-widest"
+                    autoFocus
                   />
                 </div>
 

@@ -30,15 +30,6 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(getLocalizedUrl(`/role-selection?verified=true&token=${verifyToken}`, locale))
 
   try {
-    console.log('Auth confirm called with:', { 
-      hostname,
-      locale,
-      token_hash: token_hash?.substring(0, 10) + '...', 
-      type,
-      next,
-      fullUrl: request.url 
-    })
-
     if (token_hash && type) {
       const cookieStore = await cookies()
       
@@ -68,11 +59,9 @@ export async function GET(request: NextRequest) {
       })
 
       if (!error && data.user) {
-        console.log('User verified successfully:', data.user.email)
         
         // Set the session properly for the user
         if (data.session) {
-          console.log('Session established for user')
         }
         
         // Mark user as email verified in our database
@@ -85,10 +74,8 @@ export async function GET(request: NextRequest) {
           .eq('id', data.user.id)
         
         if (updateError) {
-          console.log('Warning: Failed to update email_verified status:', updateError)
           // Don't fail the whole process for this
         } else {
-          console.log('Email verification status updated in database')
         }
         
         // Check user profile setup status - try both ID and email lookup
@@ -104,9 +91,7 @@ export async function GET(request: NextRequest) {
         
         if (!errorById && profileById) {
           userProfile = profileById
-          console.log('Found profile by ID:', profileById)
         } else {
-          console.log('Profile lookup by ID failed, trying by email:', errorById)
           
           // Try by email as fallback
           const { data: profileByEmail, error: errorByEmail } = await supabase
@@ -117,10 +102,8 @@ export async function GET(request: NextRequest) {
           
           if (!errorByEmail && profileByEmail) {
             userProfile = profileByEmail
-            console.log('Found profile by email lookup:', profileByEmail)
           } else {
             profileError = errorById // Use the original ID error for handling
-            console.log('Profile lookup by email also failed:', errorByEmail)
           }
         }
 
@@ -129,7 +112,6 @@ export async function GET(request: NextRequest) {
           
           // If user profile doesn't exist, create it manually
           if (profileError.code === 'PGRST116') {
-            console.log('User profile not found, creating manually...')
             const { error: createError } = await supabase
               .from('users')
               .insert({
@@ -145,11 +127,9 @@ export async function GET(request: NextRequest) {
               
               // If it's a duplicate error, the profile might exist with different lookup
               if (createError.code === '23505') {
-                console.log('Profile already exists (duplicate constraint), continuing to dashboard')
                 return NextResponse.redirect(getLocalizedUrl('/dashboard', locale))
               }
             } else {
-              console.log('User profile created successfully')
               // Return the response we prepared with proper cookie handling
               return response
             }
@@ -159,21 +139,13 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(getLocalizedUrl('/dashboard', locale))
         }
 
-        console.log('Profile found:', { 
-          hasRole: !!userProfile?.role, 
-          role: userProfile?.role,
-          profileSetupCompleted: userProfile?.profile_setup_completed 
-        })
-
         // Handle profile setup flow (no locale prefix needed with domain-based routing)
         if (userProfile && !userProfile.profile_setup_completed) {
           // Always redirect to role selection first for new users to let them choose their role
-          console.log('Redirecting to role selection for new user')
           return response // This already points to role-selection with verified=true&token
         }
 
         // Profile is complete, redirect to specified page or dashboard
-        console.log('Redirecting to:', next)
         // Add verified parameter to help with auth context on dashboard
         const dashboardUrl = next.includes('?') 
           ? `${next}&verified=true` 
@@ -188,10 +160,8 @@ export async function GET(request: NextRequest) {
           const { data: { user: currentUser } } = await supabase.auth.getUser()
           
           if (currentUser && currentUser.email_confirmed_at) {
-            console.log('User already verified, redirecting to dashboard')
             return NextResponse.redirect(getLocalizedUrl('/dashboard', locale))
           } else {
-            console.log('Token expired and user not verified, redirecting to signin')
             return NextResponse.redirect(getLocalizedUrl('/auth/signin?error=expired_link&message=Please request a new verification email', locale))
           }
         }

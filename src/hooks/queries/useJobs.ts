@@ -489,8 +489,6 @@ export function useDeleteJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (jobId: string) => {
-      console.log('🗑️ Attempting to delete job:', jobId)
-      
       // Check if there are any active job assignments
       const { data: assignments, error: assignmentsCheckError } = await supabase
         .from('job_assignments')
@@ -514,8 +512,6 @@ export function useDeleteJobMutation() {
         }
       }
       
-      console.log('✅ No active assignments, proceeding with deletion')
-      
       // Delete the job itself
       // CASCADE deletes: applications, saved_jobs, job_assignments, reviews, job_search_vectors
       // SET NULL preserves: conversations (job_id→NULL), connection_history (job_id→NULL - audit trail)
@@ -529,7 +525,6 @@ export function useDeleteJobMutation() {
         throw new Error(error.message || 'Failed to delete job')
       }
       
-      console.log('✅ Job deleted successfully (conversations preserved):', jobId)
       return jobId
     },
     onSuccess: (jobId) => {
@@ -576,30 +571,28 @@ export function useFinishJobMutation() {
       rating: number
       comment?: string
     }) => {
-      console.log('🏁 Starting finish job process for:', jobId)
-      
-      // 1. Get the job assignment
-      const { data: assignment, error: assignmentError } = await supabase
-        .from('job_assignments')
+      // 1. Get the accepted application (we use applications now instead of job_assignments)
+      const { data: application, error: applicationError } = await supabase
+        .from('applications')
         .select('id, status')
         .eq('job_id', jobId)
-        .eq('tasker_id', taskerId)
+        .eq('user_id', taskerId)
+        .eq('status', 'SELECTED')
         .single()
       
-      if (assignmentError || !assignment) {
-        throw new Error('No assignment found for this job')
+      if (applicationError || !application) {
+        console.error('❌ No accepted application found:', applicationError)
+        throw new Error('No accepted application found for this job')
       }
       
-      console.log('📋 Found assignment:', assignment.id, 'with status:', assignment.status)
-      
-      // 2. Create the review
+      // 2. Create the review (assignment_id is nullable, so we pass null)
       const { data: review, error: reviewError } = await supabase
         .from('reviews')
         .insert({
           job_id: jobId,
           reviewer_id: reviewerId,
           reviewee_id: taskerId,
-          assignment_id: assignment.id,
+          assignment_id: null, // No job_assignment record exists
           rating,
           comment: comment || null,
           reviewer_name: reviewerName,
@@ -613,27 +606,11 @@ export function useFinishJobMutation() {
         throw new Error('Failed to create review')
       }
       
-      console.log('⭐ Review created:', review.id)
-      
-      // 3. Update job assignment status to COMPLETED
-      const { error: updateAssignmentError } = await supabase
-        .from('job_assignments')
-        .update({ 
-          status: 'COMPLETED',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', assignment.id)
-      
-      if (updateAssignmentError) {
-        console.error('❌ Error updating assignment:', updateAssignmentError)
-        throw new Error('Failed to update assignment status')
-      }
-      
-      console.log('✅ Assignment marked as COMPLETED')
+      // 3. Note: We keep the application status as SELECTED since there's no COMPLETED status
+      // The job status change to 'completed' will indicate the work is done
       
       // 4. Keep conversations active - users can manage their own messages
       // Conversations remain accessible after job completion
-      console.log('💬 Conversations kept active - users can delete their own messages')
       
       // 5. Update job status to completed
       const { error: jobUpdateError } = await supabase
@@ -648,8 +625,6 @@ export function useFinishJobMutation() {
         console.error('❌ Error updating job status:', jobUpdateError)
         throw new Error('Failed to update job status')
       }
-      
-      console.log('✅ Job marked as completed')
       
       // 6. Create notification for tasker
       try {
@@ -670,21 +645,98 @@ export function useFinishJobMutation() {
         if (notificationError) {
           console.warn('⚠️ Warning creating notification:', notificationError)
           // Don't throw - notification is not critical
-        } else {
-          console.log('🔔 Notification sent to tasker')
         }
       } catch (notifError) {
         console.warn('⚠️ Non-critical notification error:', notifError)
       }
       
-      return { review, assignment }
+      return { review, application }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.applications.all })
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      // Invalidate tasker's applications
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.userApplications(variables.taskerId) })
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['job_assignments'] })
       queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all })
+    },
+  })
+}
+
+export function useTaskerReviewMutation() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ 
+      jobId, 
+      clientId, 
+      reviewerId,
+      reviewerName,
+      reviewerAvatarUrl,
+      rating, 
+      comment 
+    }: { 
+      jobId: string
+      clientId: string
+      reviewerId: string
+      reviewerName: string
+      reviewerAvatarUrl?: string
+      rating: number
+      comment?: string
+    }) => {
+      // Create the review for the client
+      const { data: review, error: reviewError } = await supabase
+        .from('reviews')
+        .insert({
+          job_id: jobId,
+          reviewer_id: reviewerId,
+          reviewee_id: clientId,
+          assignment_id: null,
+          rating,
+          comment: comment || null,
+          reviewer_name: reviewerName,
+          reviewer_avatar_url: reviewerAvatarUrl || null,
+        })
+        .select()
+        .single()
+      
+      if (reviewError) {
+        console.error('❌ Error creating review:', reviewError)
+        throw new Error('Failed to create review')
+      }
+      
+      // Create notification for client
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: clientId,
+            type: 'NEW_REVIEW',
+            title: 'New Review Received',
+            message: `${reviewerName} has left you a ${rating}-star review for the completed job.`,
+            data: {
+              job_id: jobId,
+              review_id: review.id,
+              rating,
+            },
+          })
+        
+        if (notificationError) {
+          console.warn('⚠️ Warning creating notification:', notificationError)
+        }
+      } catch (notifError) {
+        console.warn('⚠️ Non-critical notification error:', notifError)
+      }
+      
+      return { review }
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
   })
 }
@@ -963,20 +1015,19 @@ export function useUserApplicationsQuery(userId?: string) {
         .select(`
           *,
           job:job_listings!applications_job_id_fkey(
-            id, title, job_type, city_id, category_id, salary_min, salary_max, salary_type,
+            id, title, job_type, city_id, category_id, salary_min, salary_max, salary_type, status,
             
-            posted_by:users(name)
+            posted_by:users(name, avatar_url)
           )
         `)
         .eq('user_id', userId)
-        .order('applied_at', { ascending: false })
-      
+        .order('applied_at', { ascending: false})
       
       if (error) throw error
       return data || []
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes,
   })
 }
 export function useUserAppliedJobsQuery(userId?: string) {

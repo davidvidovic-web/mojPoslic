@@ -15,6 +15,7 @@ import { formatJobType, getJobExpirationDate } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
+import { ReviewScore } from '@/components/reviews/review-score'
 
 interface JobDetailsProps {
   jobId: string
@@ -62,14 +63,6 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           return
         }
         const job = await response.json()
-        console.log('Received job data:', {
-          id: job.id,
-          title: job.title,
-          company: job.company,
-          postedBy: job.postedBy,
-          poster_name: job.poster_name,
-          posted_by_id: job.posted_by_id
-        })
         setJob(job)
         
         // Check if this device has already viewed this job today
@@ -292,6 +285,12 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                 <p className="text-sm text-muted-foreground">
                   {job.posted_at ? formatDate(job.posted_at) : ''}
                 </p>
+                {/* Client Review Score */}
+                {job.postedBy?.id && (
+                  <div className="mt-1">
+                    <ReviewScore userId={job.postedBy.id} size="sm" showCount={true} />
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">

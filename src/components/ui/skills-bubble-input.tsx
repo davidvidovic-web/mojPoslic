@@ -38,17 +38,7 @@ export function SkillsBubbleInput({
   const locale = useLocale()
   
   // Use static categories instead of API
-  const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories()
-  
-  // Debug categories loading
-  useEffect(() => {
-    console.log('SkillsBubbleInput: Categories state:', {
-      loading: categoriesLoading,
-      error: categoriesError,
-      dataLength: categoriesData?.length || 0,
-      sampleData: categoriesData?.slice(0, 2)
-    })
-  }, [categoriesData, categoriesLoading, categoriesError])
+  const { categories: categoriesData } = useCategories()
   
   // Flatten categories for easier processing (handle both nested and flat structures)
   const categories = useMemo(() => {
@@ -77,7 +67,6 @@ export function SkillsBubbleInput({
       }
     })
     
-    console.log('SkillsBubbleInput: Processed categories:', flatCategories.length, 'total categories')
     return flatCategories
   }, [categoriesData])
 

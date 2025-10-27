@@ -198,6 +198,15 @@ export function JobCard({ job, isSaved = false, onSaveToggle, hideFeaturedBadge 
   };
 
   const handleViewDetails = () => {
+    // Check if user is logged in
+    if (!user) {
+      // Redirect to login with return URL
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      const returnUrl = `${currentPath}?jobId=${job.id}`;
+      window.location.href = `/auth/signin?returnUrl=${encodeURIComponent(returnUrl)}`;
+      return;
+    }
+    
     openDrawer(job.id);
   };
 

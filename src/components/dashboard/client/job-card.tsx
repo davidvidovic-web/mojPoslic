@@ -1,10 +1,19 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Job } from '@/types/job'
 import { formatJobType, getJobExpirationDate, isJobExpired } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
 import { useTranslations, useLocale } from 'next-intl'
+import { Eye, MessageCircle, User } from 'lucide-react'
+
+interface SelectedCandidate {
+  id: string
+  name: string
+  avatarUrl?: string
+}
 
 interface JobCardProps {
   job: Job
@@ -13,9 +22,22 @@ interface JobCardProps {
   onEdit?: (job: Job) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
   hideFeaturedBadge?: boolean
+  selectedCandidate?: SelectedCandidate | null
+  onViewProfile?: (candidateId: string) => void
+  onMessageCandidate?: (candidateId: string, jobId: string) => void
 }
 
-export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature, hideFeaturedBadge = false }: JobCardProps) {
+export function JobCard({ 
+  job, 
+  applicationCount, 
+  onDelete, 
+  onEdit, 
+  onFeature, 
+  hideFeaturedBadge = false,
+  selectedCandidate,
+  onViewProfile,
+  onMessageCandidate
+}: JobCardProps) {
   const t = useTranslations('dashboard.jobCard')
   const locale = useLocale()
   
@@ -156,6 +178,60 @@ export function JobCard({ job, applicationCount, onDelete, onEdit, onFeature, hi
         className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-1 prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: job.description }}
       />
+      
+      {/* Selected Candidate Section */}
+      {selectedCandidate && (
+        <div className="mb-3 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar className="h-10 w-10 flex-shrink-0">
+                <AvatarImage 
+                  src={selectedCandidate.avatarUrl} 
+                  alt={selectedCandidate.name}
+                />
+                <AvatarFallback className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                  {selectedCandidate.name 
+                    ? selectedCandidate.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                    : <User className="h-5 w-5" />
+                  }
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                  {t('selectedCandidate') || 'Selected Candidate'}
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-300 truncate">
+                  {selectedCandidate.name}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              {onViewProfile && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onViewProfile(selectedCandidate.id)}
+                  className="border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  {t('viewProfile') || 'View'}
+                </Button>
+              )}
+              {onMessageCandidate && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onMessageCandidate(selectedCandidate.id, job.id)}
+                  className="border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                >
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  {t('message') || 'Message'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Details - Text Only Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3 text-xs text-gray-500 dark:text-gray-400">

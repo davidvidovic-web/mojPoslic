@@ -170,14 +170,12 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
               jobTitle = data.job_title || data.job?.title || ''
               clientName = data.client_name || data.client?.name || ''
               
-              console.log('📋 Job data extracted:', { jobTitle, clientName, data })
               
               // If job title is missing from notification data, try to extract from message
               if (!jobTitle && notification.message) {
                 const messageMatch = notification.message.match(/"([^"]+)"/);
                 if (messageMatch) {
                   jobTitle = messageMatch[1];
-                  console.log('📋 Job title extracted from message:', jobTitle);
                 }
               }
             } catch (e) {
@@ -352,7 +350,6 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
     // Handle navigation based on notification type and data
     if (notification.type === 'JOB_APPLICATION') {
       // Could navigate to the specific job applications
-      console.log('Navigate to job applications for notification:', notification.id)
     } else if (notification.type === 'NEW_MESSAGE') {
       // Navigate to the conversation
       if (notification.data) {
@@ -370,6 +367,23 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
         }
       } else {
         window.location.href = '/dashboard/messaging'
+      }
+    } else if (notification.type === 'NEW_REVIEW') {
+      // Navigate to dashboard with review prompt
+      if (notification.data) {
+        try {
+          const data = notification.data as NotificationData
+          if (data.job_id) {
+            window.location.href = `/dashboard?reviewJob=${data.job_id}`
+          } else {
+            window.location.href = '/dashboard'
+          }
+        } catch (e) {
+          console.warn('Failed to parse review notification data:', e)
+          window.location.href = '/dashboard'
+        }
+      } else {
+        window.location.href = '/dashboard'
       }
     }
   }
@@ -446,7 +460,6 @@ export function HeaderNotifications({ className }: HeaderNotificationsProps) {
               className="w-full text-sm"
               onClick={() => {
                 // Navigate to full notifications page
-                console.log('Navigate to full notifications')
               }}
             >
               {t('viewAll')} ({notifications.length})

@@ -58,28 +58,11 @@ export function ClientApplicationsManager({
     }
   }
   
-  // Filter applications - exclude withdrawn/cancelled applications
+  // Filter applications - exclude withdrawn and selected applications
   const filteredApplications = applications.filter(application => {
-    // Exclude withdrawn applications
-    if (application.status === ApplicationStatus.WITHDRAWN) {
+    // Exclude withdrawn and selected applications (selected applicants are shown in the job card)
+    if (application.status === ApplicationStatus.WITHDRAWN || application.status === ApplicationStatus.SELECTED) {
       return false
-    }
-    
-    // Debug user data structure - enhanced logging
-    if (process.env.NODE_ENV === 'development' && application.user) {
-      console.log('🔍 Client Applications - User data for application:', application.id, {
-        hasUser: !!application.user,
-        userId: application.user.id,
-        userName: application.user.name,
-        userEmail: application.user.email,
-        avatarUrl: application.user.avatarUrl,
-        fullUserObject: application.user
-      })
-    } else if (process.env.NODE_ENV === 'development') {
-      console.log('⚠️ Client Applications - No user data for application:', application.id, {
-        applicationUserId: application.userId,
-        fullApplication: application
-      })
     }
     
     const matchesSearch = !searchTerm || 
@@ -92,11 +75,14 @@ export function ClientApplicationsManager({
     return matchesSearch && matchesStatus
   })
 
-  // Calculate statistics - exclude withdrawn applications
-  const activeApplications = applications.filter(app => app.status !== ApplicationStatus.WITHDRAWN)
+  // Calculate statistics - exclude withdrawn and selected applications
+  const activeApplications = applications.filter(app => 
+    app.status !== ApplicationStatus.WITHDRAWN && 
+    app.status !== ApplicationStatus.SELECTED
+  )
   const totalApplications = activeApplications.length
   const pendingApplications = activeApplications.filter(app => app.status === ApplicationStatus.PENDING).length
-  const acceptedApplications = activeApplications.filter(app => app.status === ApplicationStatus.SELECTED).length
+  const acceptedApplications = applications.filter(app => app.status === ApplicationStatus.SELECTED).length // Keep full count for selected
   const rejectedApplications = activeApplications.filter(app => app.status === ApplicationStatus.REJECTED).length
 
   if (loading) {
@@ -282,31 +268,33 @@ export function ClientApplicationsManager({
               )}
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedApplication(application)}
-                  className="hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  {t('viewProfile')}
-                </Button>
-                
-                {onMessageApplicant && (
+              <div className="flex flex-wrap justify-between gap-2 pt-2 border-t border-border">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onMessageApplicant(application.id, application.user?.id || application.userId)}
+                    onClick={() => setSelectedApplication(application)}
                     className="hover:bg-accent hover:text-accent-foreground"
                   >
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    {t('message')}
+                    <Eye className="h-4 w-4 mr-1" />
+                    {t('viewProfile')}
                   </Button>
-                )}
+                  
+                  {onMessageApplicant && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onMessageApplicant(application.id, application.user?.id || application.userId)}
+                      className="hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-1" />
+                      {t('message')}
+                    </Button>
+                  )}
+                </div>
 
                 {application.status === ApplicationStatus.PENDING && onUpdateApplicationStatus && (
-                  <>
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       onClick={() => onUpdateApplicationStatus(application.id, 'accepted')}
@@ -324,7 +312,7 @@ export function ClientApplicationsManager({
                       <X className="h-4 w-4 mr-1" />
                       {t('reject')}
                     </Button>
-                  </>
+                  </div>
                 )}
               </div>
             </div>

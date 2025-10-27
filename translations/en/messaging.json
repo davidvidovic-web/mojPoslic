@@ -17,7 +17,8 @@
     "delete": "Delete",
     "deleteMessage": "Delete message",
     "deleteMessageForMe": "Delete for me",
-    "deleteConversation": "Delete conversation",
+    "deleteConversation": "Delete Conversation",
+    "clearMessages": "Clear Messages",
     "clearConversation": "Clear conversation for me",
     "block": "Block",
     "unblock": "Unblock",
@@ -26,18 +27,31 @@
   "deleteMessageDialog": {
     "title": "Delete message?",
     "description": "This message will be deleted from your view only. Other participants will still see it.",
+    "warning": "This action cannot be undone. The message will be permanently removed from your view.",
     "confirm": "Delete for me",
     "cancel": "Cancel",
     "success": "Message deleted",
     "error": "Failed to delete message"
   },
   "clearConversationDialog": {
-    "title": "Clear conversation?",
+    "title": "Clear Messages",
     "description": "All messages in this conversation will be deleted from your view only. Other participants will still see them.",
-    "confirm": "Clear for me",
-    "cancel": "Cancel",
-    "success": "Conversation cleared",
-    "error": "Failed to clear conversation"
+    "warning": "This action cannot be undone. All messages will be permanently cleared from your view.",
+    "confirm": "Clear Messages",
+    "cancel": "Go Back",
+    "clearing": "Clearing...",
+    "success": "Messages cleared",
+    "error": "Failed to clear messages"
+  },
+  "deleteConversationDialog": {
+    "title": "Delete Conversation",
+    "description": "This will remove the conversation from your list. Messages will remain in the database and can be accessed again if the other participant sends a new message.",
+    "warning": "This conversation will be removed from your view, but all messages remain in the database.",
+    "confirm": "Delete Conversation",
+    "cancel": "Go Back",
+    "deleting": "Deleting...",
+    "success": "Conversation deleted",
+    "error": "Failed to delete conversation"
   },
   "conversation": {
     "defaultTitle": "Conversation"

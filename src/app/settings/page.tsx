@@ -101,7 +101,7 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <ProfileSettingsCard />
               <AccountInfoCard />
-              <SecurityCard />
+              <SecurityCard deletionRequest={deletionRequest} />
             </div>
             <div className="space-y-6">
               {/* <PrivacySettingsCard /> */}

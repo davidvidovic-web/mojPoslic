@@ -105,3 +105,38 @@ export function useUserReviewsQuery(userId: string) {
     enabled: !!userId,
   })
 }
+
+/**
+ * Hook to get review statistics for a user
+ */
+export function useUserReviewStats(userId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.reviews.stats(userId || ''),
+    queryFn: async () => {
+      if (!userId) return null
+
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('reviewee_id', userId)
+
+      if (error) throw error
+      
+      if (!data || data.length === 0) {
+        return {
+          averageRating: 0,
+          totalReviews: 0,
+        }
+      }
+
+      const totalReviews = data.length
+      const averageRating = data.reduce((sum, review) => sum + (review.rating || 0), 0) / totalReviews
+
+      return {
+        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal place
+        totalReviews,
+      }
+    },
+    enabled: !!userId,
+  })
+}

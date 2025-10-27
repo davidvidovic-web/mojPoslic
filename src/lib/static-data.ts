@@ -143,7 +143,6 @@ class StaticDataManager {
     }
     
     // Fallback to API endpoints
-    console.log('Loading static data from API endpoints...')
     const [citiesRes, categoriesRes] = await Promise.all([
       fetch('/api/cities', {
         headers: {

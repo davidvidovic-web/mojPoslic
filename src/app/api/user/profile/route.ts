@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Base update data - only allow changes to basic fields if profile setup is not completed
-    const baseUpdateData: Record<string, string | boolean | null> = {};
+    const baseUpdateData: Record<string, string | boolean | string[] | null> = {};
 
     // If profile setup is not completed, allow basic field updates
     if (!currentUser.profile_setup_completed) {
@@ -96,7 +96,16 @@ export async function PUT(request: NextRequest) {
     // Only include professional fields for non-client roles
     if (currentUser.role !== "client") {
       if (bio !== undefined) baseUpdateData.bio = bio;
-      if (skills !== undefined) baseUpdateData.skills = skills;
+      
+      // Handle skills array conversion - convert comma-separated string to array
+      if (skills !== undefined) {
+        baseUpdateData.skills = Array.isArray(skills)
+          ? skills
+          : typeof skills === 'string'
+            ? skills.split(',').map(s => s.trim()).filter(Boolean)
+            : null;
+      }
+      
       if (experience !== undefined) baseUpdateData.experience = experience;
 
       // Handle preferred job types array conversion
@@ -144,6 +153,7 @@ export async function PUT(request: NextRequest) {
     // Convert field names and preferred job types for frontend consumption
     const userWithArrayJobTypes = {
       ...updatedUser,
+      skills: updatedUser.skills || [],
       preferredJobTypes: updatedUser.preferred_job_types
         ? updatedUser.preferred_job_types.split(", ")
         : [],
@@ -250,6 +260,7 @@ export async function GET(request: NextRequest) {
     // Convert field names and preferred job types for frontend consumption
     const userWithArrayJobTypes = {
       ...userData,
+      skills: userData.skills || [],
       preferredJobTypes: userData.preferred_job_types
         ? userData.preferred_job_types.split(", ")
         : [],

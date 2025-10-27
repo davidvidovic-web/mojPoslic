@@ -1,55 +1,39 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { createRouteClient } from '@/lib/supabase/route'
 
 export async function GET() {
   try {
+    const supabase = createRouteClient()
+
     // Get active jobs count
-    const activeJobsCount = await prisma.jobListing.count({
-      where: {
-        isActive: true,
-        OR: [
-          { expiresAt: null }, // Jobs without expiration
-          { expiresAt: { gt: new Date() } } // Jobs that haven't expired
-        ]
-      }
-    })
+    const { count: activeJobsCount } = await supabase
+      .from('job_listings')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
 
-    // Get completed jobs count (for now, use a placeholder approach)
-    // This will be updated once the database migration is complete
-    const completedJobsCount = await prisma.jobListing.count({
-      where: {
-        isActive: false,
-        description: { contains: '[Status: COMPLETED]' }
-      }
-    })
+    // Get completed jobs count
+    const { count: completedJobsCount } = await supabase
+      .from('job_listings')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', false)
 
-    // Get unique clients count (users with role 'client' or who have posted jobs)
-    const clientsCount = await prisma.user.count({
-      where: {
-        OR: [
-          { role: 'client' },
-          { role: 'admin' }, // Admins can also be considered clients
-          {
-            postedJobs: {
-              some: {
-                isActive: true
-              }
-            }
-          }
-        ]
-      }
-    })
+    // Get unique clients count (users with role 'client' or 'admin')
+    const { count: clientsCount } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .in('role', ['client', 'admin'])
 
     // Get total registered users count
-    const totalUsersCount = await prisma.user.count()
+    const { count: totalUsersCount } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
 
     const stats = {
-      activeJobs: activeJobsCount,
-      clients: clientsCount,
-      totalUsers: totalUsersCount,
-      finishedJobs: completedJobsCount // Return completed jobs as finishedJobs
+      activeJobs: activeJobsCount || 0,
+      clients: clientsCount || 0,
+      totalUsers: totalUsersCount || 0,
+      finishedJobs: completedJobsCount || 0
     }
 
     return NextResponse.json(stats)
@@ -61,9 +45,7 @@ export async function GET() {
       activeJobs: 66,
       clients: 25,
       totalUsers: 150,
-      finishedJobs: 12 // Default fallback for finished jobs
+      finishedJobs: 12
     })
-  } finally {
-    await prisma.$disconnect()
   }
 }

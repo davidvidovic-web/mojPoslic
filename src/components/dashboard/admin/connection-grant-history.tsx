@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pagination } from '@/components/ui/pagination'
 import { History, Search, Filter, ArrowUpDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface ConnectionHistoryEntry {
   id: string
@@ -30,6 +31,7 @@ interface ConnectionGrantHistoryProps {
 }
 
 export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProps) {
+  const td = useTranslations('dashboard')
   const [history, setHistory] = useState<ConnectionHistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -53,7 +55,7 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
       setHistory(data)
     } catch (error) {
       console.error('Error fetching connection history:', error)
-      toast.error('Failed to load connection history')
+      toast.error(td('toast.connectionHistoryLoadFailed'))
     } finally {
       setLoading(false)
     }

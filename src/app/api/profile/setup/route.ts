@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
   try {
     // Check for Authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('Profile Setup API: Authorization header:', authHeader ? 'present' : 'missing')
     
     // Create Supabase client with request cookies and auth header
     const supabase = createServerClient<Database>(
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
-      console.log('Profile Setup API: Auth failed:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

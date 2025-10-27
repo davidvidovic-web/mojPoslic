@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { useDashboardTranslations } from './use-translations'
 
 // Types
 interface SiteStats {
@@ -168,6 +169,7 @@ export function useSavedJobs(userId?: string) {
 // Mutation Hooks
 export function useToggleSavedJob() {
   const queryClient = useQueryClient()
+  const t = useDashboardTranslations()
   
   return useMutation({
     mutationFn: ({ userId, jobId }: { userId: string; jobId: string }) => 
@@ -179,23 +181,25 @@ export function useToggleSavedJob() {
       })
       
       // Show user feedback
-      toast.success(isSaved ? 'Job saved!' : 'Job removed from saved')
+      toast.success(isSaved ? t('toast.jobSaved') : t('toast.jobUnsaved'))
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to save job: ${error.message}`)
+    onError: () => {
+      toast.error(t('toast.jobSaveFailed'))
     },
   })
 }
 
 export function useCreateTransferToken() {
+  const t = useDashboardTranslations()
+  
   return useMutation({
     mutationFn: createTransferToken,
     onSuccess: (data) => {
       // Redirect to new language domain
       window.location.href = data.redirectUrl
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to switch language: ${error.message}`)
+    onError: () => {
+      toast.error(t('toast.languageSwitchFailed'))
     },
   })
 }

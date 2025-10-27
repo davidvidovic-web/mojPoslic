@@ -410,6 +410,18 @@
     "finishJobNoteText": "Nakon što pošaljete ovu recenziju, majstor će biti obaviješten i može ostaviti recenziju za vas. Posao će biti označen kao završen.",
     "finishing": "Završavanje...",
     "finishJobConfirm": "Završi Posao i Pošalji Recenziju",
+    "reviewClientDialog": "Recenzirajte Klijenta",
+    "reviewClientDescription": "Podijelite svoje iskustvo rada sa {clientName} na \"{jobTitle}\".",
+    "rateClient": "Ocijenite klijenta",
+    "reviewClientPlaceholder": "Podijelite svoje iskustvo rada sa ovim klijentom...",
+    "reviewClientNote": "Vaša recenzija će biti vidljiva drugim majstorima i klijentu.",
+    "reviewClientInfoTitle": "Napomena:",
+    "reviewClientInfoText": "Ova recenzija će pomoći drugim majstorima da donesu informisane odluke o radu sa ovim klijentom.",
+    "submitReview": "Pošalji Recenziju",
+    "submitting": "Slanje...",
+    "noReviewsYet": "Još nema recenzija",
+    "star": "zvjezdica",
+    "stars": "zvjezdice",
     "cancel": "Otkaži"
   }
 }

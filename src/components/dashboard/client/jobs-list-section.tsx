@@ -8,18 +8,24 @@ import { useTranslations } from 'next-intl'
 interface JobsListSectionProps {
   jobs: Job[]
   applicationCounts: Record<string, number>
+  selectedApplicants?: Record<string, { name: string; id: string; avatarUrl?: string } | null>
   onDelete: (jobId: string) => void
   onEdit?: (job: Job) => void
   onFeature?: (jobId: string, isFeatured: boolean) => void
+  onViewProfile?: (candidateId: string) => void
+  onMessageCandidate?: (candidateId: string, jobId: string) => void
   isLoading?: boolean
 }
 
 export function JobsListSection({ 
   jobs, 
-  applicationCounts, 
+  applicationCounts,
+  selectedApplicants = {},
   onDelete, 
   onEdit,
   onFeature,
+  onViewProfile,
+  onMessageCandidate,
   isLoading = false 
 }: JobsListSectionProps) {
   const t = useTranslations('jobs')
@@ -85,9 +91,12 @@ export function JobsListSection({
                 key={job.id}
                 job={job}
                 applicationCount={applicationCounts[job.id] || 0}
+                selectedCandidate={selectedApplicants[job.id] || null}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onFeature={onFeature}
+                onViewProfile={onViewProfile}
+                onMessageCandidate={onMessageCandidate}
                 hideFeaturedBadge={true}
               />
             ))}
@@ -116,9 +125,12 @@ export function JobsListSection({
                 key={job.id}
                 job={job}
                 applicationCount={applicationCounts[job.id] || 0}
+                selectedCandidate={selectedApplicants[job.id] || null}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onFeature={onFeature}
+                onViewProfile={onViewProfile}
+                onMessageCandidate={onMessageCandidate}
               />
             ))}
           </div>

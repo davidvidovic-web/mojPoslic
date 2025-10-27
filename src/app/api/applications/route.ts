@@ -136,6 +136,28 @@ export async function POST(request: NextRequest) {
     // Use profile name if available, fallback to auth metadata, then email
     const applicantDisplayName = userProfile?.name || user.user_metadata?.name || user.email
 
+    // Fetch user cached data for application
+    const { data: userData, error: userDataError } = await supabase
+      .from('users')
+      .select('name, email, phone, avatar_url, average_rating, location')
+      .eq('id', user.id)
+      .single()
+
+    if (userDataError) {
+      console.warn('Could not fetch user data for cached fields:', userDataError)
+    }
+
+    // Fetch job cached data for application
+    const { data: jobData, error: jobDataError } = await supabase
+      .from('job_listings')
+      .select('title, job_type, city_name, category_name, poster_name, salary_min, salary_max')
+      .eq('id', jobId)
+      .single()
+
+    if (jobDataError) {
+      console.warn('Could not fetch job data for cached fields:', jobDataError)
+    }
+
     // Check if user already applied
     const { data: existingApplication, error: checkError } = await supabase
       .from('applications')
@@ -159,7 +181,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create the application - SIMPLE INSERT, NO TRIGGERS
+    // Create the application with cached data (since triggers are disabled)
     const { data: newApplication, error: insertError } = await supabase
       .from('applications')
       .insert({
@@ -169,7 +191,22 @@ export async function POST(request: NextRequest) {
         client_notes: clientNotes || null,
         status: 'PENDING',
         applied_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Cached applicant data (provide fallbacks for required fields)
+        applicant_name: userData?.name || 'User',
+        applicant_email: userData?.email || user.email || '',
+        applicant_phone: userData?.phone || null,
+        applicant_avatar_url: userData?.avatar_url || null,
+        applicant_rating: userData?.average_rating || null,
+        applicant_location: userData?.location || null,
+        // Cached job data (provide fallbacks for required fields)
+        job_title: jobData?.title || 'Job',
+        job_type: (jobData?.job_type as 'quick_job' | 'full_time' | 'part_time' | 'remote' | undefined) || 'quick_job',
+        job_city_name: jobData?.city_name || '',
+        job_category_name: jobData?.category_name || '',
+        job_poster_name: jobData?.poster_name || '',
+        job_salary_min: jobData?.salary_min || null,
+        job_salary_max: jobData?.salary_max || null
       })
       .select()
       .single()

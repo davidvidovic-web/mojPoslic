@@ -217,7 +217,6 @@ export function useSupabaseRealtimeChat({
           }))
 
         if (newMessages.length > 0) {
-          console.log('📨 Found new messages via polling:', newMessages.length)
           setMessages(prev => {
             const existingIds = prev.map(m => m.id)
             const uniqueNewMessages = newMessages.filter(m => !existingIds.includes(m.id))
@@ -376,7 +375,6 @@ export function useSupabaseRealtimeChat({
       return
     }
 
-    console.log('🔄 Setting up broadcast channel for conversation:', conversationId)
 
     // Create broadcast channel for real-time features
     const channel = supabase.channel(`chat:${conversationId}`, {
@@ -390,7 +388,6 @@ export function useSupabaseRealtimeChat({
       // Listen for new messages from other users
       .on('broadcast', { event: 'new_message' }, (payload) => {
         const { message, conversation_id } = payload.payload
-        console.log('📨 New message via broadcast:', message)
         
         if (conversation_id === conversationId && message.sender_id !== user.id) {
           setMessages(prev => {
@@ -404,7 +401,6 @@ export function useSupabaseRealtimeChat({
       // Listen for typing indicators
       .on('broadcast', { event: 'typing' }, (payload) => {
         const { user_id, typing, user_name, conversation_id } = payload.payload
-        console.log('⌨️ Typing indicator:', { user_id, typing, user_name })
         
         if (conversation_id === conversationId && user_id !== user.id) {
           setTypingUsers(prev => {
@@ -418,9 +414,7 @@ export function useSupabaseRealtimeChat({
       })
       
       .subscribe((status) => {
-        console.log('📡 Broadcast channel status:', status)
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Broadcast channel connected')
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ Broadcast channel error')
         }
@@ -432,7 +426,6 @@ export function useSupabaseRealtimeChat({
     }, 5000) // Poll every 5 seconds
 
     return () => {
-      console.log('🧹 Cleaning up conversation channel')
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
         typingTimeoutRef.current = null
@@ -457,7 +450,6 @@ export function useSupabaseRealtimeChat({
       return
     }
 
-    console.log('🔄 Setting up conversations broadcast channel')
 
     const channel = supabase.channel('conversations')
     conversationsChannelRef.current = channel
@@ -465,7 +457,6 @@ export function useSupabaseRealtimeChat({
     channel
       .on('broadcast', { event: 'conversation_update' }, (payload) => {
         const { conversation } = payload.payload
-        console.log('📋 Conversation update via broadcast:', conversation)
         
         if (conversation.participant_ids?.includes(user.id)) {
           setConversations(prev => prev.map(conv => 
@@ -482,11 +473,9 @@ export function useSupabaseRealtimeChat({
       })
       
       .subscribe((status) => {
-        console.log('📡 Conversations broadcast status:', status)
       })
 
     return () => {
-      console.log('🧹 Cleaning up conversations channel')
       supabase.removeChannel(channel)
       conversationsChannelRef.current = null
     }

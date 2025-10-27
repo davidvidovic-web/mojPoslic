@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useDashboardTranslations } from './use-translations'
 
 export interface ApplicationUser {
   id: string
@@ -43,6 +44,7 @@ export interface ApplicationsResponse {
 }
 
 export function useJobApplications(jobId: string) {
+  const t = useDashboardTranslations()
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,7 +68,7 @@ export function useJobApplications(jobId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch applications'
       setError(errorMessage)
-      toast.error(errorMessage)
+      toast.error(t('toast.applicationUpdateFailed'))
       throw err
     } finally {
       setLoading(false)
@@ -102,11 +104,10 @@ export function useJobApplications(jobId: string) {
         )
       )
 
-      toast.success(`Application ${action.toLowerCase()}ed successfully`)
+      toast.success(t('toast.applicationUpdated'))
       return data.application
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update application'
-      toast.error(errorMessage)
+      toast.error(t('toast.applicationUpdateFailed'))
       throw err
     }
   }
@@ -142,11 +143,10 @@ export function useJobApplications(jobId: string) {
         })
       )
 
-      toast.success(`${data.updated} applications updated successfully`)
+      toast.success(t('toast.applicationsUpdated', { count: data.updated }))
       return data
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update applications'
-      toast.error(errorMessage)
+      toast.error(t('toast.applicationsUpdateFailed'))
       throw err
     }
   }

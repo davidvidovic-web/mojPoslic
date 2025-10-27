@@ -9,7 +9,8 @@ import {
   Building2, 
   Briefcase, 
   ArrowRight, 
-  CheckCircle
+  CheckCircle,
+  Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
@@ -316,16 +317,29 @@ export default function RoleSelectionPage() {
                 key={role.id}
                 className={`relative transition-all duration-300 ${
                   role.id === 'company'
-                    ? 'opacity-50 cursor-not-allowed'
+                    ? 'opacity-60 cursor-not-allowed border-muted'
                     : selectedRole === role.id
                     ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer'
                     : 'hover:shadow-md border-border cursor-pointer'
                 }`}
                 onClick={() => handleRoleSelect(role.id)}
               >
+                {/* Lock icon for unavailable roles */}
+                {role.id === 'company' && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/40 backdrop-blur-sm rounded-lg">
+                    <div className="bg-background/90 p-4 rounded-full border-2 border-muted shadow-lg">
+                      <Lock className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                )}
+                
                 {role.badgeKey && (
                   <Badge 
-                    className="absolute -top-2 left-4 bg-primary text-primary-foreground"
+                    className={`absolute -top-2 left-4 ${
+                      role.id === 'company' 
+                        ? 'bg-muted text-muted-foreground'
+                        : 'bg-primary text-primary-foreground'
+                    }`}
                     variant="default"
                   >
                     {t(role.badgeKey)}

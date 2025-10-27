@@ -199,7 +199,7 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
     }
   }, [])
 
-  // Set up real-time subscription
+  // Set up real-time subscription using Broadcast (recommended by Supabase)
   useEffect(() => {
     if (!user?.id || !enabled) {
       return
@@ -207,22 +207,22 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
 
     let retryTimeout: NodeJS.Timeout | null = null
 
-    const setupSubscription = () => {
+    const setupSubscription = async () => {
       // Clean up existing channel
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current)
         channelRef.current = null
       }
 
+      // Set auth for private channel (required for broadcast)
+      await supabase.realtime.setAuth()
+
       const channel = supabase
-        .channel(`notifications:user:${user.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, (payload) => {
-          const newNotification = payload.new as Notification
+        .channel(`topic:notifications:user:${user.id}`, {
+          config: { private: true } // Required for broadcast authorization
+        })
+        .on('broadcast', { event: 'INSERT' }, (payload) => {
+          const newNotification = payload.payload.record as Notification
           
           // Double check that this notification is for the current user
           if (newNotification.user_id !== user.id) {
@@ -250,13 +250,8 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
             })
           }
         })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, (payload) => {
-          const updatedNotification = payload.new as Notification
+        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+          const updatedNotification = payload.payload.record as Notification
           
           setNotifications(prev => prev.map(n => 
             n.id === updatedNotification.id ? updatedNotification : n
@@ -271,13 +266,8 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
           queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
           queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
         })
-        .on('postgres_changes', {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, (payload) => {
-          const deletedId = payload.old.id
+        .on('broadcast', { event: 'DELETE' }, (payload) => {
+          const deletedId = payload.payload.old_record.id
           
           setNotifications(prev => {
             const deletedNotification = prev.find(n => n.id === deletedId)
@@ -296,7 +286,6 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
           queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
         })
         .subscribe((status, err) => {
-          console.log('📡 Notifications realtime status:', status, 'User:', user.id)
           setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'connecting')
           if (status === 'SUBSCRIBED') {
             setError(null)
@@ -310,7 +299,7 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
             console.error('❌ Notifications realtime connection failed:', {
               error: err,
               userId: user.id,
-              channelName: `notifications:user:${user.id}`,
+              channelName: `topic:notifications:user:${user.id}`,
               timestamp: new Date().toISOString()
             })
             setError('Realtime notifications connection failed')
@@ -318,7 +307,6 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
             // Retry after 3 seconds
             if (!retryTimeout) {
               retryTimeout = setTimeout(() => {
-                console.log('🔄 Retrying notifications realtime connection...')
                 setupSubscription()
               }, 3000)
             }
@@ -330,13 +318,11 @@ export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = 
             // Retry after 5 seconds
             if (!retryTimeout) {
               retryTimeout = setTimeout(() => {
-                console.log('🔄 Retrying notifications realtime connection after timeout...')
                 setupSubscription()
               }, 5000)
             }
           } else if (status === 'CLOSED') {
             setConnectionStatus('disconnected')
-            console.log('🔌 Notifications realtime closed')
             setError(null)
           }
         })

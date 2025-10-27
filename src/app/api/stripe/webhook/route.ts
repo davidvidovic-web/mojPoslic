@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, getPackageById } from '@/lib/stripe'
-import { PrismaClient } from '@prisma/client'
+import { createRouteClient } from '@/lib/supabase/route'
 
 // Use the webhook secret or provide instructions if missing
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
 export async function POST(request: NextRequest) {
-  const prisma = new PrismaClient()
+  const supabase = createRouteClient()
   
   try {
     // Check if Stripe is properly configured
@@ -70,24 +70,31 @@ export async function POST(request: NextRequest) {
 
         
         // First, check if the user exists
-        const existingUser = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { id: true, connections: true }
-        })
+        const { data: existingUser, error: userError } = await supabase
+          .from('users')
+          .select('id, connections')
+          .eq('id', userId)
+          .single()
         
-        if (!existingUser) {
-          console.error(`User ${userId} not found in database`)
+        if (userError || !existingUser) {
+          console.error(`User ${userId} not found in database`, userError)
           return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
         
-        const currentConnections = existingUser.connections
+        const currentConnections = existingUser.connections || 0
         
-        // Update the user's connections using Prisma
-        const updatedUser = await prisma.user.update({
-          where: { id: userId },
-          data: { connections: { increment: connectionsAmount } },
-          select: { id: true, name: true, email: true, connections: true }
-        })
+        // Update the user's connections using Supabase
+        const { data: updatedUser, error: updateError } = await supabase
+          .from('users')
+          .update({ connections: currentConnections + connectionsAmount })
+          .eq('id', userId)
+          .select('id, name, email, connections')
+          .single()
+        
+        if (updateError || !updatedUser) {
+          console.error('Connection update failed:', updateError)
+          return NextResponse.json({ error: 'Connection update failed' }, { status: 500 })
+        }
         
         
         // Verify the update actually happened
@@ -100,23 +107,22 @@ export async function POST(request: NextRequest) {
           }, { status: 500 })
         }
         
-        // Log this payment event so we can manually recover if needed
-        console.log('Payment successful:', {
-          userId,
-          connections: connectionsAmount,
-          packageId,
-          sessionId: session.id,
-          timestamp: new Date().toISOString()
-        })
-        
         // Try to create history entry but don't fail the whole operation if it doesn't work
         try {
-          // Create connection history using raw SQL to avoid TypeScript issues
-          await prisma.$queryRaw`
-            INSERT INTO connection_history (id, user_id, action, amount, description, created_at)
-            VALUES (gen_random_uuid(), ${userId}, 'PURCHASE'::"ConnectionAction", ${connectionsAmount}, ${packageDescription}, NOW())
-            RETURNING id, action, amount, description, created_at
-          `
+          const { error: historyError } = await supabase
+            .from('connection_history')
+            .insert({
+              user_id: userId,
+              action: 'PURCHASE',
+              connections_before: currentConnections,
+              connections_after: currentConnections + connectionsAmount,
+              amount_changed: connectionsAmount,
+              reason: packageDescription
+            })
+          
+          if (historyError) {
+            throw historyError
+          }
         } catch (historyError) {
           console.error('Failed to create connection history:', historyError)
           // Provide very specific error information for debugging
@@ -147,7 +153,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Webhook error:', error)
     return NextResponse.json({ error: 'Webhook error', details: error }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
   }
 }

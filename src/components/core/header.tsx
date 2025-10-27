@@ -69,7 +69,7 @@ export const Header = React.memo(function Header() {
   // Throttled scroll handler for better performance
   const handleScroll = useCallback(() => {
     const scrollTop = window.scrollY;
-    setIsScrolled(scrollTop > 100);
+    setIsScrolled(scrollTop > 50);
   }, []);
 
   // Scroll detection effect with throttling

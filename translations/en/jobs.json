@@ -403,6 +403,18 @@
     "finishJobNoteText": "After you submit this review, the tasker will be notified and can leave a review for you as well. The job will be marked as completed.",
     "finishing": "Finishing...",
     "finishJobConfirm": "Finish Job & Submit Review",
+    "reviewClientDialog": "Review Client",
+    "reviewClientDescription": "Share your experience working with {clientName} on \"{jobTitle}\".",
+    "rateClient": "Rate the client",
+    "reviewClientPlaceholder": "Share your experience working with this client...",
+    "reviewClientNote": "Your review will be visible to other taskers and the client.",
+    "reviewClientInfoTitle": "Note:",
+    "reviewClientInfoText": "This review will help other taskers make informed decisions about working with this client.",
+    "submitReview": "Submit Review",
+    "submitting": "Submitting...",
+    "noReviewsYet": "No reviews yet",
+    "star": "star",
+    "stars": "stars",
     "cancel": "Cancel"
   }
 }

@@ -8,7 +8,6 @@ export async function GET() {
     // Test with the specific UUID you mentioned
     const testUserId = 'ba4bd4f1-fa3b-474c-8e25-a2833040df76'
     
-    console.log('Testing specific user ID:', testUserId)
     
     // Try to fetch the specific user
     const { data: specificUser, error: specificUserError } = await supabase
@@ -17,7 +16,6 @@ export async function GET() {
       .eq('id', testUserId)
       .single()
     
-    console.log('Specific user query result:', { specificUser, specificUserError })
     
     // Get a few recent users to check table structure
     const { data: users, error } = await supabase
@@ -57,7 +55,6 @@ export async function GET() {
       .eq('posted_by_id', testUserId)
       .limit(1)
     
-    console.log('Direct join query result:', { jobWithUser, joinError })
     
     return NextResponse.json({
       testUserId,

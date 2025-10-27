@@ -66,9 +66,7 @@
     "errors": {
       "usernameAlreadyExists": "Korisničko ime već postoji. Molimo odaberite drugo.",
       "profileSetupCompleted": "Podešavanje profila završeno!",
-      "failedToUpdateProfile": "Neuspješno ažuriranje profila. Molimo pokušajte ponovo.",
-      "saving": "Čuva se...",
-      "completeSetup": "Završi podešavanje"
+      "failedToUpdateProfile": "Neuspješno ažuriranje profila. Molimo pokušajte ponovo."
     }
   },
   "settings": {

@@ -116,6 +116,7 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.reviews.details(), id] as const,
     byUser: (userId: string) => [...queryKeys.reviews.all, 'user', userId] as const,
     byJob: (jobId: string) => [...queryKeys.reviews.all, 'job', jobId] as const,
+    stats: (userId: string) => [...queryKeys.reviews.all, 'stats', userId] as const,
   },
 
   // Payment queries

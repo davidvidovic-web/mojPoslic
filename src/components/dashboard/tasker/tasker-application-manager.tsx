@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useApplicationManager } from '@/hooks/useQueryManagers'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { ApplicationStatus } from '@/types/application'
@@ -9,18 +10,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Search, MessageCircle, ExternalLink, X } from 'lucide-react'
+import { Search, MessageCircle, ExternalLink, X, User } from 'lucide-react'
 import { formatDistanceToNowLocalized } from '@/lib/date-format'
 import { useTranslations, useLocale } from 'next-intl'
 import { useDialogStore } from '@/stores/dialog-store'
 import { supabase } from '@/lib/supabase'
+import { CancelApplicationDialog } from './cancel-application-dialog'
+import { toast } from 'sonner'
 
 interface TaskerApplicationManagerProps {
   showOnlyHistorical?: boolean // If true, only show completed/rejected applications
+  onMessageClick?: (conversationId: string | null) => void
 }
 
 export default function TaskerApplicationManager({ 
-  showOnlyHistorical = false
+  showOnlyHistorical = false,
+  onMessageClick
 }: TaskerApplicationManagerProps) {
   const { user } = useSupabaseAuth()
   const { applications = [], isLoading } = useApplicationManager(undefined, user?.id)
@@ -30,6 +35,13 @@ export default function TaskerApplicationManager({
   const locale = useLocale()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  
+  // Cancel dialog state
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [applicationToCancel, setApplicationToCancel] = useState<{
+    id: string
+    jobTitle: string
+  } | null>(null)
 
   // Helper functions
   const formatDate = (date: string | Date) => {
@@ -40,7 +52,12 @@ export default function TaskerApplicationManager({
     return html.replace(/<[^>]*>/g, '')
   }
 
-  const getStatusText = (status: ApplicationStatus) => {
+  const getStatusText = (status: ApplicationStatus, jobStatus?: string) => {
+    // If job is completed, show 'Completed' regardless of application status
+    if (jobStatus === 'completed') {
+      return t('completed') || 'Completed'
+    }
+    
     switch (status) {
       case ApplicationStatus.PENDING:
         return t('pending')
@@ -55,18 +72,26 @@ export default function TaskerApplicationManager({
     }
   }
 
-  const handleWithdraw = async (applicationId: string) => {
-    if (confirm(t('confirmWithdraw'))) {
-      try {
-        await updateApplicationMutation.mutateAsync({
-          applicationId,
-          updates: {
-            status: ApplicationStatus.WITHDRAWN
-          }
-        })
-      } catch (error) {
-        console.error('Withdraw error:', error)
-      }
+  const handleWithdraw = async (applicationId: string, jobTitle: string) => {
+    setApplicationToCancel({ id: applicationId, jobTitle })
+    setIsCancelDialogOpen(true)
+  }
+
+  const confirmCancelApplication = async () => {
+    if (!applicationToCancel) return
+
+    try {
+      await updateApplicationMutation.mutateAsync({
+        applicationId: applicationToCancel.id,
+        updates: {
+          status: ApplicationStatus.WITHDRAWN
+        }
+      })
+      toast.success(t('cancelSuccess'))
+      setApplicationToCancel(null)
+    } catch (error) {
+      console.error('Withdraw error:', error)
+      toast.error(t('cancelError'))
     }
   }
 
@@ -81,34 +106,44 @@ export default function TaskerApplicationManager({
       
       if (error) {
         console.error('Error finding conversation:', error)
-        // If no conversation exists, just open general messaging
-        openMessagingDialog()
-        return
       }
 
-      if (conversation) {
-        // Open messaging dialog with specific conversation
-        openMessagingDialog(conversation.id)
+      // If onMessageClick is provided, use it (for local state in dashboard)
+      if (onMessageClick) {
+        onMessageClick(conversation?.id || null)
       } else {
-        // No conversation found, open general messaging
-        openMessagingDialog()
+        // Fallback to global dialog store
+        if (conversation) {
+          openMessagingDialog(conversation.id)
+        } else {
+          openMessagingDialog()
+        }
       }
     } catch (error) {
       console.error('Error handling message:', error)
       // Fallback to general messaging
-      openMessagingDialog()
+      if (!onMessageClick) {
+        openMessagingDialog()
+      }
     }
   }
 
   // Filter applications based on showOnlyHistorical
+  // Completed jobs are those where job.status === 'completed'
   const relevantApplications = showOnlyHistorical 
     ? applications.filter(app => {
         const status = app.status?.toLowerCase() || ''
-        return ['rejected', 'withdrawn'].includes(status)
+        const jobStatus = (app.job as { status?: string })?.status?.toLowerCase() || ''
+        
+        // Show completed jobs, rejected and withdrawn applications
+        return jobStatus === 'completed' || ['rejected', 'withdrawn'].includes(status)
       })
     : applications.filter(app => {
         const status = app.status?.toLowerCase() || ''
-        return ['pending', 'selected'].includes(status)
+        const jobStatus = (app.job as { status?: string })?.status?.toLowerCase() || ''
+        
+        // Show pending and selected applications (active work), but exclude completed jobs
+        return jobStatus !== 'completed' && ['pending', 'selected'].includes(status)
       })
   
   // Filter applications
@@ -224,16 +259,28 @@ export default function TaskerApplicationManager({
                   <div className="flex items-center gap-3 mb-1">
                     {/* Client Avatar */}
                     <Avatar className="h-8 w-8">
-                      <AvatarImage 
-                        src={(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url || undefined} 
-                        alt={application.job?.posted_by?.name || t('unknownCompany')}
-                      />
-                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                        {application.job?.posted_by?.name 
-                          ? application.job.posted_by.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-                          : '??'
-                        }
-                      </AvatarFallback>
+                      {(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url ? (
+                        <AvatarImage 
+                          src={(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url || undefined}
+                          alt={application.job?.posted_by?.name || t('unknownCompany')}
+                          asChild
+                        >
+                          <Image
+                            src={(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url || ''}
+                            alt={application.job?.posted_by?.name || t('unknownCompany')}
+                            width={32}
+                            height={32}
+                            className="object-cover"
+                          />
+                        </AvatarImage>
+                      ) : (
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                          {application.job?.posted_by?.name 
+                            ? application.job.posted_by.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                            : <User className="h-4 w-4" />
+                          }
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     
                     <h3 className="font-medium text-card-foreground">
@@ -242,13 +289,17 @@ export default function TaskerApplicationManager({
                     
                     {/* Status Badge */}
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      (application.job as { status?: string })?.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
                       application.status === ApplicationStatus.PENDING ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                      application.status === ApplicationStatus.SELECTED ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                      application.status === ApplicationStatus.SELECTED ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
                       application.status === ApplicationStatus.REJECTED ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
                       application.status === ApplicationStatus.WITHDRAWN ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' :
                       'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
                     }`}>
-                      {getStatusText((application.status as ApplicationStatus) || ApplicationStatus.PENDING)}
+                      {getStatusText(
+                        (application.status as ApplicationStatus) || ApplicationStatus.PENDING,
+                        (application.job as { status?: string })?.status
+                      )}
                     </span>
                   </div>
                 </div>
@@ -313,7 +364,7 @@ export default function TaskerApplicationManager({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleWithdraw(application.id)}
+                    onClick={() => handleWithdraw(application.id, application.job?.title || t('unknownJob'))}
                     disabled={updateApplicationMutation.isPending}
                     className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
                   >
@@ -326,6 +377,17 @@ export default function TaskerApplicationManager({
           ))
         )}
       </div>
+      
+      {/* Cancel Application Dialog */}
+      {applicationToCancel && (
+        <CancelApplicationDialog
+          open={isCancelDialogOpen}
+          onOpenChange={setIsCancelDialogOpen}
+          jobTitle={applicationToCancel.jobTitle}
+          onConfirm={confirmCancelApplication}
+          isSubmitting={updateApplicationMutation.isPending}
+        />
+      )}
     </div>
   )
 }

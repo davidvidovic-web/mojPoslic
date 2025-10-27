@@ -98,7 +98,6 @@ export const updateSession = async (request: NextRequest) => {
   } catch (error) {
     // Ignore auth errors in middleware - this is normal for unauthenticated users
     // or when coming from email verification links
-    console.log('Auth session update skipped:', error instanceof Error ? error.message : 'Unknown error')
   }
 
   return response

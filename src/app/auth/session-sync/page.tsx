@@ -20,14 +20,12 @@ export default function SessionSyncPage() {
     setSyncStarted(true)
 
     const syncSession = async () => {
-      console.log('SessionSync: Starting session synchronization...', { attempt: attempts + 1, maxAttempts })
       
       // Force refresh the auth context to pick up server-established session
       await refreshUser()
       
       // Check if we now have a user
       if (user) {
-        console.log('SessionSync: User found after refresh:', user.email)
         
         // Build the redirect URL with parameters
         const params = new URLSearchParams()
@@ -39,7 +37,6 @@ export default function SessionSyncPage() {
           ? `/${next}?${params.toString()}`
           : `/${next}`
         
-        console.log('SessionSync: Redirecting to:', redirectUrl)
         router.push(redirectUrl)
         return
       }
@@ -68,7 +65,6 @@ export default function SessionSyncPage() {
         ? `/${next}?${params.toString()}`
         : `/${next}`
       
-      console.log('SessionSync: User already available, redirecting to:', redirectUrl)
       router.push(redirectUrl)
     }
   }, [user, loading, attempts, maxAttempts, next, verified, router, refreshUser, syncStarted])

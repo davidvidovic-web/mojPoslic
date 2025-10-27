@@ -53,11 +53,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([], { status: 200 });
     }
 
-    console.log('Search API called with query:', query, 'API key available:', !!GOOGLE_MAPS_API_KEY);
 
     // Google Places API (if API key is available)
     if (GOOGLE_MAPS_API_KEY) {
-      console.log('Google Maps API key is configured, proceeding with Google search');
       try {
         // Set a reasonable timeout
         const controller = new AbortController();
@@ -69,28 +67,18 @@ export async function GET(request: NextRequest) {
           // Strategy 1: Broad search with just Bosnia region (no specific types to avoid filtering out results)
           const googleUrl1 = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}&language=bs&region=ba`;
           
-          console.log('Trying Google Places API (Strategy 1 - Broad) with URL:', googleUrl1.replace(GOOGLE_MAPS_API_KEY, 'API_KEY_HIDDEN'));
           
           const response1 = await fetch(googleUrl1, {
             signal: controller.signal
           });
           
-          console.log('Google Places API (Strategy 1) response status:', response1.status);
           
           if (response1.ok) {
             const data1 = await response1.json();
             
-            console.log('Google Places API (Strategy 1) response:', {
-              status: data1.status,
-              resultsCount: data1.results?.length || 0,
-              error: data1.error_message,
-              firstResult: data1.results?.[0]?.formatted_address
-            });
-            
             if (data1.status === 'OK' && data1.results && data1.results.length > 0) {
               googleResults = data1;
             } else if (data1.status === 'ZERO_RESULTS') {
-              console.log('Strategy 1: No results found');
             } else if (data1.error_message) {
               console.warn('Strategy 1 API error:', data1.error_message);
             }
@@ -98,11 +86,9 @@ export async function GET(request: NextRequest) {
           
           // Strategy 2: Search with Bosnia Herzegovina suffix for more context
           if (!googleResults || !googleResults.results?.length) {
-            console.log('Strategy 1 failed, trying Strategy 2 (with Bosnia suffix)');
             
             const googleUrl2 = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query + ' Bosnia Herzegovina')}&key=${GOOGLE_MAPS_API_KEY}&language=bs&region=ba`;
             
-            console.log('Trying Google Places API (Strategy 2) with URL:', googleUrl2.replace(GOOGLE_MAPS_API_KEY, 'API_KEY_HIDDEN'));
             
             const response2 = await fetch(googleUrl2, {
               signal: controller.signal
@@ -110,13 +96,6 @@ export async function GET(request: NextRequest) {
             
             if (response2.ok) {
               const data2 = await response2.json();
-              
-              console.log('Google Places API (Strategy 2) response:', {
-                status: data2.status,
-                resultsCount: data2.results?.length || 0,
-                error: data2.error_message,
-                firstResult: data2.results?.[0]?.formatted_address
-              });
               
               if (data2.status === 'OK' && data2.results && data2.results.length > 0) {
                 googleResults = data2;
@@ -126,7 +105,6 @@ export async function GET(request: NextRequest) {
           
           // Strategy 3: Partial/fuzzy matching by searching individual words
           if (!googleResults || !googleResults.results?.length) {
-            console.log('Strategy 2 failed, trying Strategy 3 (word-by-word search)');
             
             // Split query into words and try searching with each major word
             const words = query.toLowerCase().split(/\s+/).filter(word => word.length > 2);
@@ -134,7 +112,6 @@ export async function GET(request: NextRequest) {
             for (const word of words) {
               const googleUrl3 = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(word + ' street Bosnia')}&key=${GOOGLE_MAPS_API_KEY}&language=bs&region=ba`;
               
-              console.log(`Trying Strategy 3 with word "${word}":`, googleUrl3.replace(GOOGLE_MAPS_API_KEY, 'API_KEY_HIDDEN'));
               
               const response3 = await fetch(googleUrl3, {
                 signal: controller.signal
@@ -142,12 +119,6 @@ export async function GET(request: NextRequest) {
               
               if (response3.ok) {
                 const data3 = await response3.json();
-                
-                console.log(`Strategy 3 (${word}) response:`, {
-                  status: data3.status,
-                  resultsCount: data3.results?.length || 0,
-                  firstResult: data3.results?.[0]?.formatted_address
-                });
                 
                 if (data3.status === 'OK' && data3.results && data3.results.length > 0) {
                   googleResults = data3;
@@ -159,14 +130,12 @@ export async function GET(request: NextRequest) {
           
           // Strategy 4: Try with major cities for specific street searches
           if (!googleResults || !googleResults.results?.length) {
-            console.log('Strategy 3 failed, trying Strategy 4 (with individual cities)');
             
             const commonCities = ['Sarajevo', 'Banja Luka', 'Tuzla', 'Zenica', 'Mostar', 'Bijeljina', 'Prijedor', 'Trebinje', 'Bihac', 'Doboj'];
             
             for (const city of commonCities) {
               const googleUrl4 = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query + ' ' + city)}&key=${GOOGLE_MAPS_API_KEY}&language=bs&region=ba`;
               
-              console.log(`Trying Strategy 4 with ${city}:`, googleUrl4.replace(GOOGLE_MAPS_API_KEY, 'API_KEY_HIDDEN'));
               
               const response4 = await fetch(googleUrl4, {
                 signal: controller.signal
@@ -174,12 +143,6 @@ export async function GET(request: NextRequest) {
               
               if (response4.ok) {
                 const data4 = await response4.json();
-                
-                console.log(`Strategy 4 (${city}) response:`, {
-                  status: data4.status,
-                  resultsCount: data4.results?.length || 0,
-                  firstResult: data4.results?.[0]?.formatted_address
-                });
                 
                 if (data4.status === 'OK' && data4.results && data4.results.length > 0) {
                   googleResults = data4;
@@ -191,7 +154,6 @@ export async function GET(request: NextRequest) {
           
           // Strategy 5: Try Geocoding API with multiple variations
           if (!googleResults || !googleResults.results?.length) {
-            console.log('Strategy 4 failed, trying Strategy 5 (Geocoding API variations)');
             
             const geocodeQueries = [
               query + ', Bosnia and Herzegovina',
@@ -203,7 +165,6 @@ export async function GET(request: NextRequest) {
             for (const geocodeQuery of geocodeQueries) {
               const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(geocodeQuery)}&key=${GOOGLE_MAPS_API_KEY}&language=bs&region=ba&components=country:BA`;
               
-              console.log('Trying Geocoding API with query:', geocodeQuery, geocodeUrl.replace(GOOGLE_MAPS_API_KEY, 'API_KEY_HIDDEN'));
               
               const geocodeResponse = await fetch(geocodeUrl, {
                 signal: controller.signal
@@ -211,13 +172,6 @@ export async function GET(request: NextRequest) {
               
               if (geocodeResponse.ok) {
                 const geocodeData = await geocodeResponse.json();
-                
-                console.log('Geocoding API response:', {
-                  query: geocodeQuery,
-                  status: geocodeData.status,
-                  resultsCount: geocodeData.results?.length || 0,
-                  firstResult: geocodeData.results?.[0]?.formatted_address
-                });
                 
                 if (geocodeData.status === 'OK' && geocodeData.results && geocodeData.results.length > 0) {
                   // Convert Geocoding API results to Places API format
@@ -242,7 +196,6 @@ export async function GET(request: NextRequest) {
           
           // Process results if found
           if (googleResults && googleResults.results && googleResults.results.length > 0) {
-            console.log(`Processing ${googleResults.results.length} Google Places results`);
             
             // Format Google results to match our expected format
             const formattedResults: SearchResult[] = googleResults.results.slice(0, parseInt(limit)).map((place: GooglePlaceResult, index: number) => {
@@ -275,12 +228,9 @@ export async function GET(request: NextRequest) {
               };
             });
             
-            console.log('Returning Google Places results:', formattedResults.length, 'results');
-            console.log('Sample result:', formattedResults[0]);
             
             return NextResponse.json(formattedResults);
           } else {
-            console.log('No valid Google results found, proceeding to enhanced static fallback');
           }
 
           clearTimeout(timeoutId);
@@ -303,7 +253,6 @@ export async function GET(request: NextRequest) {
       const lowerQuery = query.toLowerCase();
       const matches = [];
       
-      console.log('Starting enhanced static fallback for query:', lowerQuery);
       
       // Check if the query matches any city name first
       for (const [key, city] of Object.entries(CITY_COORDINATES)) {
@@ -325,7 +274,6 @@ export async function GET(request: NextRequest) {
       
       // Enhanced street name search with common Bosnian streets and fuzzy matching
       if (matches.length === 0) {
-        console.log('No city matches, trying enhanced street name fallback');
         
         // Common Bosnian street names (expanded list)
         const commonStreets = [
@@ -370,7 +318,6 @@ export async function GET(request: NextRequest) {
           .sort((a, b) => b.score - a.score)
           .slice(0, 3); // Top 3 matches
         
-        console.log('Street matches found:', streetMatches);
         
         if (streetMatches.length > 0) {
           // Generate results for major cities where these streets might exist
@@ -406,7 +353,6 @@ export async function GET(request: NextRequest) {
         // Limit to requested number
         const limitedMatches = matches.slice(0, parseInt(limit));
         
-        console.log(`Enhanced static fallback found ${limitedMatches.length} results for query: ${query}`);
         return NextResponse.json(limitedMatches);
       }
     } catch (cityError) {
@@ -414,7 +360,6 @@ export async function GET(request: NextRequest) {
     }
     
     // If all else fails, return empty array
-    console.log('No results found for query:', query, '- returning empty array');
     return NextResponse.json([]);
   } catch (error) {
     console.error('Search API error:', error);

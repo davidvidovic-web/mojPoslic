@@ -8,7 +8,6 @@ import { useClientApplications } from '@/hooks/use-client-applications'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useDialogStore } from '@/stores/dialog-store'
 import { useConnectionsManager } from '@/hooks/use-connections'
-import { supabase } from '@/lib/supabase'
 import { UnifiedJobDialog } from '@/components/core/unified-job-dialog'
 import { JobEditDialog } from '@/components/core/job-edit-dialog'
 import { FeatureJobDialog } from './client/feature-job-dialog'
@@ -73,6 +72,24 @@ export function ClientDashboard() {
   // Fetch applications for all client jobs
   const { data: allApplications = [], isLoading: applicationsLoading } = useClientApplications(jobIds, jobs)
   
+  // Get selected applicants for each job
+  const selectedApplicants = React.useMemo(() => {
+    const map: Record<string, { name: string; id: string; avatarUrl?: string } | null> = {}
+    jobs.forEach(job => {
+      const selectedApp = allApplications.find(
+        app => app.jobId === job.id && app.status === 'SELECTED'
+      )
+      map[job.id] = selectedApp 
+        ? { 
+            name: selectedApp.user?.name || 'Unknown',
+            id: selectedApp.userId || '',
+            avatarUrl: selectedApp.user?.avatarUrl
+          }
+        : null
+    })
+    return map
+  }, [jobs, allApplications])
+  
   // Zustand stores for UI state
   const {
     isJobPostDialogOpen,
@@ -116,7 +133,6 @@ export function ClientDashboard() {
     if (!deletingJob) return
 
     try {
-      console.log('🗑️ Attempting to delete job:', deletingJob.id, deletingJob.title)
       await deleteJobMutation.mutateAsync(deletingJob.id)
       toast.success(tJobs('success.jobDeleted'))
       setIsDeleteDialogOpen(false)
@@ -169,65 +185,23 @@ export function ClientDashboard() {
     }
   }
 
-  const handleAcceptJob = async (jobId: string) => {
-    try {
-      // Accept logic - could mark job as accepted or accept top applicant
-      console.log('Accepting job:', jobId)
-      toast.success(tJobs('success.jobAccepted') || 'Job accepted successfully')
-      // TODO: Implement actual accept logic
-    } catch (error) {
-      console.error('Error accepting job:', error)
-      toast.error(tJobs('errors.acceptError') || 'Failed to accept job')
-    }
-  }
-
-  const handleRejectJob = async (jobId: string) => {
-    try {
-      // Reject logic - could reject all pending applicants
-      console.log('Rejecting job:', jobId)
-      toast.success(tJobs('success.jobRejected') || 'Job rejected successfully')
-      // TODO: Implement actual reject logic
-    } catch (error) {
-      console.error('Error rejecting job:', error)
-      toast.error(tJobs('errors.rejectError') || 'Failed to reject job')
-    }
-  }
-
   const handleCloseJob = async (jobId: string) => {
     const job = jobs.find(j => j.id === jobId)
     if (!job || !user) return
     
-    // Fetch the tasker info from job assignments
+    // Get the selected applicant for this job
+    const selectedApplicant = selectedApplicants[jobId]
+    
+    if (!selectedApplicant) {
+      console.error('No selected applicant found for job:', jobId)
+      toast.error(t('toast.taskerNotFound'))
+      return
+    }
+    
     try {
-      const { data: assignment, error } = await supabase
-        .from('job_assignments')
-        .select(`
-          tasker_id,
-          tasker:users!job_assignments_tasker_id_fkey (
-            id,
-            name,
-            email
-          )
-        `)
-        .eq('job_id', jobId)
-        .eq('client_id', user.id)
-        .single()
-      
-      if (error || !assignment) {
-        console.error('Error fetching tasker info:', error)
-        toast.error('Could not find the tasker for this job')
-        return
-      }
-      
-      const tasker = assignment.tasker as { id: string; name: string; email: string } | null
-      if (!tasker) {
-        toast.error('Could not find the tasker for this job')
-        return
-      }
-      
       setTaskerInfo({
-        id: tasker.id,
-        name: tasker.name || tasker.email || 'Tasker'
+        id: selectedApplicant.id,
+        name: selectedApplicant.name
       })
       
       // Open finish job dialog to collect review
@@ -235,7 +209,7 @@ export function ClientDashboard() {
       setIsFinishDialogOpen(true)
     } catch (error) {
       console.error('Error preparing to finish job:', error)
-      toast.error('Failed to load job information')
+      toast.error(t('toast.jobInfoLoadFailed'))
     }
   }
 
@@ -243,8 +217,6 @@ export function ClientDashboard() {
     if (!finishingJob || !user) return
 
     try {
-      console.log('🏁 Finishing job:', finishingJob.id, 'with review for tasker:', taskerId)
-      
       // Create review and mark job as finished
       await finishJobMutation.mutateAsync({
         jobId: finishingJob.id,
@@ -264,8 +236,22 @@ export function ClientDashboard() {
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
     } catch (error) {
       console.error('❌ Error finishing job:', error)
-      const errorMessage = error instanceof Error ? error.message : tJobs('errors.finishError')
-      toast.error(errorMessage || 'Failed to finish job')
+      
+      // Map error messages to translation keys
+      const errorMessage = error instanceof Error ? error.message : ''
+      let translationKey = 'toast.jobInfoLoadFailed' // default
+      
+      if (errorMessage.includes('No accepted application')) {
+        translationKey = 'toast.noAcceptedApplication'
+      } else if (errorMessage.includes('Failed to create review')) {
+        translationKey = 'toast.reviewCreationFailed'
+      } else if (errorMessage.includes('Failed to update application')) {
+        translationKey = 'toast.applicationStatusUpdateFailed'
+      } else if (errorMessage.includes('Failed to update job status')) {
+        translationKey = 'toast.jobStatusUpdateFailed'
+      }
+      
+      toast.error(t(translationKey))
     }
   }
 
@@ -295,28 +281,18 @@ export function ClientDashboard() {
   }
 
   const handleMessageApplicant = async (applicationId: string, userId: string) => {
-    console.log('DEBUG: handleMessageApplicant called with:', { applicationId, userId })
-    
     try {
-      console.log('Starting to create conversation for:', { applicationId, userId })
-      
       // Find the application to get job details
       const application = allApplications.find(app => app.id === applicationId)
       if (!application) {
-        toast.error('Application not found')
+        toast.error(t('toast.applicationNotFound'))
         return
       }
 
       if (!application.job) {
-        toast.error('Job information not found')
+        toast.error(t('toast.jobInfoNotFound'))
         return
       }
-
-      console.log('Creating job conversation with:', {
-        jobId: application.job.id,
-        userId,
-        jobTitle: application.job.title
-      })
 
       // Create conversation via API
       const response = await fetch('/api/conversations', {
@@ -343,14 +319,43 @@ export function ClientDashboard() {
         // Show messaging interface with the conversation
         setMessagingConversationId(result.data.conversationId)
         setShowMessaging(true)
-        toast.success(`Started conversation about "${application.job.title}"`)
       } else {
         throw new Error(result.error || 'Failed to create conversation')
       }
 
     } catch (error) {
       console.error('Error creating conversation:', error)
-      toast.error('Failed to start conversation. Please try again.')
+      toast.error(t('toast.conversationStartFailed'))
+    }
+  }
+
+  const handleViewCandidateProfile = (candidateId: string) => {
+    // Find the application for this candidate
+    const application = allApplications.find(app => app.userId === candidateId)
+    if (application) {
+      // You can implement a modal or drawer to show the profile
+      // For now, we'll just show a toast message
+      toast.info('Profile viewing feature coming soon!')
+    }
+  }
+
+  const handleMessageCandidate = async (candidateId: string, jobId: string) => {
+    try {
+      // Find the application for this candidate and job
+      const application = allApplications.find(
+        app => app.userId === candidateId && app.jobId === jobId
+      )
+      
+      if (!application) {
+        toast.error(t('toast.applicationNotFound'))
+        return
+      }
+
+      // Use the existing handleMessageApplicant function
+      await handleMessageApplicant(application.id, candidateId)
+    } catch (error) {
+      console.error('Error messaging candidate:', error)
+      toast.error(t('toast.conversationStartFailed'))
     }
   }
 
@@ -410,13 +415,14 @@ export function ClientDashboard() {
             <ClientJobsManager
               jobs={jobs}
               applicationCounts={applicationCounts}
+              selectedApplicants={selectedApplicants}
               onEdit={handleEditJob}
               onDelete={handleDeleteJob}
               onFeature={handleFeatureJob}
-              onAccept={handleAcceptJob}
-              onReject={handleRejectJob}
               onClose={handleCloseJob}
               onPostNewJob={openJobPostDialog}
+              onViewProfile={handleViewCandidateProfile}
+              onMessageCandidate={handleMessageCandidate}
               loading={isLoading}
             />
           </CardContent>

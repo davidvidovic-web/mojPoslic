@@ -3,16 +3,16 @@
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Mail, Phone, MapPin, Star, X, User } from 'lucide-react'
+import { Mail, MapPin, X, User } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatDate } from '@/lib/date-format'
+import { ReviewScore } from '@/components/reviews/review-score'
 
 interface TaskerProfileCardProps {
   user: {
     id: string
     name?: string
     email?: string
-    phone?: string
     avatarUrl?: string
     bio?: string
     location?: string
@@ -43,7 +43,17 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
     
     // Handle array format (modern)
     if (Array.isArray(skills)) {
-      return skills.filter(skill => skill && skill.trim() !== '')
+      return skills.map(skill => {
+        // Handle object format: {skill: "name", experienceLevel: "..."}
+        if (typeof skill === 'object' && skill !== null && 'skill' in skill) {
+          return (skill as { skill: string; experienceLevel?: string }).skill
+        }
+        // Handle simple string format
+        if (typeof skill === 'string') {
+          return skill
+        }
+        return ''
+      }).filter(skill => skill && skill.trim() !== '')
     }
     
     // Handle string format (legacy)
@@ -53,7 +63,13 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
         try {
           const parsed = JSON.parse(skills)
           if (Array.isArray(parsed)) {
-            return parsed.filter(skill => skill && skill.trim() !== '')
+            return parsed.map(skill => {
+              // Handle object format in parsed JSON
+              if (typeof skill === 'object' && skill !== null && 'skill' in skill) {
+                return skill.skill
+              }
+              return skill
+            }).filter(skill => skill && typeof skill === 'string' && skill.trim() !== '')
           }
         } catch (error) {
           console.warn('Failed to parse skills JSON:', error)
@@ -70,15 +86,31 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
     return []
   }
 
-  const skills = parseSkills(user.skills)
+  // Format location from slug to proper name (e.g., "banja-luka" -> "Banja Luka")
+  const formatLocation = (location: string | undefined): string => {
+    if (!location) return ''
+    
+    // Convert kebab-case to Title Case
+    return location
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
 
-  // Debug logging to see what we're getting
-  console.log('🔍 TaskerProfileCard Debug:', {
-    rawSkills: user.skills,
-    parsedSkills: skills,
-    skillsType: typeof user.skills,
-    skillsLength: skills.length
-  })
+  const skills = parseSkills(user.skills)
+  const formattedLocation = formatLocation(user.location)
+
+  // Filter out invalid experience (e.g., JSON strings that should be in skills)
+  const isValidExperience = (exp: string | undefined): boolean => {
+    if (!exp) return false
+    // Check if it's a JSON array string (invalid for experience)
+    if (exp.trim().startsWith('[') && exp.trim().endsWith(']')) {
+      return false
+    }
+    return true
+  }
+
+  const validExperience = isValidExperience(user.experience) ? user.experience : undefined
 
   // Helper function to strip HTML (same as application manager)
   const stripHtml = (html: string) => {
@@ -128,25 +160,15 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
               </h3>
               
               {/* Rating */}
-              {user.averageRating && (
-                <div className="flex items-center gap-1 mb-2">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium text-foreground">
-                    {user.averageRating.toFixed(1)}
-                  </span>
-                  {user.totalReviews && (
-                    <span className="text-sm text-muted-foreground">
-                      ({user.totalReviews} {user.totalReviews === 1 ? t('profileCard.review') : t('profileCard.reviews')})
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className="mb-2">
+                <ReviewScore userId={user.id} size="md" showCount={true} />
+              </div>
               
               {/* Location */}
-              {user.location && (
+              {formattedLocation && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  <span>{user.location}</span>
+                  <span>{formattedLocation}</span>
                 </div>
               )}
             </div>
@@ -163,14 +185,6 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <span className="text-foreground">{user.email}</span>
               </div>
-              
-              {/* Phone */}
-              {user.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{user.phone}</span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -184,37 +198,33 @@ export function TaskerProfileCard({ user, application, onClose, onMessage }: Tas
             </div>
           )}
 
-          {/* Skills Section - Always show for debugging */}
-          <div className="mb-6">
-            <h4 className="font-medium text-card-foreground mb-3">
-              {t('profileCard.skills')} ({skills.length} skills found)
-            </h4>
-            {skills.length > 0 ? (
+          {/* Skills Section */}
+          {skills.length > 0 && (
+            <div className="mb-6">
+              <h4 className="font-medium text-card-foreground mb-3">
+                {t('profileCard.skills')}
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
                   <Badge 
                     key={index} 
                     variant="secondary" 
-                    className="text-xs"
+                    className="text-xs px-3 py-1"
                   >
                     {skill}
                   </Badge>
                 ))}
               </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No skills data found. Raw skills: {JSON.stringify(user.skills)}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Experience */}
-          {user.experience && (
+          {validExperience && (
             <div className="mb-6">
               <h4 className="font-medium text-card-foreground mb-3">
                 {t('profileCard.experience')}
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{user.experience}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{validExperience}</p>
             </div>
           )}
 

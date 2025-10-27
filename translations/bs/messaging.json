@@ -17,7 +17,8 @@
     "delete": "Obriši",
     "deleteMessage": "Obriši poruku",
     "deleteMessageForMe": "Obriši za mene",
-    "deleteConversation": "Obriši razgovor",
+    "deleteConversation": "Obriši Razgovor",
+    "clearMessages": "Očisti Poruke",
     "clearConversation": "Očisti razgovor za mene",
     "block": "Blokiraj",
     "unblock": "Odblokiraj",
@@ -26,18 +27,31 @@
   "deleteMessageDialog": {
     "title": "Obrisati poruku?",
     "description": "Ova poruka će biti obrisana samo iz vašeg prikaza. Drugi učesnici će je i dalje vidjeti.",
+    "warning": "Ova akcija se ne može poništiti. Poruka će biti trajno uklonjena iz vašeg prikaza.",
     "confirm": "Obriši za mene",
     "cancel": "Otkaži",
     "success": "Poruka obrisana",
     "error": "Neuspjelo brisanje poruke"
   },
   "clearConversationDialog": {
-    "title": "Očistiti razgovor?",
+    "title": "Očisti Poruke",
     "description": "Sve poruke u ovom razgovoru će biti obrisane samo iz vašeg prikaza. Drugi učesnici će ih i dalje vidjeti.",
-    "confirm": "Očisti za mene",
-    "cancel": "Otkaži",
-    "success": "Razgovor očišćen",
-    "error": "Neuspjelo čišćenje razgovora"
+    "warning": "Ova akcija se ne može poništiti. Sve poruke će biti trajno očišćene iz vašeg prikaza.",
+    "confirm": "Očisti Poruke",
+    "cancel": "Vrati se",
+    "clearing": "Čišćenje...",
+    "success": "Poruke očišćene",
+    "error": "Neuspjelo čišćenje poruka"
+  },
+  "deleteConversationDialog": {
+    "title": "Obriši Razgovor",
+    "description": "Ovo će ukloniti razgovor iz vaše liste. Poruke će ostati u bazi podataka i mogu biti ponovo pristupne ako drugi učesnik pošalje novu poruku.",
+    "warning": "Ovaj razgovor će biti uklonjen iz vašeg prikaza, ali sve poruke ostaju u bazi podataka.",
+    "confirm": "Obriši Razgovor",
+    "cancel": "Vrati se",
+    "deleting": "Brisanje...",
+    "success": "Razgovor obrisan",
+    "error": "Neuspjelo brisanje razgovora"
   },
   "conversation": {
     "defaultTitle": "Razgovor"

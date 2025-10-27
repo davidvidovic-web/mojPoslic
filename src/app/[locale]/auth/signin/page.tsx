@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { OTPInput } from "@/components/ui/otp-input"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { showToast } from "@/lib/toast"
@@ -71,25 +72,9 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
       // For now using supabase directly since we need both password and OTP auth
       const { supabase } = await import("@/lib/supabase")
       
-      console.log('🔐 Attempting signin with:', {
-        email: formData.email,
-        passwordLength: formData.password.length,
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(0, 30) + '...',
-        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      })
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
-      })
-
-      console.log('🔐 Signin response:', {
-        hasUser: !!data?.user,
-        hasSession: !!data?.session,
-        errorCode: error?.code,
-        errorMessage: error?.message,
-        userId: data?.user?.id,
-        userEmail: data?.user?.email
       })
 
       if (error) {
@@ -103,7 +88,6 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
           showToast.error(error.message || t('signInFailed'))
         }
       } else {
-        console.log('🔐 Signin successful, redirecting...')
         showToast.success(t('signedInSuccessfully'))
         const redirectTo = returnUrl || `/${locale}/dashboard`
         window.location.href = redirectTo
@@ -214,17 +198,12 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="otp">{t('verificationCode') || 'Verification Code'}</Label>
-                  <Input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    placeholder={t('enterSixDigitCode') || 'Enter 6-digit code'}
+                  <OTPInput
+                    length={6}
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    required
+                    onChange={setOtp}
                     disabled={loading}
-                    maxLength={6}
-                    className="text-center text-lg tracking-widest"
+                    autoFocus
                   />
                 </div>
 

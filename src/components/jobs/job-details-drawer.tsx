@@ -14,6 +14,7 @@ import { formatJobType, getJobTypeBadgeVariant, getJobExpirationDate } from "@/l
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
+import { ReviewScore } from '@/components/reviews/review-score'
 
 interface JobDetailsDrawerProps {
   jobId: string
@@ -279,6 +280,12 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                         <p className="text-sm text-muted-foreground">
                           {job.posted_at ? formatDate(job.posted_at) : ''}
                         </p>
+                        {/* Client Review Score */}
+                        {job.postedBy?.id && (
+                          <div className="mt-1">
+                            <ReviewScore userId={job.postedBy.id} size="sm" showCount={true} />
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">

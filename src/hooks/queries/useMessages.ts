@@ -11,8 +11,6 @@ export function useDeleteMessageForUserMutation() {
 
   return useMutation({
     mutationFn: async ({ messageId, userId }: { messageId: string; userId: string }) => {
-      console.log('🗑️ User deleting message from their view:', { messageId, userId })
-
       // First, get the current message to see who has already deleted it
       const { data: message, error: fetchError } = await supabase
         .from('messages')
@@ -21,7 +19,6 @@ export function useDeleteMessageForUserMutation() {
         .single() as { data: { deleted_by_users: string[] | null } | null; error: Error | null }
 
       if (fetchError) {
-        console.error('❌ Error fetching message:', fetchError)
         throw new Error('Failed to fetch message')
       }
 
@@ -37,11 +34,8 @@ export function useDeleteMessageForUserMutation() {
         .eq('id', messageId)
 
       if (updateError) {
-        console.error('❌ Error updating message:', updateError)
         throw new Error('Failed to delete message')
       }
-
-      console.log('✅ Message deleted from user view')
       
       return { messageId, userId }
     },
@@ -49,7 +43,6 @@ export function useDeleteMessageForUserMutation() {
       // Invalidate conversation queries to refresh the message list
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['messages'] })
-      console.log('🔄 Invalidated conversation queries')
     },
   })
 }
@@ -72,8 +65,6 @@ export function useDeleteConversationForUserMutation() {
 
   return useMutation({
     mutationFn: async ({ conversationId, userId }: { conversationId: string; userId: string }) => {
-      console.log('🗑️ User deleting all messages from conversation:', { conversationId, userId })
-
       // Get all messages in the conversation
       const { data: messages, error: fetchError } = await supabase
         .from('messages')
@@ -84,12 +75,10 @@ export function useDeleteConversationForUserMutation() {
         }
 
       if (fetchError) {
-        console.error('❌ Error fetching messages:', fetchError)
         throw new Error('Failed to fetch messages')
       }
 
       if (!messages || messages.length === 0) {
-        console.log('ℹ️ No messages to delete')
         return { conversationId, userId, deletedCount: 0 }
       }
 
@@ -110,11 +99,8 @@ export function useDeleteConversationForUserMutation() {
       // Check for errors
       const errors = results.filter(r => r.error)
       if (errors.length > 0) {
-        console.error('❌ Some messages failed to delete:', errors)
         throw new Error(`Failed to delete ${errors.length} messages`)
       }
-
-      console.log(`✅ Deleted ${messages.length} messages from user view`)
       
       return { conversationId, userId, deletedCount: messages.length }
     },
@@ -122,7 +108,51 @@ export function useDeleteConversationForUserMutation() {
       // Invalidate conversation queries to refresh the message list
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['messages'] })
-      console.log('🔄 Invalidated conversation queries')
+    },
+  })
+}
+
+/**
+ * Hook to hide a conversation for the current user
+ * Messages remain in the database, but the conversation is hidden from the user's list
+ */
+export function useHideConversationMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ conversationId, userId }: { conversationId: string; userId: string }) => {
+      // Get current conversation
+      const { data: conversation, error: fetchError } = await supabase
+        .from('conversations')
+        .select('hidden_for_users')
+        .eq('id', conversationId)
+        .single() as {
+          data: { hidden_for_users: string[] | null } | null
+          error: Error | null
+        }
+
+      if (fetchError) {
+        throw new Error('Failed to fetch conversation')
+      }
+
+      // Add user to hidden_for_users array
+      const currentHidden = conversation?.hidden_for_users || []
+      const updatedHidden = [...new Set([...currentHidden, userId])]
+
+      const { error: updateError } = await supabase
+        .from('conversations')
+        .update({ hidden_for_users: updatedHidden } as Record<string, unknown>)
+        .eq('id', conversationId)
+
+      if (updateError) {
+        throw new Error('Failed to hide conversation')
+      }
+
+      return { conversationId, userId }
+    },
+    onSuccess: () => {
+      // Invalidate conversation queries to remove from list
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
     },
   })
 }
