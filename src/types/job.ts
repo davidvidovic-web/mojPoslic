@@ -83,6 +83,7 @@ export interface Job {
   
   // Additional details
   duration_days?: number
+  performance_bonus?: boolean
   requirements?: string
   benefits?: string
   contact_info?: string // JSON string
@@ -119,7 +120,7 @@ export interface Job {
   transportation_amount?: number // Amount if client compensates for transportation
   has_parking?: boolean // Whether parking is available
   public_transport_info?: string // Public transport accessibility information
-  expires_at?: string // When the job posting expires
+  // Note: Job posting expiration is calculated dynamically using getJobExpirationDate()
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
   job_longitude?: number // Longitude coordinate
@@ -130,6 +131,7 @@ export interface Job {
     name: string | null
     email: string | null
     phone: string | null
+    avatar_url: string | null
     role: string
   }
   createdAt: string

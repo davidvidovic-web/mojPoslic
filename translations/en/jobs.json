@@ -87,6 +87,9 @@
     "timePosted": "Time posted:"
   },
   "form": {
+    "requirements": "Requirements",
+    "benefits": "Benefits",
+    "createJobPosting": "Create Job Posting",
     "sections": {
       "basicInformation": "Basic Information",
       "jobDetails": "Job Details",
@@ -226,6 +229,7 @@
     "startDate": "Start Date",
     "expectedDuration": "Expected Duration",
     "applicationDeadline": "Application Deadline",
+    "jobExpiration": "Job Posting Expires",
     "at": "at",
     "byAgreement": "By agreement",
     "timeByAgreement": "time by agreement"

@@ -35,6 +35,7 @@ const JOB_LISTING_COLUMNS = `
   duration_days,
   is_salary_negotiable,
   is_urgent,
+  performance_bonus,
   salary_amount,
   subcategory_id,
   application_url
@@ -262,7 +263,7 @@ export function useUserJobsQuery(userId: string) {
             salaryType: jobWithCachedFields.salary_type, // Map salary_type to salaryType
             posted_at: jobWithCachedFields.created_at, // Map created_at to posted_at
             createdAt: jobWithCachedFields.created_at, // Also keep createdAt for compatibility
-            expires_at: jobWithCachedFields.application_deadline, // Map application_deadline to expires_at
+            application_deadline: jobWithCachedFields.application_deadline, // Keep application_deadline as is
             start_date: null, // Not available in database schema
             duration: jobWithCachedFields.duration_days ? `${jobWithCachedFields.duration_days} days` : null,
             tags: [], // Not available in database schema, ensure tags is an array

@@ -8,8 +8,11 @@ import {
   Calendar, 
   DollarSign, 
   Tag,
-  Car
+  Car,
+  User
 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Image from 'next/image'
 import { Job } from "@/types/job"
 import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
 
@@ -28,9 +31,34 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
     <Card>
       <CardHeader>
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-[calc(var(--radius)*1.5)] bg-muted border flex items-center justify-center font-bold text-xl">
-            {formatClientName(job.company).charAt(0).toUpperCase()}
-          </div>
+          <Avatar className="h-16 w-16 border">
+            {job.postedBy?.avatar_url ? (
+              <AvatarImage 
+                src={job.postedBy.avatar_url}
+                alt={job.postedBy?.name || formatClientName(job.company) || 'User avatar'}
+                asChild
+              >
+                <Image
+                  src={job.postedBy.avatar_url}
+                  alt={job.postedBy?.name || formatClientName(job.company) || 'User avatar'}
+                  width={64}
+                  height={64}
+                  className="object-cover"
+                />
+              </AvatarImage>
+            ) : (
+              <AvatarFallback className="text-xl bg-muted">
+                {formatClientName(job.company) 
+                  ? formatClientName(job.company).charAt(0).toUpperCase()
+                  : job.postedBy?.name 
+                    ? job.postedBy.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                    : job.poster_name
+                      ? job.poster_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                      : <User className="h-8 w-8" />
+                }
+              </AvatarFallback>
+            )}
+          </Avatar>
           <div className="flex-1">
             <div className="flex items-start justify-between gap-4">
               <div>

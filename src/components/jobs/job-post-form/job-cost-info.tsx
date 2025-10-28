@@ -45,7 +45,7 @@ export function JobCostInfo({ className = '' }: JobCostInfoProps) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h4 className="font-medium text-blue-900 dark:text-blue-100">
-                {costInfo.willCostConnections ? 'Connection Cost' : 'Free Job Posting'}
+                {costInfo.willCostConnections ? t('connectionCost') : t('freeJobPosting')}
               </h4>
             </div>
             <div className="text-sm text-blue-700 dark:text-blue-300">

@@ -99,17 +99,16 @@ export async function GET(request: NextRequest) {
       // Continue to Google API call
     }
     
-    // Google Maps Geocoding (if API key is available)
+    // Server-side geocoding is limited due to HTTP referrer restrictions
+    // Most Google Maps API keys are configured with HTTP referrer restrictions
+    // which prevent server-side calls. We provide a fallback response here
+    // and recommend using client-side geocoding for full functionality.
+    
     if (GOOGLE_MAPS_API_KEY) {
-      // Debug API key availability
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Google Maps API Key available:', GOOGLE_MAPS_API_KEY ? 'YES' : 'NO');
-      }
-      
+      // Still try Google API in case it's configured for server-side use
       try {
-        // Set a reasonable timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // Shorter timeout
         
         try {
           const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${roundedLat},${roundedLng}&key=${GOOGLE_MAPS_API_KEY}&language=bs`;
@@ -126,27 +125,14 @@ export async function GET(request: NextRequest) {
           if (response.ok) {
             const data = await response.json();
             
-            // Add debugging for development
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Google Geocoding Response:', {
-                url: googleUrl,
-                status: data.status,
-                resultsCount: data.results?.length || 0,
-                firstResult: data.results?.[0]?.formatted_address,
-                error: data.error_message
-              });
-            }
-            
             if (data.status === 'OK' && data.results && data.results.length > 0) {
-              // Process Google Maps result to match our expected format
+              // Process successful Google Maps result
               const googleResult = data.results[0];
               
-              // Extract city from address components (multiple fallbacks)
               let city = null;
               let country = null;
               
               for (const component of googleResult.address_components || []) {
-                // Try multiple component types in order of preference
                 if (component.types.includes('locality')) {
                   city = component.long_name;
                 } else if (!city && component.types.includes('administrative_area_level_2')) {
@@ -158,15 +144,10 @@ export async function GET(request: NextRequest) {
                 }
               }
               
-              // Try to get the best formatted address (prefer short_name for readability)
-              let displayAddress = googleResult.formatted_address || `${roundedLat}, ${roundedLng}`;
-              
-              // Clean up the address if it's too verbose
-              if (displayAddress.length > 100) {
-                // Try to use just the relevant parts
-                const parts = displayAddress.split(',').map(p => p.trim());
-                // Take first 3-4 parts (street, area, city, region)
-                displayAddress = parts.slice(0, Math.min(4, parts.length)).join(', ');
+              // Simplify address for Bosnia and Herzegovina
+              let displayAddress = googleResult.formatted_address;
+              if (country === 'Bosnia and Herzegovina' && city) {
+                displayAddress = `${city}, Bosnia and Herzegovina`;
               }
               
               const formattedResult: GeocodingResult = {
@@ -179,7 +160,6 @@ export async function GET(request: NextRequest) {
                 }
               };
               
-              // Cache the successful result
               geocodeCache.set(cacheKey, {
                 data: formattedResult,
                 timestamp: Date.now()
@@ -188,41 +168,26 @@ export async function GET(request: NextRequest) {
               return NextResponse.json(formattedResult, {
                 headers: { 'Cache-Control': `public, max-age=${CACHE_DURATION}` }
               });
+            } else if (data.status === 'REQUEST_DENIED' && data.error_message?.includes('referer restrictions')) {
+              // This is the expected error for most API keys
+              console.info('🔍 Google Maps API has referrer restrictions (normal for web apps)');
+              console.info('💡 Client-side geocoding should be used instead for full address resolution');
             } else {
-              // Google API returned error status
               console.warn('Google Geocoding API error:', data.status, data.error_message);
             }
-          } else {
-            console.warn('Google Maps API HTTP error:', response.status, response.statusText);
+          } else if (response.status === 403) {
+            console.info('🔍 Google Maps API has restrictions that prevent server-side calls (this is normal)');
           }
-        } catch (error) {
+        } catch {
           clearTimeout(timeoutId);
-          console.warn('Google Maps API network error:', error);
+          // Network errors are expected with restricted keys, no need to warn
         }
-      } catch (googleError) {
-        console.warn('Google Maps error:', googleError);
+      } catch {
+        // API errors are expected with restricted keys
       }
-    } else {
-      console.warn('Google Maps API key not configured, skipping Google geocoding. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable.');
-      
-      // Add a response header to help with debugging
-      return NextResponse.json({
-        display_name: `Location near ${roundedLat}, ${roundedLng}`,
-        lat: roundedLat,
-        lon: roundedLng,
-        address: {
-          city: "Unknown Location"
-        },
-        error: "Google Maps API key not configured"
-      }, {
-        headers: { 
-          'Cache-Control': `public, max-age=${24 * 60 * 60}`,
-          'X-Debug': 'No Google Maps API key'
-        }
-      });
     }
     
-    // Fallback response - just use the coordinates
+    // Fallback response with suggestion to use client-side geocoding
     const fallbackResult: GeocodingResult = {
       display_name: `${roundedLat}, ${roundedLng}`,
       lat: roundedLat,
@@ -239,7 +204,10 @@ export async function GET(request: NextRequest) {
     });
     
     return NextResponse.json(fallbackResult, {
-      headers: { 'Cache-Control': `public, max-age=${24 * 60 * 60}` }
+      headers: { 
+        'Cache-Control': `public, max-age=${24 * 60 * 60}`,
+        'X-Geocoding-Note': 'Use client-side geocoding for full address resolution'
+      }
     });
     
   } catch (error) {

@@ -703,6 +703,7 @@ export type Database = {
           poster_name: string
           poster_phone: string | null
           poster_rating: number | null
+          performance_bonus: boolean | null
           requirements: string | null
           salary_amount: number | null
           salary_max: number | null
@@ -752,6 +753,7 @@ export type Database = {
           poster_name: string
           poster_phone?: string | null
           poster_rating?: number | null
+          performance_bonus?: boolean | null
           requirements?: string | null
           salary_amount?: number | null
           salary_max?: number | null
@@ -801,6 +803,7 @@ export type Database = {
           poster_name?: string
           poster_phone?: string | null
           poster_rating?: number | null
+          performance_bonus?: boolean | null
           requirements?: string | null
           salary_amount?: number | null
           salary_max?: number | null

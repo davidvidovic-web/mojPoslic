@@ -198,8 +198,8 @@
   },
   "locationPicker": {
     "helpText": "Kliknite na mapu da postavite tačnu lokaciju",
-    "findMyLocation": "Pronađi Moju Lokaciju",
-    "findingLocation": "Pronalažim...",
+    "findMyLocation": "Pronađi moju lokaciju",
+    "findingLocation": "Pronalažim lokaciju...",
     "locationError": "Nije moguće dobiti vašu lokaciju",
     "locationPermissionDenied": "Pristup lokaciji odbačen",
     "locationPermissionMessage": "Da biste koristili ovu funkciju, molimo dozvolite pristup lokaciji u vašem pregledniku. Možete to učiniti klikom na ikonu lokacije u adresnoj traci ili odlaskom u postavke pregljednika.",

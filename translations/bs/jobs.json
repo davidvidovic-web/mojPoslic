@@ -87,6 +87,9 @@
     "timePosted": "Vrijeme objave:"
   },
   "form": {
+    "requirements": "Zahtjevi",
+    "benefits": "Prednosti",
+    "createJobPosting": "Kreiraj oglas za posao",
     "sections": {
       "basicInformation": "Osnovne informacije",
       "jobDetails": "Detalji posla",
@@ -226,6 +229,7 @@
     "startDate": "Datum početka",
     "expectedDuration": "Očekivano trajanje",
     "applicationDeadline": "Rok za prijave",
+    "jobExpiration": "Oglas ističe",
     "at": "u",
     "byAgreement": "Po dogovoru",
     "timeByAgreement": "vrijeme po dogovoru"

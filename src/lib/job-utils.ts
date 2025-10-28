@@ -363,22 +363,36 @@ export const formatDuration = (duration?: string): string => {
 };
 
 /**
- * Calculates the expiration date for a job
- * - If job has a start_date, use that as the deadline
- * - Otherwise, use created_at + 14 days (constant)
- * @param job - The job object with created_at and optional start_date
+ * Calculates the expiration date for a job posting
+ * - If job has application_deadline, use deadline + 14 days
+ * - Otherwise, use created_at + 14 days
+ * - Jobs with selected candidates or finished status don't expire
+ * @param job - The job object with created_at, application_deadline, and status
  * @returns The expiration date
  */
 export function getJobExpirationDate(job: {
   created_at: string | Date;
+  application_deadline?: string | null;
+  status?: 'active' | 'inactive' | 'completed' | 'expired';
   start_date?: string | null;
 }): Date {
-  // If start_date is set, use it as the application deadline
-  if (job.start_date) {
-    return new Date(job.start_date);
+  // Jobs that are completed or inactive don't expire
+  if (job.status === 'completed' || job.status === 'inactive') {
+    // Return a far future date for jobs that shouldn't expire
+    const farFuture = new Date();
+    farFuture.setFullYear(farFuture.getFullYear() + 10);
+    return farFuture;
   }
   
-  // Otherwise, calculate expiration as created_at + 14 days (constant)
+  // If application_deadline is set, use deadline + 14 days
+  if (job.application_deadline) {
+    const deadlineDate = new Date(job.application_deadline);
+    const expirationDate = new Date(deadlineDate);
+    expirationDate.setDate(deadlineDate.getDate() + 14);
+    return expirationDate;
+  }
+  
+  // Otherwise, use created_at + 14 days
   const createdDate = new Date(job.created_at);
   const expirationDate = new Date(createdDate);
   expirationDate.setDate(createdDate.getDate() + 14);
@@ -387,14 +401,22 @@ export function getJobExpirationDate(job: {
 }
 
 /**
- * Checks if a job is expired based on start_date or 14 days from creation
- * @param job - The job object
- * @returns true if the job is expired, false otherwise
+ * Checks if a job posting is expired
+ * Jobs with selected candidates or finished status are never considered expired
+ * @param job - The job object with created_at, application_deadline, and status
+ * @returns true if the job posting is expired, false otherwise
  */
 export function isJobExpired(job: {
   created_at: string | Date;
+  application_deadline?: string | null;
+  status?: 'active' | 'inactive' | 'completed' | 'expired';
   start_date?: string | null;
 }): boolean {
+  // Jobs that are completed or inactive are never expired
+  if (job.status === 'completed' || job.status === 'inactive') {
+    return false;
+  }
+  
   const expirationDate = getJobExpirationDate(job);
   return expirationDate < new Date();
 }

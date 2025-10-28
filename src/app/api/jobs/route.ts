@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
       job_longitude: job.longitude,
       application_url: job.application_url,
       contact_email: job.contact_info,
-      expires_at: job.application_deadline,
+      application_deadline: job.application_deadline,
       is_featured: job.is_featured || false,
       is_active: job.is_active || false,
       user_id: job.posted_by_id,

@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Star, ArrowLeft, ExternalLink, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award } from "lucide-react"
+import { Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Star, ArrowLeft, ExternalLink, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award, User } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Image from 'next/image'
 import { Job } from "@/types/job"
 import { toast } from "sonner"
 import { JobApplicationForm } from "@/components/jobs/job-application-form"
@@ -172,6 +174,10 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
   const formatDate = (dateString: string) => {
     return formatRelativeDate(dateString, locale)
   }
+  
+  const formatAbsoluteDate = (dateString: string) => {
+    return formatDateUtil(dateString, locale, { format: 'short' })
+  }
 
   const formatSalary = (job: Job) => {
     // Check if salary is negotiable first
@@ -268,14 +274,37 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                   <div className="flex-1">
                     <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
-                          {job.company ? job.company.charAt(0).toUpperCase() : 'U'}
-                        </span>
-                      </div>
+                      <Avatar className="h-12 w-12">
+                        {job.postedBy?.avatar_url ? (
+                          <AvatarImage 
+                            src={job.postedBy.avatar_url}
+                            alt={job.postedBy?.name || job.company || 'User avatar'}
+                            asChild
+                          >
+                            <Image
+                              src={job.postedBy.avatar_url}
+                              alt={job.postedBy?.name || job.company || 'User avatar'}
+                              width={48}
+                              height={48}
+                              className="object-cover"
+                            />
+                          </AvatarImage>
+                        ) : (
+                          <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                            {job.company 
+                              ? job.company.charAt(0).toUpperCase() 
+                              : job.postedBy?.name 
+                                ? job.postedBy.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                : job.poster_name
+                                  ? job.poster_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                  : <User className="h-6 w-6" />
+                            }
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
                       <div>
                         <p className="text-xl font-semibold text-foreground">
-                          {job.company || job.postedBy?.name || 'Individual'}
+                          {job.company || job.postedBy?.name || job.poster_name || 'Unknown'}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {job.posted_at ? formatDate(job.posted_at) : ''}
@@ -529,7 +558,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                           <div>
                             <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.applicationDeadline')}</span>
                             <p className="text-sm font-medium text-foreground">
-                              {job.application_deadline ? formatDate(job.application_deadline) : t('common.messages.notSpecified')}
+                              {job.application_deadline ? formatAbsoluteDate(job.application_deadline) : t('common.messages.notSpecified')}
                             </p>
                           </div>
                         </div>
@@ -543,7 +572,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                         <div>
                           <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
                           <p className="text-sm font-medium text-foreground">
-                            {formatDate(getJobExpirationDate(job).toISOString())}
+                            {formatAbsoluteDate(getJobExpirationDate(job).toISOString())}
                           </p>
                         </div>
                       </div>

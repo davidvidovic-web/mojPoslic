@@ -26,7 +26,7 @@ export function JobPostForm({
   const { user } = useSupabaseAuth()
   const { cities, categories } = useData()
   const createJobMutation = useCreateJobMutation()
-  const t = useTranslations('jobs.review')
+  const t = useTranslations('jobPost')
 
   const handleSubmit = async (formData: CreateJobData) => {
     try {
@@ -98,10 +98,13 @@ export function JobPostForm({
         start_date: requestData.start_date || undefined,
         start_time: requestData.start_time || undefined,
         duration: requestData.duration || undefined,
+        duration_days: requestData.duration_days || undefined,
         transportation: requestData.transportation || undefined,
         transportation_amount: requestData.transportation_amount || undefined,
         has_parking: requestData.has_parking ?? undefined,
         public_transport_info: requestData.public_transport_info || undefined,
+        application_deadline: requestData.application_deadline || undefined,
+        is_urgent: requestData.is_urgent ?? undefined,
         tags: requestData.tags || undefined,
         posted_by_id: user?.id || ''
       }

@@ -33,12 +33,12 @@ export function ClientQuickStats({ jobs, applicationCounts }: ClientQuickStatsPr
       </div>
 
       {/* Completed Jobs */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-green-100 dark:border-green-900/30 p-4 hover:shadow-lg hover:shadow-green-500/5 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-green-600 dark:text-green-400">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {t('dashboard.stats.completedJobs')}
           </p>
-          <h3 className="text-2xl font-bold text-green-700 dark:text-green-300">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {completedJobs}
           </h3>
         </div>

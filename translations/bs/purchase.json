@@ -2,7 +2,7 @@
   "connections": {
     "title": "Kupovina konekcijskih kredita",
     "description": "Odaberite paket za dodavanje konekcijskih kredita na vaš račun i nastavite komuniciranje s kandidatima i klijentima.",
-    "connections": "Konekcije",
+    "connections": "Konekcija",
     "pricePerConnection": "Cijena po konekciji",
     "processing": "Obrađuje se...",
     "purchaseNow": "Kupi sada",
@@ -14,6 +14,26 @@
     "currency": "KM",
     "package_10_description": "Savršeno za povremenu upotrebu",
     "package_20_description": "Odlično za redovno traženje posla",
-    "package_50_description": "Najbolja vrijednost za napredne korisnike"
+    "package_50_description": "Najbolja vrijednost za napredne korisnike",
+    "checkoutFailed": "Neuspješno pokretanje procesa plaćanja",
+    "sessionCreationFailed": "Neuspješno kreiranje sesije plaćanja",
+    "stripeLoadFailed": "Neuspješno učitavanje Stripe servisa",
+    "authenticationRequired": "Molimo prijavite se za kupovinu konekcija",
+    "invalidPackage": "Nevažeći paket odabran",
+    "stripeInvalidUrl": "Greška konfiguracije: Nevažeći URL",
+    "stripeCardError": "Došlo je do greške s karticom",
+    "stripeValidationError": "Došlo je do greške validacije",
+    "stripeError": "Došlo je do greške u sistemu plaćanja",
+    "errors": {
+      "checkoutFailed": "Neuspješno pokretanje procesa plaćanja",
+      "sessionCreationFailed": "Neuspješno kreiranje sesije plaćanja",
+      "stripeLoadFailed": "Neuspješno učitavanje Stripe servisa",
+      "authenticationRequired": "Molimo prijavite se za kupovinu konekcija",
+      "invalidPackage": "Nevažeći paket odabran",
+      "stripeInvalidUrl": "Greška konfiguracije: Nevažeći URL",
+      "stripeCardError": "Došlo je do greške s karticom",
+      "stripeValidationError": "Došlo je do greške validacije",
+      "stripeError": "Došlo je do greške u sistemu plaćanja"
+    }
   }
 }

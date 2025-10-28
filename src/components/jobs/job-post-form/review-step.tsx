@@ -6,7 +6,7 @@ import { CreateJobData } from '@/types/job'
 import { Rocket, Star, Zap } from 'lucide-react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useEffect, useState } from 'react'
-import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone } from 'lucide-react'
+import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone, Settings } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useTranslations, useLocale } from 'next-intl'
 import { useData } from '@/hooks/use-data'
@@ -29,6 +29,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
   const tSchedule = useTranslations('jobPost.types.schedule')
   const tDuration = useTranslations('jobPost.types.schedule.durationOptions')
   const tTransportation = useTranslations('jobPost.types.transportation.options')
+  const tSettings = useTranslations('jobPost.types.settings')
   const locale = useLocale()
   const { cities, categories } = useData()
   const [city, setCity] = useState<City | null>(null)
@@ -379,6 +380,35 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
             )}
           </CardContent>
         </Card>
+
+        {/* Job Settings */}
+        {(formData.is_urgent || formData.application_deadline) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                {tSettings('title')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {formData.is_urgent && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-sm font-medium">{tSettings('urgentJob')}</span>
+                </div>
+              )}
+              {formData.application_deadline && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{tSettings('applicationDeadline')}: </span>
+                  <span className="text-sm">
+                    {new Date(formData.application_deadline).toLocaleDateString(locale === 'bs' ? 'bs-BA' : 'en-US')}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Contact Information */}
         <Card>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Job } from '@/types/job'
 import { formatJobType, getJobExpirationDate, isJobExpired } from '@/lib/job-utils'
+import { formatDate as formatDateUtil } from '@/lib/date-format'
 import { JobCardActions } from './job-card-actions'
 import { useTranslations, useLocale } from 'next-intl'
 import { Eye, MessageCircle, User } from 'lucide-react'
@@ -46,11 +47,7 @@ export function JobCard({
       return 'Not available'
     }
     try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) {
-        return 'Invalid date'
-      }
-      return date.toLocaleDateString()
+      return formatDateUtil(dateString, locale as 'bs' | 'en', { format: 'short' })
     } catch {
       return 'Invalid date'
     }
@@ -140,7 +137,7 @@ export function JobCard({
             )}
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge className="bg-primary/10 text-primary border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs">{formatJobType(job.type || job.job_type, locale)}</Badge>
+            <Badge className="bg-primary/10 text-primary border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs">{formatJobType(job.type || job.job_type, locale as 'bs' | 'en')}</Badge>
             <Badge className={`border-0 rounded-[var(--radius)] px-2 py-0.5 text-xs ${status.color === 'text-green-600' ? 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' : status.color === 'text-red-600' ? 'bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400'}`}>
               {status.text}
             </Badge>

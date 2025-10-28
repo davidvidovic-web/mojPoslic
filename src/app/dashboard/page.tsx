@@ -8,9 +8,8 @@ import { TaskerDashboard } from "@/components/dashboard/tasker-dashboard";
 import { RegistrationFlowGuard } from "@/components/auth/registration-flow-guard";
 import { ConditionalHeader } from "@/components/core/conditional-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, Suspense, useState, useCallback } from "react";
-import { toast } from "sonner";
 import { NextIntlClientProvider } from "next-intl";
 
 // Helper function to load all translation messages for a given locale
@@ -67,7 +66,6 @@ type DashboardContentProps = {
 };
 
 function DashboardContent({ user, loading, messages }: DashboardContentProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Helper functions to access translations
@@ -85,19 +83,8 @@ function DashboardContent({ user, loading, messages }: DashboardContentProps) {
 
   const tDashboard = useCallback((key: string) => t(`dashboard.${key}`), [t]);
 
-  // Handle payment-related toasts based on search params
-  useEffect(() => {
-    const payment = searchParams.get("payment");
-    if (payment === "success") {
-      toast.success(tDashboard("notifications.paymentSuccessful"));
-      // Clean up URL
-      router.replace("/dashboard");
-    } else if (payment === "cancelled") {
-      toast.error(tDashboard("notifications.paymentCancelled"));
-      // Clean up URL
-      router.replace("/dashboard");
-    }
-  }, [searchParams, router, tDashboard]);
+  // Note: Payment handling is done in the locale-specific dashboard page
+  // to avoid duplicate toast notifications
 
   // Show loading state
   if (loading) {

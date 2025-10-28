@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useTranslations, useLocale } from 'next-intl'
 import { Plus, Edit, Star, Trash2, CircleCheckBig, UserCheck, Eye, MessageCircle } from 'lucide-react'
 import { getJobExpirationDate, isJobExpired } from '@/lib/job-utils'
+import { formatDate as formatDateUtil } from '@/lib/date-format'
 
 interface ClientJobsManagerProps {
   jobs: Job[]
@@ -67,9 +68,7 @@ export function ClientJobsManager({
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return t('notAvailable')
     try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) return t('invalidDate')
-      return date.toLocaleDateString()
+      return formatDateUtil(dateString, locale as 'bs' | 'en', { format: 'short' })
     } catch {
       return t('invalidDate')
     }
@@ -383,13 +382,13 @@ export function ClientJobsManager({
           {completedJobsList.length > 0 && (
             <div className="space-y-4 mt-8">
               <div className="flex items-center gap-2 pb-2 border-b border-border">
-                <h3 className="text-base font-semibold text-green-600 dark:text-green-400">{t('completedJobsSection')}</h3>
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('completedJobsSection')}</h3>
+                <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full">
                   {completedJobsList.length}
                 </span>
               </div>
               {completedJobsList.map((job) => (
-            <div key={job.id} className="border border-green-200 dark:border-green-900/50 bg-green-50/50 dark:bg-green-950/20 p-4 space-y-3">
+            <div key={job.id} className="border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20 p-4 space-y-3">
               {/* Job Title and Status */}
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -398,13 +397,13 @@ export function ClientJobsManager({
                     {job.is_featured && <span className="ml-2 text-xs text-muted-foreground">[{t('featured')}]</span>}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    <span className="text-green-600 dark:text-green-400 font-medium">{t('status')}: {t('completed')}</span> • {t('applications')}: {applicationCounts[job.id] || 0}
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">{t('status')}: {t('completed')}</span> • {t('applications')}: {applicationCounts[job.id] || 0}
                   </p>
                   {selectedApplicants[job.id] && (
-                    <div className="flex items-center justify-between gap-2 mt-2 p-2 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded">
+                    <div className="flex items-center justify-between gap-2 mt-2 p-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded">
                       <div className="flex items-center gap-1.5 text-sm">
-                        <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                        <span className="text-green-700 dark:text-green-300 font-medium">
+                        <UserCheck className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">
                           {t('completedBy')}: {selectedApplicants[job.id]?.name}
                         </span>
                       </div>
@@ -414,7 +413,7 @@ export function ClientJobsManager({
                             variant="outline"
                             size="sm"
                             onClick={() => onViewProfile(selectedApplicants[job.id]!.id)}
-                            className="h-7 px-2 text-xs border-green-400 dark:border-green-600 hover:bg-green-200 dark:hover:bg-green-800/30"
+                            className="h-7 px-2 text-xs border-gray-400 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800/30"
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             {t('view')}
@@ -425,7 +424,7 @@ export function ClientJobsManager({
                             variant="outline"
                             size="sm"
                             onClick={() => onMessageCandidate(selectedApplicants[job.id]!.id, job.id)}
-                            className="h-7 px-2 text-xs border-green-400 dark:border-green-600 hover:bg-green-200 dark:hover:bg-green-800/30"
+                            className="h-7 px-2 text-xs border-gray-400 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800/30"
                           >
                             <MessageCircle className="h-3 w-3 mr-1" />
                             {t('message')}

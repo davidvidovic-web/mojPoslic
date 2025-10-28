@@ -1,4 +1,5 @@
 import { geocodeCache } from './geocode-cache';
+import { reverseGeocodeClient } from './client-geocoding';
 
 export interface GeolocationPosition {
   coords: {
@@ -105,34 +106,19 @@ export class GeolocationService {
       // Continue to API lookup
     }
     
-    // Try to get address via our proxy API
+    // Use client-side geocoding for best results
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const { reverseGeocodeClient } = await import('@/lib/client-geocoding');
+      const geocodeResult = await reverseGeocodeClient(roundedLat, roundedLng);
       
-      try {
-        const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data && data.display_name) {
-            // Cache and return the address
-            geocodeCache.set(roundedLat, roundedLng, data.display_name, 'google');
-            return data.display_name;
-          }
-        }
-      } catch (error) {
-        console.warn('Geocoding API error:', error);
-      } finally {
-        clearTimeout(timeoutId);
+      if (geocodeResult && geocodeResult.display_name) {
+        // Cache and return the address
+        const cacheSource = geocodeResult.source === 'google' ? 'google' : 'fallback';
+        geocodeCache.set(roundedLat, roundedLng, geocodeResult.display_name, cacheSource);
+        return geocodeResult.display_name;
       }
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.warn('Client-side geocoding error:', error);
     }
     
     // Enhanced fallback: try to estimate city based on proximity to known cities
@@ -208,10 +194,43 @@ export class GeolocationService {
       console.warn('City lookup error:', cityError);
     }
     
-    // Try to get detailed address via our proxy API first for better address formatting
+    // Use client-side geocoding for best results (bypasses referrer restrictions)
+    try {
+      const geocodeResult = await reverseGeocodeClient(roundedLat, roundedLng);
+      
+      if (geocodeResult && geocodeResult.display_name) {
+        const result = {
+          address: geocodeResult.display_name,
+          city: geocodeResult.address?.city || geocodeResult.address?.town || geocodeResult.address?.village,
+          cityKey: undefined as string | undefined
+        };
+        
+        // Try to match the found city to our city list
+        if (result.city) {
+          try {
+            const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+            for (const [cityKey, cityData] of Object.entries(CITY_COORDINATES)) {
+              if (cityData.name.toLowerCase().includes(result.city.toLowerCase()) ||
+                  result.city.toLowerCase().includes(cityData.name.toLowerCase())) {
+                result.cityKey = cityKey;
+                break;
+              }
+            }
+          } catch (error) {
+            console.warn('City matching error:', error);
+          }
+        }
+        
+        return result;
+      }
+    } catch (error) {
+      console.warn('Client-side geocoding error:', error);
+    }
+    
+    // Fallback to server-side API (may have limited functionality due to referrer restrictions)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased timeout for better results
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // Shorter timeout for fallback
       
       try {
         const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
@@ -254,12 +273,12 @@ export class GeolocationService {
           }
         }
       } catch (error) {
-        console.warn('Detailed geocoding API error:', error);
+        console.warn('Server-side geocoding API error:', error);
       } finally {
         clearTimeout(timeoutId);
       }
     } catch (error) {
-      console.error('Detailed geocoding error:', error);
+      console.error('Fallback geocoding error:', error);
     }
     
     // Fallback to basic reverse geocoding

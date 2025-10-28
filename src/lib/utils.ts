@@ -82,3 +82,47 @@ export function getTimeBasedGreetingWithIcon(): {
     }
   }
 }
+
+/**
+ * Creates a URL-friendly slug from text
+ * @param text - The text to slugify
+ * @returns URL-friendly slug
+ */
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    // Replace spaces and special characters with hyphens
+    .replace(/[\s\W-]+/g, '-')
+    // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, '')
+    // Limit length
+    .substring(0, 50)
+}
+
+/**
+ * Generates a job URL slug with job ID
+ * @param title - Job title
+ * @param jobId - Job ID
+ * @returns URL slug in format "job-title-slug-{jobId}"
+ */
+export function generateJobSlug(title: string, jobId: string): string {
+  const titleSlug = slugify(title)
+  return `${titleSlug}-${jobId}`
+}
+
+/**
+ * Extracts job ID from a job URL slug
+ * @param slug - Job URL slug in format "job-title-slug-{jobId}"
+ * @returns Job ID
+ */
+export function extractJobIdFromSlug(slug: string): string {
+  // If it doesn't contain hyphens, it's likely just an ID
+  if (!slug.includes('-')) {
+    return slug
+  }
+  
+  // Extract the last part after the final hyphen
+  const parts = slug.split('-')
+  return parts[parts.length - 1]
+}

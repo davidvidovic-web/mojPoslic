@@ -49,7 +49,10 @@ function mapJobToFormData(job: Job, cities: any[], categories: any[]): Partial<C
       benefits: job.benefits,
       contact_email: job.contact_email,
       application_url: job.application_url,
-      is_featured: job.is_featured
+      is_featured: job.is_featured,
+      performance_bonus: job.performance_bonus,
+      is_urgent: job.is_urgent,
+      application_deadline: job.application_deadline
     }
   }
   
@@ -115,7 +118,10 @@ function mapJobToFormData(job: Job, cities: any[], categories: any[]): Partial<C
     benefits: job.benefits,
     contact_email: job.contact_email,
     application_url: job.application_url,
-    is_featured: job.is_featured
+    is_featured: job.is_featured,
+    performance_bonus: job.performance_bonus,
+    is_urgent: job.is_urgent,
+    application_deadline: job.application_deadline
   }
 }
 
@@ -245,6 +251,16 @@ export function JobEditForm({
         }),
         ...(formData.public_transport_info !== initialData.public_transport_info && {
           public_transport_info: formData.public_transport_info || null
+        }),
+        // Job settings fields
+        ...(formData.performance_bonus !== initialData.performance_bonus && {
+          performance_bonus: formData.performance_bonus || false
+        }),
+        ...(formData.is_urgent !== initialData.is_urgent && {
+          is_urgent: formData.is_urgent || false
+        }),
+        ...(formData.application_deadline !== initialData.application_deadline && {
+          application_deadline: formData.application_deadline || null
         }),
         // NEVER allow featured status changes through edit form to prevent unexpected charges
         // Featured status should only be changed through dedicated feature/unfeature actions

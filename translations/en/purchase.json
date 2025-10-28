@@ -11,9 +11,29 @@
     "cancel": "Cancel",
     "mostPopular": "Most Popular",
     "bestValue": "Best Value",
-    "currency": "€",
+    "currency": "KM",
     "package_10_description": "Perfect for occasional use",
     "package_20_description": "Great for regular job searching",
-    "package_50_description": "Best value for power users"
+    "package_50_description": "Best value for power users",
+    "checkoutFailed": "Failed to start checkout process",
+    "sessionCreationFailed": "Failed to create checkout session",
+    "stripeLoadFailed": "Stripe failed to load",
+    "authenticationRequired": "Please sign in to purchase connections",
+    "invalidPackage": "Invalid package selected",
+    "stripeInvalidUrl": "Configuration error: Invalid URL",
+    "stripeCardError": "Card error occurred",
+    "stripeValidationError": "Validation error occurred",
+    "stripeError": "Payment system error occurred",
+    "errors": {
+      "checkoutFailed": "Failed to start checkout process",
+      "sessionCreationFailed": "Failed to create checkout session",
+      "stripeLoadFailed": "Stripe failed to load",
+      "authenticationRequired": "Please sign in to purchase connections",
+      "invalidPackage": "Invalid package selected",
+      "stripeInvalidUrl": "Configuration error: Invalid URL",
+      "stripeCardError": "Card error occurred",
+      "stripeValidationError": "Validation error occurred",
+      "stripeError": "Payment system error occurred"
+    }
   }
 }

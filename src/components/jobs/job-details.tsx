@@ -1,9 +1,11 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Head from 'next/head'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award }
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ArrowLeft, Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Car, ParkingCircle, Bus, AlertCircle, CalendarDays, MapPinned, Award, User }
  from "lucide-react"
 import { Job } from "@/types/job"
 import { toast } from "sonner"
@@ -180,8 +182,12 @@ export function JobDetails({ jobId }: JobDetailsProps) {
   const formatDate = (dateString: string) => {
     return formatRelativeDate(dateString, locale)
   }
+  
+  const formatAbsoluteDate = (dateString: string) => {
+    return formatDateUtil(dateString, locale, { format: 'short' })
+  }
 
-  const formatSalary = (job: Job) => {
+  const formatSalary = useCallback((job: Job) => {
     // If we have structured salary data
     if (job.salaryMin && job.salaryMax && job.salaryType) {
       const min = job.salaryMin.toLocaleString()
@@ -211,7 +217,115 @@ export function JobDetails({ jobId }: JobDetailsProps) {
     
     // Fallback to legacy salary field
     return job.salary || null
+  }, [t])
+
+  // SEO helper functions
+  const generateJobStructuredData = (job: Job) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mojposlic.ba'
+    const jobUrl = `${baseUrl}/${locale}/jobs/${job.id}`
+    
+    const structuredData: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "JobPosting",
+      "title": job.title,
+      "description": job.description.replace(/<[^>]*>/g, '').substring(0, 500),
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "Job ID",
+        "value": job.id
+      },
+      "datePosted": job.created_at || job.posted_at,
+      "validThrough": getJobExpirationDate(job).toISOString(),
+      "employmentType": job.job_type?.toUpperCase().replace('_', '_'),
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": job.company || job.postedBy?.name || "mojPoslic Employer",
+        "logo": job.postedBy?.avatar_url
+      },
+      "jobLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": job.city?.name,
+          "addressCountry": "BA"
+        }
+      },
+      "url": jobUrl,
+      "applicantLocationRequirements": {
+        "@type": "Country",
+        "name": "Bosnia and Herzegovina"
+      }
+    }    // Add salary information if available
+    if (job.salaryMin || job.salary) {
+      const salaryInfo: Record<string, unknown> = {
+        "@type": "MonetaryAmount",
+        "currency": "BAM"
+      }
+      
+      if (job.salaryMin && job.salaryMax) {
+        salaryInfo.value = {
+          "@type": "QuantitativeValue",
+          "minValue": job.salaryMin,
+          "maxValue": job.salaryMax,
+          "unitText": job.salaryType || "TOTAL"
+        }
+      } else if (job.salaryMin) {
+        salaryInfo.value = job.salaryMin
+      }
+      
+      structuredData.baseSalary = salaryInfo
+    }
+
+    // Add job requirements if available
+    if (job.requirements) {
+      structuredData.qualifications = job.requirements.replace(/<[^>]*>/g, '')
+    }
+
+    // Add benefits if available
+    if (job.benefits) {
+      structuredData.jobBenefits = job.benefits.replace(/<[^>]*>/g, '')
+    }
+
+    // Add application deadline if available
+    if (job.application_deadline) {
+      structuredData.applicationDeadline = job.application_deadline
+    }
+
+    return structuredData
   }
+
+  const generateMetaTags = useCallback((job: Job) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mojposlic.ba'
+    const jobUrl = `${baseUrl}/${locale}/jobs/${job.id}`
+    const salary = formatSalary(job)
+    const location = job.city?.name || (locale === 'bs' ? 'Rad na daljinu' : 'Remote work')
+    
+    const title = `${job.title} - ${job.company || 'mojPoslic'} | ${location}`
+    const description = `${job.title} posao u ${location}${salary ? ` - ${salary}` : ''}. ${job.description.replace(/<[^>]*>/g, '').substring(0, 120)}...`
+    
+    return {
+      title,
+      description: description.substring(0, 160), // Meta description limit
+      canonical: jobUrl,
+      ogTitle: title,
+      ogDescription: description.substring(0, 160),
+      ogUrl: jobUrl,
+      ogType: 'article',
+      ogImage: job.postedBy?.avatar_url || `${baseUrl}/og-job-default.jpg`,
+      twitterCard: 'summary_large_image',
+      twitterTitle: title,
+      twitterDescription: description.substring(0, 160),
+      twitterImage: job.postedBy?.avatar_url || `${baseUrl}/og-job-default.jpg`
+    }
+  }, [locale, formatSalary])
+
+  // Set document title when job is loaded
+  useEffect(() => {
+    if (job) {
+      const metaTags = generateMetaTags(job)
+      document.title = metaTags.title
+    }
+  }, [job, generateMetaTags])
 
   // Show loading state while checking authentication
   if (authLoading) {
@@ -255,8 +369,88 @@ export function JobDetails({ jobId }: JobDetailsProps) {
     )
   }
 
+  const metaTags = generateMetaTags(job)
+  const structuredData = generateJobStructuredData(job)
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <>
+      {/* SEO Meta Tags */}
+      <Head>
+        <title>{metaTags.title}</title>
+        <meta name="description" content={metaTags.description} />
+        <link rel="canonical" href={metaTags.canonical} />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={metaTags.ogTitle} />
+        <meta property="og:description" content={metaTags.ogDescription} />
+        <meta property="og:url" content={metaTags.ogUrl} />
+        <meta property="og:type" content={metaTags.ogType} />
+        <meta property="og:image" content={metaTags.ogImage} />
+        <meta property="og:site_name" content="mojPoslic" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content={metaTags.twitterCard} />
+        <meta name="twitter:title" content={metaTags.twitterTitle} />
+        <meta name="twitter:description" content={metaTags.twitterDescription} />
+        <meta name="twitter:image" content={metaTags.twitterImage} />
+        
+        {/* Job Posting Structured Data */}
+        <script 
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData)
+          }}
+        />
+        
+        {/* Additional SEO */}
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content={job.company || job.postedBy?.name || 'mojPoslic'} />
+        <meta name="keywords" content={`${job.title}, posao, ${job.city?.name}, ${job.category?.name}, mojPoslic, bosnia, jobs`} />
+        
+        {/* Geo tags for local SEO */}
+        {job.city?.name && (
+          <>
+            <meta name="geo.region" content="BA" />
+            <meta name="geo.placename" content={job.city.name} />
+          </>
+        )}
+        
+        {/* Language and locale */}
+        <meta httpEquiv="content-language" content={locale} />
+        <meta property="og:locale" content={locale === 'bs' ? 'bs_BA' : 'en_US'} />
+      </Head>
+      
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Hidden Breadcrumb for SEO */}
+      <nav aria-label="Breadcrumb" className="sr-only">
+        <ol itemScope itemType="https://schema.org/BreadcrumbList">
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+            <a itemProp="item" href={`/${locale}`}>
+              <span itemProp="name">mojPoslic</span>
+            </a>
+            <meta itemProp="position" content="1" />
+          </li>
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+            <a itemProp="item" href={`/${locale}/jobs`}>
+              <span itemProp="name">{locale === 'bs' ? 'Poslovi' : 'Jobs'}</span>
+            </a>
+            <meta itemProp="position" content="2" />
+          </li>
+          {job.category && (
+            <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+              <a itemProp="item" href={`/${locale}/jobs?category=${job.category.id}`}>
+                <span itemProp="name">{locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}</span>
+              </a>
+              <meta itemProp="position" content="3" />
+            </li>
+          )}
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+            <span itemProp="name">{job.title}</span>
+            <meta itemProp="position" content={job.category ? "4" : "3"} />
+          </li>
+        </ol>
+      </nav>
+      
       {/* Back Button */}
       <Button 
         variant="ghost" 
@@ -271,15 +465,27 @@ export function JobDetails({ jobId }: JobDetailsProps) {
       <div className="mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-start justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-[calc(var(--radius)*1.5)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
-                  {job.company ? job.company.charAt(0).toUpperCase() : 'U'}
-                </span>
-              </div>
+            <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight" itemProp="title">{job.title}</h1>
+            <div className="flex items-center gap-3 mb-4" itemScope itemType="https://schema.org/Organization">
+              <Avatar className="h-12 w-12">
+                {job.postedBy?.avatar_url ? (
+                  <AvatarImage 
+                    src={job.postedBy.avatar_url}
+                    alt={job.postedBy?.name || job.company || 'User avatar'}
+                  />
+                ) : (
+                  <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                    {job.company 
+                      ? job.company.charAt(0).toUpperCase() 
+                      : job.postedBy?.name 
+                        ? job.postedBy.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                        : <User className="h-6 w-6" />
+                    }
+                  </AvatarFallback>
+                )}
+              </Avatar>
               <div>
-                <p className="text-xl font-semibold text-foreground">
+                <p className="text-xl font-semibold text-foreground" itemProp="name">
                   {job.company || job.postedBy?.name || 'Individual'}
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -365,7 +571,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
         </div>
       </div>
       {/* Job Content */}
-      <div className="space-y-8">
+      <div className="space-y-8" itemScope itemType="https://schema.org/JobPosting">
         {/* Description */}
         <section>
           <h2 className="text-2xl font-bold mb-4 text-foreground">
@@ -373,6 +579,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           </h2>
           <div 
             className="prose max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground"
+            itemProp="description"
             dangerouslySetInnerHTML={{ __html: job.description }}
           />
         </section>
@@ -384,6 +591,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             </h2>
             <div 
               className="prose max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground"
+              itemProp="qualifications"
               dangerouslySetInnerHTML={{ __html: job.requirements }}
             />
           </section>
@@ -397,6 +605,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             </h2>
             <div 
               className="prose max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground"
+              itemProp="jobBenefits"
               dangerouslySetInnerHTML={{ __html: job.benefits }}
             />
           </section>
@@ -495,60 +704,6 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           <div className="mb-8">
             <h3 className="font-semibold mb-4 text-lg text-foreground">{t('jobs.form.labels.scheduleAndTimeline')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Start Date */}
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.startDate')}</span>
-                  {job.start_date && job.start_date !== 'negotiable' && job.start_date.trim() !== '' ? (
-                    <p className="text-sm font-medium text-foreground">{formatDateUtil(job.start_date, locale, { format: 'short' })}</p>
-                  ) : (
-                    <p className="text-sm font-medium text-foreground">{t('jobs.form.labels.byAgreement')}</p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Start Time */}
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.startTime')}</span>
-                  {job.start_time && job.start_time !== 'negotiable' && job.start_time.trim() !== '' ? (
-                    <p className="text-sm font-medium text-foreground">{job.start_time}</p>
-                  ) : (
-                    <p className="text-sm font-medium text-foreground">{t('jobs.form.labels.byAgreement')}</p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Duration */}
-              {(job.duration || job.duration_days || user) && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
-                  <div className="w-8 h-8 rounded-[var(--radius)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Timer className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.duration')}</span>
-                    {job.duration ? (
-                      <p className="text-sm font-medium text-foreground">{job.duration}</p>
-                    ) : job.duration_days ? (
-                      <p className="text-sm font-medium text-foreground">
-                        {job.duration_days === 1 ? 
-                          t('jobs.form.labels.oneDay') : 
-                          t('jobs.form.labels.multipleDays', { days: job.duration_days })
-                        }
-                      </p>
-                    ) : (
-                      <p className="text-sm font-medium text-foreground">{t('common.messages.notSpecified')}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-              
               {/* Application Deadline */}
               {(job.application_deadline || user) && (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-[var(--radius)]">
@@ -572,7 +727,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                 <div>
                   <span className="text-sm font-medium text-muted-foreground">{t('jobs.form.labels.expires')}</span>
                   <p className="text-sm font-medium text-foreground">
-                    {formatDate(getJobExpirationDate(job).toISOString())}
+                    {formatAbsoluteDate(getJobExpirationDate(job).toISOString())}
                   </p>
                 </div>
               </div>
@@ -822,6 +977,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

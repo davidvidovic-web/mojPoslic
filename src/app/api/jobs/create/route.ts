@@ -77,7 +77,21 @@ export async function POST(request: Request) {
       job_address,
       job_latitude,
       job_longitude,
-      is_featured
+      is_featured,
+      // Schedule and timing fields
+      start_date,
+      start_time,
+      duration,
+      duration_days,
+      // Transportation fields
+      transportation,
+      transportation_amount,
+      has_parking,
+      public_transport_info,
+      // Additional job fields
+      application_deadline,
+      is_urgent,
+      performance_bonus
     } = body
 
     // Validate required fields
@@ -90,17 +104,47 @@ export async function POST(request: Request) {
     }
 
     // Load static data to validate that the keys exist
-    // Use relative paths to avoid localhost issues on Vercel
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : process.env.NEXT_PUBLIC_SITE_URL 
-      || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
-    
-    const citiesResponse = await fetch(`${baseUrl}/static/cities.json`)
-    const citiesData = await citiesResponse.json()
-    
-    const categoriesResponse = await fetch(`${baseUrl}/static/categories.json`)
-    const categoriesData = await categoriesResponse.json()
+    // Import the data directly instead of fetching to avoid URL issues
+    let citiesData, categoriesData
+    try {
+      // Try to import the static data directly from the file system
+      const fs = await import('fs')
+      const path = await import('path')
+      
+      const citiesPath = path.join(process.cwd(), 'public', 'static', 'cities.json')
+      const categoriesPath = path.join(process.cwd(), 'public', 'static', 'categories.json')
+      
+      citiesData = JSON.parse(fs.readFileSync(citiesPath, 'utf8'))
+      categoriesData = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'))
+    } catch (fsError) {
+      console.error('Failed to read static files directly, trying fetch:', fsError)
+      
+      // Fallback to fetch with better URL construction
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : process.env.NEXT_PUBLIC_SITE_URL 
+        || 'http://localhost:3000'
+      
+      try {
+        const [citiesResponse, categoriesResponse] = await Promise.all([
+          fetch(`${baseUrl}/static/cities.json`),
+          fetch(`${baseUrl}/static/categories.json`)
+        ])
+        
+        if (!citiesResponse.ok || !categoriesResponse.ok) {
+          throw new Error(`Failed to fetch static data: cities ${citiesResponse.status}, categories ${categoriesResponse.status}`)
+        }
+        
+        citiesData = await citiesResponse.json()
+        categoriesData = await categoriesResponse.json()
+      } catch (fetchError) {
+        console.error('Failed to fetch static data:', fetchError)
+        return NextResponse.json(
+          { success: false, error: 'Failed to load validation data' },
+          { status: 500 }
+        )
+      }
+    }
 
     // Validate the city and category keys exist in static data
     let cityFromStatic
@@ -195,11 +239,26 @@ export async function POST(request: Request) {
         return salaryMin || salaryMax || null
       })(),
       contact_info: email || contact_email || null,
+      contact_email: contact_email || email || null,
       application_url: application_url || website || null,
       // Map location fields correctly (form sends job_address, job_latitude, job_longitude)
       exact_location: job_address || null,
       latitude: job_latitude || null,
       longitude: job_longitude || null,
+      // Schedule and timing fields from the form
+      start_date: start_date || null,
+      start_time: start_time || null,
+      duration: duration || null,
+      duration_days: duration_days || null,
+      // Transportation fields from the form
+      transportation: transportation || null,
+      transportation_amount: transportation_amount || null,
+      has_parking: has_parking || false,
+      public_transport_info: public_transport_info || null,
+      // Additional job fields
+      application_deadline: application_deadline || null,
+      is_urgent: is_urgent || false,
+      performance_bonus: performance_bonus || false,
       is_active: true,
       is_featured: is_featured || false,
       status: 'active' as const,
@@ -211,10 +270,9 @@ export async function POST(request: Request) {
       category_name: categoryName,
       category_name_bs: categoryNameBs,
       category_name_en: categoryNameEn,
-      // Cached poster data (we'll add these later if needed)
+            // Cached poster data for performance (phone and avatar come from users table)
       poster_name: user.user_metadata?.name || user.email || 'User',
       poster_email: user.email || '',
-      poster_phone: user.user_metadata?.phone || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -289,6 +347,14 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Jobs Create API: Unexpected error:', error)
+    
+    // More detailed error logging for debugging
+    if (error instanceof Error) {
+      console.error('Error name:', error.name)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
     return NextResponse.json(
       { 
         success: false, 
