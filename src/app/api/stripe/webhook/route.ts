@@ -7,6 +7,9 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
 export async function POST(request: NextRequest) {
+  console.log('=== STRIPE WEBHOOK CALLED ===')
+  console.log('Timestamp:', new Date().toISOString())
+  
   const supabase = createRouteClient()
   
   try {
@@ -18,6 +21,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+    
+    console.log('Stripe configuration OK')
     
     const body = await request.text()
     
@@ -45,15 +50,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
+    console.log('Event type:', event.type)
+    
     if (event.type === 'checkout.session.completed') {
+      console.log('Processing checkout.session.completed event')
       const session = event.data.object
       
+      console.log('Session metadata:', session.metadata)
       const { userId, packageId, connections } = session.metadata || {}
 
       if (!userId || !connections) {
         console.error('Missing metadata in checkout session:', session.metadata)
         return NextResponse.json({ error: 'Missing metadata' }, { status: 400 })
       }
+      
+      console.log('Processing purchase for user:', userId, 'connections:', connections)
 
       const connectionsAmount = parseInt(connections, 10)
       if (isNaN(connectionsAmount)) {
@@ -83,6 +94,8 @@ export async function POST(request: NextRequest) {
         
         const currentConnections = existingUser.connections || 0
         
+        console.log('Updating connections from', currentConnections, 'to', currentConnections + connectionsAmount)
+        
         // Update the user's connections using Supabase
         const { data: updatedUser, error: updateError } = await supabase
           .from('users')
@@ -95,6 +108,8 @@ export async function POST(request: NextRequest) {
           console.error('Connection update failed:', updateError)
           return NextResponse.json({ error: 'Connection update failed' }, { status: 500 })
         }
+        
+        console.log('Connections updated successfully:', updatedUser.connections)
         
         
         // Verify the update actually happened

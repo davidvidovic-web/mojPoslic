@@ -468,17 +468,17 @@ export function JobDetails({ jobId }: JobDetailsProps) {
             <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight" itemProp="title">{job.title}</h1>
             <div className="flex items-center gap-3 mb-4" itemScope itemType="https://schema.org/Organization">
               <Avatar className="h-12 w-12">
-                {job.postedBy?.avatar_url ? (
+                {(job.poster_avatar_url || job.postedBy?.avatar_url) ? (
                   <AvatarImage 
-                    src={job.postedBy.avatar_url}
-                    alt={job.postedBy?.name || job.company || 'User avatar'}
+                    src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
+                    alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
                   />
                 ) : (
                   <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                     {job.company 
                       ? job.company.charAt(0).toUpperCase() 
-                      : job.postedBy?.name 
-                        ? job.postedBy.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                      : (job.postedBy?.name || job.poster_name)
+                        ? (job.postedBy?.name || job.poster_name)!.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
                         : <User className="h-6 w-6" />
                     }
                   </AvatarFallback>

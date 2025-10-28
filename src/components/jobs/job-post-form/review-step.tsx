@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CreateJobData } from '@/types/job'
 import { Rocket, Star, Zap } from 'lucide-react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
@@ -240,11 +241,15 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
             <div>
               <h4 className="font-medium text-lg">{formData.title}</h4>
               <div className="flex items-center gap-2 mt-2">
-                <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10">
-                  <span className="text-sm font-bold text-primary">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage 
+                    src={user?.avatarUrl}
+                    alt={user?.name || user?.email || 'User avatar'}
+                  />
+                  <AvatarFallback className="text-sm bg-gradient-to-br from-primary/10 to-primary/20 text-primary">
                     {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
+                  </AvatarFallback>
+                </Avatar>
                 <span className="text-sm text-muted-foreground">
                   {t('review.postedBy')}: {user?.name || user?.email}
                 </span>

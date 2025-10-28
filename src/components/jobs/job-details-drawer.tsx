@@ -275,15 +275,15 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                     <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
                     <div className="flex items-center gap-3 mb-4">
                       <Avatar className="h-12 w-12">
-                        {job.postedBy?.avatar_url ? (
+                        {(job.poster_avatar_url || job.postedBy?.avatar_url) ? (
                           <AvatarImage 
-                            src={job.postedBy.avatar_url}
-                            alt={job.postedBy?.name || job.company || 'User avatar'}
+                            src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
+                            alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
                             asChild
                           >
                             <Image
-                              src={job.postedBy.avatar_url}
-                              alt={job.postedBy?.name || job.company || 'User avatar'}
+                              src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
+                              alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
                               width={48}
                               height={48}
                               className="object-cover"
@@ -293,11 +293,9 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                           <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                             {job.company 
                               ? job.company.charAt(0).toUpperCase() 
-                              : job.postedBy?.name 
-                                ? job.postedBy.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-                                : job.poster_name
-                                  ? job.poster_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-                                  : <User className="h-6 w-6" />
+                              : (job.postedBy?.name || job.poster_name)
+                                ? (job.postedBy?.name || job.poster_name)!.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                : <User className="h-6 w-6" />
                             }
                           </AvatarFallback>
                         )}
