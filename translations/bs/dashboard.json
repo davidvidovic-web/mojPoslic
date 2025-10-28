@@ -534,8 +534,8 @@
     "fullHistory": "Puna istorija konekcija",
     "fullHistoryDescription": "Kompletna istorija svih vaših transakcija konekcija",
     "recentActivity": "Nedavna aktivnost",
-    "recentActivityPreview": "Nedavna aktivnost (Pregled)",
-    "viewFullHistory": "Pogledajte punu istoriju u sekciji 'Istorija konekcija' ispod",
+    "recentActivityPreview": "Nedavna aktivnost",
+    "viewFullHistory": "Pogledajte punu istoriju",
     "totalReceived": "Ukupno primljeno",
     "totalBought": "Ukupno kupljeno",
     "totalSpent": "Ukupno potrošeno",
@@ -558,19 +558,21 @@
     "partTimeJobPosting": "Objavljivanje posla sa skraćenim radnim vremenom",
     "fullTimeJobPosting": "Objavljivanje posla sa punim radnim vremenom",
     "remoteJobPosting": "Objavljivanje udaljenog posla",
+    "featureJob": "Istakni posao",
+    "promoteJob": "Promoviši posao",
     "roleChange": "Promjena uloge",
     "jobPostClient": "Objavljivanje posla (Klijent)",
     "jobPostCompany": "Objavljivanje posla (Kompanija)",
     "adminAdjustment": "Administratorska korekcija",
     "connections": "konekcija",
-    "taskerInfo": "Konekcije se koriste za prijavu na profesionalne poslove samo. Brzi poslovi ne zahtijevaju konekcije.",
+    "taskerInfo": "Konekcije se koriste za prijavu na profesionalne poslove ili istaknute poslove. Brzi poslovi su besplatni",
     "clientInfo": "Konekcije se koriste za objavljivanje više od 1 posla dnevno. Brzi poslovi koštaju 3 konekcije.",
-    "monthlyRefreshInfo": "Dobijate 10 konekcija automatski 1. svakog mjeseca.",
+    "monthlyRefreshInfo": "Dobijate 10 konekcija automatski svakog mjeseca.",
     "nextRefresh": "Sljedeće osvježavanje: {date}",
     "lastRefresh": "Zadnje osvježavanje: {date}",
     "needMoreConnections": "Trebate više konekcija?",
     "purchaseAdditionalTasker": "Kupite dodatne konekcije za nastavak prijave na profesionalne poslove.",
-    "purchaseAdditionalClient": "Kupite dodatne konekcije za objavljivanje više poslova dnevno.",
+    "purchaseAdditionalClient": "Kupite dodatne konekcije za promovisanje posla.",
     "lowConnectionsWarning": "Malo konekcija!",
     "lowConnectionsTasker": "Malo konekcija! Trebate konekcije za prijavu na profesionalne poslove.",
     "lowConnectionsClient": "Malo konekcija! Trebate konekcije za objavljivanje više poslova dnevno. Brzi poslovi zahtijevaju 3 konekcije svaki.",
@@ -582,6 +584,9 @@
     "welcomeBonusDescription": "Dobrodošli bonus konekcije (mjesečno obnavljanje dostupno)",
     "welcomeBonusDescriptionNoRefresh": "Dobrodošli bonus konekcije",
     "roleChangeDescription": "Uloga promijenjena u izvršioca (mjesečno obnavljanje dostupno)",
+    "purchasePackageDescription": "Kupovina {name} ({connections} konekcija)",
+    "purchaseConnectionsDescription": "Kupovina {connections} konekcija",
+    "purchaseConnectionsAction": "Kupovina {connections} konekcija",
     "activity": {
       "title": "Aktivnost konekcija",
       "showAll": "Prikaži sve ({count})",
@@ -592,7 +597,20 @@
     "noConnectionsDescription": "Još niste uspostavili nijednu konekciju",
     "errorTitle": "Greška pri učitavanju",
     "tryAgain": "Pokušaj ponovo",
-    "currentBalance": "Trenutni balans"
+    "currentBalance": "Trenutni balans",
+    "tableHeaders": {
+      "dateTime": "Datum i vrijeme",
+      "action": "Akcija",
+      "description": "Opis",
+      "type": "Tip",
+      "amount": "Iznos"
+    },
+    "transactionTypes": {
+      "credit": "Kredit",
+      "debit": "Dugovanje"
+    },
+    "noAdditionalDetails": "Nema dodatnih detalja",
+    "jobLabel": "Posao"
   },
   "admin": {
     "stats": {

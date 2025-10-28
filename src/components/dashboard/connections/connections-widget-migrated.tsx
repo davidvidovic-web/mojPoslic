@@ -8,11 +8,13 @@ import { PurchaseConnectionsSection } from './purchase-connections-section'
 import { LowConnectionsWarning } from './low-connections-warning'
 import { ConnectionActivity } from './connection-activity'
 import { useConnectionsManager } from '@/hooks/use-connections'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { Zap, TrendingUp } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export function ConnectionsWidget() {
   const t = useTranslations('dashboard.connections')
+  const { user } = useSupabaseAuth()
   
   // Use Supabase hooks instead of manual fetch() calls
   const {
@@ -103,8 +105,8 @@ export function ConnectionsWidget() {
         {/* Connection costs info */}
         <ConnectionCosts />
         
-        {/* Monthly refresh info */}
-        <MonthlyRefreshInfo />
+        {/* Monthly refresh info - only for taskers */}
+        {user?.role === 'tasker' && <MonthlyRefreshInfo />}
         
         {/* Purchase connections */}
         <PurchaseConnectionsSection />

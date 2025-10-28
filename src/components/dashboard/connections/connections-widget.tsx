@@ -10,11 +10,14 @@ import { PurchaseConnectionsSection } from './purchase-connections-section'
 import { LowConnectionsWarning } from './low-connections-warning'
 import { ConnectionActivity } from './connection-activity'
 import { useConnectionsManager } from '@/hooks/use-connections'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { Zap, TrendingUp } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
 export function ConnectionsWidget() {
   const t = useTranslations('dashboard.connections')
+  const { user } = useSupabaseAuth()
   
   // Use Supabase hooks instead of manual fetch() calls
   const { 
@@ -107,8 +110,8 @@ export function ConnectionsWidget() {
         {/* Connection costs info */}
         <ConnectionCosts />
         
-        {/* Monthly refresh info */}
-        <MonthlyRefreshInfo />
+        {/* Monthly refresh info - only for taskers */}
+        {user?.role === 'tasker' && <MonthlyRefreshInfo />}
         
         {/* Purchase connections */}
         <PurchaseConnectionsSection />
@@ -121,9 +124,14 @@ export function ConnectionsWidget() {
               {t('recentActivityPreview')}
             </h4>
             <ConnectionActivity history={history.slice(0, 3)} />
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-              {t('viewFullHistory')}
-            </p>
+            <div className="text-center mt-2">
+              <Link 
+                href="/connections"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+              >
+                {t('viewFullHistory')}
+              </Link>
+            </div>
           </div>
         )}
       </CardContent>

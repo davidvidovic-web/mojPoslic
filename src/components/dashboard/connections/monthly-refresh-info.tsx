@@ -13,7 +13,7 @@ export function MonthlyRefreshInfo({ lastRefresh }: MonthlyRefreshInfoProps) {
   const getNextRefreshDate = () => {
     const now = new Date()
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    return nextMonth.toLocaleDateString('en-US', { 
+    return nextMonth.toLocaleDateString('bs-BA', { 
       month: 'long', 
       day: 'numeric',
       year: 'numeric'
@@ -30,7 +30,11 @@ export function MonthlyRefreshInfo({ lastRefresh }: MonthlyRefreshInfoProps) {
         <p>{t('monthlyRefreshInfo')}</p>
         <p className="font-medium">{t('nextRefresh', { date: getNextRefreshDate() })}</p>
         {lastRefresh && (
-          <p>{t('lastRefresh', { date: lastRefresh.toLocaleDateString() })}</p>
+          <p>{t('lastRefresh', { date: lastRefresh.toLocaleDateString('bs-BA', { 
+            month: 'long', 
+            day: 'numeric',
+            year: 'numeric'
+          }) })}</p>
         )}
       </div>
     </div>

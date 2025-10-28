@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -64,6 +62,13 @@ export function ConnectionsFullHistory() {
 
   // Function to translate action labels
   const getTranslatedActionLabel = (actionLabel: string) => {
+    // Handle dynamic purchase action labels first
+    const purchaseMatch = actionLabel.match(/Purchase (\d+) Connections/)
+    if (purchaseMatch) {
+      const [, connections] = purchaseMatch
+      return t('purchaseConnectionsAction', { connections })
+    }
+    
     // Map common action labels to translation keys (both formatted and raw backend types)
     const actionMap: Record<string, string> = {
       // Formatted action labels
@@ -87,7 +92,11 @@ export function ConnectionsFullHistory() {
       'JOB_POST_CLIENT': 'jobPostClient',
       'JOB_POST_COMPANY': 'jobPostCompany',
       'ADMIN_ADJUSTMENT': 'adminAdjustment',
-      'PURCHASE': 'purchase'
+      'PURCHASE': 'purchase',
+      'JOB_FEATURE': 'featureJob',
+      'Featured job': 'featureJob',
+      'PROMOTE_JOB': 'promoteJob',
+      'JOB_PROMOTION': 'promoteJob'
     }
     
     // Return translated label if exists, otherwise return original
@@ -101,6 +110,19 @@ export function ConnectionsFullHistory() {
       'Welcome bonus connections (monthly refresh eligible)': 'welcomeBonusDescription',
       'Welcome bonus connections': 'welcomeBonusDescriptionNoRefresh',
       'Role changed to tasker (monthly refresh eligible)': 'roleChangeDescription'
+    }
+    
+    // Handle purchase descriptions with dynamic content
+    const purchasePackageMatch = description.match(/Purchase of (.+) \((\d+) connections\)/)
+    if (purchasePackageMatch) {
+      const [, name, connections] = purchasePackageMatch
+      return t('purchasePackageDescription', { name, connections })
+    }
+    
+    const purchaseConnectionsMatch = description.match(/Purchase of (\d+) connections/)
+    if (purchaseConnectionsMatch) {
+      const [, connections] = purchaseConnectionsMatch
+      return t('purchaseConnectionsDescription', { connections })
     }
     
     // Return translated description if exists, otherwise return original
@@ -138,13 +160,13 @@ export function ConnectionsFullHistory() {
 
   const exportHistory = () => {
     const csvContent = [
-      ['Date', 'Action', 'Description', 'Amount', 'Type'],
+      [t('tableHeaders.dateTime'), t('tableHeaders.action'), t('tableHeaders.description'), t('tableHeaders.amount'), t('tableHeaders.type')],
       ...filteredHistory.map(entry => [
         new Date(entry.createdAt).toLocaleDateString(),
-        entry.actionLabel,
-        entry.description || '',
+        getTranslatedActionLabel(entry.actionLabel),
+        entry.description ? getTranslatedDescription(entry.description) : '',
         entry.amount.toString(),
-        entry.isPositive ? 'Credit' : 'Debit'
+        entry.isPositive ? t('transactionTypes.credit') : t('transactionTypes.debit')
       ])
     ].map(row => row.join(',')).join('\\n')
 
@@ -160,35 +182,27 @@ export function ConnectionsFullHistory() {
   if (loading) {
     return (
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
-            <History className="h-6 w-6" />
-            {t('fullHistory')}
-          </h2>
-        </div>
-
         {/* Summary Stats skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-muted rounded-lg animate-pulse"></div>
+            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
           ))}
         </div>
         
         {/* Filters skeleton */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
+          <div className="flex-1 h-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           <div className="flex gap-2">
-            <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
-            <div className="w-32 h-10 bg-muted rounded animate-pulse"></div>
-            <div className="w-24 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-32 h-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+            <div className="w-32 h-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+            <div className="w-24 h-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           </div>
         </div>
         
         {/* History skeleton */}
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
+            <div key={i} className="h-16 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -198,17 +212,11 @@ export function ConnectionsFullHistory() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <History className="h-6 w-6" />
-            {t('fullHistory')}
-          </h2>
-        </div>
-        <div className="text-center py-12 bg-muted/50 rounded-lg">
-          <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">{t('errorTitle')}</h3>
-          <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          <Button onClick={refetchAll} variant="outline">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800">
+          <History className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('errorTitle')}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <Button onClick={refetchAll} variant="outline" className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800">
             {t('tryAgain')}
           </Button>
         </div>
@@ -218,49 +226,38 @@ export function ConnectionsFullHistory() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Title */}
-      <div>
-        <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
-          <History className="h-6 w-6" />
-          {t('fullHistory')}
-        </h2>
-        <p className="text-muted-foreground">
-          {t('fullHistoryDescription') || 'Complete history of all your connection transactions'}
-        </p>
-      </div>
-      
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-yellow-50 dark:bg-yellow-950/30 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-1">
-            <Zap className="h-4 w-4 text-yellow-600" />
-            <span className="text-sm font-medium">{t('currentBalance')}</span>
+            <Zap className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('currentBalance')}</span>
           </div>
-          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{connections}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{connections}</p>
         </div>
         
-        <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-1">
-            <Plus className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium">{t('totalReceived')}</span>
+            <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('totalReceived')}</span>
           </div>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">+{totalReceived}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">+{totalReceived}</p>
         </div>
         
-        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-lg border border-emerald-200 dark:border-emerald-800">
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-1">
-            <ShoppingCart className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-medium">{t('totalBought')}</span>
+            <ShoppingCart className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('totalBought')}</span>
           </div>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">+{totalBought}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">+{totalBought}</p>
         </div>
         
-        <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg border border-red-200 dark:border-red-800">
+        <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingDown className="h-4 w-4 text-red-600" />
-            <span className="text-sm font-medium">{t('totalSpent')}</span>
+            <TrendingDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('totalSpent')}</span>
           </div>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">-{totalSpent}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">-{totalSpent}</p>
         </div>
       </div>
       
@@ -268,20 +265,20 @@ export function ConnectionsFullHistory() {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
             <Input
               placeholder={t('searchTransactions')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             />
           </div>
         </div>
         
         <div className="flex gap-2">
           <Select value={filterType} onValueChange={(value: 'all' | 'positive' | 'negative') => setFilterType(value)}>
-            <SelectTrigger className="w-32">
-              <Filter className="h-4 w-4 mr-2" />
+            <SelectTrigger className="w-32 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+              <Filter className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -292,8 +289,8 @@ export function ConnectionsFullHistory() {
           </Select>
           
           <Select value={sortOrder} onValueChange={(value: 'newest' | 'oldest') => setSortOrder(value)}>
-            <SelectTrigger className="w-32">
-              <Calendar className="h-4 w-4 mr-2" />
+            <SelectTrigger className="w-32 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+              <Calendar className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -302,79 +299,114 @@ export function ConnectionsFullHistory() {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="sm" onClick={exportHistory}>
+          <Button variant="outline" size="sm" onClick={exportHistory} className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800">
             <Download className="h-4 w-4 mr-2" />
             {t('export')}
           </Button>
         </div>
       </div>
       
-      {/* History List */}
-      <Card>
-        <CardContent className="p-6">
-          {filteredHistory.length > 0 ? (
-            <ScrollArea className="h-[600px] pr-4">
-              <div className="space-y-3">
-                {filteredHistory.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{getTranslatedActionLabel(entry.actionLabel)}</h4>
-                        <Badge variant={entry.isPositive ? 'default' : 'destructive'} className="text-xs">
-                          {entry.isPositive ? '+' : '-'}{entry.amount}
-                        </Badge>
+      {/* History Table */}
+      <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+        {filteredHistory.length > 0 ? (
+          <div className="overflow-x-auto">
+            <div className="min-w-full">
+              {/* Table Header */}
+              <div className="grid grid-cols-5 gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 font-medium text-sm text-gray-900 dark:text-gray-100">
+                <div>{t('tableHeaders.dateTime')}</div>
+                <div>{t('tableHeaders.action')}</div>
+                <div>{t('tableHeaders.description')}</div>
+                <div className="text-center">{t('tableHeaders.type')}</div>
+                <div className="text-right">{t('tableHeaders.amount')}</div>
+              </div>
+              
+              {/* Table Body */}
+              <ScrollArea className="h-[calc(100vh-400px)] min-h-[500px]">
+                <div className="divide-y divide-gray-200 dark:divide-gray-800">
+                  {filteredHistory.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="grid grid-cols-5 gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                    >
+                      {/* Date & Time */}
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(entry.createdAt).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
                       </div>
-                      {entry.description && (
-                        <p className="text-sm text-muted-foreground mb-1">{getTranslatedDescription(entry.description)}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>{new Date(entry.createdAt).toLocaleDateString()}</span>
-                        <span>{new Date(entry.createdAt).toLocaleTimeString()}</span>
+                      
+                      {/* Action */}
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {getTranslatedActionLabel(entry.actionLabel)}
+                        </div>
                         {entry.jobId && (
-                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                            Job ID: {entry.jobId.slice(-8)}
-                          </span>
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            {t('jobLabel')}: {entry.jobId.slice(-8)}
+                          </div>
                         )}
                       </div>
+                      
+                      {/* Description */}
+                      <div>
+                        {entry.description ? (
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {getTranslatedDescription(entry.description)}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-500 dark:text-gray-500 italic">
+                            {t('noAdditionalDetails')}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Type Text */}
+                      <div className="text-center">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {entry.isPositive ? t('transactionTypes.credit') : t('transactionTypes.debit')}
+                        </span>
+                      </div>
+                      
+                      {/* Amount */}
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                          {entry.isPositive ? '+' : '-'}{entry.amount}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {t('connections')}
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="text-right">
-                      <p className={`text-lg font-bold ${
-                        entry.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {entry.isPositive ? '+' : '-'}{entry.amount}
-                      </p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {entry.action.replace('_', ' ')}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          ) : (
-            <div className="text-center py-12">
-              <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">{t('noTransactionsFound')}</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {searchTerm || filterType !== 'all' 
-                  ? t('tryAdjustingSearch')
-                  : t('connectionHistoryWillAppear')}
-              </p>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
-          )}
-          
-          {/* Results count */}
-          {filteredHistory.length > 0 && (
-            <div className="text-sm text-muted-foreground text-center pt-4 mt-4 border-t">
-              {t('showingTransactions', { count: filteredHistory.length, total: history.length })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <History className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('noTransactionsFound')}</h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+              {searchTerm || filterType !== 'all' 
+                ? t('tryAdjustingSearch')
+                : t('connectionHistoryWillAppear')}
+            </p>
+          </div>
+        )}
+        
+        {/* Results count */}
+        {filteredHistory.length > 0 && (
+          <div className="text-sm text-gray-600 dark:text-gray-400 text-center p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30">
+            {t('showingTransactions', { count: filteredHistory.length, total: history.length })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

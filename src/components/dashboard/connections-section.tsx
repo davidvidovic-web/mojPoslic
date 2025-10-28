@@ -175,9 +175,14 @@ export function ConnectionsSection() {
         
         <Separator />
         
-        <MonthlyRefreshInfo lastRefresh={lastRefresh} />
+        {/* Only show monthly refresh info to taskers */}
+        {user?.role === 'tasker' && (
+          <>
+            <MonthlyRefreshInfo lastRefresh={lastRefresh} />
+            <Separator />
+          </>
+        )}
         
-        <Separator />
         
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <ConnectionActivity history={history as any} />

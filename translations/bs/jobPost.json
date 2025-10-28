@@ -51,7 +51,7 @@
         "provided": "Klijent osigurava transport",
         "notProvided": "Transport nije osiguran",
         "taskerResponsible": "Radnik je odgovoran za transport",
-        "compensated": "Klijent će kompenzirati transport"
+        "compensated": "Klijent će kompenzisati transport"
       },
       "compensationAmount": "Iznos kompenzacije za transport (BAM)",
       "tips": {
@@ -63,7 +63,7 @@
       },
       "selectDescription": "Objasnite ko je odgovoran za dolazak na lokaciju posla i povratak s nje.",
       "compensationAmountPlaceholder": "npr., 50",
-      "compensationHelp": "Iznos u BAM koji ćete kompenzirati za troškove transporta.",
+      "compensationHelp": "Iznos u BAM koji ćete kompenzisati za troškove transporta.",
       "parkingAvailable": "Parking je dostupan",
       "parkingHelp": "Označite ako je parking dostupan za one koji se voze na lokaciju.",
       "publicTransportInfo": "Pristupačnost javnog transporta (Opcionalno)",
@@ -109,7 +109,7 @@
       "selectStartDate": "Odaberite datum početka",
       "selectStartTime": "Odaberite vrijeme početka",
       "durationPlaceholder": "Koliko će dugo trajati ovaj posao?",
-      "durationHelp": "Pomaže kandidatima razumjeti vremensko obvezanje i planirati u skladu s tim.",
+      "durationHelp": "Pomaže kandidatima razumijeti vremensko obavezanje i planirati u skladu s tim.",
       "optional": "(Opcionalno)",
       "notEnoughTime": "Nedovoljno vremena",
       "dontKnowExactDate": "Ne znam tačan datum",
@@ -124,7 +124,7 @@
     },
     "compensation": {
       "title": "Budžet i kompenzacija",
-      "salaryType": "Kako želite strukturirati budžet?",
+      "salaryType": "Kako želite strukturisati budžet?",
       "salaryTypes": {
         "hourly": "Satnica",
         "fixed": "Fiksna cijena",
@@ -184,7 +184,7 @@
       },
       "paymentCalculation": {
         "total": "Ukupno",
-        "dependsOnAgreement": "Ukupno plaćanje ovisi o konačnom dogovoru",
+        "dependsOnAgreement": "Ukupno plaćanje zavisi o konačnom dogovoru",
         "estimatedTotal": "Procijenjeni ukupni iznos",
         "considerSwitching": "Razmislite o prebacivanju na",
         "forBetterAccuracy": "plaćanje za bolju preciznost",

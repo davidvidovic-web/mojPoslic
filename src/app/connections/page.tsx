@@ -3,8 +3,6 @@
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { ConnectionsFullHistory } from '@/components/dashboard/connections/connections-full-history'
-import { ConnectionsWidget } from '@/components/dashboard/connections/connections-widget'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RegistrationFlowGuard } from '@/components/auth/registration-flow-guard'
 import { ConditionalHeader } from '@/components/core/conditional-header'
 import { NextIntlClientProvider } from 'next-intl'
@@ -96,20 +94,8 @@ function ConnectionsContent({ messages }: ConnectionsContentProps) {
           </p>
         </div>
 
-        {/* Connection Balance Widget */}
-        <ConnectionsWidget />
-
-        {/* Full Connection History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              {tDashboard('connections.fullHistory')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ConnectionsFullHistory />
-          </CardContent>
-        </Card>
+        {/* Full Connection History - Takes entire page */}
+        <ConnectionsFullHistory />
       </div>
     </DashboardLayout>
   )
