@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Briefcase, MapPin, Calendar, Banknote, Tag, Clock, Mail, Phone, Star, ArrowLeft, ExternalLink, Car, ParkingCircle, Bus, AlertCircle, Timer, CalendarDays, MapPinned, Award, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import Image from 'next/image'
 import { Job } from "@/types/job"
 import { toast } from "sonner"
 import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
-import { formatJobType, getJobExpirationDate } from "@/lib/job-utils"
+import { formatJobType, getJobExpirationDate, formatSalary as utilFormatSalary } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
@@ -33,6 +32,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
   const [loading, setLoading] = useState(false)
   const [showApplicationForm, setShowApplicationForm] = useState(false)
   const [showMobileButton, setShowMobileButton] = useState(false)
+
   const viewTrackedRef = useRef(false)
   const desktopApplyButtonRef = useRef<HTMLDivElement>(null)
   
@@ -45,7 +45,7 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
     if (!isOpen) {
       setJob(null)
       setShowApplicationForm(false)
-      setShowMobileButton(false)
+
       viewTrackedRef.current = false
       return
     }
@@ -179,45 +179,8 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
     return formatDateUtil(dateString, locale, { format: 'short' })
   }
 
-  const formatSalary = (job: Job) => {
-    // Check if salary is negotiable first
-    if (job.salary_type === 'negotiable' || job.is_salary_negotiable) {
-      return t('jobs.form.labels.negotiable')
-    }
-    
-    // If we have structured salary data
-    if (job.salaryMin && job.salaryMax && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const max = job.salaryMax.toLocaleString()
-      const type = job.salaryType === 'hourly' ? t('jobCard.hourly') : 
-                   job.salaryType === 'daily' ? t('jobCard.daily') :
-                   job.salaryType === 'weekly' ? t('jobCard.weekly') :
-                   job.salaryType === 'monthly' ? t('jobCard.monthly') : ''
-      const result = `${min} - ${max} BAM${type}`
-      return job.is_salary_negotiable ? `${result} (${t('jobs.form.labels.negotiable')})` : result
-    }
-    
-    // If we only have minimum salary
-    if (job.salaryMin && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const type = job.salaryType === 'hourly' ? t('jobCard.hourly') : 
-                   job.salaryType === 'daily' ? t('jobCard.daily') :
-                   job.salaryType === 'weekly' ? t('jobCard.weekly') :
-                   job.salaryType === 'monthly' ? t('jobCard.monthly') : ''
-      
-      // Don't show "From" for fixed prices
-      if (job.salaryType === 'fixed') {
-        const result = `${min} BAM`
-        return job.is_salary_negotiable ? `${result} (${t('jobs.form.labels.negotiable')})` : result
-      }
-      
-      const result = `${t('jobCard.from')} ${min} BAM${type}`
-      return job.is_salary_negotiable ? `${result} (${t('jobs.form.labels.negotiable')})` : result
-    }
-    
-    // Fallback to legacy salary field
-    return job.salary || null
-  }
+  // Use centralized formatter
+  const formatSalary = (job: Job) => utilFormatSalary(job as unknown as Record<string, unknown>)
 
   // Don't render anything if not open
   if (!isOpen) return null
@@ -267,28 +230,63 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
               </div>
             </div>
           ) : job ? (
-            <div className="p-6">
+            <div className="p-6 pb-24 md:pb-6">
               {/* Job Header */}
               <div className="mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
-                <div className="flex items-start justify-between gap-4 mb-6">
-                  <div className="flex-1">
-                    <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
-                    <div className="flex items-center gap-3 mb-4">
-                      <Avatar className="h-12 w-12">
+                {/* Mobile: Action buttons first, then content. Desktop: side by side */}
+                
+                {/* Action buttons - show first on mobile */}
+                <div className="flex flex-col items-center gap-4 mb-6 md:hidden">
+                  {hasApplied && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
+                      <div className="w-2 h-2 bg-gray-700 dark:bg-gray-300 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t('jobs.form.labels.applied')}
+                      </span>
+                    </div>
+                  )}
+                  {!isOwner && !hasApplied && user?.role !== 'client' && (
+                    <Button onClick={handleApply} size="default" className="rounded-[var(--radius)] w-full">
+                      {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
+                    </Button>
+                  )}
+                  {isOwner && (
+                    <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t('jobs.form.labels.yourJob')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Main content and desktop action buttons */}
+                <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4 mb-6">
+                    <div className="flex-1 w-full">
+                      <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">{job.title}</h1>
+                      <div className="flex items-center md:items-start gap-3 mb-4">
+                        <Avatar className="h-16 w-16 md:h-12 md:w-12">
                         {(job.poster_avatar_url || job.postedBy?.avatar_url) ? (
-                          <AvatarImage 
-                            src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
-                            alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
-                            asChild
-                          >
-                            <Image
+                          <>
+                            <AvatarImage 
                               src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
                               alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
-                              width={48}
-                              height={48}
-                              className="object-cover"
+                              onError={(e) => {
+                                console.error('Avatar image failed to load:', {
+                                  poster_avatar_url: job.poster_avatar_url,
+                                  postedBy_avatar_url: job.postedBy?.avatar_url,
+                                  error: e
+                                })
+                              }}
                             />
-                          </AvatarImage>
+                            <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                              {job.company 
+                                ? job.company.charAt(0).toUpperCase() 
+                                : (job.postedBy?.name || job.poster_name)
+                                  ? (job.postedBy?.name || job.poster_name)!.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                  : <User className="h-6 w-6" />
+                              }
+                            </AvatarFallback>
+                          </>
                         ) : (
                           <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                             {job.company 
@@ -308,10 +306,18 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                           {job.posted_at ? formatDate(job.posted_at) : ''}
                         </p>
                         {/* Client Review Score */}
-                        {job.postedBy?.id && (
+                        {(job.postedBy?.id || job.posted_by_id) ? (
                           <div className="mt-1">
-                            <ReviewScore userId={job.postedBy.id} size="sm" showCount={true} />
+                            <ReviewScore userId={job.postedBy?.id || job.posted_by_id} size="sm" showCount={true} />
                           </div>
+                        ) : (
+                          process.env.NODE_ENV === 'development' && (
+                            <div className="mt-1">
+                              <div className="text-xs text-muted-foreground">
+                                Debug: No user ID - poster_name: {job.poster_name}, posted_by_id: {job.posted_by_id}
+                              </div>
+                            </div>
+                          )
                         )}
                       </div>
                     </div>
@@ -327,7 +333,9 @@ export function JobDetailsDrawer({ jobId, isOpen, onClose }: JobDetailsDrawerPro
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-4" ref={desktopApplyButtonRef}>
+                  
+                  {/* Desktop action buttons */}
+                  <div className="hidden md:flex flex-col items-end gap-4" ref={desktopApplyButtonRef}>
                     {hasApplied && (
                       <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
                         <div className="w-2 h-2 bg-gray-700 dark:bg-gray-300 rounded-full"></div>

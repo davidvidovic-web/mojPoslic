@@ -99,10 +99,14 @@ export function formatSalary(
   job:
     | string
     | {
-        salaryMin?: number;
-        salaryMax?: number;
-        salaryType?: string;
-        salary?: string;
+        salary_min?: number;
+        salary_max?: number;
+        salary_amount?: number;
+        salary_type?: string;
+        salaryMin?: number; // Legacy field
+        salaryMax?: number; // Legacy field
+        salaryType?: string; // Legacy field
+        salary?: string; // Legacy text field
       }
     | undefined
 ): string | null {
@@ -113,47 +117,184 @@ export function formatSalary(
 
   // Handle job object with new salary structure
   if (typeof job === "object" && job !== null) {
-    // If we have structured salary data
+    // If we have structured salary data with both min and max (current fields)
+    if (job.salary_min && job.salary_max) {
+      const min = job.salary_min.toLocaleString();
+      const max = job.salary_max.toLocaleString();
+      const typeKey = (job.salary_type || 'fixed').toLowerCase();
+      
+      let typeText = '';
+      switch (typeKey) {
+        case 'hourly':
+          typeText = ' / h';
+          break;
+        case 'daily':
+          typeText = ' / day';
+          break;
+        case 'weekly':
+          typeText = ' / week';
+          break;
+        case 'monthly':
+          typeText = ' / month';
+          break;
+        case 'fixed':
+        case 'negotiable':
+        default:
+          typeText = '';
+          break;
+      }
+      
+      return `${min} - ${max} BAM${typeText}`;
+    }
+
+    // If we only have minimum salary (current fields)
+    if (job.salary_min && !job.salary_max) {
+      const min = job.salary_min.toLocaleString();
+      const typeKey = (job.salary_type || 'fixed').toLowerCase();
+      
+      let typeText = '';
+      switch (typeKey) {
+        case 'hourly':
+          typeText = ' / h';
+          break;
+        case 'daily':
+          typeText = ' / day';
+          break;
+        case 'weekly':
+          typeText = ' / week';
+          break;
+        case 'monthly':
+          typeText = ' / month';
+          break;
+        case 'fixed':
+        case 'negotiable':
+        default:
+          typeText = '';
+          break;
+      }
+
+      // Don't show "From" for fixed prices
+      if ((job.salary_type || 'fixed') === 'fixed') {
+        return `${min} BAM${typeText}`;
+      }
+      
+      return `From ${min} BAM${typeText}`;
+    }
+
+    // If we have a single salary amount (current fields)
+    if (job.salary_amount) {
+      const amount = job.salary_amount.toLocaleString();
+      const typeKey = (job.salary_type || 'fixed').toLowerCase();
+      
+      let typeText = '';
+      switch (typeKey) {
+        case 'hourly':
+          typeText = ' / h';
+          break;
+        case 'daily':
+          typeText = ' / day';
+          break;
+        case 'weekly':
+          typeText = ' / week';
+          break;
+        case 'monthly':
+          typeText = ' / month';
+          break;
+        case 'fixed':
+        case 'negotiable':
+        default:
+          typeText = '';
+          break;
+      }
+      
+      return `${amount} BAM${typeText}`;
+    }
+
+    // Legacy field support - If we have structured salary data with legacy fields
     if (job.salaryMin && job.salaryMax && job.salaryType) {
       const min = job.salaryMin.toLocaleString();
       const max = job.salaryMax.toLocaleString();
-      const type =
-        job.salaryType === "hourly"
-          ? "/hr"
-          : job.salaryType === "daily"
-            ? "/day"
-            : job.salaryType === "weekly"
-              ? "/week"
-              : job.salaryType === "monthly"
-                ? "/month"
-                : "";
-      return `${min} - ${max} BAM${type}`;
+      const typeKey = job.salaryType.toLowerCase();
+      
+      let typeText = '';
+      switch (typeKey) {
+        case 'hourly':
+          typeText = ' / h';
+          break;
+        case 'daily':
+          typeText = ' / day';
+          break;
+        case 'weekly':
+          typeText = ' / week';
+          break;
+        case 'monthly':
+          typeText = ' / month';
+          break;
+        case 'fixed':
+        case 'negotiable':
+        default:
+          typeText = '';
+          break;
+      }
+      
+      return `${min} - ${max} BAM${typeText}`;
     }
 
-    // If we only have minimum salary
+    // If we only have minimum salary (legacy fields)
     if (job.salaryMin && job.salaryType) {
       const min = job.salaryMin.toLocaleString();
-      const type =
-        job.salaryType === "hourly"
-          ? "/hr"
-          : job.salaryType === "daily"
-            ? "/day"
-            : job.salaryType === "weekly"
-              ? "/week"
-              : job.salaryType === "monthly"
-                ? "/month"
-                : "";
-
-      // Don't show "From" for fixed prices
-      if (job.salaryType === "fixed") {
-        return `${min} BAM`;
+      const typeKey = job.salaryType.toLowerCase();
+      
+      let typeText = '';
+      switch (typeKey) {
+        case 'hourly':
+          typeText = ' / h';
+          break;
+        case 'daily':
+          typeText = ' / day';
+          break;
+        case 'weekly':
+          typeText = ' / week';
+          break;
+        case 'monthly':
+          typeText = ' / month';
+          break;
+        case 'fixed':
+        case 'negotiable':
+        default:
+          typeText = '';
+          break;
       }
 
-      return `From ${min} BAM${type}`;
+      // Don't show "From" for fixed prices
+      if (job.salaryType === 'fixed') {
+        return `${min} BAM${typeText}`;
+      }
+      
+      return `From ${min} BAM${typeText}`;
     }
 
-    // Fallback to legacy salary field
-    return job.salary || null;
+    // Debug: Check what salary fields exist
+    if (process.env.NODE_ENV === 'development') {
+      console.log('formatSalary debug:', {
+        salary_min: job.salary_min,
+        salary_max: job.salary_max,
+        salary_amount: job.salary_amount,
+        salary_type: job.salary_type,
+        salaryMin: job.salaryMin,
+        salaryMax: job.salaryMax,
+        salaryType: job.salaryType,
+        salary: job.salary,
+      });
+    }
+
+    // Fallback to legacy salary field only if no structured data exists
+    if (!job.salary_min && !job.salary_max && !job.salary_amount && !job.salaryMin && !job.salaryMax) {
+      return job.salary || null;
+    }
+
+    // If we have structured data but it didn't match above conditions, return null to avoid showing wrong data
+    return null;
   }
 
   return null;

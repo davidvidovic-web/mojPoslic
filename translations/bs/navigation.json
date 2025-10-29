@@ -1,4 +1,14 @@
 {
+  "home": "Početna",
+  "jobs": "Poslovi", 
+  "dashboard": "Kontrolna tabla",
+  "connections": "Konekcije",
+  "settings": "Postavke",
+  "auth": {
+    "title": "Autentifikacija",
+    "signin": "Prijava",
+    "register": "Registracija"
+  },
   "main": {
     "home": "Početna",
     "dashboard": "Kontrolna tabla",
@@ -11,7 +21,7 @@
     "login": "Prijavi se",
     "register": "Registruj se"
   },
-  "dashboard": {
+  "pages": {
     "overview": "Pregled",
     "stats": "Statistika",
     "recent": "Nedavna aktivnost"

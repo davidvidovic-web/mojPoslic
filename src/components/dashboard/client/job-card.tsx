@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Job } from '@/types/job'
-import { formatJobType, getJobExpirationDate, isJobExpired } from '@/lib/job-utils'
+import { formatJobType, getJobExpirationDate, isJobExpired, formatSalary } from '@/lib/job-utils'
 import { formatDate as formatDateUtil } from '@/lib/date-format'
 import { JobCardActions } from './job-card-actions'
 import { useTranslations, useLocale } from 'next-intl'
@@ -64,48 +64,7 @@ export function JobCard({
     }
   }
 
-  const formatSalary = (job: Job) => {
-    // Use structured salary data if available
-    if (job.salaryMin && job.salaryMax && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const max = job.salaryMax.toLocaleString()
-      const typeMap: Record<string, string> = {
-        'hourly': '/h',
-        'daily': '/day', 
-        'weekly': '/week',
-        'monthly': '/month',
-        'fixed': '',
-        'negotiable': ''
-      }
-      const typeSuffix = typeMap[job.salaryType] || ''
-      
-      if (job.salaryType === 'fixed') {
-        return `${min} BAM`
-      }
-      return `${min} - ${max} BAM${typeSuffix}`
-    }
-    
-    if (job.salaryMin && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const typeMap: Record<string, string> = {
-        'hourly': '/h',
-        'daily': '/day', 
-        'weekly': '/week',
-        'monthly': '/month',
-        'fixed': '',
-        'negotiable': ''
-      }
-      const typeSuffix = typeMap[job.salaryType] || ''
-      
-      if (job.salaryType === 'fixed') {
-        return `${min} BAM`
-      }
-      return `From ${min} BAM${typeSuffix}`
-    }
-    
-    // Fallback to legacy salary field
-    return job.salary || t('negotiable')
-  }
+
 
   const getJobStatus = () => {
     // Check if job is expired based on application_deadline or 14 days from creation

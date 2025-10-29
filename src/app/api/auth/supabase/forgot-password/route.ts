@@ -25,10 +25,26 @@ export async function POST(request: NextRequest) {
     const supabase = await createServerSupabaseClient()
     
     // Get the origin from the request headers for proper redirect URL
-    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // Support domain-based routing for both Bosnian and English sites
+    let origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL
+    
+    // Handle domain-based routing
+    if (!origin || origin.includes('localhost')) {
+      // Default to Bosnian domain in development
+      origin = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000' 
+        : 'https://mojposlic.com'
+    } else if (origin.includes('en.mojposlic.com')) {
+      // Preserve English domain for English users
+      origin = 'https://en.mojposlic.com'
+    } else {
+      // Default to Bosnian domain for main site
+      origin = 'https://mojposlic.com'
+    }
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/reset-password`
+      redirectTo: `${origin}/auth/reset-password`,
+      captchaToken: undefined // Ensure no captcha issues
     })
     
     // Add detailed debugging information

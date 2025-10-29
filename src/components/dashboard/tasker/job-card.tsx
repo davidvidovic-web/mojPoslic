@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Job } from '@/types/job'
 import { MapPin, Calendar, DollarSign, Car, Star } from 'lucide-react'
-import { formatJobType, formatTransportation } from '@/lib/job-utils'
+import { formatJobType, formatTransportation, formatSalary } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
 import { useLocale } from 'next-intl'
 
@@ -62,10 +62,10 @@ export function JobCard({ job, applicationCount, onEdit, onDelete, hideFeaturedB
                 <MapPin className="h-4 w-4 mr-1" />
                 {job.city?.name || 'Remote'}
               </div>
-              {job.salary && (
+              {formatSalary(job) && (
                 <div className="flex items-center">
                   <DollarSign className="h-4 w-4 mr-1" />
-                  {job.salary}
+                  {formatSalary(job)}
                 </div>
               )}
               <div className="flex items-center">

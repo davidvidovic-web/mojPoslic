@@ -34,7 +34,12 @@ export default function ForgotPasswordPage({ params }: { params: Promise<{ local
 
       if (error) {
         console.error('Password reset error:', error)
-        showToast.error(error.message || 'Failed to send reset email')
+        // Handle specific error messages with translations
+        let errorMessage = error.message || 'Failed to send reset email'
+        if (errorMessage === 'RATE_LIMIT_EXCEEDED') {
+          errorMessage = t('toast.rateLimitExceeded') || 'Previše zahtjeva. Molimo sačekajte prije slanja novog emaila za resetovanje lozinke.'
+        }
+        showToast.error(errorMessage)
         return
       }
 

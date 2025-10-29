@@ -18,7 +18,7 @@ import {
   Eye
 } from 'lucide-react'
 import { Job } from '@/types/job'
-import { formatClientName } from '@/lib/job-utils'
+import { formatClientName, formatSalary } from '@/lib/job-utils'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
@@ -112,9 +112,9 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
                   <Calendar className="h-3 w-3" />
                   {t('applied')} {formatDate(application.appliedAt)}
                 </div>
-                {application.job.salary && (
+                {formatSalary(application.job) && (
                   <div className="font-medium text-foreground">
-                    {application.job.salary}
+                    {formatSalary(application.job)}
                   </div>
                 )}
               </div>

@@ -9,7 +9,7 @@ import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Car, User } from
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Image from 'next/image'
 import { Job } from "@/types/job"
-import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName, formatSalary } from "@/lib/job-utils"
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 interface JobCardListProps {
@@ -26,37 +26,7 @@ export function JobCardList({ job }: JobCardListProps) {
   // Check if the current user owns this job
   const isOwner = user && job.posted_by === user.id
 
-  const formatSalary = (job: Job) => {
-    // If we have structured salary data
-    if (job.salaryMin && job.salaryMax && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const max = job.salaryMax.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
-      return `${min}-${max} BAM${type}`
-    }
-    
-    // If we only have minimum salary
-    if (job.salaryMin && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
-      
-      // Don't show "From" for fixed prices
-      if (job.salaryType === 'fixed') {
-        return `${min} BAM`
-      }
-      
-      return `From ${min} BAM${type}`
-    }
-    
-    // Fallback to legacy salary field
-    return job.salary || null
-  }
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

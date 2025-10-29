@@ -26,7 +26,8 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
   const [otp, setOtp] = useState('')
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
+    website: "" // honeypot field
   })
 
   // Get the return URL from search params
@@ -67,6 +68,13 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
     e.preventDefault()
     setLoading(true)
 
+    // Honeypot check - if filled, it's likely a bot
+    if (formData.website) {
+      console.log('Honeypot triggered in signin - potential bot submission')
+      setLoading(false)
+      return
+    }
+
     try {
       // This would use the signIn function from context for password auth
       // For now using supabase directly since we need both password and OTP auth
@@ -103,6 +111,13 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
   const handleOtpLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    // Honeypot check - if filled, it's likely a bot
+    if (formData.website) {
+      console.log('Honeypot triggered in OTP login - potential bot submission')
+      setLoading(false)
+      return
+    }
 
     try {
       const { error } = await signInWithOtp(formData.email, {
@@ -274,6 +289,20 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
                 </div>
 
                 <form onSubmit={useOtp ? handleOtpLogin : handleEmailSignIn} className="space-y-4">
+                  {/* Honeypot field - hidden from users */}
+                  <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      type="text"
+                      id="website"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="email">{t('email')}</Label>
                     <Input

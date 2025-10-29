@@ -7,6 +7,7 @@ import { Star, CheckCircle } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import { useJobDetailsDrawer } from "@/hooks/use-job-details-drawer"
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
+import { formatSalary } from "@/lib/job-utils"
 
 interface JobCardProps {
   job: Job
@@ -95,6 +96,8 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false, hideFeatur
     return text.substring(0, maxLength) + '...'
   }
 
+
+
   // Handle opening job details in drawer
   const handleJobClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -131,7 +134,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false, hideFeatur
 
             {/* Payment Type - Payment Amount */}
             <div className="text-sm font-medium text-green-600 mb-3">
-              {formatJobType(job.type || job.job_type)} {job.salary ? ` - ${job.salary} KM` : ''}
+              {formatJobType(job.type || job.job_type)}{formatSalary(job) ? ` - ${formatSalary(job)}` : ''}
             </div>
             
             {/* Description */}
@@ -224,7 +227,7 @@ export function JobCard({ job, viewMode = 'grid', hasApplied = false, hideFeatur
 
           {/* Payment Type - Payment Amount */}
           <div className="text-sm font-medium text-green-600 mb-3">
-            {formatJobType(job.type || job.job_type)} {job.salary ? ` - ${job.salary} KM` : ''}
+            {formatJobType(job.type || job.job_type)}{formatSalary(job) ? ` - ${formatSalary(job)}` : ''}
           </div>
           
           {/* Description */}

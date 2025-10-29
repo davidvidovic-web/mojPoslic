@@ -14,7 +14,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://mojposlic.com'),
-  title: "mojPoslić - Platforma za male poslove",
+  title: "mojPoslić - Platforma za male poslove | Prijava, Registracija, Dokumentacija",
   description: "Brza platforma za male poslove u BiH. Pronađite radnike ili poslove za kratak rad, dnevne zadatke i privremene usluge. Direktna komunikacija, brza aplikacija i sigurno plaćanje.",
   keywords: [
     "mali poslovi BiH",
@@ -264,6 +264,68 @@ export default async function RootLayout({
               "availableLanguage": ["bs", "en"],
               "serviceType": "Employment Services",
               "priceRange": "Free"
+            })
+          }}
+        />
+
+        {/* Sitelinks Search Box Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "mojPoslić",
+              "url": "https://mojposlic.com",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://mojposlic.com/jobs?search={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
+
+        {/* Sitelinks Structured Data for Navigation */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              "itemListElement": [
+                {
+                  "@type": "SiteNavigationElement",
+                  "position": 1,
+                  "name": "Prijava",
+                  "description": "Prijavite se na svoj mojPoslić račun",
+                  "url": "https://mojposlic.com/auth/signin"
+                },
+                {
+                  "@type": "SiteNavigationElement", 
+                  "position": 2,
+                  "name": "Registracija",
+                  "description": "Kreirajte novi račun na mojPoslić platformi",
+                  "url": "https://mojposlic.com/auth/register"
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  "position": 3,
+                  "name": "Dokumentacija",
+                  "description": "Kompletna dokumentacija za korišćenje platforme",
+                  "url": "https://mojposlic.com/dokumentacija"
+                },
+                {
+                  "@type": "SiteNavigationElement",
+                  "position": 4,
+                  "name": "Podrška",
+                  "description": "Kontaktirajte naš tim podrške za pomoć",
+                  "url": "https://mojposlic.com/podrska"
+                }
+              ]
             })
           }}
         />

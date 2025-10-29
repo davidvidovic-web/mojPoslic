@@ -26,7 +26,8 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
   const [otp, setOtp] = useState('')
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
+    website: "" // honeypot field
   })
 
   // Get the return URL from search params
@@ -43,6 +44,13 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
     const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    // Honeypot check - if filled, it's likely a bot
+    if (formData.website) {
+      console.log('Honeypot triggered in register - potential bot submission')
+      setLoading(false)
+      return
+    }
 
     try {
       const { error } = await signInWithOtp(formData.email, {
@@ -204,6 +212,20 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
             ) : (
               /* Email Registration Form */
               <form onSubmit={handleEmailRegister} className="space-y-4">
+                {/* Honeypot field - hidden from users */}
+                <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                  <label htmlFor="website">Website</label>
+                  <input
+                    type="text"
+                    id="website"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="email">{t('email')}</Label>
                   <Input

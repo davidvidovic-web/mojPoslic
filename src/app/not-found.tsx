@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { BackButton } from '@/components/common/back-button';
-import { Home, Search } from 'lucide-react';
+import { Home } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Stranica nije pronađena - 404 | mojPoslić',
@@ -27,54 +26,13 @@ export default function NotFound() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link href="/">
-              <Button size="lg" className="w-full sm:w-auto">
+              <Button size="lg">
                 <Home className="h-5 w-5 mr-2" />
                 Početna stranica
               </Button>
             </Link>
-            
-            <Link href="/jobs">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                <Search className="h-5 w-5 mr-2" />
-                Pretraži poslove
-              </Button>
-            </Link>
-            
-            <BackButton />
-            
-          </div>
-
-          {/* Popular Links */}
-          <div className="pt-8 border-t">
-            <h2 className="text-xl font-semibold mb-4">Popularne sekcije platforme</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Link href="/jobs?category=majstorski-radovi" className="text-primary hover:underline">
-                Majstorski radovi
-              </Link>
-              <Link href="/jobs?category=selidbe-transport" className="text-primary hover:underline">
-                Selidbe i transport
-              </Link>
-              <Link href="/jobs?category=ciscenje-odrzavanje" className="text-primary hover:underline">
-                Čišćenje i održavanje
-              </Link>
-              <Link href="/jobs?category=dostava-kupovina" className="text-primary hover:underline">
-                Dostava i kupovina
-              </Link>
-              <Link href="/jobs?city=sarajevo" className="text-primary hover:underline">
-                Oglasi Sarajevo
-              </Link>
-              <Link href="/jobs?city=banja-luka" className="text-primary hover:underline">
-                Oglasi Banja Luka
-              </Link>
-              <Link href="/jobs?city=tuzla" className="text-primary hover:underline">
-                Oglasi Tuzla
-              </Link>
-              <Link href="/jobs?city=mostar" className="text-primary hover:underline">
-                Pomoć Mostar
-              </Link>
-            </div>
           </div>
         </div>
       </div>

@@ -168,6 +168,8 @@ export async function GET(
           const displayName = publicProfile.name || publicProfile.email || 'Unknown'
           const companyName = publicProfile.company_name || publicProfile.name || displayName
 
+
+
           enrichedJob.postedBy = {
             id: publicProfile.id,
             name: displayName,
@@ -178,21 +180,39 @@ export async function GET(
           }
           enrichedJob.company = companyName
           enrichedJob.poster_name = displayName
+          enrichedJob.poster_avatar_url = publicProfile.avatar_url // Also set the cached field
           enrichedJob.email = publicProfile.showEmail ? publicProfile.email : enrichedJob.contact_email
         } else {
           console.error('Failed to fetch public profile:', publicProfileResponse.status)
-          // Set fallback values using cached data
+          // Set fallback values using cached data but still create postedBy object
+          enrichedJob.postedBy = {
+            id: jobData.posted_by_id,
+            name: enrichedJob.poster_name || 'Unknown',
+            email: null,
+            phone: null,
+            avatar_url: null,
+            role: 'user'
+          }
           enrichedJob.company = enrichedJob.poster_name || 'Unknown'
           enrichedJob.poster_name = enrichedJob.poster_name || 'Unknown'
         }
       } catch (error) {
         console.error('Error fetching public profile:', error)
-        // Set fallback values using cached data
+        // Set fallback values using cached data but still create postedBy object
+        enrichedJob.postedBy = {
+          id: jobData.posted_by_id,
+          name: enrichedJob.poster_name || 'Unknown',
+          email: null,
+          phone: null,
+          avatar_url: null,
+          role: 'user'
+        }
         enrichedJob.company = enrichedJob.poster_name || 'Unknown'
         enrichedJob.poster_name = enrichedJob.poster_name || 'Unknown'
       }
     } else {
       // Set fallback values when no posted_by_id using cached data
+      // Note: No postedBy object created here since there's no posted_by_id
       enrichedJob.company = enrichedJob.poster_name || 'Unknown'
       enrichedJob.poster_name = enrichedJob.poster_name || 'Unknown'
     }

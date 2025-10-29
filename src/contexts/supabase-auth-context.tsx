@@ -375,7 +375,19 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       if (!response.ok) {
-        return { error: new Error(data.error || 'Failed to send reset email') }
+        // Handle specific Supabase error messages and translate them
+        let errorMessage = data.error || 'Failed to send reset email'
+        
+        // Check for rate limiting error - this will be handled by the component using translations
+        if (errorMessage.includes('Email rate limit exceeded') || 
+            errorMessage.includes('too many') ||
+            errorMessage.includes('rate limit') ||
+            errorMessage.includes('For security purposes') ||
+            errorMessage.includes('after') && errorMessage.includes('seconds')) {
+          errorMessage = 'RATE_LIMIT_EXCEEDED'
+        }
+        
+        return { error: new Error(errorMessage) }
       }
 
       return { error: null }

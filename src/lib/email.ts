@@ -8,7 +8,7 @@ interface EmailOptions {
   from?: string;
 }
 
-class EmailService {
+export class EmailService {
   private resend: Resend | null;
   private readonly fromEmail: string;
 
@@ -231,11 +231,15 @@ ${content.ignore}
       }
 
       const isBosnian = locale === 'bs';
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
-        : process.env.NEXT_PUBLIC_SITE_URL 
-        || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
-      const resetUrl = `${baseUrl}/${locale}/auth/reset-password?token=${resetToken}`;
+      // Determine the correct base URL based on locale for domain-based routing
+      let baseUrl: string;
+      if (process.env.NODE_ENV === 'development') {
+        baseUrl = locale === 'en' ? 'http://en.localhost:3000' : 'http://localhost:3000';
+      } else {
+        baseUrl = locale === 'en' ? 'https://en.mojposlic.com' : 'https://mojposlic.com';
+      }
+      
+      const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
 
       const greeting = name 
         ? (isBosnian ? `Zdravo ${name}!` : `Hello ${name}!`)

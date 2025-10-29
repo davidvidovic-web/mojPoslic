@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": "Documentation",
+    "description": "Complete documentation for using the mojPoslić platform. Learn how to post jobs, apply for tasks, and use all platform features."
+  },
+  "title": "Documentation",
+  "subtitle": "Everything you need to know about using our platform",
+  "searchPlaceholder": "Search documentation...",
+  "categories": {
+    "basics": "Basics",
+    "account": "Account",
+    "jobs": "Jobs", 
+    "payments": "Payments",
+    "policies": "Policies",
+    "troubleshooting": "Troubleshooting"
+  },
+  "noResults": "No results for"
+}

@@ -16,6 +16,8 @@ export function ReviewScore({ userId, size = 'md', showCount = true, className =
   const { data: stats, isLoading } = useUserReviewStats(userId)
   const t = useTranslations('jobs.dialogs')
 
+
+
   if (isLoading) {
     return <Skeleton className="h-5 w-24" />
   }

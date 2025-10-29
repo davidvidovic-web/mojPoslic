@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Star, MapPin, Clock, DollarSign, ExternalLink, Calendar } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
+import { formatSalary } from '@/lib/job-utils'
 
 interface Job {
   id: string
@@ -103,17 +104,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
     )
   }
 
-  const formatSalary = (job: Job) => {
-    if (job.salaryMin && job.salaryMax) {
-      return `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((job as any).salary) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (job as any).salary
-    }
-    return tCommon('messages.salaryNotSpecified')
-  }
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {

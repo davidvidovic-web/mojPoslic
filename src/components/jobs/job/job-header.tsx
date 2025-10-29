@@ -30,8 +30,9 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-start gap-4">
-          <Avatar className="h-16 w-16 border">
+        {/* Responsive header: stack on small screens, row on larger screens */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+          <Avatar className="h-16 w-16 sm:h-16 sm:w-16 border">
             {job.postedBy?.avatar_url ? (
               <AvatarImage 
                 src={job.postedBy.avatar_url}
@@ -59,15 +60,17 @@ export function JobHeader({ job, formatDate, formatSalary }: JobHeaderProps) {
               </AvatarFallback>
             )}
           </Avatar>
-          <div className="flex-1">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+          <div className="flex-1 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 w-full">
+              <div className="flex-1">
                 <h1 className="text-2xl font-bold">{job.title}</h1>
                 <p className="text-lg text-muted-foreground mt-1">{formatClientName(job.company)}</p>
               </div>
-              <Badge variant={getTypeVariant(job.type)}>
-                {formatJobType(job.type, locale)}
-              </Badge>
+              <div className="mt-3 sm:mt-0 sm:ml-4 flex-shrink-0">
+                <Badge variant={getTypeVariant(job.type)}>
+                  {formatJobType(job.type, locale)}
+                </Badge>
+              </div>
             </div>
             
             <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">

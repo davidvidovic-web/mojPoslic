@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": "Dokumentacija",
+    "description": "Kompletna dokumentacija za korišćenje mojPoslić platforme. Učite kako postavljati poslove, aplikovati na zadatke i koristiti sve funkcije platforme."
+  },
+  "title": "Dokumentacija",
+  "subtitle": "Sve što trebate znati o korišćenju naše platforme",
+  "searchPlaceholder": "Pretražite dokumentaciju...",
+  "categories": {
+    "basics": "Osnove",
+    "account": "Račun", 
+    "jobs": "Poslovi",
+    "payments": "Plaćanja",
+    "policies": "Pravila",
+    "troubleshooting": "Rješavanje problema"
+  },
+  "noResults": "Nema rezultata za"
+}

@@ -13,7 +13,7 @@ import { JobApplicationForm } from "@/components/jobs/job-application-form"
 import { GoogleJobLocationMap } from "@/components/jobs/google-job-location-map"
 import { useUserAppliedJobs } from "@/hooks/use-applications"
 import { useTranslations, useLocale } from 'next-intl'
-import { formatJobType, getJobExpirationDate } from "@/lib/job-utils"
+import { formatJobType, getJobExpirationDate, formatSalary as utilFormatSalary } from "@/lib/job-utils"
 import { formatRelativeDate, formatDate as formatDateUtil } from '@/lib/date-format'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useData } from "@/hooks/use-data"
@@ -187,37 +187,10 @@ export function JobDetails({ jobId }: JobDetailsProps) {
     return formatDateUtil(dateString, locale, { format: 'short' })
   }
 
-  const formatSalary = useCallback((job: Job) => {
-    // If we have structured salary data
-    if (job.salaryMin && job.salaryMax && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const max = job.salaryMax.toLocaleString()
-      const type = job.salaryType === 'hourly' ? t('jobCard.hourly') : 
-                   job.salaryType === 'daily' ? t('jobCard.daily') :
-                   job.salaryType === 'weekly' ? t('jobCard.weekly') :
-                   job.salaryType === 'monthly' ? t('jobCard.monthly') : ''
-      return `${min} - ${max} BAM${type}`
-    }
-    
-    // If we only have minimum salary
-    if (job.salaryMin && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const type = job.salaryType === 'hourly' ? t('jobCard.hourly') : 
-                   job.salaryType === 'daily' ? t('jobCard.daily') :
-                   job.salaryType === 'weekly' ? t('jobCard.weekly') :
-                   job.salaryType === 'monthly' ? t('jobCard.monthly') : ''
-      
-      // Don't show "From" for fixed prices
-      if (job.salaryType === 'fixed') {
-        return `${min} BAM`
-      }
-      
-      return `${t('jobCard.from')} ${min} BAM${type}`
-    }
-    
-    // Fallback to legacy salary field
-    return job.salary || null
-  }, [t])
+  // Use centralized salary formatter (supports both new and legacy fields)
+  const formatSalary = useCallback((j: Job) => {
+    return utilFormatSalary(j as unknown as Record<string, unknown>)
+  }, [])
 
   // SEO helper functions
   const generateJobStructuredData = (job: Job) => {
@@ -420,7 +393,7 @@ export function JobDetails({ jobId }: JobDetailsProps) {
         <meta property="og:locale" content={locale === 'bs' ? 'bs_BA' : 'en_US'} />
       </Head>
       
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl pb-24 md:pb-8">
       {/* Hidden Breadcrumb for SEO */}
       <nav aria-label="Breadcrumb" className="sr-only">
         <ol itemScope itemType="https://schema.org/BreadcrumbList">
@@ -463,16 +436,60 @@ export function JobDetails({ jobId }: JobDetailsProps) {
       
       {/* Job Header */}
       <div className="mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div className="flex-1">
+        {/* Mobile: Action buttons first, then content. Desktop: side by side */}
+        
+        {/* Action buttons - show first on mobile */}
+        <div className="flex flex-col items-center gap-4 mb-6 md:hidden">
+          {hasApplied && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
+              <div className="w-2 h-2 bg-gray-700 dark:bg-gray-300 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('jobs.form.labels.applied')}
+              </span>
+            </div>
+          )}
+          {!isOwner && !hasApplied && user?.role !== 'client' && (
+            <Button onClick={handleApply} size="default" className="rounded-[var(--radius)] w-full">
+              {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
+            </Button>
+          )}
+          {isOwner && (
+            <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('jobs.form.labels.yourJob')}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Main content and desktop action buttons */}
+        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4 mb-6">
+          <div className="flex-1 w-full">
             <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight" itemProp="title">{job.title}</h1>
-            <div className="flex items-center gap-3 mb-4" itemScope itemType="https://schema.org/Organization">
-              <Avatar className="h-12 w-12">
+            <div className="flex items-center md:items-start gap-3 mb-4">
+              <Avatar className="h-16 w-16 md:h-12 md:w-12">
                 {(job.poster_avatar_url || job.postedBy?.avatar_url) ? (
-                  <AvatarImage 
-                    src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
-                    alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
-                  />
+                  <>
+                    <AvatarImage 
+                      src={job.poster_avatar_url || job.postedBy?.avatar_url || ''}
+                      alt={job.postedBy?.name || job.poster_name || job.company || 'User avatar'}
+                      onError={(e) => {
+                        console.error('Avatar image failed to load:', {
+                          poster_avatar_url: job.poster_avatar_url,
+                          postedBy_avatar_url: job.postedBy?.avatar_url,
+                          error: e
+                        })
+                      }}
+                    />
+                    <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                      {job.company 
+                        ? job.company.charAt(0).toUpperCase() 
+                        : (job.postedBy?.name || job.poster_name)
+                          ? (job.postedBy?.name || job.poster_name)!.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                          : <User className="h-6 w-6" />
+                      }
+                    </AvatarFallback>
+                  </>
                 ) : (
                   <AvatarFallback className="text-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                     {job.company 
@@ -492,10 +509,18 @@ export function JobDetails({ jobId }: JobDetailsProps) {
                   {job.posted_at ? formatDate(job.posted_at) : ''}
                 </p>
                 {/* Client Review Score */}
-                {job.postedBy?.id && (
+                {(job.postedBy?.id || job.posted_by_id) ? (
                   <div className="mt-1">
-                    <ReviewScore userId={job.postedBy.id} size="sm" showCount={true} />
+                    <ReviewScore userId={job.postedBy?.id || job.posted_by_id} size="sm" showCount={true} />
                   </div>
+                ) : (
+                  process.env.NODE_ENV === 'development' && (
+                    <div className="mt-1">
+                      <div className="text-xs text-muted-foreground">
+                        Debug: No user ID - poster_name: {job.poster_name}, posted_by_id: {job.posted_by_id}
+                      </div>
+                    </div>
+                  )
                 )}
               </div>
             </div>
@@ -510,7 +535,9 @@ export function JobDetails({ jobId }: JobDetailsProps) {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-4">
+          
+          {/* Desktop action buttons */}
+          <div className="hidden md:flex flex-col items-end gap-4">
             {hasApplied && (
               <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-[var(--radius)]">
                 <div className="w-2 h-2 bg-gray-700 dark:bg-gray-300 rounded-full"></div>
@@ -962,6 +989,19 @@ export function JobDetails({ jobId }: JobDetailsProps) {
           )}
         </section>
       </div>
+      {/* Fixed Mobile Apply Button */}
+      {!isOwner && !hasApplied && user && user.role !== 'client' && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 z-50 md:hidden">
+          <Button 
+            onClick={handleApply} 
+            size="lg"
+            className="w-full rounded-[var(--radius)]"
+          >
+            {job.application_url ? t('jobs.form.labels.applyExternally') : t('jobs.form.labels.applyNow')}
+          </Button>
+        </div>
+      )}
+
       {/* Application Form Modal/Overlay */}
       {showApplicationForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">

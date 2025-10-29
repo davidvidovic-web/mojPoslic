@@ -97,14 +97,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get base URL with proper scheme
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    // Get the origin from the request for proper domain handling
+    let baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL
     
-    // Ensure URL has proper scheme
-    const normalizedBaseUrl = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`
+    if (!baseUrl || baseUrl.includes('localhost')) {
+      // Development fallback
+      baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000' 
+        : 'https://mojposlic.com'
+    } else if (baseUrl.includes('en.mojposlic.com')) {
+      // Preserve English domain for English users
+      baseUrl = 'https://en.mojposlic.com'
+    } else {
+      // Default to Bosnian domain
+      baseUrl = 'https://mojposlic.com'
+    }
     
-    console.log('Stripe checkout: Using base URL:', normalizedBaseUrl)
+    console.log('Stripe checkout: Using base URL:', baseUrl)
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -123,8 +132,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${normalizedBaseUrl}/dashboard?payment=success`,
-      cancel_url: `${normalizedBaseUrl}/dashboard?payment=cancelled`,
+      success_url: `${baseUrl}/dashboard?payment=success`,
+      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
       metadata: {
         userId: user.id,
         packageId: packageData.id,
