@@ -22,7 +22,6 @@ export async function POST() {
       }
     })
 
-    console.log('Temporarily disabling RLS for messaging tables...')
 
     // Disable RLS temporarily
     const sqlCommands = [
@@ -42,7 +41,6 @@ export async function POST() {
         if (error) {
           console.error(`Failed to execute: ${sql}`, error)
         } else {
-          console.log(`Successfully executed: ${sql}`)
         }
       } catch (err) {
         console.error(`Error executing: ${sql}`, err)

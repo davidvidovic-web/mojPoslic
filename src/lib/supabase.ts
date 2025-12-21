@@ -18,6 +18,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   realtime: {
     params: {
       eventsPerSecond: 10
+    },
+    // Increase timeout for slower connections
+    timeout: 30000, // 30 seconds
+    // Add heartbeat to keep connection alive
+    heartbeatIntervalMs: 30000,
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'supabase-js-web'
     }
   }
 })
@@ -65,4 +74,20 @@ export const handleSupabaseError = (error: unknown) => {
   }
   
   return 'An unexpected error occurred'
+}
+
+// Helper to update realtime access token
+export const updateRealtimeAccessToken = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      // Update the realtime connection with the new token
+      supabase.realtime.setAuth(session.access_token)
+      return true
+    }
+    return false
+  } catch (error) {
+    console.error('Failed to update realtime access token:', error)
+    return false
+  }
 }

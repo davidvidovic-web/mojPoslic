@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Star, MapPin, Clock, DollarSign, ExternalLink, Calendar } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
+import { formatSalary } from '@/lib/job-utils'
 
 interface Job {
   id: string
@@ -27,7 +28,7 @@ interface Job {
 interface JobApplication {
   id: string
   job_id: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  status: 'PENDING' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   appliedAt: string
   job: Job
   clientNotes?: string
@@ -46,7 +47,8 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
 
   // Filter to only show shortlisted and interview scheduled applications
   const filteredApplications = shortlistedApplications.filter(app => 
-    app.status === 'SHORTLISTED' || app.status === 'INTERVIEW_SCHEDULED'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (app.status as any) === 'SHORTLISTED' || (app.status as any) === 'INTERVIEW_SCHEDULED'
   )
 
   if (loading) {
@@ -102,35 +104,27 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
     )
   }
 
-  const formatSalary = (job: Job) => {
-    if (job.salaryMin && job.salaryMax) {
-      return `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
-    }
-    if (job.salary) {
-      return job.salary
-    }
-    return tCommon('messages.salaryNotSpecified')
-  }
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'SHORTLISTED':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+          <Badge className="bg-yellow-100 text-yellow-800 border-0 rounded-full px-2 py-1 text-xs font-medium">
             <Star className="h-3 w-3 mr-1" />
             {t('shortlistedJobs.statuses.shortlisted')}
           </Badge>
         )
       case 'INTERVIEW_SCHEDULED':
         return (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+          <Badge className="bg-blue-100 text-blue-800 border-0 rounded-full px-2 py-1 text-xs font-medium">
             <Calendar className="h-3 w-3 mr-1" />
             {t('shortlistedJobs.statuses.interviewScheduled')}
           </Badge>
         )
       default:
         return (
-          <Badge variant="secondary">
+          <Badge className="rounded-full px-2 py-1 text-xs font-medium" variant="secondary">
             {status}
           </Badge>
         )
@@ -144,7 +138,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
           <CardTitle className="flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
             {t('shortlistedJobs.title')}
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-2 rounded-full px-2 py-1 text-xs font-medium">
               {filteredApplications.length}
             </Badge>
           </CardTitle>
@@ -198,7 +192,7 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
                   })()}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                     {application.job.type}
                   </Badge>
                 </div>
@@ -223,12 +217,12 @@ export function ShortlistedJobsSection({ shortlistedApplications, loading = fals
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-1">
                   {application.job.tags?.slice(0, 3).map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
+                    <Badge key={index} variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                       {tag}
                     </Badge>
                   ))}
                   {application.job.tags && application.job.tags.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                       +{application.job.tags.length - 3} more
                     </Badge>
                   )}

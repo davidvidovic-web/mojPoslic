@@ -8,6 +8,3 @@ export * from './types'
 
 // Re-export all utility functions
 export * from './utils'
-
-// Re-export all database operations
-export * from './database'

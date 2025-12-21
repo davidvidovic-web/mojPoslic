@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "title": "Podrška", 
+    "description": "Kontaktirajte mojPoslić podršku za bilo kakve nedoumice. Dostupni smo putem email-a, live chat-a i telefona za vašu pomoć."
+  },
+  "title": "Podrška",
+  "subtitle": "Tu smo da vam pomognemo",
+  "contactInfo": "Kontakt informacije",
+  "support": {
+    "email": "Pošaljite nam email",
+    "phone": "Pozovite nas",
+    "hours": "Radno vrijeme"
+  }
+}

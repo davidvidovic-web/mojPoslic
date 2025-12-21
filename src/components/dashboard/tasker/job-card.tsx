@@ -4,17 +4,20 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Job } from '@/types/job'
 import { MapPin, Calendar, DollarSign, Car, Star } from 'lucide-react'
-import { formatJobType, formatTransportation } from '@/lib/job-utils'
+import { formatJobType, formatTransportation, formatSalary } from '@/lib/job-utils'
 import { JobCardActions } from './job-card-actions'
+import { useLocale } from 'next-intl'
 
 interface JobCardProps {
   job: Job
   applicationCount: number
   onEdit: (job: Job) => void
   onDelete: (jobId: string) => void
+  hideFeaturedBadge?: boolean
 }
 
-export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProps) {
+export function JobCard({ job, applicationCount, onEdit, onDelete, hideFeaturedBadge = false }: JobCardProps) {
+  const locale = useLocale()
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString()
   }
@@ -26,15 +29,15 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold">{job.title}</h3>
-              {job.is_featured && (
-                <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1">
+              {job.is_featured && !hideFeaturedBadge && (
+                <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-xs flex items-center gap-1 rounded-full px-2 py-1 font-medium">
                   <Star className="h-3 w-3 fill-current" />
                   Featured
                 </Badge>
               )}
-              <Badge variant="secondary">{formatJobType(job.type)}</Badge>
+              <Badge variant="secondary" className="rounded-full px-2 py-1 text-xs font-medium">{formatJobType(job.type, locale)}</Badge>
               {job.transportation && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                   <Car className="h-3 w-3 mr-1" />
                   {formatTransportation(job.transportation, job.transportation_amount)}
                 </Badge>
@@ -42,7 +45,7 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
               {typeof applicationCount === 'number' && (
                 <Badge 
                   variant={applicationCount > 0 ? "default" : "outline"}
-                  className="text-xs"
+                  className="text-xs rounded-full px-2 py-1 font-medium"
                 >
                   {applicationCount} application{applicationCount !== 1 ? 's' : ''}
                 </Badge>
@@ -59,10 +62,10 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
                 <MapPin className="h-4 w-4 mr-1" />
                 {job.city?.name || 'Remote'}
               </div>
-              {job.salary && (
+              {formatSalary(job) && (
                 <div className="flex items-center">
                   <DollarSign className="h-4 w-4 mr-1" />
-                  {job.salary}
+                  {formatSalary(job)}
                 </div>
               )}
               <div className="flex items-center">
@@ -74,12 +77,12 @@ export function JobCard({ job, applicationCount, onEdit, onDelete }: JobCardProp
             {job.tags && job.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
                 {job.tags.slice(0, 3).map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                     {tag}
                   </Badge>
                 ))}
                 {job.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs rounded-full px-2 py-1 font-medium">
                     +{job.tags.length - 3} more
                   </Badge>
                 )}

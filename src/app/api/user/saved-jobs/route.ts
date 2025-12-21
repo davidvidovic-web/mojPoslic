@@ -44,7 +44,9 @@ export async function GET(request: Request) {
     }
 
     // Get all saved jobs for the user
-    const { data: savedJobs, error: savedJobsError } = await supabase
+    // Cast to any to avoid Supabase type parser errors with complex joins
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: savedJobs, error: savedJobsError } = await (supabase as any)
       .from('saved_jobs')
       .select(`
         id,
@@ -61,7 +63,7 @@ export async function GET(request: Request) {
           location,
           remote_allowed,
           category,
-          status as job_status,
+          status,
           created_at,
           deadline,
           posted_by,
@@ -82,26 +84,27 @@ export async function GET(request: Request) {
     }
 
     // Transform the data to match expected frontend format
-    const transformedSavedJobs = (savedJobs || []).map(savedJob => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedSavedJobs = (savedJobs || []).map((savedJob: any) => ({
       id: savedJob.id,
-      savedAt: savedJob.saved_at,
-      jobId: savedJob.job_id,
+      saved_at: savedJob.saved_at,
+      job_id: savedJob.job_id,
       job: {
-        id: savedJob.job_listings.id,
-        title: savedJob.job_listings.title,
-        description: savedJob.job_listings.description,
-        salaryMin: savedJob.job_listings.salary_min,
-        salaryMax: savedJob.job_listings.salary_max,
-        salaryCurrency: savedJob.job_listings.salary_currency,
-        jobType: savedJob.job_listings.job_type,
-        location: savedJob.job_listings.location,
-        remoteAllowed: savedJob.job_listings.remote_allowed,
-        category: savedJob.job_listings.category,
-        status: savedJob.job_listings.status,
-        createdAt: savedJob.job_listings.created_at,
-        deadline: savedJob.job_listings.deadline,
-        postedBy: savedJob.job_listings.posted_by,
-        postedByUser: savedJob.job_listings.users ? {
+        id: savedJob.job_listings?.id,
+        title: savedJob.job_listings?.title,
+        description: savedJob.job_listings?.description,
+        salary_min: savedJob.job_listings?.salary_min,
+        salary_max: savedJob.job_listings?.salary_max,
+        salary_currency: savedJob.job_listings?.salary_currency,
+        job_type: savedJob.job_listings?.job_type,
+        location: savedJob.job_listings?.location,
+        remote_allowed: savedJob.job_listings?.remote_allowed,
+        category: savedJob.job_listings?.category,
+        status: savedJob.job_listings?.status,
+        created_at: savedJob.job_listings?.created_at,
+        deadline: savedJob.job_listings?.deadline,
+        posted_by: savedJob.job_listings?.posted_by,
+        posted_by_user: savedJob.job_listings?.users ? {
           name: savedJob.job_listings.users.name
         } : null
       }
@@ -168,13 +171,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Job already saved" }, { status: 409 });
     }
 
-    // Save the job
-    const { data: savedJob, error: saveError } = await supabase
+    // Fetch job details to populate cached columns in saved_jobs
+    const { data: jobDetails, error: jobDetailsError } = await supabase
+      .from('job_listings')
+      .select('title, city_id, category_id, salary_min, salary_max, status, created_at, cities(name), categories(name)')
+      .eq('id', jobId)
+      .single()
+
+    if (jobDetailsError || !jobDetails) {
+      console.error("Job details fetch error:", jobDetailsError);
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    // Cast to avoid TypeScript issues with Supabase insert overload
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: savedJob, error: saveError } = await (supabase as any)
       .from('saved_jobs')
       .insert({
         user_id: user.id,
         job_id: jobId,
-        saved_at: new Date().toISOString()
+        job_title: jobDetails.title,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        job_city_name: (jobDetails.cities as any)?.name || 'Unknown',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        job_category_name: (jobDetails.categories as any)?.name || 'Unknown',
+        job_salary_min: jobDetails.salary_min,
+        job_salary_max: jobDetails.salary_max,
+        job_status: jobDetails.status,
+        job_posted_at: jobDetails.created_at
       })
       .select()
       .single()
@@ -191,8 +215,8 @@ export async function POST(request: Request) {
       success: true,
       savedJob: {
         id: savedJob.id,
-        savedAt: savedJob.saved_at,
-        jobId: savedJob.job_id
+        saved_at: savedJob.created_at,
+        job_id: savedJob.job_id
       }
     });
 

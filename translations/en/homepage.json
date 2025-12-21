@@ -1,7 +1,7 @@
 {
   "hero": {
     "title": "Find Your Perfect Job",
-    "subtitle": "Connect with opportunities that match your skills and aspirations",
+    "subtitle": "Platform for small jobs",
     "searchPlaceholder": "Search jobs, companies, or skills...",
     "browseJobs": "Browse Jobs",
     "postJob": "Post Job",
@@ -50,7 +50,7 @@
     "learnMore": "Learn More"
   },
   "footer": {
-    "description": "Connect with opportunities that match your skills and aspirations",
+    "description": "Platform for small jobs in Bosnia and Herzegovina",
     "forWorkers": {
       "title": "For Workers",
       "findJobs": "Find Jobs",

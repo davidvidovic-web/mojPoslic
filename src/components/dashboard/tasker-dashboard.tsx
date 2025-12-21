@@ -3,53 +3,128 @@
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations } from 'next-intl'
 import { ApplicationStatus } from '@/types/application'
-import { TaskerApplicationManager } from './tasker/tasker-application-manager'
-import { TaskerQuickStats } from './tasker/tasker-quick-stats'
-import { ConnectionsWidget } from './connections/connections-widget'
-import { ConnectionsFullHistory } from './connections/connections-full-history'
-import { MessagingDialog } from './messaging/messaging-dialog'
+import TaskerApplicationManager from './tasker/tasker-application-manager'
+import { TaskerQuickStats } from '@/components/dashboard/tasker/tasker-quick-stats'
+import { ConnectionsWidget } from '@/components/dashboard/connections/connections-widget'
 import { DashboardLayout } from './dashboard-layout'
 import { JobCompletionCard } from './job-completion-card'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Star, Briefcase, History } from 'lucide-react'
-import { useApplications } from '@/hooks/use-applications'
+import { useUserApplications } from '@/hooks/use-applications'
 import { useJobAcceptanceManager } from '@/hooks/useQueryManagers'
 import type { ActiveJob } from '@/hooks/use-job-acceptance'
+import { ReviewClientDialog } from './tasker/review-client-dialog'
+import { useTaskerReviewMutation } from '@/hooks/queries/useJobs'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { UnifiedMessagingInterface } from '@/components/messaging/unified-messaging-interface'
 
 interface ApplicationStats {
   total: number
   pending: number
-  shortlisted: number
   accepted: number
-  completed: number
   rejected: number
-  totalEarnings: number
 }
 
 export function TaskerDashboard() {
   const { user } = useSupabaseAuth()
+  const searchParams = useSearchParams()
   
   // Translation hooks
   const tDashboard = useTranslations('dashboard')
   
-  // Use Supabase hooks instead of manual fetch calls
-  const { data: applications = [], isLoading: applicationsLoading } = useApplications()
-  const { activeJobs, isLoading: isLoadingActiveJobs } = useJobAcceptanceManager(user?.id)
+  // State for messaging
+  const [messagingConversationId, setMessagingConversationId] = useState<string | null>(null)
+  const [showMessaging, setShowMessaging] = useState(false)
+  
+  // Review dialog state
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false)
+  const [reviewingJob, setReviewingJob] = useState<{
+    jobId: string
+    jobTitle: string
+    clientId: string
+    clientName: string
+    clientAvatarUrl: string | null
+  } | null>(null)
+  
+  // Use Supabase hooks for user-specific data
+  const { data: applications = [], isLoading: applicationsLoading } = useUserApplications(user?.id)
+  const { activeJobs, isLoading: isLoadingActiveJobs } = useJobAcceptanceManager()
+  const reviewMutation = useTaskerReviewMutation()
+  
+  // Handle reviewJob URL parameter
+  useEffect(() => {
+    const reviewJobId = searchParams.get('reviewJob')
+    if (reviewJobId && user) {
+      // Fetch job and client details
+      const fetchJobForReview = async () => {
+        // Get job details
+        const { data: job, error: jobError } = await supabase
+          .from('job_listings')
+          .select('id, title, posted_by_id')
+          .eq('id', reviewJobId)
+          .single()
+        
+        if (jobError || !job || !job.posted_by_id) {
+          console.error('Error fetching job for review:', jobError)
+          return
+        }
+        
+        // Get client details
+        const { data: client, error: clientError } = await supabase
+          .from('users')
+          .select('id, name, avatar_url')
+          .eq('id', job.posted_by_id)
+          .single()
+        
+        if (clientError || !client) {
+          console.error('Error fetching client for review:', clientError)
+          return
+        }
+        
+        // Set review dialog data and open
+        setReviewingJob({
+          jobId: job.id,
+          jobTitle: job.title,
+          clientId: client.id,
+          clientName: client.name || 'Client',
+          clientAvatarUrl: client.avatar_url
+        })
+        setIsReviewDialogOpen(true)
+      }
+      
+      fetchJobForReview()
+    }
+  }, [searchParams, user])
+  
+  const handleReviewSubmit = async (rating: number, comment: string) => {
+    if (!reviewingJob || !user) return
+    
+    await reviewMutation.mutateAsync({
+      jobId: reviewingJob.jobId,
+      clientId: reviewingJob.clientId,
+      reviewerId: user.id,
+      reviewerName: user.name || 'Tasker',
+      reviewerAvatarUrl: user.avatarUrl || undefined,
+      rating,
+      comment
+    })
+    
+    setIsReviewDialogOpen(false)
+    setReviewingJob(null)
+  }
+
+  const handleMessageClick = (conversationId: string | null) => {
+    setMessagingConversationId(conversationId)
+    setShowMessaging(true)
+  }
   
   // Calculate derived data from hook data
-  const shortlistedApplications = applications.filter(app => 
-    app.status === ApplicationStatus.SHORTLISTED
-  )
-  
   const stats: ApplicationStats = {
     total: applications.length,
     pending: applications.filter(app => app.status === ApplicationStatus.PENDING).length,
-    shortlisted: applications.filter(app => app.status === ApplicationStatus.SHORTLISTED).length,
     accepted: applications.filter(app => app.status === ApplicationStatus.SELECTED).length,
-    completed: 0, // TODO: Get from completed job assignments
     rejected: applications.filter(app => app.status === ApplicationStatus.REJECTED).length,
-    totalEarnings: 0 // TODO: Calculate from completed assignments
   }
   
   const loading = applicationsLoading || isLoadingActiveJobs
@@ -68,57 +143,34 @@ export function TaskerDashboard() {
   }
 
   return (
-    <DashboardLayout 
-      userRole="tasker" 
-      userName={user?.name}
-      sidebar={
-        <div className="space-y-6">
-          {/* Messages Section - Prominent and First */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-[calc(var(--radius)*1.5)] p-6 border border-green-200 dark:border-green-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-green-500 flex items-center justify-center">
-                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">Messages</h3>
-              </div>
-              <MessagingDialog />
-            </div>
-            <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
-              Communicate with clients and manage your conversations in real-time.
-            </p>
+    <>
+      <DashboardLayout 
+        userRole="tasker" 
+        userName={user?.name}
+        sidebar={
+          <div className="space-y-6">
+            {/* Connections Widget */}
+            <ConnectionsWidget />
           </div>
-          
-          {/* Connections Widget */}
-          <ConnectionsWidget />
+        }
+      >
+        {/* Quick Stats - collapsed on mobile */}
+        <div className="hidden md:block mb-8">
+          <TaskerQuickStats stats={stats} />
         </div>
-      }
-    >
-      {/* Quick Stats - collapsed on mobile */}
-      <div className="hidden md:block mb-8">
-        <TaskerQuickStats stats={stats} />
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Mobile: Content */}
-        <div className="lg:col-span-2">
-          
-          {/* Active Jobs - Jobs in progress that can be marked complete */}
+        
+        <div className="space-y-12 lg:space-y-20">
+          {/* Active Jobs Section */}
           {activeJobs.length > 0 && (
-            <div className="mb-8">
-              <div className="bg-card border rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                    <Briefcase className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Active Jobs</h2>
-                    <p className="text-sm text-muted-foreground">
-                      You have {activeJobs.length} job{activeJobs.length !== 1 ? 's' : ''} in progress
-                    </p>
-                  </div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="mb-6">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    {tDashboard('tasker.activeJobs.title') || 'Active Jobs'}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">
+                    {tDashboard('tasker.activeJobs.description', { count: activeJobs.length }) || 'Jobs you are currently working on'}
+                  </p>
                 </div>
                 <div className="space-y-4">
                   {activeJobs.map((job: ActiveJob) => (
@@ -153,85 +205,75 @@ export function TaskerDashboard() {
                     />
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Applied Jobs - first/second on mobile */}
-          <div className="mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <TaskerApplicationManager 
-                  showOnlyHistorical={false}
-                  title="Recent Applications"
-                  description="Your latest job applications and their status"
-                />
               </CardContent>
             </Card>
-          </div>
-          
-          {/* Shortlisted Jobs - second/third on mobile */}
-          {shortlistedApplications.length > 0 && (
-            <div className="mb-8">
-              <div className="bg-card border rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-                    <Star className="h-5 w-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">{tDashboard('tasker.shortlisted.title')}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {tDashboard('tasker.shortlisted.employersInterested', { count: shortlistedApplications.length })}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {shortlistedApplications.slice(0, 2).map((application) => (
-                    <div key={application.id} className="border rounded-lg p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-200 dark:border-yellow-800">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-                            {application.job?.title || 'Untitled Job'}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-400 font-medium">
-                            {application.job?.company || 'Unknown Company'}
-                          </p>
-                        </div>
-                        <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-                          {tDashboard('tasker.stats.shortlisted')}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           )}
-          
-          {/* Connections History Section */}
-          <div className="mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-[calc(var(--radius)*1.5)] bg-gradient-to-br from-purple-500/10 to-purple-600/20 flex items-center justify-center">
-                    <History className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {tDashboard('connections.fullHistory') || 'Connection History'}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      View your complete connections transaction history
-                    </p>
-                  </div>
-                </div>
-                <ConnectionsFullHistory />
-              </CardContent>
-            </Card>
+
+          {/* Applications Section */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                  {tDashboard('tasker.applicationManager.recentApplications') || 'My Applications'}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  {tDashboard('tasker.applicationManager.recentApplicationsDescription') || 'Track your job applications and their status'}
+                </p>
+              </div>
+              <TaskerApplicationManager 
+                showOnlyHistorical={false}
+                onMessageClick={handleMessageClick}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Completed Jobs Section */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-green-700 dark:text-green-400 mb-1">
+                  {tDashboard('jobManagement.completedJobsSection') || 'Completed Jobs'}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  {tDashboard('tasker.applications.completedJobsDescription') || 'View your completed work and past applications'}
+                </p>
+              </div>
+              <TaskerApplicationManager 
+                showOnlyHistorical={true}
+                onMessageClick={handleMessageClick}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+      
+      {/* Review Client Dialog */}
+      {reviewingJob && (
+        <ReviewClientDialog
+          open={isReviewDialogOpen}
+          onOpenChange={setIsReviewDialogOpen}
+          jobTitle={reviewingJob.jobTitle}
+          clientName={reviewingJob.clientName}
+          clientAvatarUrl={reviewingJob.clientAvatarUrl}
+          onSubmit={handleReviewSubmit}
+          isSubmitting={reviewMutation.isPending}
+        />
+      )}
+
+      {/* Messaging Interface */}
+      {showMessaging && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-4 z-50 flex items-center justify-center">
+            <div className="w-full max-w-4xl h-full max-h-[600px] bg-background border rounded-lg shadow-lg relative">
+              <UnifiedMessagingInterface 
+                conversationId={messagingConversationId || undefined}
+                onClose={() => setShowMessaging(false)}
+                className="h-full"
+              />
+            </div>
           </div>
         </div>
-        
-      </div>
-    </DashboardLayout>
+      )}
+    </>
   )
 }

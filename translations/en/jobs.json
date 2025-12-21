@@ -39,10 +39,12 @@
     "edit": "Edit",
     "delete": "Delete",
     "apply": "Apply",
+    "applyForJob": "Apply for Job",
     "save": "Save Job",
     "feature": "Feature",
     "unfeature": "Unfeature",
-    "backToJobs": "Back to Jobs"
+    "backToJobs": "Back to Jobs",
+    "openInNewWindow": "Open in new window"
   },
   "emptyStates": {
     "noJobs": "No jobs found",
@@ -61,7 +63,8 @@
     "yesterday": "Yesterday",
     "daysAgo": "{count} days ago",
     "weeksAgo": "{count} weeks ago",
-    "monthsAgo": "{count} months ago"
+    "monthsAgo": "{count} months ago",
+    "unknown": "Unknown"
   },
   "card": {
     "readMore": "Read more",
@@ -76,9 +79,17 @@
     "applied": "Applied",
     "viewJob": "View Job",
     "viewDetails": "View Details",
-    "viewApplication": "View Application"
+    "viewApplication": "View Application",
+    "view": "view",
+    "views": "views",
+    "application": "application",
+    "applications": "applications",
+    "timePosted": "Time posted:"
   },
   "form": {
+    "requirements": "Requirements",
+    "benefits": "Benefits",
+    "createJobPosting": "Create Job Posting",
     "sections": {
       "basicInformation": "Basic Information",
       "jobDetails": "Job Details",
@@ -128,7 +139,18 @@
       "links": "Links",
       "transportationAndLocation": "Transportation & Location",
       "contactInformation": "Contact Information",
-      "scheduleAndTimeline": "Schedule & Timeline"
+      "scheduleAndTimeline": "Schedule & Timeline",
+      "locationMap": "Location Map",
+      "transportationProvided": "Provided by client",
+      "transportationCompensated": "Compensated",
+      "applicationDeadline": "Application Deadline",
+      "priority": "Priority",
+      "urgent": "Urgent",
+      "negotiable": "Negotiable",
+      "performanceBonus": "Performance Bonus",
+      "oneDay": "1 day",
+      "multipleDays": "{days} days",
+      "exactLocation": "Exact Location"
     },
     "placeholders": {
       "jobTitleExample": "e.g., Web Developer, Graphic Designer",
@@ -150,13 +172,36 @@
   "messages": {
     "loadingJobDetails": "Loading job details...",
     "jobNotFound": "Job not found",
-    "errorLoadingJob": "Error loading job details"
+    "errorLoadingJob": "Error loading job details",
+    "jobFeaturedSuccess": "Job \"{jobTitle}\" has been featured successfully! 6 connections were deducted from your balance.",
+    "jobFeatureRemovedSuccess": "Featured status removed from \"{jobTitle}\" successfully!",
+    "jobUpdatedWithFeature": "Job updated successfully! 6 connections were deducted for featuring.",
+    "jobUpdatedSuccess": "Job updated successfully!",
+    "insufficientConnections": "Insufficient connections. You need 6 connections to feature a job.",
+    "connectionCheckFailed": "Failed to check connection balance",
+    "connectionDeductFailed": "Failed to deduct connections",
+    "authRequired": "Authentication required",
+    "featureJobFailed": "Failed to update job feature status",
+    "yourConnections": "Your connections: {connections}",
+    "requiredConnections": "Required: 6 connections",
+    "noConnectionCost": "No connection cost to remove featured status",
+    "insufficientConnectionsWarning": "You don't have enough connections to feature this job.",
+    "success": {
+      "jobPosted": "Job posted successfully!",
+      "jobUpdated": "Job updated successfully!",
+      "jobDeleted": "Job deleted successfully!",
+      "jobFinished": "Job marked as finished! The tasker will be notified.",
+      "redirecting": "Redirecting to your job..."
+    }
   },
   "errors": {
     "jobNotFound": "Job not found",
     "loadFailed": "Failed to load job details",
     "cannotApplyToOwnJob": "You cannot apply to your own job",
-    "alreadyApplied": "You have already applied to this job"
+    "alreadyApplied": "You have already applied to this job",
+    "clientCannotApply": "Clients cannot apply to jobs. Switch to job seeker role to apply for positions.",
+    "deleteError": "Failed to delete job. Please try again.",
+    "finishError": "Failed to finish job. Please try again."
   },
   "details": {
     "jobDetails": "Job Details",
@@ -166,6 +211,7 @@
     "startDate": "Start Date",
     "expires": "Expires",
     "payment": "Payment",
+    "compensation": "Compensation",
     "salary": "Salary",
     "transportation": "Transportation",
     "transportationNotProvided": "Transportation not provided",
@@ -183,6 +229,7 @@
     "startDate": "Start Date",
     "expectedDuration": "Expected Duration",
     "applicationDeadline": "Application Deadline",
+    "jobExpiration": "Job Posting Expires",
     "at": "at",
     "byAgreement": "By agreement",
     "timeByAgreement": "time by agreement"
@@ -195,6 +242,7 @@
     "contactHidden": "Hidden",
     "addressHidden": "Hidden",
     "mapHidden": "Map hidden for privacy",
+    "locationRestricted": "Location details are restricted",
     "availableAfterSelection": "Available after job assignment"
   },
   "statusManager": {
@@ -291,16 +339,15 @@
       "titleTooShort": "Job title must be at least 5 characters",
       "titleTooLong": "Job title must be less than 100 characters",
       "descriptionTooShort": "Job description must be at least 50 characters",
-      "descriptionTooLong": "Job description must be less than 5000 characters"
-    },
-    "success": {
-      "jobPosted": "Job posted successfully!",
-      "jobUpdated": "Job updated successfully!",
-      "redirecting": "Redirecting to your job..."
+      "descriptionTooLong": "Job description must be less than 5000 characters",
+      "deleteError": "Failed to delete job. Please try again."
     }
   },
   "sections": {
-    "compensationTransportation": "Compensation & Transportation"
+    "compensationTransportation": "Compensation & Transportation",
+    "featuredJobs": "Featured Jobs ({count})",
+    "regularJobs": "All Jobs ({count})",
+    "allJobs": "All Jobs ({count})"
   },
   "review": {
     "title": "Review Your Job Posting",
@@ -320,6 +367,7 @@
     "willCostConnections": "This will cost {connections} connections",
     "willBeFeatured": "This job will be featured for 7 days",
     "readyToPost": "Ready to Post",
+    "postedBy": "Posted By",
     "jobLooksGreat": "Your job posting looks great! Click submit to publish it and start receiving applications.",
     "connectionCostNotice": "Connection Cost Notice",
     "alreadyPostedToday": "You have already posted {count} job{plural} today.",
@@ -331,12 +379,46 @@
     "submitting": "Submitting...",
     "updating": "Updating...",
     "alternateContact": "alternate contact",
-    "applicationUrl": "application URL"
+    "applicationUrl": "application URL",
+    "insufficientConnections": "Insufficient connections. You have {current} connections but need {required} to feature a job. You need {needed} more connection(s)."
   },
   "dialogs": {
     "postJobDialog": "Post New Job",
     "postJobDescription": "Create a new job posting to find qualified candidates.",
     "editJobDialog": "Edit Job Posting",
-    "editJobDescription": "Update your job posting details."
+    "editJobDescription": "Update your job posting details.",
+    "featureJobDialog": "Feature Job",
+    "removeFeatureDialog": "Remove Featured Status",
+    "featureJobDescription": "Are you sure you want to feature \"{jobTitle}\"? Featured jobs are highlighted and shown more prominently to potential applicants.\n\nThis will cost 6 connections.",
+    "removeFeatureDescription": "Are you sure you want to remove the featured status from \"{jobTitle}\"? This job will no longer be highlighted to potential applicants.",
+    "featureJobConfirm": "Feature Job",
+    "removeFeatureConfirm": "Remove Featured",
+    "deleteJobDialog": "Delete Job Posting",
+    "deleteJobDescription": "Are you sure you want to delete \"{jobTitle}\"? This action cannot be undone and will permanently remove the job posting and all associated applications.",
+    "deleteJobConfirm": "Delete Job",
+    "finishJobDialog": "Finish Job & Leave Review",
+    "finishJobDescription": "Mark \"{jobTitle}\" as finished and review {taskerName}.",
+    "rateTasker": "Rate the tasker's work",
+    "ratingRequired": "Please select a rating",
+    "reviewComment": "Review (optional)",
+    "reviewPlaceholder": "Share your experience working with this tasker...",
+    "reviewNote": "Your review will be visible to other clients and the tasker can respond to it.",
+    "finishJobNote": "Note:",
+    "finishJobNoteText": "After you submit this review, the tasker will be notified and can leave a review for you as well. The job will be marked as completed.",
+    "finishing": "Finishing...",
+    "finishJobConfirm": "Finish Job & Submit Review",
+    "reviewClientDialog": "Review Client",
+    "reviewClientDescription": "Share your experience working with {clientName} on \"{jobTitle}\".",
+    "rateClient": "Rate the client",
+    "reviewClientPlaceholder": "Share your experience working with this client...",
+    "reviewClientNote": "Your review will be visible to other taskers and the client.",
+    "reviewClientInfoTitle": "Note:",
+    "reviewClientInfoText": "This review will help other taskers make informed decisions about working with this client.",
+    "submitReview": "Submit Review",
+    "submitting": "Submitting...",
+    "noReviewsYet": "No reviews yet",
+    "star": "star",
+    "stars": "stars",
+    "cancel": "Cancel"
   }
 }

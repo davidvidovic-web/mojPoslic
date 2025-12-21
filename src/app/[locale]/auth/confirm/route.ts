@@ -15,14 +15,6 @@ export async function GET(
     const type = searchParams.get('type') as EmailOtpType | null
     const next = searchParams.get('next') ?? `/${locale}/dashboard`
 
-    console.log('Auth confirm called with:', { 
-      locale: locale,
-      token_hash: token_hash?.substring(0, 10) + '...', 
-      type,
-      next,
-      fullUrl: request.url 
-    })
-
     if (token_hash && type) {
       const supabase = await createServerSupabaseClient()
       
@@ -32,7 +24,6 @@ export async function GET(
       })
 
       if (!error && data.user) {
-        console.log('User verified successfully:', data.user.email)
         
         // Check user profile setup status
         const { data: userProfile, error: profileError } = await supabase
@@ -49,16 +40,13 @@ export async function GET(
         // Handle profile setup flow
         if (userProfile && !userProfile.profile_setup_completed) {
           if (!userProfile.role) {
-            console.log('Redirecting to role selection')
             redirect(`/${locale}/role-selection`)
           } else {
-            console.log('Redirecting to complete profile')
             redirect(`/${locale}/profile-setup`)
           }
         }
 
         // Profile is complete, redirect to specified page or dashboard
-        console.log('Redirecting to:', next)
         redirect(next)
       } else {
         console.error('Token verification failed:', error)

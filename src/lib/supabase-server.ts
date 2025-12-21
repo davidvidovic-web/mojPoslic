@@ -15,6 +15,7 @@ export const createServerSupabaseClient = async () => {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         set(name: string, value: string, options: any) {
           try {
             cookieStore.set({ name, value, ...options })
@@ -24,6 +25,7 @@ export const createServerSupabaseClient = async () => {
             // user sessions.
           }
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         remove(name: string, options: any) {
           try {
             cookieStore.set({ name, value: '', ...options })
@@ -54,6 +56,7 @@ export const updateSession = async (request: NextRequest) => {
         get(name: string) {
           return request.cookies.get(name)?.value
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         set(name: string, value: string, options: any) {
           request.cookies.set({
             name,
@@ -71,6 +74,7 @@ export const updateSession = async (request: NextRequest) => {
             ...options,
           })
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         remove(name: string, options: any) {
           request.cookies.set({
             name,
@@ -95,10 +99,9 @@ export const updateSession = async (request: NextRequest) => {
   // Safely try to get user session, don't throw if it fails
   try {
     await supabase.auth.getUser()
-  } catch (error) {
+  } catch {
     // Ignore auth errors in middleware - this is normal for unauthenticated users
     // or when coming from email verification links
-    console.log('Auth session update skipped:', error instanceof Error ? error.message : 'Unknown error')
   }
 
   return response
@@ -155,11 +158,13 @@ export const requireAuth = async () => {
 export const checkUserRole = async (requiredRole: 'admin' | 'business_owner' | 'client') => {
   const user = await getCurrentUser()
   
-  if (!user?.userData) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!(user as any)?.userData) {
     throw new Error('Authentication required')
   }
   
-  if (user.userData.role !== requiredRole && user.userData.role !== 'admin') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((user as any).userData.role !== requiredRole && (user as any).userData.role !== 'admin') {
     throw new Error('Insufficient permissions')
   }
   

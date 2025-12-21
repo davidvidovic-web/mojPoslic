@@ -1,401 +1,393 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import { useState } from 'react'
+import Image from 'next/image'
 import { useApplicationManager } from '@/hooks/useQueryManagers'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { ApplicationStatus } from '@/types/application'
+import { useUpdateApplication } from '@/hooks/use-applications'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  Search,
-  Briefcase,
-  Clock,
-  CheckCircle,
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink
-} from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { useRouter } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Search, MessageCircle, ExternalLink, X, User } from 'lucide-react'
+import { formatDistanceToNowLocalized } from '@/lib/date-format'
+import { useTranslations, useLocale } from 'next-intl'
+import { useDialogStore } from '@/stores/dialog-store'
+import { supabase } from '@/lib/supabase'
+import { CancelApplicationDialog } from './cancel-application-dialog'
+import { toast } from 'sonner'
 
 interface TaskerApplicationManagerProps {
   showOnlyHistorical?: boolean // If true, only show completed/rejected applications
-  title?: string
-  description?: string
+  onMessageClick?: (conversationId: string | null) => void
 }
 
-export function TaskerApplicationManager({ 
+export default function TaskerApplicationManager({ 
   showOnlyHistorical = false,
-  title = "My Applications",
-  description = "Track your job applications"
+  onMessageClick
 }: TaskerApplicationManagerProps) {
-  // Use Supabase hooks instead of manual state management
-  const { applications, isLoading, isError, error } = useApplicationManager()
-  const router = useRouter()
-  
+  const { user } = useSupabaseAuth()
+  const { applications = [], isLoading } = useApplicationManager(undefined, user?.id)
+  const updateApplicationMutation = useUpdateApplication()
+  const { openMessagingDialog } = useDialogStore()
+  const t = useTranslations('dashboard.applicationManagement')
+  const locale = useLocale()
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'company'>('newest')
-  const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set())
+  const [statusFilter, setStatusFilter] = useState('all')
+  
+  // Cancel dialog state
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [applicationToCancel, setApplicationToCancel] = useState<{
+    id: string
+    jobTitle: string
+  } | null>(null)
 
-  // Helper function to check if work is completed (this would need to be enhanced with actual job assignment data)
-  const hasCompletedWork = (app: { status: string | null; applied_at: string | null; updated_at?: string | null }): boolean => {
-    // This is a placeholder - in reality, you'd check job assignment status
-    // For now, assume all SELECTED applications that are older than 30 days are completed
-    if (app.status === 'SELECTED') {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      return new Date(app.applied_at || '').getTime() < thirtyDaysAgo.getTime()
-    }
-    return false
+  // Helper functions
+  const formatDate = (date: string | Date) => {
+    return formatDistanceToNowLocalized(date, locale as 'en' | 'bs', { addSuffix: true })
   }
 
-  // Filter and sort applications
-  const filteredAndSortedApplications = useMemo(() => {
-    // Filter applications based on props first
-    let filtered = showOnlyHistorical 
-      ? applications.filter(app => 
-          ['REJECTED', 'WITHDRAWN'].includes(app.status || '') || 
-          (app.status === 'SELECTED' && hasCompletedWork(app))
-        )
-      : applications.filter(app => 
-          ['PENDING', 'REVIEWED', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED'].includes(app.status || '') &&
-          !hasCompletedWork(app)
-        )
+  const stripHtml = (html: string) => {
+    return html.replace(/<[^>]*>/g, '')
+  }
 
-    // Apply search and status filters
-    filtered = filtered.filter(app => {
-      const matchesSearch = searchTerm === '' || 
-        app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.job?.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = statusFilter === 'all' || app.status === statusFilter
-      
-      return matchesSearch && matchesStatus
-    })
+  const getStatusText = (status: ApplicationStatus, jobStatus?: string) => {
+    // If job is completed, show 'Completed' regardless of application status
+    if (jobStatus === 'completed') {
+      return t('completed') || 'Completed'
+    }
+    
+    switch (status) {
+      case ApplicationStatus.PENDING:
+        return t('pending')
+      case ApplicationStatus.SELECTED:
+        return t('accepted') 
+      case ApplicationStatus.REJECTED:
+        return t('cancelledByClient')
+      case ApplicationStatus.WITHDRAWN:
+        return t('withdrawn')
+      default:
+        return t('unknown')
+    }
+  }
 
-    // Sort applications
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'oldest':
-          return new Date(a.applied_at || '').getTime() - new Date(b.applied_at || '').getTime()
-        case 'company':
-          return (a.job?.title || '').localeCompare(b.job?.title || '')
-        case 'newest':
-        default:
-          return new Date(b.applied_at || '').getTime() - new Date(a.applied_at || '').getTime()
+  const handleWithdraw = async (applicationId: string, jobTitle: string) => {
+    setApplicationToCancel({ id: applicationId, jobTitle })
+    setIsCancelDialogOpen(true)
+  }
+
+  const confirmCancelApplication = async () => {
+    if (!applicationToCancel) return
+
+    try {
+      await updateApplicationMutation.mutateAsync({
+        applicationId: applicationToCancel.id,
+        updates: {
+          status: ApplicationStatus.WITHDRAWN
+        }
+      })
+      toast.success(t('cancelSuccess'))
+      setApplicationToCancel(null)
+    } catch (error) {
+      console.error('Withdraw error:', error)
+      toast.error(t('cancelError'))
+    }
+  }
+
+  const handleMessage = async (application: { id: string }) => {
+    try {
+      // Find the conversation for this application
+      const { data: conversation, error } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('application_id', application.id)
+        .single()
+      
+      if (error) {
+        console.error('Error finding conversation:', error)
       }
-    })
 
-    return filtered
-  }, [applications, searchTerm, statusFilter, sortBy, showOnlyHistorical])
-
-  const toggleExpanded = (applicationId: string) => {
-    const newExpanded = new Set(expandedApplications)
-    if (newExpanded.has(applicationId)) {
-      newExpanded.delete(applicationId)
-    } else {
-      newExpanded.add(applicationId)
-    }
-    setExpandedApplications(newExpanded)
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return <Badge className="bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400 border-0 rounded-xl px-3 py-1">Pending</Badge>
-      case 'REVIEWED':
-        return <Badge className="bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400 border-0 rounded-xl px-3 py-1">Reviewed</Badge>
-      case 'SHORTLISTED':
-        return <Badge className="bg-purple-100 dark:bg-purple-950/30 text-purple-800 dark:text-purple-400 border-0 rounded-xl px-3 py-1">Shortlisted</Badge>
-      case 'INTERVIEW_SCHEDULED':
-        return <Badge className="bg-indigo-100 dark:bg-indigo-950/30 text-indigo-800 dark:text-indigo-400 border-0 rounded-xl px-3 py-1">Interview Scheduled</Badge>
-      case 'SELECTED':
-        return <Badge className="bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400 border-0 rounded-xl px-3 py-1">Selected</Badge>
-      case 'REJECTED':
-        return <Badge className="bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400 border-0 rounded-xl px-3 py-1">Rejected</Badge>
-      case 'WITHDRAWN':
-        return <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400 border-0 rounded-xl px-3 py-1">Withdrawn</Badge>
-      default:
-        return <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400 border-0 rounded-xl px-3 py-1">{status}</Badge>
+      // If onMessageClick is provided, use it (for local state in dashboard)
+      if (onMessageClick) {
+        onMessageClick(conversation?.id || null)
+      } else {
+        // Fallback to global dialog store
+        if (conversation) {
+          openMessagingDialog(conversation.id)
+        } else {
+          openMessagingDialog()
+        }
+      }
+    } catch (error) {
+      console.error('Error handling message:', error)
+      // Fallback to general messaging
+      if (!onMessageClick) {
+        openMessagingDialog()
+      }
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'SELECTED':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case 'REJECTED':
-      case 'WITHDRAWN':
-        return <XCircle className="h-4 w-4 text-red-600" />
-      case 'SHORTLISTED':
-      case 'INTERVIEW_SCHEDULED':
-        return <Clock className="h-4 w-4 text-purple-600" />
-      default:
-        return <Clock className="h-4 w-4 text-gray-600" />
-    }
-  }
-
-    const formatSalary = (job: { salary_min?: number | null; salary_max?: number | null; salary_type?: string | null } | null) => {
-    if (!job?.salary_min) return ''
-    const max = job.salary_max || job.salary_min
-    const salaryType = job.salary_type || ''
-    return `${job.salary_min}-${max} EUR${salaryType ? ` (${salaryType})` : ''}`
-  }
-
-  // Handle error state
-  if (isError) {
-    return (
-      <div className="text-center py-16 px-6">
-        <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mx-auto mb-4">
-          <XCircle className="h-8 w-8 text-red-500" />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Error Loading Applications</h3>
-        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-          {error?.message || 'Failed to load applications'}
-        </p>
-        <Button 
-          variant="outline"
-          className="rounded-xl" 
-          onClick={() => window.location.reload()}
-        >
-          Try Again
-        </Button>
-      </div>
-    )
-  }
+  // Filter applications based on showOnlyHistorical
+  // Completed jobs are those where job.status === 'completed'
+  const relevantApplications = showOnlyHistorical 
+    ? applications.filter(app => {
+        const status = app.status?.toLowerCase() || ''
+        const jobStatus = (app.job as { status?: string })?.status?.toLowerCase() || ''
+        
+        // Show completed jobs, rejected and withdrawn applications
+        return jobStatus === 'completed' || ['rejected', 'withdrawn'].includes(status)
+      })
+    : applications.filter(app => {
+        const status = app.status?.toLowerCase() || ''
+        const jobStatus = (app.job as { status?: string })?.status?.toLowerCase() || ''
+        
+        // Show pending and selected applications (active work), but exclude completed jobs
+        return jobStatus !== 'completed' && ['pending', 'selected'].includes(status)
+      })
+  
+  // Filter applications
+  const filteredApplications = relevantApplications.filter(application => {
+    const matchesSearch = !searchTerm || 
+      application.job?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      application.job?.posted_by?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = statusFilter === 'all' || application.status === statusFilter
+    
+    return matchesSearch && matchesStatus
+  })
 
   if (isLoading) {
     return (
-      <div className="text-center py-16 px-6">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+      <div className="space-y-6">        
+        {/* Filters skeleton */}
+        <div className="flex flex-col md:flex-row gap-4 border-b border-border pb-4">
+          <div className="flex-1">
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+          </div>
+          <div className="w-full md:w-48">
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+          </div>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 font-medium">Loading applications...</p>
+        
+        {/* Applications skeleton */}
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="border border-border bg-card p-4 space-y-3 animate-pulse">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="h-5 bg-muted rounded w-48 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-64"></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="h-4 bg-muted rounded w-32"></div>
+                <div className="h-4 bg-muted rounded w-24"></div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <div className="h-8 bg-muted rounded w-20"></div>
+                <div className="h-8 bg-muted rounded w-16"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center lg:text-left">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{title}</h2>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">{description}</p>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search by job title or company..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-11 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:bg-white dark:focus:bg-gray-900"
-              />
-            </div>
+    <div className="space-y-6">
+      {/* Filters and Search */}
+      <div className="flex flex-col md:flex-row gap-4 border-b border-border pb-4">
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-
+        </div>
+        <div className="w-full md:w-48">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full lg:w-48 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-              <SelectValue placeholder="Filter by status" />
+            <SelectTrigger>
+              <SelectValue placeholder={t('filterByStatus')} />
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="all">All Status</SelectItem>
-              {!showOnlyHistorical && (
-                <>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="REVIEWED">Reviewed</SelectItem>
-                  <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
-                  <SelectItem value="INTERVIEW_SCHEDULED">Interview Scheduled</SelectItem>
-                  <SelectItem value="SELECTED">Selected</SelectItem>
-                </>
-              )}
-              {showOnlyHistorical && (
-                <>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                  <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
-                  <SelectItem value="SELECTED">Completed</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={(value: 'newest' | 'oldest' | 'company') => setSortBy(value)}>
-            <SelectTrigger className="w-full lg:w-48 h-12 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="company">Company A-Z</SelectItem>
+            <SelectContent>
+              <SelectItem value="all">{t('allStatuses')}</SelectItem>
+              <SelectItem value="PENDING">{t('pending')}</SelectItem>
+              <SelectItem value="SELECTED">{t('accepted')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
+
       {/* Applications List */}
       <div className="space-y-4">
-        {filteredAndSortedApplications.length === 0 ? (
-          <div className="text-center py-16 px-6">
-            <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center mx-auto mb-4">
-              <Briefcase className="h-8 w-8 text-gray-400" />
+        {filteredApplications.length === 0 ? (
+          <div className="text-center py-16 border border-border bg-muted/30 rounded-lg">
+            <div className="max-w-md mx-auto">
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {searchTerm || statusFilter !== 'all' ? t('noResultsTitle') || 'No results found' : t('noApplicationsTitle') || 'No applications yet'}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {searchTerm || statusFilter !== 'all' ? t('noFilterResults') : t('noApplicationsMessage')}
+              </p>
+              {(searchTerm || statusFilter !== 'all') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm('')
+                    setStatusFilter('all')
+                  }}
+                  className="mt-4"
+                >
+                  {t('clearFilters') || 'Clear filters'}
+                </Button>
+              )}
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No applications found</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-              {showOnlyHistorical 
-                ? "No historical applications to show."
-                : "No active applications match your current filters."
-              }
-            </p>
-            {!showOnlyHistorical && (
-              <Button 
-                className="rounded-xl" 
-                onClick={() => router.push('/jobs')}
-              >
-                Browse Jobs
-              </Button>
-            )}
           </div>
         ) : (
-          <div className="space-y-6">
-            {filteredAndSortedApplications.map((application) => (
-              <div key={application.id} className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
-                <div className="space-y-6">
-                  {/* Header Row */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10 shrink-0">
-                        {getStatusIcon(application.status || 'PENDING')}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">
-                            {application.job?.title || 'Job Title Not Available'}
-                          </h3>
-                          {getStatusBadge(application.status || 'PENDING')}
-                        </div>
-                        <p className="text-base font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          Posted by: {application.job?.posted_by_id || 'Unknown'}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="font-medium">{formatSalary(application.job)}</span>
-                          <span>•</span>
-                          <span>Applied {formatDistanceToNow(new Date(application.applied_at || ''), { addSuffix: true })}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/jobs/${application.job?.id}`)}
-                        className="rounded-xl"
-                        disabled={!application.job?.id}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleExpanded(application.id)}
-                        className="rounded-xl"
-                      >
-                        {expandedApplications.has(application.id) ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Expanded Details */}
-                  {expandedApplications.has(application.id) && (
-                    <div className="pt-6 border-t border-gray-100 dark:border-gray-800 space-y-6">
-                      {application.cover_letter && (
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4">
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                              <span className="text-xs text-blue-600">📝</span>
-                            </div>
-                            Your Application Message
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {application.cover_letter}
-                          </p>
-                        </div>
-                      )}
-
-                      {application.job?.city_id && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mt-0.5">
-                            <span className="text-xs text-purple-600">📍</span>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Location</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{application.job.exact_location || application.job.city_id}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {application.job?.description && (
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4">
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                              <span className="text-xs text-green-600">📄</span>
-                            </div>
-                            Job Description
-                          </h4>
-                          <div 
-                            className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: application.job.description }}
+          filteredApplications.map((application) => (
+            <div key={application.id} className="border border-border bg-card p-4 space-y-3 hover:shadow-sm transition-shadow">
+              {/* Application Header */}
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    {/* Client Avatar */}
+                    <Avatar className="h-8 w-8">
+                      {(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url ? (
+                        <AvatarImage 
+                          src={(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url || undefined}
+                          alt={application.job?.posted_by?.name || t('unknownCompany')}
+                          asChild
+                        >
+                          <Image
+                            src={(application.job?.posted_by as { name: string; company_name?: string | null; avatar_url?: string | null })?.avatar_url || ''}
+                            alt={application.job?.posted_by?.name || t('unknownCompany')}
+                            width={32}
+                            height={32}
+                            className="object-cover"
                           />
-                        </div>
+                        </AvatarImage>
+                      ) : (
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                          {application.job?.posted_by?.name 
+                            ? application.job.posted_by.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                            : <User className="h-4 w-4" />
+                          }
+                        </AvatarFallback>
                       )}
+                    </Avatar>
+                    
+                    <h3 className="font-medium text-card-foreground">
+                      {application.job?.title || t('unknownJob')}
+                    </h3>
+                    
+                    {/* Status Badge */}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      (application.job as { status?: string })?.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                      application.status === ApplicationStatus.PENDING ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      application.status === ApplicationStatus.SELECTED ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
+                      application.status === ApplicationStatus.REJECTED ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+                      application.status === ApplicationStatus.WITHDRAWN ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+                    }`}>
+                      {getStatusText(
+                        (application.status as ApplicationStatus) || ApplicationStatus.PENDING,
+                        (application.job as { status?: string })?.status
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                      {application.client_notes && (
-                        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
-                          <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-lg bg-blue-200 dark:bg-blue-800 flex items-center justify-center">
-                              <span className="text-xs text-blue-700">💬</span>
-                            </div>
-                            Client Notes
-                          </h4>
-                          <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                            {application.client_notes}
-                          </p>
-                        </div>
-                      )}
+              {/* Application Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t('appliedLabel')}:</span>{' '}
+                  <span className="text-foreground">{application.applied_at ? formatDate(application.applied_at) : t('unknownTime')}</span>
+                </div>
+                {(application.job?.salary_min || application.job?.salary_max) && (
+                  <div>
+                    <span className="text-muted-foreground">{t('salaryLabel')}:</span>{' '}
+                    <span className="text-foreground">
+                      {application.job.salary_min && application.job.salary_max 
+                        ? `${application.job.salary_min} - ${application.job.salary_max} BAM`
+                        : application.job.salary_min 
+                        ? `${application.job.salary_min} BAM`
+                        : `Up to ${application.job.salary_max} BAM`}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-                      {application.applied_at && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mt-0.5">
-                            <span className="text-xs text-yellow-600">⏰</span>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Timeline</h4>
-                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                              <p>Applied: {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}</p>
-                              {application.updated_at && application.updated_at !== application.applied_at && (
-                                <p>Last Updated: {formatDistanceToNow(new Date(application.updated_at), { addSuffix: true })}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+              {/* Application Message */}
+              {application.cover_letter && (
+                <div className="border-t border-border pt-3">
+                  <p className="text-sm text-muted-foreground mb-1">{t('messageLabel')}:</p>
+                  <p className="text-sm text-foreground line-clamp-3 bg-muted/50 p-2 rounded">
+                    {stripHtml(application.cover_letter)}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-border">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/jobs/${application.job?.id}`, '_blank')}
+                    className="hover:bg-accent hover:text-accent-foreground whitespace-nowrap"
+                    disabled={!application.job?.id}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{t('viewJob')}</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleMessage(application)}
+                    className="hover:bg-accent hover:text-accent-foreground whitespace-nowrap"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{t('messages')}</span>
+                  </Button>
+                </div>
+
+                {application.status === ApplicationStatus.PENDING && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleWithdraw(application.id, application.job?.title || t('unknownJob'))}
+                    disabled={updateApplicationMutation.isPending}
+                    className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground whitespace-nowrap"
+                  >
+                    <X className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{t('cancelApplication')}</span>
+                  </Button>
+                )}
               </div>
             </div>
-            ))}
-          </div>
+          ))
         )}
       </div>
+      
+      {/* Cancel Application Dialog */}
+      {applicationToCancel && (
+        <CancelApplicationDialog
+          open={isCancelDialogOpen}
+          onOpenChange={setIsCancelDialogOpen}
+          jobTitle={applicationToCancel.jobTitle}
+          onConfirm={confirmCancelApplication}
+          isSubmitting={updateApplicationMutation.isPending}
+        />
+      )}
     </div>
   )
 }

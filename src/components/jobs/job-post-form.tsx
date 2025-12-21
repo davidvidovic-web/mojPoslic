@@ -36,6 +36,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
     requirements: '',
     benefits: '',
     type: 'quick_job',
+    job_type: 'quick_job',
     city_id: '',
     category_id: '',
     salary: '',
@@ -77,7 +78,8 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
   useEffect(() => {
     if (selectedParentCategory) {
       const parentCategory = categories.find(cat => cat.id === selectedParentCategory)
-      setAvailableChildCategories(parentCategory?.children || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setAvailableChildCategories((parentCategory?.children || []) as any)
       // Reset child category selection when parent changes
       setFormData(prev => ({ ...prev, category_id: '' }))
     } else {
@@ -164,7 +166,20 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
       contact_email: formData.contact_email?.trim() || formData.email?.trim() || user.email,
       job_address: formData.job_address?.trim() || null,
       job_latitude: formData.job_latitude || null,
-      job_longitude: formData.job_longitude || null
+      job_longitude: formData.job_longitude || null,
+      // Schedule and timing fields
+      start_date: formData.start_date || null,
+      start_time: formData.start_time || null,
+      duration: formData.duration || null,
+      duration_days: formData.duration_days || null,
+      // Transportation fields
+      transportation: formData.transportation || null,
+      transportation_amount: formData.transportation_amount || null,
+      has_parking: formData.has_parking || false,
+      public_transport_info: formData.public_transport_info?.trim() || null,
+      // Additional job fields
+      application_deadline: formData.application_deadline || null,
+      is_urgent: formData.is_urgent || false
     }
 
     createJobMutation.mutate(jobData, {
@@ -181,6 +196,7 @@ export function JobPostForm({ onJobPosted }: JobPostFormProps) {
           requirements: '',
           benefits: '',
           type: 'quick_job',
+          job_type: 'quick_job',
           city_id: '',
           category_id: '',
           salary: '',

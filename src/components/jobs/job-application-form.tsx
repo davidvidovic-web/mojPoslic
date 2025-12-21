@@ -24,6 +24,7 @@ export function JobApplicationForm({
   onCancel 
 }: JobApplicationFormProps) {
   const t = useTranslations('jobApplication')
+  const td = useTranslations('dashboard')
   const [message, setMessage] = useState('')
 
   const applyMutation = useCreateApplicationMutation()
@@ -51,15 +52,13 @@ export function JobApplicationForm({
     try {
       await applyMutation.mutateAsync({
         jobId,
-        data: {
-          message: message
-        }
+        coverLetter: message
       })
 
       // Reset form
       setMessage('')
       
-      toast.success('Application submitted successfully!')
+      toast.success(td('toast.applicationSubmitted'))
       onSuccess?.()
     } catch (error) {
       // Error is handled by the mutation and shown via toast

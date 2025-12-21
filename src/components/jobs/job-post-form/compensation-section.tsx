@@ -30,14 +30,14 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
   
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">{t('title')}</h3>
+      <h3 className="text-lg md:text-xl font-semibold">{t('title')}</h3>
       
       <div 
         className="p-4 bg-secondary/50 rounded-[var(--radius)] cursor-pointer hover:bg-secondary/70 transition-colors"
         onClick={() => setShowTips(!showTips)}
       >
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium flex items-center gap-1">
+          <h4 className="text-base md:text-sm font-medium flex items-center gap-1">
             <Target className="h-4 w-4" />
             {t('bestPractices.title')}
           </h4>
@@ -48,7 +48,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
           )}
         </div>
         {showTips && (
-          <ul className="text-xs text-muted-foreground space-y-1 mt-2">
+          <ul className="text-sm md:text-xs text-muted-foreground space-y-1 mt-2">
             <li>• {t('bestPractices.transparency')}</li>
             <li>• {t('bestPractices.ranges')}</li>
             <li>• {t('bestPractices.benefits')}</li>
@@ -59,7 +59,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="salary-type">{t('salaryType')}</Label>
+        <Label htmlFor="salary-type" className="text-base md:text-sm">{t('salaryType')}</Label>
         <Select 
           value={formData.salaryType || ''} 
           onValueChange={(value) => {
@@ -70,7 +70,7 @@ export function CompensationSection({ formData, onChange }: CompensationSectionP
             }
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="text-base md:text-sm">
             <SelectValue placeholder="Select payment structure (optional)" />
           </SelectTrigger>
           <SelectContent>

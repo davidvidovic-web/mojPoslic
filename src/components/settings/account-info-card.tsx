@@ -6,46 +6,12 @@ import { Badge } from '@/components/ui/badge'
 import { UserCircle, Crown, Building2, User } from 'lucide-react'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useTranslations, useLocale } from 'next-intl'
+import { formatMemberSince } from '@/lib/date-format'
 
 export function AccountInfoCard() {
   const { user: profile, loading } = useSupabaseAuth()
   const t = useTranslations('settings.accountInfo')
-  const locale = useLocale()
-
-  const formatMemberSince = (date?: string | Date) => {
-    if (!date) {
-      // If no creation date is available, check if we have session data
-      return t('recentMember')
-    }
-    
-    try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date
-      
-      // Check if date is valid
-      if (isNaN(dateObj.getTime())) {
-        return t('recentMember')
-      }
-      
-      // Handle Bosnian locale specifically to avoid M07 format
-      if (locale === 'bs') {
-        const monthNames = [
-          'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni',
-          'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
-        ]
-        const year = dateObj.getFullYear()
-        const month = monthNames[dateObj.getMonth()]
-        return `${month} ${year}`
-      } else {
-        // Use standard formatting for English
-        return dateObj.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long'
-        })
-      }
-    } catch {
-      return t('recentMember')
-    }
-  }
+  const locale = useLocale() as 'bs' | 'en'
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
@@ -142,9 +108,9 @@ export function AccountInfoCard() {
           <div>
             <Label className="text-sm font-medium">{t('accountType')}</Label>
             <div className="mt-1">
-              <Badge variant={getRoleBadgeVariant(profile.role)} className="flex items-center w-fit">
-                {getRoleIcon(profile.role)}
-                <span className="ml-1">{getRoleDisplayName(profile.role)}</span>
+              <Badge variant={getRoleBadgeVariant(profile.role || 'tasker')} className="flex items-center w-fit">
+                {getRoleIcon(profile.role || 'tasker')}
+                <span className="ml-1">{getRoleDisplayName(profile.role || 'tasker')}</span>
               </Badge>
             </div>
           </div>
@@ -152,7 +118,7 @@ export function AccountInfoCard() {
           <div>
             <Label className="text-sm font-medium">{t('memberSince')}</Label>
             <p className="text-sm text-muted-foreground">
-              {formatMemberSince(profile.createdAt)}
+              {formatMemberSince(profile.created_at, locale)}
             </p>
           </div>
           

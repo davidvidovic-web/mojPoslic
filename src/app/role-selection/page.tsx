@@ -9,7 +9,8 @@ import {
   Building2, 
   Briefcase, 
   ArrowRight, 
-  CheckCircle
+  CheckCircle,
+  Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
@@ -20,15 +21,21 @@ import { useRouter } from 'next/navigation'
 const getRoleSelectionMessages = (locale: string = 'bs') => {
   if (locale === 'en') {
     return {
-      roleSelection: {
-        selectRole: "Select Your Account Type",
-        chooseRole: "Choose how you want to use mojPoslić",
-        welcomeMessage: "Welcome! You've selected to join as a {role}",
-        continue: "Continue as {role}",
-        continueAsUser: "Select your role to continue",
-        updating: "Updating...",
-        canChangeRole: "You can change your role later in settings",
-        tasker: {
+    roleSelection: {
+      selectRole: "Select Your Account Type",
+      chooseRole: "Choose how you want to use mojPoslić",
+      welcomeMessage: "Welcome! You've selected to join as a {role}",
+      continue: "Continue as {role}",
+      continueAsUser: "Select your role to continue",
+      updating: "Updating...",
+      canChangeRole: "You can change your role later in settings",
+      errors: {
+        pleaseSelectRole: "Please select your account type",
+        pleaseSignInAgain: "Please sign in again to continue",
+        roleUpdateSuccess: "Role updated successfully!",
+        failedToUpdateRole: "Failed to update your role"
+      },
+      tasker: {
           title: "Job Seeker",
           description: "Looking for work opportunities",
           badge: "Most Popular",
@@ -74,6 +81,12 @@ const getRoleSelectionMessages = (locale: string = 'bs') => {
       continueAsUser: "Odaberite svoju ulogu da nastavite",
       updating: "Ažuriram...",
       canChangeRole: "Možete promijeniti svoju ulogu kasnije u postavkama",
+      errors: {
+        pleaseSelectRole: "Molimo odaberite tip vašeg računa",
+        pleaseSignInAgain: "Molimo prijavite se ponovo da nastavite",
+        roleUpdateSuccess: "Uloga je uspješno ažurirana!",
+        failedToUpdateRole: "Neuspješno ažuriranje vaše uloge"
+      },
       tasker: {
         title: "Tražim Posao",
         description: "Tražim prilike za rad",
@@ -156,8 +169,9 @@ export default function RoleSelectionPage() {
   const messages = getRoleSelectionMessages(locale);
   
   // Helper functions to access translations
-  const t = (key: string, params?: Record<string, string>) => {
+  const t = (key: string, params?: Record<string, string>): string => {
     const keys = key.split('.');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = messages.roleSelection;
     for (const k of keys) {
       value = value?.[k];
@@ -167,7 +181,18 @@ export default function RoleSelectionPage() {
       return value.replace(/\{(\w+)\}/g, (match, key) => params[key] || match);
     }
     
-    return value || key;
+    return (typeof value === 'string' ? value : key);
+  };
+  
+  // Helper to get feature objects
+  const getFeatures = (key: string): Record<string, string> => {
+    const keys = key.split('.');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let value: any = messages.roleSelection;
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return typeof value === 'object' ? value : {};
   };
 
   // Handle navigation based on auth state
@@ -209,7 +234,8 @@ export default function RoleSelectionPage() {
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Redirecting...</p>
+            {/* Hardcoded in Bosnian - redirect page */}
+            <p className="mt-2 text-muted-foreground">Preusmjeravanje...</p>
           </div>
         </div>
       </NextIntlClientProvider>
@@ -226,7 +252,7 @@ export default function RoleSelectionPage() {
 
   const handleContinue = async () => {
     if (!selectedRole) {
-      toast.error('Please select your account type')
+      toast.error(t('errors.pleaseSelectRole'))
       return
     }
 
@@ -239,7 +265,7 @@ export default function RoleSelectionPage() {
       
       if (sessionError || !session) {
         console.error('No valid session found:', sessionError)
-        toast.error('Please sign in again to continue')
+        toast.error(t('errors.pleaseSignInAgain'))
         router.push('/auth/signin')
         return
       }
@@ -257,16 +283,16 @@ export default function RoleSelectionPage() {
       })
       
       if (response.ok) {
-        toast.success('Role updated successfully!')
+        toast.success(t('errors.roleUpdateSuccess'))
         await refreshUser()
         router.push('/profile-setup')
       } else {
         const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to update your role')
+        toast.error(errorData.error || t('errors.failedToUpdateRole'))
       }
     } catch (error) {
       console.error('Error updating role:', error)
-      toast.error('Failed to update your role')
+      toast.error(t('errors.failedToUpdateRole'))
     } finally {
       setIsSubmitting(false)
     }
@@ -291,16 +317,29 @@ export default function RoleSelectionPage() {
                 key={role.id}
                 className={`relative transition-all duration-300 ${
                   role.id === 'company'
-                    ? 'opacity-50 cursor-not-allowed'
+                    ? 'opacity-60 cursor-not-allowed border-muted'
                     : selectedRole === role.id
                     ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer'
                     : 'hover:shadow-md border-border cursor-pointer'
                 }`}
                 onClick={() => handleRoleSelect(role.id)}
               >
+                {/* Lock icon for unavailable roles */}
+                {role.id === 'company' && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/40 backdrop-blur-sm rounded-lg">
+                    <div className="bg-background/90 p-4 rounded-full border-2 border-muted shadow-lg">
+                      <Lock className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                )}
+                
                 {role.badgeKey && (
                   <Badge 
-                    className="absolute -top-2 left-4 bg-primary text-primary-foreground"
+                    className={`absolute -top-2 left-4 ${
+                      role.id === 'company' 
+                        ? 'bg-muted text-muted-foreground'
+                        : 'bg-primary text-primary-foreground'
+                    }`}
                     variant="default"
                   >
                     {t(role.badgeKey)}
@@ -331,7 +370,7 @@ export default function RoleSelectionPage() {
 
                 <CardContent>
                   <ul className="space-y-2 text-sm">
-                    {Object.values(t(role.featuresKey) || {}).map((feature, index: number) => (
+                    {Object.values(getFeatures(role.featuresKey) || {}).map((feature, index: number) => (
                       <li key={index} className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
                         {String(feature)}

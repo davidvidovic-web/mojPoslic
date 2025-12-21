@@ -7,7 +7,6 @@ import { TaskerDashboard } from '@/components/dashboard/tasker-dashboard'
 import { RegistrationFlowGuard } from '@/components/auth/registration-flow-guard'
 import { Card, CardContent } from '@/components/ui/card'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { UserRole } from '@prisma/client'
 import { useEffect, Suspense } from 'react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -59,7 +58,7 @@ function DashboardContent({ user, loading }: DashboardContentProps) {
   const dashboardView = searchParams.get('view') || 'default'
   
   // Admin can access any dashboard view
-  if (user.role === UserRole.admin) {
+  if (user.role === 'admin') {
     switch (dashboardView) {
       case 'client':
         return <ClientDashboard />

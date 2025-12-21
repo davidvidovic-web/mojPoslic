@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useTranslations } from 'next-intl'
 
 interface ConnectionPackage {
@@ -17,24 +16,26 @@ interface ConnectionPackage {
 
 export default function AdminPackagesPage() {
   const t = useTranslations()
-  const { data: session, status } = useSession()
-  const { isAdmin } = useSupabaseAuth()
+  const { user, loading: authLoading } = useSupabaseAuth()
   const router = useRouter()
   const [packages, setPackages] = useState<ConnectionPackage[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin'
+
   useEffect(() => {
-    if (status === 'loading') return
+    if (authLoading) return
     
-    if (!session?.user || !isAdmin) {
+    if (!user || !isAdmin) {
       router.push('/')
       return
     }
 
     fetchPackages()
-  }, [session, isAdmin, status, router])
+  }, [user, isAdmin, authLoading, router])
 
   const fetchPackages = async () => {
     try {

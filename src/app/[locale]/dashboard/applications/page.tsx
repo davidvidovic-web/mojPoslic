@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { ApplicationsSection } from '@/components/dashboard/tasker/applications-section'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
@@ -9,14 +10,13 @@ import { useApplications } from '@/hooks/use-applications'
 import { useRecommendedJobsQuery } from '@/hooks/queries/useJobs'
 
 export default function ApplicationsPage() {
+  const t = useTranslations('dashboard')
   const { user } = useSupabaseAuth()
   
   // Use new Supabase-based hooks
   const { data: applications = [], isLoading: applicationsLoading } = useApplications()
   const { data: recommendedJobs = [], isLoading: recommendedLoading } = useRecommendedJobsQuery(user?.id, 5)
   
-  // TODO: Implement saved jobs query when available
-  const savedJobs: any[] = []
   // TODO: Implement saved jobs query when available
   const savedJobs: Array<unknown> = []
 
@@ -29,7 +29,7 @@ export default function ApplicationsPage() {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading your applications...</p>
+              <p className="text-muted-foreground">{t('applications.loading')}</p>
             </div>
           </div>
         </div>
@@ -52,9 +52,9 @@ export default function ApplicationsPage() {
 
         {/* Content */}
         <div className="space-y-8 max-w-6xl">
-          <ApplicationsSection applications={applications} />
-          <SavedJobsSection savedJobs={savedJobs} />
-          <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+          <ApplicationsSection applications={applications as never} />
+          <SavedJobsSection savedJobs={savedJobs as never} />
+          <RecommendedJobsSection recommendedJobs={recommendedJobs as never} />
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { ConnectionBalance } from './connection-balance'
 import { ConnectionCosts } from './connection-costs'
 import { MonthlyRefreshInfo } from './monthly-refresh-info'
@@ -8,17 +10,21 @@ import { PurchaseConnectionsSection } from './purchase-connections-section'
 import { LowConnectionsWarning } from './low-connections-warning'
 import { ConnectionActivity } from './connection-activity'
 import { useConnectionsManager } from '@/hooks/use-connections'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { Zap, TrendingUp } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
 export function ConnectionsWidget() {
   const t = useTranslations('dashboard.connections')
+  const { user } = useSupabaseAuth()
   
   // Use Supabase hooks instead of manual fetch() calls
   const { 
     connections, 
     history, 
     isLoading: loading,
+    error,
     refetchAll 
   } = useConnectionsManager()
 
@@ -33,33 +39,68 @@ export function ConnectionsWidget() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-[calc(var(--radius)*1.5)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
-            <Zap className="h-5 w-5 text-yellow-600" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
             {t('overview')}
-          </h3>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Balance skeleton */}
+          <div className="h-12 bg-muted rounded animate-pulse"></div>
+          
+          {/* Stats skeletons */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
+            ))}
+          </div>
+          
+          {/* Activity skeleton */}
+          <div className="space-y-2">
+            <div className="h-4 bg-muted rounded w-1/3 animate-pulse"></div>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-12 bg-muted rounded animate-pulse"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            {t('overview')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Zap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold">{t('errorTitle')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button onClick={refetchAll} variant="outline">
+              {t('tryAgain')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="bg-white dark:bg-gray-950 rounded-[calc(var(--radius)*1.5)] border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-[calc(var(--radius)*1.5)] bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
-          <Zap className="h-5 w-5 text-yellow-600" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Zap className="h-5 w-5" />
           {t('overview')}
-        </h3>
-      </div>
-      <div className="space-y-6">
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-6">
         {/* Low connections warning */}
         <LowConnectionsWarning connections={connections} />
         
@@ -69,8 +110,8 @@ export function ConnectionsWidget() {
         {/* Connection costs info */}
         <ConnectionCosts />
         
-        {/* Monthly refresh info */}
-        <MonthlyRefreshInfo />
+        {/* Monthly refresh info - only for taskers */}
+        {user?.role === 'tasker' && <MonthlyRefreshInfo />}
         
         {/* Purchase connections */}
         <PurchaseConnectionsSection />
@@ -83,12 +124,17 @@ export function ConnectionsWidget() {
               {t('recentActivityPreview')}
             </h4>
             <ConnectionActivity history={history.slice(0, 3)} />
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-              {t('viewFullHistory')}
-            </p>
+            <div className="text-center mt-2">
+              <Link 
+                href="/connections"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+              >
+                {t('viewFullHistory')}
+              </Link>
+            </div>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

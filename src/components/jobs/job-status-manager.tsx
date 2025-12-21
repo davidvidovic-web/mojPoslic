@@ -43,6 +43,7 @@ export function JobStatusManager({
 }: JobStatusManagerProps) {
   const t = useTranslations('jobs')
   const tCommon = useTranslations('common')
+  const td = useTranslations('dashboard')
   const [selectedStatus, setSelectedStatus] = useState<JobStatus>(currentStatus)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   
@@ -85,13 +86,13 @@ export function JobStatusManager({
       { jobId, status: selectedStatus },
       {
         onSuccess: () => {
-          toast.success(`Job status updated to ${statusConfig[selectedStatus].label}`)
+          toast.success(td('toast.jobStatusUpdated', { status: statusConfig[selectedStatus].label }))
           onStatusUpdate?.(selectedStatus)
           setIsDialogOpen(false)
         },
         onError: (error) => {
           console.error('Error updating job status:', error)
-          toast.error(error instanceof Error ? error.message : 'Failed to update job status')
+          toast.error(error instanceof Error ? error.message : td('toast.jobStatusUpdateFailed'))
           // Reset to current status on error
           setSelectedStatus(currentStatus)
         }

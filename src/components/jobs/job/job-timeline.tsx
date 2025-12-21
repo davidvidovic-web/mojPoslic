@@ -7,18 +7,23 @@ import {
   AlertCircle
 } from "lucide-react"
 import { Job } from "@/types/job"
+import { getJobExpirationDate } from "@/lib/job-utils"
+import { formatDate as formatDateUtil } from "@/lib/date-format"
 import { useTranslations, useLocale } from 'next-intl'
 
 interface JobTimelineProps {
   job: Job
-  formatDate: (dateString: string) => string
 }
 
-export function JobTimeline({ job, formatDate }: JobTimelineProps) {
+export function JobTimeline({ job }: JobTimelineProps) {
   const t = useTranslations('jobs.timeline')
-  const locale = useLocale()
+  const locale = useLocale() as 'bs' | 'en'
   
-  if (!job.start_date && !job.start_time && !job.duration && !job.expires_at) {
+  const formatAbsoluteDate = (dateString: string) => {
+    return formatDateUtil(dateString, locale, { format: 'short' })
+  }
+  
+  if (!job.start_date && !job.start_time && !job.duration && !job.application_deadline) {
     return null
   }
 
@@ -73,17 +78,28 @@ export function JobTimeline({ job, formatDate }: JobTimelineProps) {
           </div>
         )}
         
-        {job.expires_at && (
+        {job.application_deadline && (
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <div>
               <p className="text-sm font-medium">{t('applicationDeadline')}</p>
               <p className="text-sm text-muted-foreground">
-                {formatDate(job.expires_at)}
+                {formatAbsoluteDate(job.application_deadline)}
               </p>
             </div>
           </div>
         )}
+        
+        {/* Job posting expiration */}
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <div>
+            <p className="text-sm font-medium">{t('jobExpiration')}</p>
+            <p className="text-sm text-muted-foreground">
+              {formatAbsoluteDate(getJobExpirationDate(job).toISOString())}
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

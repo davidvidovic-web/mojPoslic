@@ -83,6 +83,7 @@ export interface Job {
   
   // Additional details
   duration_days?: number
+  performance_bonus?: boolean
   requirements?: string
   benefits?: string
   contact_info?: string // JSON string
@@ -100,9 +101,11 @@ export interface Job {
   updated_at: string
   
   // Legacy fields for backward compatibility (deprecated)
+  type?: 'quick_job' | 'full_time' | 'part_time' | 'remote' // Use job_type instead, but mapped for component compatibility
   company?: string // Use poster_name instead
   city?: City // Use cached city_name_* instead
   category?: Category // Use cached category_name_* instead
+  subcategory?: Category // Enriched subcategory data
   email?: string // Use poster_email instead
   website?: string // Use application_url instead
   salary?: string // Use salary_* fields instead
@@ -117,7 +120,7 @@ export interface Job {
   transportation_amount?: number // Amount if client compensates for transportation
   has_parking?: boolean // Whether parking is available
   public_transport_info?: string // Public transport accessibility information
-  expires_at?: string // When the job posting expires
+  // Note: Job posting expiration is calculated dynamically using getJobExpirationDate()
   job_address?: string // Full address of the job location
   job_latitude?: number // Latitude coordinate
   job_longitude?: number // Longitude coordinate
@@ -128,6 +131,7 @@ export interface Job {
     name: string | null
     email: string | null
     phone: string | null
+    avatar_url: string | null
     role: string
   }
   createdAt: string

@@ -10,7 +10,7 @@ import { LocationTransportationCompensationStep } from './location-transportatio
 import { ReviewStep } from './review-step'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Trash2, X, Save, Loader2 } from 'lucide-react'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useCallback } from 'react'
 
@@ -18,21 +18,18 @@ interface JobFormBaseProps {
   initialData?: Partial<CreateJobData>
   onSubmit: (formData: CreateJobData) => Promise<void>
   onCancel?: () => void
-  submitButtonText?: string
-  submittingText?: string
   showCard?: boolean
+  isEditMode?: boolean
 }
 
 export function JobFormBase({
   initialData,
   onSubmit,
   onCancel,
-  submitButtonText,
-  submittingText,
-  showCard = true
+  showCard = true,
+  isEditMode = false
 }: JobFormBaseProps) {
   const t = useTranslations('jobPost.validation')
-  const tNav = useTranslations('jobPost.form.navigation')
   const { user } = useSupabaseAuth()
   const {
     currentStep,
@@ -156,6 +153,7 @@ export function JobFormBase({
             formData={formData}
             onValidation={handleReviewValidation}
             onChange={handleFormDataUpdate}
+            isEditMode={isEditMode}
           />
         )
       default:
@@ -188,9 +186,10 @@ export function JobFormBase({
               variant="outline"
               onClick={handlePrevious}
               disabled={isSubmitting}
+              size="sm"
+              className="h-8 w-8 p-0"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              {tNav('previous')}
+              <ChevronLeft className="h-4 w-4" />
             </Button>
           )}
           {onCancel && (
@@ -199,8 +198,10 @@ export function JobFormBase({
               variant="outline"
               onClick={onCancel}
               disabled={isSubmitting}
+              size="sm"
+              className="h-8 w-8 p-0"
             >
-              {tNav('cancel')}
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
@@ -212,9 +213,10 @@ export function JobFormBase({
             variant="destructive"
             onClick={clearForm}
             disabled={isSubmitting}
+            size="sm"
+            className="h-8 w-8 p-0"
           >
-            <Trash2 className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">{tNav('clearForm')}</span>
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
 
@@ -225,17 +227,24 @@ export function JobFormBase({
               type="button"
               onClick={handleNext}
               disabled={!canGoNext || isSubmitting}
+              size="sm"
+              className="h-8 w-8 p-0"
             >
-              {tNav('next')}
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button
               type="button"
               onClick={handleFormSubmit}
               disabled={isSubmitting || !isCurrentStepValid}
+              size="sm"
+              className="h-8 w-8 p-0"
             >
-              {isSubmitting ? (submittingText || tNav('saving')) : (submitButtonText || tNav('submit'))}
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
             </Button>
           )}
         </div>

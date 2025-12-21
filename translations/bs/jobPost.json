@@ -5,7 +5,7 @@
   "steps": {
     "basic": "Osnovne info",
     "details": "Detalji posla",
-    "salary": "Plata",
+    "salary": "Budžet",
     "contact": "Kontakt",
     "review": "Pregled"
   },
@@ -51,7 +51,7 @@
         "provided": "Klijent osigurava transport",
         "notProvided": "Transport nije osiguran",
         "taskerResponsible": "Radnik je odgovoran za transport",
-        "compensated": "Klijent će kompenzirati transport"
+        "compensated": "Klijent će kompenzisati transport"
       },
       "compensationAmount": "Iznos kompenzacije za transport (BAM)",
       "tips": {
@@ -63,7 +63,7 @@
       },
       "selectDescription": "Objasnite ko je odgovoran za dolazak na lokaciju posla i povratak s nje.",
       "compensationAmountPlaceholder": "npr., 50",
-      "compensationHelp": "Iznos u BAM koji ćete kompenzirati za troškove transporta.",
+      "compensationHelp": "Iznos u BAM koji ćete kompenzisati za troškove transporta.",
       "parkingAvailable": "Parking je dostupan",
       "parkingHelp": "Označite ako je parking dostupan za one koji se voze na lokaciju.",
       "publicTransportInfo": "Pristupačnost javnog transporta (Opcionalno)",
@@ -86,7 +86,7 @@
       "whenStart": "Kada želite početi ovaj posao?",
       "dontKnowExactTime": "Ne znam tačno vrijeme",
       "startDate": "Datum početka *",
-      "startTime": "Vrijeme početka (Opcionalno)",
+      "startTime": "Vrijeme početka *",
       "duration": "Očekivano trajanje",
       "durationOptions": {
         "1_hour": "1 sat",
@@ -109,7 +109,7 @@
       "selectStartDate": "Odaberite datum početka",
       "selectStartTime": "Odaberite vrijeme početka",
       "durationPlaceholder": "Koliko će dugo trajati ovaj posao?",
-      "durationHelp": "Pomaže kandidatima razumjeti vremensko obvezanje i planirati u skladu s tim.",
+      "durationHelp": "Pomaže kandidatima razumijeti vremensko obavezanje i planirati u skladu s tim.",
       "optional": "(Opcionalno)",
       "notEnoughTime": "Nedovoljno vremena",
       "dontKnowExactDate": "Ne znam tačan datum",
@@ -123,8 +123,8 @@
       }
     },
     "compensation": {
-      "title": "Plata i kompenzacija",
-      "salaryType": "Kako želite strukturirati platu?",
+      "title": "Budžet i kompenzacija",
+      "salaryType": "Kako želite strukturisati budžet?",
       "salaryTypes": {
         "hourly": "Satnica",
         "fixed": "Fiksna cijena",
@@ -184,7 +184,7 @@
       },
       "paymentCalculation": {
         "total": "Ukupno",
-        "dependsOnAgreement": "Ukupno plaćanje ovisi o konačnom dogovoru",
+        "dependsOnAgreement": "Ukupno plaćanje zavisi o konačnom dogovoru",
         "estimatedTotal": "Procijenjeni ukupni iznos",
         "considerSwitching": "Razmislite o prebacivanju na",
         "forBetterAccuracy": "plaćanje za bolju preciznost",
@@ -210,6 +210,22 @@
         "clearStructure": "Jasna struktura kompenzacije skraćuje vrijeme pregovaranja"
       }
     },
+    "settings": {
+      "title": "Postavke posla",
+      "urgentJob": "Označi kao hitan posao",
+      "urgentJobHelp": "Hitni poslovi se prikazuju sa posebnim indikatorom i imaju prioritet u rezultatima pretrage",
+      "applicationDeadline": "Rok za prijave (opcionalno)",
+      "applicationDeadlineHelp": "Postavite kada želite prestati primati prijave. Ostavite prazno za neograničeno vrijeme.",
+      "selectDeadline": "Izaberite rok za prijave",
+      "deadlineError": "Rok za prijave ne može biti u prošlosti",
+      "tips": {
+        "title": "Savjeti za postavke",
+        "urgentJobs": "Hitni poslovi dobijaju više vidljivosti i privlače brže odgovore",
+        "applicationDeadline": "Postavljanje roka stvara hitnost i brže odgovore",
+        "urgentVisibility": "Hitni poslovi se prikazuju na vrhu rezultata pretrage",
+        "deadlineHelp": "Razmislite o tome da date dovoljno vremena kvalitetnim kandidatima da vide i prijave se"
+      }
+    },
     "messages": {
       "categorySelectedNoSubcategories": "Izabrana kategorija nema dostupne potkategorije.",
       "descriptionTimeline": "Vaš opis posla će biti pregledan i objavljen u roku od 24 sata."
@@ -222,8 +238,14 @@
     "fullTimeCost": "Objavljivanje posla sa punim radnim vremenom",
     "remoteCost": "Objavljivanje remote posla",
     "freeForLimitedTime": "Besplatno ograničeno vrijeme",
-    "currency": "BAM"
+    "currency": "BAM",
+    "connectionCost": "Cijena konekcije",
+    "freeJobPosting": "Besplatno objavljivanje posla",
+    "alreadyPosted": "Već ste objavili {count} posao/poslova danas.",
+    "additionalCost": "Ovaj posao će koštati {cost} konekcija.",
+    "firstJobFree": "Vaš prvi posao danas je besplatan!"
   },
+  "insufficientConnections": "Nemate dovoljno konekcija. Imate {current} konekcija, a trebate {required} za objavljivanje ovog posla. Trebate još {needed} konekciju/a.",
   "validation": {
     "titleRequired": "Naziv posla je obavezan",
     "titleTooShort": "Naziv posla mora imati najmanje 5 karaktera",
@@ -253,7 +275,7 @@
         "description": "Osnovne informacije o poslu i zahtjevi"
       },
       "locationCompensation": {
-        "title": "Lokacija i Plata",
+        "title": "Lokacija i Budžet",
         "description": "Detalji lokacije i kompenzacije"
       },
       "review": {
@@ -291,7 +313,7 @@
     "requirements": "Zahtjevi",
     "benefits": "Prednosti",
     "transportation": "Transport",
-    "salary": "Plata"
+    "salary": "Budžet"
   },
   "review": {
     "title": "Pregledaj Svoj Oglas",
@@ -302,11 +324,11 @@
       "locationSchedule": "Lokacija i raspored",
       "contactInformation": "Kontakt informacije"
     },
-    "featureYourJob": "Istaknite Vaš Oglas",
-    "makeJobFeatured": "Učinite ovaj oglas istaknutim",
-    "featuredJobsAppear": "Istaknuti oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
+    "featureYourJob": "Promoviši Vaš Oglas",
+    "makeJobFeatured": "Učinite ovaj oglas promovisanim",
+    "featuredJobsAppear": "Promovisani oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
     "willCostConnections": "Ovo će koštati {connections} konekcija",
-    "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
+    "willBeFeatured": "Ovaj oglas će biti promovisan 7 dana",
     "readyToPost": "Spremno za Objavu",
     "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave."
   },

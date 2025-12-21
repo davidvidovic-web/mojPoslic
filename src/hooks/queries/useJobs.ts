@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { queryKeys } from '@/lib/query-keys'
 import type { Database } from '@/types/supabase'
 import type { JobFilters } from '@/types/job'
+import { useData } from '@/hooks/use-data'
 type JobListing = Database['public']['Tables']['job_listings']['Row']
 type JobUpdate = Database['public']['Tables']['job_listings']['Update']
 // Standard job listing columns for consistent queries (including the new application_url column)
@@ -34,11 +35,14 @@ const JOB_LISTING_COLUMNS = `
   duration_days,
   is_salary_negotiable,
   is_urgent,
+  performance_bonus,
   salary_amount,
   subcategory_id,
   application_url
 ` as const
 export function useJobsQuery(filters: JobFilters = {}) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.list(filters),
     queryFn: async () => {
@@ -48,6 +52,7 @@ export function useJobsQuery(filters: JobFilters = {}) {
           ${JOB_LISTING_COLUMNS},
           posted_by:users(name, avatar_url)
         `)
+        .eq('is_active', true)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
       // Apply filters
@@ -87,30 +92,32 @@ export function useJobsQuery(filters: JobFilters = {}) {
       const transformedJobs = (data || []).map((job) => {
         const typedJob = job as JobListing & {
           posted_by?: { name?: string } | null
-          city?: { name?: string; country?: string } | null  
-          category?: { name?: string } | null
         }
+        
+        // Get city and category data using keys
+        const cityData = getCityByKey(typedJob.city_id || '')
+        const categoryData = getCategoryByKey(typedJob.category_id || '')
         
         return {
           id: typedJob.id,
           title: typedJob.title,
           company: typedJob.posted_by?.name || 'Company',
           city_id: typedJob.city_id || '', // Handle null case
-          city: typedJob.city ? {
-            id: typedJob.city_id || '',
-            key: typedJob.city_id || '',
-            name_bs: typedJob.city.name || '',
-            name_en: typedJob.city.name || '',
-            name: typedJob.city.name || '',
-            country: typedJob.city.country || 'Bosnia and Herzegovina'
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
           } : undefined,
           category_id: typedJob.category_id || '',
-          category: typedJob.category ? {
-            id: typedJob.category_id || '',
-            key: typedJob.category_id || '',
-            name_bs: typedJob.category.name || '',
-            name_en: typedJob.category.name || '',
-            name: typedJob.category.name || '',
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
           } : undefined,
           type: typedJob.job_type as 'quick_job' | 'full_time' | 'part_time' | 'remote',
           description: typedJob.description,
@@ -145,6 +152,8 @@ export function useJobsQuery(filters: JobFilters = {}) {
   })
 }
 export function useJobQuery(jobId: string) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.detail(jobId),
     queryFn: async () => {
@@ -164,12 +173,40 @@ export function useJobQuery(jobId: string) {
         .eq('id', jobId)
         .single()
       if (error) throw error
+      
+      // Enhance the job data with city and category information
+      if (data) {
+        const cityData = getCityByKey(data.city_id || '')
+        const categoryData = getCategoryByKey(data.category_id || '')
+        
+        return {
+          ...data,
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
+          } : undefined,
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
+          } : undefined,
+        }
+      }
+      
       return data
     },
     enabled: !!jobId,
   })
 }
 export function useUserJobsQuery(userId: string) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.list({ postedBy: userId }),
     queryFn: async () => {
@@ -179,12 +216,105 @@ export function useUserJobsQuery(userId: string) {
         .eq('posted_by_id', userId)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data
+      
+      // Return jobs with minimal transformation - the database already has cached names
+      const enhancedJobs = (data || []).map(job => {
+        try {
+          // Cast to include cached name fields that exist in DB but not in types
+          const jobWithCachedFields = job as typeof job & {
+            city_name?: string
+            city_name_bs?: string  
+            city_name_en?: string
+            category_name?: string
+            category_name_bs?: string
+            category_name_en?: string
+          }
+          
+          // If the job doesn't have cached names (legacy data), enhance with lookup
+          if (!jobWithCachedFields.city_name && job.city_id) {
+            const cityData = getCityByKey(job.city_id || '')
+            if (cityData) {
+              jobWithCachedFields.city_name = cityData.name_en || cityData.name_bs || cityData.name || job.city_id
+              jobWithCachedFields.city_name_bs = cityData.name_bs || cityData.name_en || cityData.name || job.city_id  
+              jobWithCachedFields.city_name_en = cityData.name_en || cityData.name_bs || cityData.name || job.city_id
+            }
+          }
+          
+          if (!jobWithCachedFields.category_name && job.category_id) {
+            const categoryData = getCategoryByKey(job.category_id || '')
+            if (categoryData) {
+              jobWithCachedFields.category_name = categoryData.name_en || categoryData.name_bs || categoryData.name || job.category_id
+              jobWithCachedFields.category_name_bs = categoryData.name_bs || categoryData.name_en || categoryData.name || job.category_id
+              jobWithCachedFields.category_name_en = categoryData.name_en || categoryData.name_bs || categoryData.name || job.category_id
+            }
+          }
+          
+          // Also add nested objects for components that expect them
+          const cityData = getCityByKey(job.city_id || '')
+          const categoryData = getCategoryByKey(job.category_id || '')
+          
+          return {
+            ...jobWithCachedFields,
+            // Map database fields to expected Job interface fields
+            type: jobWithCachedFields.job_type || 'quick_job', // Map job_type to type
+            salary: jobWithCachedFields.salary_amount || null, // Map salary_amount to salary
+            salaryMin: jobWithCachedFields.salary_min, // Map salary_min to salaryMin
+            salaryMax: jobWithCachedFields.salary_max, // Map salary_max to salaryMax  
+            salaryType: jobWithCachedFields.salary_type, // Map salary_type to salaryType
+            posted_at: jobWithCachedFields.created_at, // Map created_at to posted_at
+            createdAt: jobWithCachedFields.created_at, // Also keep createdAt for compatibility
+            application_deadline: jobWithCachedFields.application_deadline, // Keep application_deadline as is
+            start_date: null, // Not available in database schema
+            duration: jobWithCachedFields.duration_days ? `${jobWithCachedFields.duration_days} days` : null,
+            tags: [], // Not available in database schema, ensure tags is an array
+            // Location fields mapping  
+            job_address: jobWithCachedFields.exact_location, // Map exact_location to job_address for compatibility
+            job_latitude: jobWithCachedFields.latitude, // Map latitude to job_latitude
+            job_longitude: jobWithCachedFields.longitude, // Map longitude to job_longitude
+            city: cityData ? {
+              id: cityData.id,
+              key: cityData.key,
+              name_bs: cityData.name_bs,
+              name_en: cityData.name_en,
+              name: cityData.name_en || cityData.name_bs || cityData.name || jobWithCachedFields.city_name || job.city_id,
+              country: cityData.country || 'Bosnia and Herzegovina'
+            } : (jobWithCachedFields.city_name ? {
+              id: job.city_id || '',
+              key: job.city_id || '',
+              name_bs: jobWithCachedFields.city_name_bs || jobWithCachedFields.city_name || job.city_id || '',
+              name_en: jobWithCachedFields.city_name_en || jobWithCachedFields.city_name || job.city_id || '',
+              name: jobWithCachedFields.city_name || job.city_id || '',
+              country: 'Bosnia and Herzegovina'
+            } : undefined),
+            category: categoryData ? {
+              id: categoryData.id,
+              key: categoryData.key,
+              name_bs: categoryData.name_bs,
+              name_en: categoryData.name_en,
+              name: categoryData.name_en || categoryData.name_bs || categoryData.name || jobWithCachedFields.category_name || job.category_id,
+            } : (jobWithCachedFields.category_name ? {
+              id: job.category_id || '',
+              key: job.category_id || '',
+              name_bs: jobWithCachedFields.category_name_bs || jobWithCachedFields.category_name || job.category_id || '',
+              name_en: jobWithCachedFields.category_name_en || jobWithCachedFields.category_name || job.category_id || '',
+              name: jobWithCachedFields.category_name || job.category_id || '',
+            } : undefined),
+          }
+        } catch (error) {
+          console.error('useUserJobsQuery - Error processing job:', job.id, error)
+          // Return the job as-is if transformation fails
+          return job
+        }
+      })
+      
+      return enhancedJobs
     },
     enabled: !!userId,
   })
 }
 export function useFeaturedJobsQuery() {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.list({ featured: true }),
     queryFn: async () => {
@@ -195,11 +325,38 @@ export function useFeaturedJobsQuery() {
           posted_by:users(name, avatar_url)
         `)
         .eq('is_featured', true)
+        .eq('is_active', true)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(10)
       if (error) throw error
-      return data
+      
+      // Enhance jobs with city and category data
+      const enhancedJobs = (data || []).map(job => {
+        const cityData = getCityByKey(job.city_id || '')
+        const categoryData = getCategoryByKey(job.category_id || '')
+        
+        return {
+          ...job,
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
+          } : undefined,
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
+          } : undefined,
+        }
+      })
+      
+      return enhancedJobs
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - featured jobs don't change often
   })
@@ -245,6 +402,9 @@ interface CreateJobAPIData {
   job_address?: string | null
   job_latitude?: number | null
   job_longitude?: number | null
+  start_date?: string | null
+  start_time?: string | null
+  duration_days?: number | null
 }
 export function useCreateJobMutation() {
   const queryClient = useQueryClient()
@@ -292,9 +452,14 @@ export function useUpdateJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: JobUpdate }) => {
-      const { data, error } = await supabase
+      // Filter out null and undefined values to match database schema
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([, value]) => value !== null && value !== undefined)
+      )
+      
+      const { data, error} = await supabase
         .from('job_listings')
-        .update(updates)
+        .update(cleanUpdates as Record<string, unknown>) // Type assertion to bypass schema mismatch
         .eq('id', id)
         .select(`
           *,
@@ -325,11 +490,42 @@ export function useDeleteJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (jobId: string) => {
+      // Check if there are any active job assignments
+      const { data: assignments, error: assignmentsCheckError } = await supabase
+        .from('job_assignments')
+        .select('id, status')
+        .eq('job_id', jobId)
+      
+      if (assignmentsCheckError) {
+        console.error('❌ Error checking assignments:', assignmentsCheckError)
+        throw new Error('Failed to check job assignments')
+      }
+      
+      // If there are active assignments, prevent deletion
+      if (assignments && assignments.length > 0) {
+        const activeAssignments = assignments.filter(a => 
+          a.status === 'ACCEPTED' || 
+          a.status === 'WORK_COMPLETED' || 
+          a.status === 'CONFIRMED_COMPLETED'
+        )
+        if (activeAssignments.length > 0) {
+          throw new Error('This job has active work assignments. Please finish the job first before deleting it.')
+        }
+      }
+      
+      // Delete the job itself
+      // CASCADE deletes: applications, saved_jobs, job_assignments, reviews, job_search_vectors
+      // SET NULL preserves: conversations (job_id→NULL), connection_history (job_id→NULL - audit trail)
       const { error } = await supabase
         .from('job_listings')
         .delete()
         .eq('id', jobId)
-      if (error) throw error
+      
+      if (error) {
+        console.error('❌ Delete job error:', error)
+        throw new Error(error.message || 'Failed to delete job')
+      }
+      
       return jobId
     },
     onSuccess: (jobId) => {
@@ -338,6 +534,296 @@ export function useDeleteJobMutation() {
       
       // Invalidate job lists
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      
+      // Invalidate applications
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      
+      // Invalidate connection history
+      queryClient.invalidateQueries({ queryKey: ['connections'] })
+    },
+    onError: (error) => {
+      console.error('❌ Delete mutation error:', error)
+    }
+  })
+}
+
+/**
+ * Hook to finish a job with review
+ * This marks the job as completed and creates a review for the tasker
+ */
+export function useFinishJobMutation() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ 
+      jobId, 
+      taskerId, 
+      reviewerId,
+      reviewerName,
+      reviewerAvatarUrl,
+      rating, 
+      comment 
+    }: { 
+      jobId: string
+      taskerId: string
+      reviewerId: string
+      reviewerName: string
+      reviewerAvatarUrl?: string
+      rating: number
+      comment?: string
+    }) => {
+      // 1. Get the accepted application (we use applications now instead of job_assignments)
+      const { data: application, error: applicationError } = await supabase
+        .from('applications')
+        .select('id, status')
+        .eq('job_id', jobId)
+        .eq('user_id', taskerId)
+        .eq('status', 'SELECTED')
+        .single()
+      
+      if (applicationError || !application) {
+        console.error('❌ No accepted application found:', applicationError)
+        throw new Error('No accepted application found for this job')
+      }
+      
+      // 2. Create the review (assignment_id is nullable, so we pass null)
+      const { data: review, error: reviewError } = await supabase
+        .from('reviews')
+        .insert({
+          job_id: jobId,
+          reviewer_id: reviewerId,
+          reviewee_id: taskerId,
+          assignment_id: null, // No job_assignment record exists
+          rating,
+          comment: comment || null,
+          reviewer_name: reviewerName,
+          reviewer_avatar_url: reviewerAvatarUrl || null,
+        })
+        .select()
+        .single()
+      
+      if (reviewError) {
+        console.error('❌ Error creating review:', reviewError)
+        throw new Error('Failed to create review')
+      }
+      
+      // 3. Note: We keep the application status as SELECTED since there's no COMPLETED status
+      // The job status change to 'completed' will indicate the work is done
+      
+      // 4. Keep conversations active - users can manage their own messages
+      // Conversations remain accessible after job completion
+      
+      // 5. Update job status to completed
+      const { error: jobUpdateError } = await supabase
+        .from('job_listings')
+        .update({ 
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', jobId)
+      
+      if (jobUpdateError) {
+        console.error('❌ Error updating job status:', jobUpdateError)
+        throw new Error('Failed to update job status')
+      }
+      
+      // 6. Create notification for tasker
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: taskerId,
+            type: 'NEW_REVIEW',
+            title: 'Job Completed - Review Received',
+            message: `The client has marked the job as completed and left you a ${rating}-star review. You can now leave your own review.`,
+            data: {
+              job_id: jobId,
+              review_id: review.id,
+              rating,
+            },
+          })
+        
+        if (notificationError) {
+          console.warn('⚠️ Warning creating notification:', notificationError)
+          // Don't throw - notification is not critical
+        }
+      } catch (notifError) {
+        console.warn('⚠️ Non-critical notification error:', notifError)
+      }
+      
+      return { review, application }
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.applications.all })
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      // Invalidate tasker's applications
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.userApplications(variables.taskerId) })
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+      queryClient.invalidateQueries({ queryKey: ['job_assignments'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all })
+    },
+  })
+}
+
+export function useTaskerReviewMutation() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ 
+      jobId, 
+      clientId, 
+      reviewerId,
+      reviewerName,
+      reviewerAvatarUrl,
+      rating, 
+      comment 
+    }: { 
+      jobId: string
+      clientId: string
+      reviewerId: string
+      reviewerName: string
+      reviewerAvatarUrl?: string
+      rating: number
+      comment?: string
+    }) => {
+      // Create the review for the client
+      const { data: review, error: reviewError } = await supabase
+        .from('reviews')
+        .insert({
+          job_id: jobId,
+          reviewer_id: reviewerId,
+          reviewee_id: clientId,
+          assignment_id: null,
+          rating,
+          comment: comment || null,
+          reviewer_name: reviewerName,
+          reviewer_avatar_url: reviewerAvatarUrl || null,
+        })
+        .select()
+        .single()
+      
+      if (reviewError) {
+        console.error('❌ Error creating review:', reviewError)
+        throw new Error('Failed to create review')
+      }
+      
+      // Create notification for client
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: clientId,
+            type: 'NEW_REVIEW',
+            title: 'New Review Received',
+            message: `${reviewerName} has left you a ${rating}-star review for the completed job.`,
+            data: {
+              job_id: jobId,
+              review_id: review.id,
+              rating,
+            },
+          })
+        
+        if (notificationError) {
+          console.warn('⚠️ Warning creating notification:', notificationError)
+        }
+      } catch (notifError) {
+        console.warn('⚠️ Non-critical notification error:', notifError)
+      }
+      
+      return { review }
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+}
+
+export function useFeatureJobMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ jobId, isFeatured }: { jobId: string; isFeatured: boolean }) => {
+      // If featuring the job, check connections first
+      if (isFeatured) {
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+          throw new Error('User not authenticated')
+        }
+
+        // Check user's connection balance
+        const { data: userProfile, error: profileError } = await supabase
+          .from('users')
+          .select('connections')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError || !userProfile) {
+          throw new Error('Failed to check connection balance')
+        }
+
+        const currentConnections = userProfile.connections ?? 0
+
+        if (currentConnections < 6) {
+          throw new Error('Insufficient connections. You need 6 connections to feature a job.')
+        }
+
+        // Deduct 6 connections
+        const { error: deductError } = await supabase
+          .from('users')
+          .update({ connections: currentConnections - 6 })
+          .eq('id', user.id)
+
+        if (deductError) {
+          throw new Error('Failed to deduct connections')
+        }
+
+        // Create connection history entry for featuring the job
+        const { error: historyError } = await supabase
+          .from('connection_history')
+          .insert({
+            user_id: user.id,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            action: 'JOB_FEATURE' as any, // Type will be updated when database types are regenerated
+            connections_before: currentConnections,
+            connections_after: currentConnections - 6,
+            amount_changed: -6,
+            reason: 'Featured job',
+            job_id: jobId
+          })
+
+        if (historyError) {
+          console.error('Failed to create connection history entry:', historyError)
+          // Don't throw - the main operation succeeded
+        }
+      }
+
+      // Update the job
+      const { data, error } = await supabase
+        .from('job_listings')
+        .update({ is_featured: isFeatured, updated_at: new Date().toISOString() })
+        .eq('id', jobId)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: (updatedJob) => {
+      // Update cache
+      queryClient.setQueryData(queryKeys.jobs.detail(updatedJob.id), updatedJob)
+      
+      // Invalidate job lists
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.lists() })
+      
+      // Invalidate user's jobs if posted_by_id exists
+      if (updatedJob.posted_by_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: queryKeys.jobs.list({ postedBy: updatedJob.posted_by_id }) 
+        })
+      }
     },
   })
 }
@@ -345,9 +831,30 @@ export function useSaveJobMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ userId, jobId }: { userId: string; jobId: string }) => {
+      // First, fetch the job to get required details
+      const { data: job, error: jobError } = await supabase
+        .from('job_listings')
+        .select('title, city_name, category_name, salary_min, salary_max, status, created_at')
+        .eq('id', jobId)
+        .single()
+
+      if (jobError || !job) {
+        throw new Error('Failed to fetch job details')
+      }
+
       const { data, error } = await supabase
         .from('saved_jobs')
-        .insert([{ user_id: userId, job_id: jobId }])
+        .insert({
+          user_id: userId,
+          job_id: jobId,
+          job_title: job.title,
+          job_city_name: job.city_name || 'Unknown',
+          job_category_name: job.category_name || 'Unknown',
+          job_salary_min: job.salary_min,
+          job_salary_max: job.salary_max,
+          job_status: job.status || 'active',
+          job_posted_at: job.created_at || new Date().toISOString(),
+        })
         .select()
         .single()
       if (error) throw error
@@ -380,23 +887,19 @@ export function useUnsaveJobMutation() {
 export function useJobViewMutation() {
   return useMutation({
     mutationFn: async ({ jobId, userId }: { jobId: string; userId?: string }) => {
-      const { data, error } = await supabase
-        .from('job_views')
-        .insert([{ 
-          job_id: jobId, 
-          user_id: userId || null,
-          viewed_at: new Date().toISOString()
-        }])
-        .select()
-        .single()
-      if (error) throw error
-      return data
+      // TODO: Create job_views table in database
+      // For now, just update the view_count on the job_listings table
+      const { error } = await supabase.rpc('increment_job_view_count', { job_id: jobId })
+      if (error) {
+        console.warn('Failed to increment view count:', error)
+        // Don't throw - view tracking is non-critical
+      }
+      return { jobId, userId }
     },
     // Don't need onSuccess for view tracking - it's fire and forget
   })
 }
 // ===== APPLICATION HOOKS =====
-type ApplicationInsert = Database['public']['Tables']['applications']['Insert']
 type ApplicationUpdate = Database['public']['Tables']['applications']['Update']
 // Import ApplicationFilters from query-keys to avoid duplication
 import type { ApplicationFilters } from '@/lib/query-keys'
@@ -444,6 +947,42 @@ export function useApplicationsQuery(filters?: ApplicationFilters) {
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
+
+/**
+ * Query hook for fetching applications for a specific job using the API endpoint
+ * This provides better authentication and permission handling
+ */
+export function useJobApplicationsQuery(jobId: string) {
+  return useQuery({
+    queryKey: ['job-applications', jobId], // Use a unique key to avoid conflicts
+    queryFn: async () => {
+      // Get session token for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        throw new Error('Not authenticated')
+      }
+
+      const response = await fetch(`/api/jobs/${jobId}/applications`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch job applications')
+      }
+
+      const result = await response.json()
+      return result.data || []
+    },
+    enabled: !!jobId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  })
+}
 export function useApplicationQuery(applicationId: string) {
   return useQuery({
     queryKey: queryKeys.jobs.application(applicationId),
@@ -477,18 +1016,19 @@ export function useUserApplicationsQuery(userId?: string) {
         .select(`
           *,
           job:job_listings!applications_job_id_fkey(
-            id, title, job_type, city_id, category_id, salary_min, salary_max, salary_type,
+            id, title, job_type, city_id, category_id, salary_min, salary_max, salary_type, status,
             
-            posted_by:users(name)
+            posted_by:users(name, avatar_url)
           )
         `)
         .eq('user_id', userId)
-        .order('applied_at', { ascending: false })
+        .order('applied_at', { ascending: false})
+      
       if (error) throw error
       return data || []
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes,
   })
 }
 export function useUserAppliedJobsQuery(userId?: string) {
@@ -513,43 +1053,40 @@ export function useUserAppliedJobsQuery(userId?: string) {
 export function useCreateApplicationMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ jobId, data }: { jobId: string; data: { message: string } }) => {
-      // Get current user first
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+    mutationFn: async ({ jobId, coverLetter, clientNotes }: { jobId: string; coverLetter?: string; clientNotes?: string }) => {
+      // Get current session for authorization header
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
         throw new Error('You must be logged in to apply for jobs')
       }
-      // Check if user has already applied
-      const { data: existingApplication } = await supabase
-        .from('applications')
-        .select('id')
-        .eq('job_id', jobId)
-        .eq('user_id', user.id)
-        .single()
-      if (existingApplication) {
-        throw new Error('You have already applied for this job. You can check your application status in your dashboard.')
+
+      // Call the simplified API route
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          jobId,
+          coverLetter,
+          clientNotes
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit application')
       }
-      // Create the application
-      const applicationData: ApplicationInsert = {
-        job_id: jobId,
-        user_id: user.id,
-        cover_letter: data.message,
-        status: 'PENDING',
-        applied_at: new Date().toISOString(),
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit application')
       }
-      const { data: newApplication, error } = await supabase
-        .from('applications')
-        .insert([applicationData])
-        .select(`
-          *,
-          job:job_listings!applications_job_id_fkey(
-            id, title, job_type, 
-            posted_by:users(name)
-          )
-        `)
-        .single()
-      if (error) throw error
-      return newApplication
+
+      return result.data
     },
     onSuccess: (data, variables) => {
       // Invalidate relevant queries
@@ -794,6 +1331,8 @@ export function useAcceptTaskerMutation() {
  * Uses job matching based on user preferences, applied jobs, and profile
  */
 export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
+  const { getCityByKey, getCategoryByKey } = useData()
+  
   return useQuery({
     queryKey: queryKeys.jobs.recommended(userId, limit),
     queryFn: async () => {
@@ -810,7 +1349,7 @@ export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
       const { data: userApplications } = await supabase
         .from('applications')
         .select('job_id')
-        .eq('applicant_id', userId)
+        .eq('user_id', userId)
       
       const appliedJobIds = userApplications?.map((app: { job_id: string | null }) => app.job_id).filter(id => id !== null) || []
       
@@ -839,10 +1378,6 @@ export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
           application_deadline,
           contact_info,
           status,
-            id, key, name, country
-          ),
-            id, key, name
-          ),
           posted_by:users!job_listings_posted_by_id_fkey (
             id, name, email
           )
@@ -866,26 +1401,29 @@ export function useRecommendedJobsQuery(userId?: string, limit: number = 10) {
       // Transform to match expected Job interface
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const transformedJobs = (data || []).map((job: any) => {
+        const cityData = getCityByKey(job.city_id || '')
+        const categoryData = getCategoryByKey(job.category_id || '')
+        
         return {
           id: job.id,
           title: job.title,
           company: job.posted_by?.name || 'Company',
           city_id: job.city_id || '',
-          city: job.city ? {
-            id: job.city_id || '',
-            key: job.city_id || '',
-            name_bs: job.city.name || '',
-            name_en: job.city.name || '',
-            name: job.city.name || '',
-            country: job.city.country || 'Bosnia and Herzegovina'
+          city: cityData ? {
+            id: cityData.id,
+            key: cityData.key,
+            name_bs: cityData.name_bs,
+            name_en: cityData.name_en,
+            name: cityData.name,
+            country: cityData.country || 'Bosnia and Herzegovina'
           } : undefined,
           category_id: job.category_id || '',
-          category: job.category ? {
-            id: job.category_id || '',
-            key: job.category_id || '',
-            name_bs: job.category.name || '',
-            name_en: job.category.name || '',
-            name: job.category.name || '',
+          category: categoryData ? {
+            id: categoryData.id,
+            key: categoryData.key,
+            name_bs: categoryData.name_bs,
+            name_en: categoryData.name_en,
+            name: categoryData.name,
           } : undefined,
           type: job.job_type as 'quick_job' | 'full_time' | 'part_time' | 'remote',
           description: job.description,
@@ -961,7 +1499,7 @@ export function useMultipleJobApplicantCountsQuery(jobIds: string[]) {
         .from('applications')
         .select('job_id')
         .in('job_id', jobIds)
-        .not('status', 'eq', 'withdrawn')
+        .not('status', 'eq', 'WITHDRAWN')
       
       if (error) {
         console.error('Error fetching application counts:', error)

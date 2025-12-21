@@ -4,6 +4,7 @@
  */
 
 import { useStaticCities, useStaticCategories, useStaticData } from './use-static-data'
+import type { StaticCategory } from '@/types/static-data'
 
 // Re-export types for backwards compatibility
 export type { City, Category } from '@/lib/static-data-types'
@@ -26,10 +27,10 @@ export function useCities() {
     ...result,
     // Map to old API for backwards compatibility
     isLoading: result.loading,
-    data: result.data,
-    cities: result.data,
+    data: result.cities,
+    cities: result.cities,
     error: result.error,
-    refetch: result.reload,
+    refetch: () => Promise.resolve(), // Static data doesn't need refetch
   }
 }
 
@@ -37,7 +38,7 @@ export function usePopularCities() {
   const cities = useStaticCities()
   
   return {
-    data: cities.getSpecialCities(), // Popular cities are special cities in our system
+    data: cities.cities.filter(city => city.is_special), // Popular cities are special cities
     isLoading: cities.loading,
     error: cities.error,
   }
@@ -50,24 +51,90 @@ export function useCategories() {
     ...result,
     // Map to old API for backwards compatibility
     isLoading: result.loading,
-    data: result.data,
-    categories: result.data,
+    data: result.categories,
+    categories: result.categories,
     error: result.error,
-    refetch: result.reload,
+    refetch: () => Promise.resolve(), // Static data doesn't need refetch
     // Add the missing method for backwards compatibility
     getCategoriesByParent: (parentId?: string) => {
       if (parentId === undefined) {
-        return result.getMainCategories()
+        return result.categories
       }
-      return result.getSubcategories(parentId)
+      const parent = result.categories.find(cat => cat.id === parentId)
+      return parent?.children || []
     },
-    getAllSubcategories: result.getAllSubcategories,
+    getAllSubcategories: () => {
+      const allSubs: StaticCategory[] = []
+      result.categories.forEach(category => {
+        if (category.children) {
+          allSubs.push(...category.children)
+        }
+      })
+      return allSubs
+    },
   }
 }
 
 // Combined hook for components that need both
 export function useData() {
   const staticData = useStaticData()
+  
+  // Helper function to find city by key
+  const getCityByKey = (key: string) => {
+    return staticData.cities.find(city => city.key === key)
+  }
+  
+  // Helper function to find category by key (searches recursively)
+  const getCategoryByKey = (key: string): StaticCategory | undefined => {
+    const findCategory = (categories: StaticCategory[]): StaticCategory | undefined => {
+      for (const category of categories) {
+        if (category.key === key) return category
+        if (category.children) {
+          const found = findCategory(category.children)
+          if (found) return found
+        }
+      }
+      return undefined
+    }
+    return findCategory(staticData.categories)
+  }
+  
+  // Helper function to get cities by country
+  const getCitiesByCountry = (country: string) => {
+    return staticData.cities.filter(city => city.country === country)
+  }
+  
+  // Helper function to get active cities
+  const getActiveCities = () => {
+    return staticData.cities.filter(city => city.is_active)
+  }
+  
+  // Helper function to get special cities
+  const getSpecialCities = () => {
+    return staticData.cities.filter(city => city.is_special)
+  }
+  
+  // Helper function to get main categories
+  const getMainCategories = () => {
+    return staticData.categories
+  }
+  
+  // Helper function to get subcategories
+  const getSubcategories = (parentId: string) => {
+    const parent = staticData.categories.find(cat => cat.id === parentId)
+    return parent?.children || []
+  }
+  
+  // Helper function to get all subcategories (flattened)
+  const getAllSubcategories = () => {
+    const allSubs: StaticCategory[] = []
+    staticData.categories.forEach(category => {
+      if (category.children) {
+        allSubs.push(...category.children)
+      }
+    })
+    return allSubs
+  }
   
   return {
     cities: staticData.cities,
@@ -76,28 +143,25 @@ export function useData() {
     error: staticData.error,
     
     // City helpers
-    getCityById: staticData.getCityById,
-    getCityByKey: staticData.getCityByKey,
-    getCitiesByCountry: staticData.getCitiesByCountry,
-    getActiveCities: staticData.getActiveCities,
-    getSpecialCities: staticData.getSpecialCities,
+    getCityByKey,
+    getCitiesByCountry,
+    getActiveCities,
+    getSpecialCities,
     
     // Category helpers
-    getCategoryById: staticData.getCategoryById,
-    getCategoryByKey: staticData.getCategoryByKey,
+    getCategoryByKey,
     getCategoriesByParent: (parentId?: string) => {
       if (parentId === undefined) {
-        return staticData.getMainCategories()
+        return getMainCategories()
       }
-      return staticData.getSubcategories(parentId)
+      return getSubcategories(parentId)
     },
-    getMainCategories: staticData.getMainCategories,
-    getSubcategories: staticData.getSubcategories,
-    getAllSubcategories: staticData.getAllSubcategories,
-    getPopularCategories: staticData.getPopularCategories,
+    getMainCategories,
+    getSubcategories,
+    getAllSubcategories,
     
     // Refresh functions
-    refreshCities: staticData.reload,
-    refreshCategories: staticData.reload,
+    refreshCities: staticData.refresh,
+    refreshCategories: staticData.refresh,
   }
 }

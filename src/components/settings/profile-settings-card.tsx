@@ -9,7 +9,6 @@ import { SimpleRichTextEditor } from '@/components/ui/simple-rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SkillsBubbleInput } from '@/components/ui/skills-bubble-input'
 import { AvatarUpload } from '@/components/profile/avatar-upload'
-import { ResumeUpload } from '@/components/profile/resume-upload'
 import { User } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
@@ -66,7 +65,7 @@ export function ProfileSettingsCard() {
         experience: authProfile.experience || '',
         experienceLevels: parsedExperienceLevels,
         preferredJobTypes: authProfile.preferredJobTypes || [],
-        createdAt: authProfile.createdAt?.toISOString()
+        createdAt: authProfile.created_at
       })
     }
   }, [authProfile])
@@ -189,9 +188,9 @@ export function ProfileSettingsCard() {
             <h3 className="text-lg font-medium">{t('profilePicture')}</h3>
             <AvatarUpload 
               currentAvatarUrl={authProfile?.avatarUrl || undefined}
-              onAvatarUploaded={(_url) => {
-                // Avatar upload handles its own profile update, just refresh
-                refreshUser()
+              onAvatarUploaded={async () => {
+                // Avatar upload handles its own profile update, refresh to get updated data
+                await refreshUser()
               }}
               size="lg"
             />
@@ -372,20 +371,6 @@ export function ProfileSettingsCard() {
                         )
                       })}
                     </div>
-                  </div>
-                )}
-
-                {/* Resume Upload - Only for taskers */}
-                {profile.role === 'tasker' && (
-                  <div className="space-y-2">
-                    <Label>{t('resume')}</Label>
-                    <ResumeUpload
-                      currentResumeUrl={authProfile?.resumeUrl || undefined}
-                      onResumeUploaded={(_url) => {
-                        // Resume upload handles its own profile update, just refresh
-                        refreshUser()
-                      }}
-                    />
                   </div>
                 )}
               </div>

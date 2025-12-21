@@ -9,6 +9,7 @@ import { CONNECTION_PACKAGES, type ConnectionPackage } from '@/lib/stripe'
 import { getStripe } from '@/lib/stripe'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 
 interface PurchaseConnectionsProps {
   onClose?: () => void
@@ -16,6 +17,7 @@ interface PurchaseConnectionsProps {
 
 export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
   const t = useTranslations('purchase.connections')
+  const { session, user } = useSupabaseAuth()
   const [loading, setLoading] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
   const [hoveredPackage, setHoveredPackage] = useState<string | null>(null)
@@ -25,17 +27,57 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
       setLoading(true)
       setSelectedPackage(packageId)
 
+      // Check if user is authenticated
+      if (!session?.access_token || !user?.id) {
+        console.log('Purchase: No session, access token, or user available', { 
+          hasSession: !!session, 
+          hasToken: !!session?.access_token, 
+          hasUser: !!user?.id 
+        })
+        throw new Error(t('authenticationRequired') || t('errors.authenticationRequired') || 'Please sign in to purchase connections')
+      }
+
+      console.log('Purchase: Making request with auth token')
+      
       // Create checkout session
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ packageId }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        const errorData = await response.json().catch(() => ({}))
+        console.log('Purchase: API request failed', { 
+          status: response.status, 
+          statusText: response.statusText,
+          errorData 
+        })
+        
+        let errorMessage = 'Failed to create checkout session'
+        
+        // Map API error codes to translation keys
+        if (errorData.error === 'AUTHENTICATION_REQUIRED') {
+          errorMessage = t('authenticationRequired') || t('errors.authenticationRequired') || 'Please sign in to purchase connections'
+        } else if (errorData.error === 'INVALID_PACKAGE_ID') {
+          errorMessage = t('invalidPackage') || t('errors.invalidPackage') || 'Invalid package selected'
+        } else if (errorData.error === 'STRIPE_INVALID_URL') {
+          errorMessage = t('stripeInvalidUrl') || t('errors.stripeInvalidUrl') || 'Configuration error: Invalid URL'
+        } else if (errorData.error === 'STRIPE_CARD_ERROR') {
+          errorMessage = t('stripeCardError') || t('errors.stripeCardError') || 'Card error occurred'
+        } else if (errorData.error === 'STRIPE_VALIDATION_ERROR') {
+          errorMessage = t('stripeValidationError') || t('errors.stripeValidationError') || 'Validation error occurred'
+        } else if (errorData.error === 'STRIPE_ERROR' || errorData.stripeError) {
+          errorMessage = t('stripeError') || t('errors.stripeError') || 'Payment system error occurred'
+        } else {
+          errorMessage = errorData.message || t('sessionCreationFailed') || t('errors.sessionCreationFailed') || 'Failed to create checkout session'
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const { sessionId } = await response.json()
@@ -43,7 +85,7 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
       // Redirect to Stripe Checkout
       const stripe = await getStripe()
       if (!stripe) {
-        throw new Error('Stripe failed to load')
+        throw new Error(t('stripeLoadFailed') || t('errors.stripeLoadFailed') || 'Stripe failed to load')
       }
 
       const { error } = await stripe.redirectToCheckout({
@@ -55,7 +97,8 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
       }
     } catch (error) {
       console.error('Purchase error:', error)
-      toast.error('Failed to start checkout process')
+      const errorMessage = error instanceof Error ? error.message : (t('checkoutFailed') || t('errors.checkoutFailed') || 'Failed to start checkout process')
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
       setSelectedPackage(null)
@@ -110,7 +153,7 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
                 </CardTitle>
                 <div className="space-y-2">
                   <div className="text-2xl font-bold h-[32px] flex items-center">
-                    {t('currency')}{pkg.price.toFixed(2)}
+                    {t('currency')}{pkg.displayPrice.toFixed(2)}
                   </div>
                   <p className="text-sm text-muted-foreground min-h-[40px] flex items-center">
                     {t(`package_${pkg.connections}_description`)}
@@ -126,7 +169,7 @@ export function PurchaseConnections({ onClose }: PurchaseConnectionsProps) {
                   <div className="flex items-center justify-between text-sm h-[20px]">
                     <span>{t('pricePerConnection')}</span>
                     <span className="font-medium">
-                      {t('currency')}{(pkg.price / pkg.connections).toFixed(3)}
+                      {t('currency')}{(pkg.displayPrice / pkg.connections).toFixed(3)}
                     </span>
                   </div>
                 </div>

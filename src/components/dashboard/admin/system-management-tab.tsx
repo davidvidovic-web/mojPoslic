@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/ui/pagination'
-import { Shield, Users } from 'lucide-react'
+import { Shield, Users, Edit, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import ConnectionGrantHistory from './connection-grant-history'
@@ -52,6 +52,7 @@ interface SystemManagementTabProps {
 
 export function SystemManagementTab({ categories, cities }: SystemManagementTabProps) {
   const t = useTranslations('admin.system')
+  const td = useTranslations('dashboard')
   const [systemActiveTab, setSystemActiveTab] = useState('categories')
   const [connectionUsers, setConnectionUsers] = useState<ConnectionUser[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -64,13 +65,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
   const itemsPerPage = 10
 
   // Load users for connections management
-  useEffect(() => {
-    if (systemActiveTab === 'connections') {
-      fetchUsersForConnections()
-    }
-  }, [systemActiveTab])
-
-  const fetchUsersForConnections = async () => {
+  const fetchUsersForConnections = useCallback(async () => {
     setLoadingConnections(true)
     try {
       const response = await fetch('/api/admin/users')
@@ -78,19 +73,25 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
         const users = await response.json()
         setConnectionUsers(users.data || users)
       } else {
-        toast.error('Failed to load users')
+        toast.error(td('toast.usersLoadFailed'))
       }
     } catch (error) {
       console.error('Error fetching users:', error)
-      toast.error('Failed to load users')
+      toast.error(td('toast.usersLoadFailed'))
     } finally {
       setLoadingConnections(false)
     }
-  }
+  }, [td])
+
+  useEffect(() => {
+    if (systemActiveTab === 'connections') {
+      void fetchUsersForConnections()
+    }
+  }, [systemActiveTab, fetchUsersForConnections])
 
   const handleGrantConnections = async () => {
     if (!selectedUserId || !connectionAmount || isNaN(Number(connectionAmount))) {
-      toast.error('Please select a user and enter a valid connection amount')
+      toast.error(td('toast.selectUserAndAmount'))
       return
     }
 
@@ -109,7 +110,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
       })
 
       if (response.ok) {
-        toast.success('Connections granted successfully')
+        toast.success(td('toast.connectionsGranted'))
         setSelectedUserId('')
         setConnectionAmount('')
         setReason('')
@@ -117,11 +118,11 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
         fetchUsersForConnections()
       } else {
         const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to grant connections')
+        toast.error(errorData.error || td('toast.connectionsGrantFailed'))
       }
     } catch (error) {
       console.error('Error granting connections:', error)
-      toast.error('Failed to grant connections')
+      toast.error(td('toast.connectionsGrantFailed'))
     } finally {
       setGrantingConnections(false)
     }
@@ -205,8 +206,14 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                           <p className="text-sm text-muted-foreground">Key: {category.key}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">Edit</Button>
-                          <Button variant="outline" size="sm" className="text-destructive flex-1 sm:flex-none">Delete</Button>
+                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-destructive flex-1 sm:flex-none">
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -243,8 +250,14 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                         <p className="text-sm text-muted-foreground">Key: {city.key}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
-                        <Button variant="outline" size="sm" className="text-destructive">Delete</Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive">
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -346,7 +359,7 @@ export function SystemManagementTab({ categories, cities }: SystemManagementTabP
                   
                   {loadingConnections ? (
                     <div className="text-center py-8">
-                      <div className="text-muted-foreground">Loading users...</div>
+                      <div className="text-muted-foreground">{t('loadingUsers')}</div>
                     </div>
                   ) : (
                     <div className="space-y-2">

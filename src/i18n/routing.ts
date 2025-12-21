@@ -16,13 +16,13 @@ export const routing = defineRouting({
   // Domain-based routing configuration
   domains: [
     {
-      domain: process.env.NODE_ENV === 'development' ? 'localhost:3000' : 'mojposlic.com', // Main domain - Bosnian
+      domain: 'mojposlic.com', // Main domain - Bosnian
       defaultLocale: 'bs',
       locales: ['bs']
     },
     {
-      domain: process.env.NODE_ENV === 'development' ? 'en.localhost:3000' : 'en.mojposlic.com', // English subdomain
-      defaultLocale: 'en',
+      domain: 'en.mojposlic.com', // English subdomain
+      defaultLocale: 'en', 
       locales: ['en']
     }
   ]

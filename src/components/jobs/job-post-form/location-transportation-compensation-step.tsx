@@ -6,6 +6,7 @@ import { LocationSection } from './location-section'
 import { TransportationSection } from './transportation-section'
 import { ScheduleSection } from './schedule-section'
 import { CompensationSection } from './compensation-section'
+import { JobSettingsSection } from './job-settings-section'
 import { ContactInformationSection } from './contact-information-section'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
@@ -69,6 +70,11 @@ export function LocationTransportationCompensationStep({ formData, onChange, onV
       />
       
       <CompensationSection 
+        formData={formData} 
+        onChange={onChange} 
+      />
+      
+      <JobSettingsSection 
         formData={formData} 
         onChange={onChange} 
       />

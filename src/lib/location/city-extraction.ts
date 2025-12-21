@@ -19,6 +19,8 @@ export function extractCityFromMapAddress(address: string): string[] {
     /City of/i,
     /Federation of/i,
     /Republic of/i,
+    /Bosnia and Herzegovina/i,  // Full country name first
+    /Bosna i Hercegovina/i,     // Local language version
     /Bosnia/i,
     /Herzegovina/i,
     /Republika Srpska/i,

@@ -44,7 +44,7 @@ function VerifyEmailForm() {
     })
 
     return () => subscription.unsubscribe()
-  }, [authLoading])
+  }, [authLoading, router])
 
   const handleResendEmail = async () => {
     if (!email) {

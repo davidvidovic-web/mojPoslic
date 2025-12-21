@@ -46,6 +46,10 @@ export function ConnectionCosts({ userRole = 'tasker' }: ConnectionCostsProps) {
           <span>{t('quickJobPosting')}</span>
           <Badge variant="secondary">3 {t('connections')}</Badge>
         </div>
+        <div className="flex justify-between items-center">
+          <span>{t('featureJob')}</span>
+          <Badge variant="secondary">5 {t('connections')}</Badge>
+        </div>
       </div>
     </>
   )

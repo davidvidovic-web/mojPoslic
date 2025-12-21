@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Users, CheckCircle, XCircle, Clock, Eye, MessageCircle } from 'lucide-react'
 import { useApplications } from '@/hooks/use-applications'
 import { ApplicationStatus, JobApplication } from '@/types/application'
+import { useTranslations } from 'next-intl'
 
 interface JobApplicationsManagerProps {
   // For future enhancement - job filtering
@@ -16,10 +17,13 @@ interface JobApplicationsManagerProps {
 }
 
 export function JobApplicationsManager({}: JobApplicationsManagerProps) {
+  const tDashboard = useTranslations('dashboard')
   const { data: applications = [], isLoading } = useApplications()
 
-  const pendingApplications = applications.filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
-  const reviewedApplications = applications.filter((app: JobApplication) => 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pendingApplications = (applications as any[]).filter((app: JobApplication) => app.status === ApplicationStatus.PENDING)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviewedApplications = (applications as any[]).filter((app: JobApplication) => 
     app.status === ApplicationStatus.REVIEWED || 
     app.status === ApplicationStatus.SHORTLISTED || 
     app.status === ApplicationStatus.SELECTED
@@ -72,7 +76,7 @@ export function JobApplicationsManager({}: JobApplicationsManagerProps) {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading applications...</p>
+              <p className="text-muted-foreground">{tDashboard('applications.loading')}</p>
             </div>
           </div>
         </CardContent>

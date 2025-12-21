@@ -26,6 +26,7 @@ interface SkillExperience {
 export default function ProfileSetupPage() {
   const t = useTranslations('profile')
   const tErrors = useTranslations('errors')
+  const tAuth = useTranslations('auth')
   const { user, loading, refreshUser } = useSupabaseAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -48,7 +49,6 @@ export default function ProfileSetupPage() {
   // Refresh user context if just verified
   useEffect(() => {
     if (isVerified && !loading) {
-      console.log('User just verified, refreshing auth context...')
       refreshUser()
     }
   }, [isVerified, loading, refreshUser])
@@ -72,7 +72,6 @@ export default function ProfileSetupPage() {
 
     // If just verified, give more time for auth context to refresh
     if (isVerified && !user) {
-      console.log('Just verified but no user yet, waiting...')
       return
     }
 
@@ -101,7 +100,7 @@ export default function ProfileSetupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
+          <p className="mt-2 text-muted-foreground">{t('setup.loading')}</p>
         </div>
       </div>
     )
@@ -140,7 +139,7 @@ export default function ProfileSetupPage() {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError || !session) {
-        toast.error('Please sign in again to continue')
+        toast.error(tAuth('pleaseSignInAgain'))
         setIsSubmitting(false)
         return
       }

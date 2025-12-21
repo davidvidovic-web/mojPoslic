@@ -7,10 +7,12 @@ import { Zap, UserPlus, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context';
+import { useDialogStore } from '@/stores/dialog-store';
 
 export default function Home() {
   const t = useTranslations('homepage');
   const { user } = useSupabaseAuth();
+  const { openJobPostDialog } = useDialogStore();
   
   return (
     <>
@@ -43,15 +45,14 @@ export default function Home() {
                 {user ? (
                   // Only show "Post Job" button for clients and companies, not taskers
                   user.role !== 'tasker' ? (
-                    <Link href="/dashboard">
-                      <Button
-                        size="lg"
-                        className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-                      >
-                        <Plus className="h-5 w-5 mr-2" />
-                        {t('hero.postJob')}
-                      </Button>
-                    </Link>
+                    <Button
+                      size="lg"
+                      onClick={() => openJobPostDialog()}
+                      className="bg-foreground hover:bg-foreground/80 text-background font-bold border-2 border-white/20 hover:border-white/40 px-8 py-3 text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <Plus className="h-5 w-5 mr-2" />
+                      {t('hero.postJob')}
+                    </Button>
                   ) : null
                 ) : (
                   <Link href="/auth/register">

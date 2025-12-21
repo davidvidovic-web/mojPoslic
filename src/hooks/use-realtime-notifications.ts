@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
 import { toast } from 'sonner'
 
 export type NotificationType = 
@@ -12,9 +14,6 @@ export type NotificationType =
   | 'JOB_APPLICATION' 
   | 'JOB_UPDATE' 
   | 'SYSTEM'
-  | 'APPLICATION_STATUS_CHANGE'
-  | 'NEW_JOB_MATCH'
-  | 'CONNECTION_UPDATE'
 
 export interface NotificationData {
   url?: string
@@ -42,12 +41,16 @@ interface UseRealtimeNotificationsProps {
   showToasts?: boolean
 }
 
-export function useRealtimeNotifications() {
+export function useRealtimeNotifications(props: UseRealtimeNotificationsProps = {}) {
+  const { enabled = true, showToasts = true } = props
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
   const channelRef = useRef<RealtimeChannel | null>(null)
   const { user } = useSupabaseAuth()
+  const queryClient = useQueryClient()
 
   // Load initial notifications
   const loadNotifications = useCallback(async () => {
@@ -64,15 +67,29 @@ export function useRealtimeNotifications() {
 
       if (error) throw error
 
-      setNotifications(data || [])
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0)
+      // Filter and convert to proper Notification type
+      const filteredNotifications = (data || [])
+        .filter(n => n.id && n.user_id && n.type && n.title && n.message && n.created_at)
+        .map(n => ({
+          id: n.id,
+          user_id: n.user_id!,
+          type: n.type as NotificationType,
+          title: n.title,
+          message: n.message,
+          data: n.data as NotificationData | undefined,
+          is_read: n.is_read || false,
+          created_at: n.created_at!
+        }))
+
+      setNotifications(filteredNotifications)
+      setUnreadCount(filteredNotifications.filter(n => !n.is_read).length)
     } catch (err) {
       console.error('Failed to load notifications:', err)
       setError(err instanceof Error ? err.message : 'Failed to load notifications')
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, enabled, supabase])
+  }, [user?.id, enabled])
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -94,7 +111,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Failed to mark notification as read:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
@@ -114,7 +131,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Failed to mark all notifications as read:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Delete notification
   const deleteNotification = useCallback(async (notificationId: string) => {
@@ -138,7 +155,7 @@ export function useRealtimeNotifications() {
     } catch (err) {
       console.error('Failed to delete notification:', err)
     }
-  }, [user?.id, notifications, supabase])
+  }, [user?.id, notifications])
 
   // Create notification (for testing or manual creation)
   const createNotification = useCallback(async (
@@ -168,7 +185,7 @@ export function useRealtimeNotifications() {
       console.error('Failed to create notification:', err)
       throw err
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Format notification for display
   const formatNotification = useCallback((notification: Notification) => {
@@ -182,75 +199,150 @@ export function useRealtimeNotifications() {
     }
   }, [])
 
-  // Set up real-time subscription
+  // Set up real-time subscription using Broadcast (recommended by Supabase)
   useEffect(() => {
-    if (!user?.id || !enabled) return
+    if (!user?.id || !enabled) {
+      return
+    }
 
-    const channel = supabase
-      .channel(`notifications_${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, (payload: any) => {
-        const newNotification = payload.new as Notification
-        
-        setNotifications(prev => [newNotification, ...prev])
-        setUnreadCount(prev => prev + 1)
+    let retryTimeout: NodeJS.Timeout | null = null
 
-        // Show toast notification
-        if (showToasts) {
-          toast(newNotification.title, {
-            description: newNotification.message,
-            action: {
-              label: 'View',
-              onClick: () => {
-                // Handle notification action based on type
-                handleNotificationAction(newNotification)
+    const setupSubscription = async () => {
+      // Clean up existing channel
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+
+      // Set auth for private channel (required for broadcast)
+      await supabase.realtime.setAuth()
+
+      const channel = supabase
+        .channel(`topic:notifications:user:${user.id}`, {
+          config: { private: true } // Required for broadcast authorization
+        })
+        .on('broadcast', { event: 'INSERT' }, (payload) => {
+          const newNotification = payload.payload.record as Notification
+          
+          // Double check that this notification is for the current user
+          if (newNotification.user_id !== user.id) {
+            return
+          }
+          
+          setNotifications(prev => [newNotification, ...prev])
+          setUnreadCount(prev => prev + 1)
+
+          // Invalidate React Query cache to update header notifications
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+
+          // Show toast notification
+          if (showToasts) {
+            toast(newNotification.title, {
+              description: newNotification.message,
+              action: {
+                label: 'View',
+                onClick: () => {
+                  // Handle notification action based on type
+                  handleNotificationAction(newNotification)
+                }
               }
+            })
+          }
+        })
+        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+          const updatedNotification = payload.payload.record as Notification
+          
+          setNotifications(prev => prev.map(n => 
+            n.id === updatedNotification.id ? updatedNotification : n
+          ))
+          
+          // Update unread count if read status changed
+          if (updatedNotification.is_read) {
+            setUnreadCount(prev => Math.max(0, prev - 1))
+          }
+
+          // Invalidate React Query cache
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+        })
+        .on('broadcast', { event: 'DELETE' }, (payload) => {
+          const deletedId = payload.payload.old_record.id
+          
+          setNotifications(prev => {
+            const deletedNotification = prev.find(n => n.id === deletedId)
+            const newNotifications = prev.filter(n => n.id !== deletedId)
+            
+            // Update unread count if the deleted notification was unread
+            if (deletedNotification && !deletedNotification.is_read) {
+              setUnreadCount(prevCount => Math.max(0, prevCount - 1))
             }
+            
+            return newNotifications
           })
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        const updatedNotification = payload.new as Notification
-        
-        setNotifications(prev => prev.map(n => 
-          n.id === updatedNotification.id ? updatedNotification : n
-        ))
-        
-        // Update unread count if read status changed
-        if (updatedNotification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1))
-        }
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        const deletedId = payload.old.id
-        const deletedNotification = notifications.find(n => n.id === deletedId)
-        
-        setNotifications(prev => prev.filter(n => n.id !== deletedId))
-        
-        if (deletedNotification && !deletedNotification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1))
-        }
-      })
-      .subscribe()
+
+          // Invalidate React Query cache
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.user(user.id) })
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unread(user.id) })
+        })
+        .subscribe((status, err) => {
+          setConnectionStatus(status === 'SUBSCRIBED' ? 'connected' : 'connecting')
+          if (status === 'SUBSCRIBED') {
+            setError(null)
+            // Clear any pending retry
+            if (retryTimeout) {
+              clearTimeout(retryTimeout)
+              retryTimeout = null
+            }
+          } else if (status === 'CHANNEL_ERROR') {
+            setConnectionStatus('disconnected')
+            console.error('❌ Notifications realtime connection failed:', {
+              error: err,
+              userId: user.id,
+              channelName: `topic:notifications:user:${user.id}`,
+              timestamp: new Date().toISOString()
+            })
+            setError('Realtime notifications connection failed')
+            
+            // Retry after 3 seconds
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                setupSubscription()
+              }, 3000)
+            }
+          } else if (status === 'TIMED_OUT') {
+            setConnectionStatus('disconnected')
+            console.error('⏰ Notifications realtime timed out')
+            setError('Realtime notifications timed out')
+            
+            // Retry after 5 seconds
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                setupSubscription()
+              }, 5000)
+            }
+          } else if (status === 'CLOSED') {
+            setConnectionStatus('disconnected')
+            setError(null)
+          }
+        })
+
+      channelRef.current = channel
+    }
+
+    // Initial setup
+    setupSubscription()
 
     return () => {
-      channel.unsubscribe()
+      if (retryTimeout) {
+        clearTimeout(retryTimeout)
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
     }
-  }, [user?.id, enabled, showToasts, notifications, supabase])
+  }, [user?.id, enabled, showToasts, queryClient])
 
   // Load initial notifications
   useEffect(() => {
@@ -267,6 +359,7 @@ export function useRealtimeNotifications() {
     // State
     isLoading,
     error,
+    connectionStatus,
     
     // Actions
     markAsRead,
@@ -292,16 +385,10 @@ function getNotificationIcon(type: NotificationType): string {
       return '📝'
     case 'JOB_UPDATE':
       return '🔄'
-    case 'APPLICATION_STATUS_CHANGE':
-      return '📋'
-    case 'NEW_JOB_MATCH':
-      return '🎯'
-    case 'CONNECTION_UPDATE':
-      return '🔗'
     case 'SYSTEM':
-      return '⚙️'
+      return '🔔'
     default:
-      return '📢'
+      return '�'
   }
 }
 
@@ -315,16 +402,10 @@ function getNotificationColor(type: NotificationType): string {
       return 'green'
     case 'JOB_UPDATE':
       return 'orange'
-    case 'APPLICATION_STATUS_CHANGE':
-      return 'purple'
-    case 'NEW_JOB_MATCH':
-      return 'pink'
-    case 'CONNECTION_UPDATE':
-      return 'cyan'
     case 'SYSTEM':
       return 'gray'
     default:
-      return 'blue'
+      return 'gray'
   }
 }
 

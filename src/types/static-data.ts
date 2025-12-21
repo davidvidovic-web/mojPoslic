@@ -27,6 +27,7 @@ export interface StaticCategory {
   sort_order?: number
   is_active?: boolean
   children?: StaticCategory[]
+  subcategories?: StaticCategory[]
 }
 
 export interface StaticDataCache {

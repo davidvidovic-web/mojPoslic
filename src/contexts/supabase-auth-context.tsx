@@ -99,7 +99,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     try {
       // Only fetch if we have a valid user and session
       if (!supabaseUser || !userSession) {
-        console.log('No valid session, skipping user data fetch')
         // If we have a user but no session, create basic user data
         if (supabaseUser && !userSession) {
           const basicUser: AuthUser = {
@@ -149,7 +148,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         
         setUser(extendedUser)
       } else if (response.status === 401) {
-        console.log('User session not valid, using basic user data')
         const basicUser: AuthUser = {
           ...supabaseUser,
           role: null, // No default role - must be selected
@@ -158,7 +156,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
         setUser(basicUser)
       } else {
-        console.warn('Failed to fetch user profile, using basic user data')
         const basicUser: AuthUser = {
           ...supabaseUser,
           role: null, // No default role - must be selected
@@ -185,7 +182,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('AuthContext: Initializing auth state...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -193,12 +189,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           setSession(null)
           setUser(null)
         } else if (session?.user) {
-          console.log('AuthContext: Session found for user:', session.user.email)
           setSession(session)
           await fetchUserData(session.user, session)
         } else {
           // No session - user is not authenticated
-          console.log('AuthContext: No session found')
           setSession(null)
           setUser(null)
         }
@@ -207,7 +201,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         setSession(null)
         setUser(null)
       } finally {
-        console.log('AuthContext: Setting loading to false')
         setLoading(false)
       }
     }
@@ -239,12 +232,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      console.log('AuthContext: Refreshing user session...')
       // First try to refresh the session - this is critical for newly verified users
       const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
       
       if (refreshError) {
-        console.log('AuthContext: Session refresh failed, trying getSession:', refreshError)
         // If refresh fails, try getSession as fallback
         const { data: { session: currentSession }, error } = await supabase.auth.getSession()
         
@@ -254,20 +245,16 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
         
         if (currentSession?.user) {
-          console.log('AuthContext: Session found via getSession for user:', currentSession.user.email)
           setSession(currentSession)
           await fetchUserData(currentSession.user, currentSession)
         } else {
-          console.log('AuthContext: No session found during refresh')
           setSession(null)
           setUser(null)
         }
       } else if (refreshedSession?.user) {
-        console.log('AuthContext: Session refreshed successfully for user:', refreshedSession.user.email)
         setSession(refreshedSession)
         await fetchUserData(refreshedSession.user, refreshedSession)
       } else {
-        console.log('AuthContext: No session after refresh')
         setSession(null)
         setUser(null)
       }
@@ -376,10 +363,34 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+      // Use the API route for consistency
+      const response = await fetch('/api/auth/supabase/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       })
-      return { error }
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Handle specific Supabase error messages and translate them
+        let errorMessage = data.error || 'Failed to send reset email'
+        
+        // Check for rate limiting error - this will be handled by the component using translations
+        if (errorMessage.includes('Email rate limit exceeded') || 
+            errorMessage.includes('too many') ||
+            errorMessage.includes('rate limit') ||
+            errorMessage.includes('For security purposes') ||
+            errorMessage.includes('after') && errorMessage.includes('seconds')) {
+          errorMessage = 'RATE_LIMIT_EXCEEDED'
+        }
+        
+        return { error: new Error(errorMessage) }
+      }
+
+      return { error: null }
     } catch (error) {
       console.error('Reset password error:', error)
       return { error: error as Error }

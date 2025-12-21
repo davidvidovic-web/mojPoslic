@@ -1,13 +1,3 @@
-/**
- * Comprehensive Supabase File Upload Service
- * 
- * This service handles file uploads to different Supabase Storage buckets:
- * - avatars: User profile pictures
- * - resumes: User resume files 
- * - message-attachments: Message attachments (existing)
- * - company-logos: Company branding images
- */
-
 import { supabase } from './supabase'
 
 export interface FileUploadResult {
@@ -21,17 +11,17 @@ export interface FileUploadResult {
 export type BucketName = 'avatars' | 'resumes' | 'message-attachments' | 'company-logos'
 
 export class SupabaseFileUploadService {
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-  private static readonly MAX_AVATAR_SIZE = 5 * 1024 * 1024 // 5MB for avatars
-  
+  private static readonly MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+  private static readonly MAX_AVATAR_SIZE = 2 * 1024 * 1024 // 2MB for avatars
+
   private static readonly ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
     'image/gif',
     'image/webp'
   ]
-  
+
   private static readonly ALLOWED_DOCUMENT_TYPES = [
     'application/pdf',
     'application/msword',
@@ -41,6 +31,77 @@ export class SupabaseFileUploadService {
   ]
 
   /**
+   * Create storage buckets if they don't exist
+   */
+  static async createBucketsIfNeeded(): Promise<void> {
+    try {
+
+      const requiredBuckets = ['avatars', 'resumes', 'message-attachments', 'company-logos']
+
+      for (const bucketName of requiredBuckets) {
+        try {
+          // Try to create the bucket (this will fail if it already exists, which is fine)
+          const { error } = await supabase.storage.createBucket(bucketName, {
+            public: true, // Make buckets public for file access
+            allowedMimeTypes: bucketName === 'avatars' || bucketName === 'company-logos'
+              ? this.ALLOWED_IMAGE_TYPES
+              : bucketName === 'resumes'
+              ? this.ALLOWED_DOCUMENT_TYPES
+              : undefined,
+            fileSizeLimit: bucketName === 'avatars' ? this.MAX_AVATAR_SIZE : this.MAX_FILE_SIZE
+          })
+
+          if (error && !error.message?.includes('already exists')) {
+            console.error(`Error creating bucket ${bucketName}:`, error)
+          } else {
+          }
+        } catch {
+        }
+      }
+
+    } catch (error) {
+      console.error('Error setting up buckets:', error)
+    }
+  }
+
+  /**
+   * Test Supabase storage connection and bucket availability
+   */
+  static async testStorageConnection(): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.storage.listBuckets()
+
+      if (error) {
+        console.error('Storage connection test failed:', error)
+        return false
+      }
+
+
+      // Check if required buckets exist
+      const requiredBuckets = ['avatars', 'resumes', 'message-attachments', 'company-logos']
+      const existingBuckets = data?.map(b => b.name) || []
+
+      for (const bucketName of requiredBuckets) {
+        if (!existingBuckets.includes(bucketName)) {
+          console.warn(`Required bucket '${bucketName}' does not exist`)
+          // Try to create the missing bucket
+          try {
+            await this.createBucketsIfNeeded()
+          } catch (createError) {
+            console.error(`Failed to create bucket ${bucketName}:`, createError)
+          }
+        } else {
+        }
+      }
+
+      return true
+    } catch (error) {
+      console.error('Storage connection test error:', error)
+      return false
+    }
+  }
+
+  /**
    * Upload avatar image for user
    */
   static async uploadAvatar(
@@ -48,15 +109,35 @@ export class SupabaseFileUploadService {
     userId: string
   ): Promise<FileUploadResult> {
     try {
+      // Validate inputs
+      if (!file) {
+        throw new Error('No file provided')
+      }
+      if (!userId) {
+        throw new Error('No user ID provided')
+      }
+
+      // Check authentication
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError) {
+        console.error('Authentication error:', authError)
+        throw new Error('Authentication failed')
+      }
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+
       // Validate file for avatar
       this.validateAvatarFile(file)
 
       // Generate filename
       const fileExtension = file.name.split('.').pop()
       const filename = `${userId}.${fileExtension}`
-      
+
       // Create file path: avatars/userId.ext
       const filePath = `${filename}`
+
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -66,15 +147,44 @@ export class SupabaseFileUploadService {
           upsert: true // Allow overwriting existing avatar
         })
 
+      // If bucket doesn't exist, try to create it
+      if (error && error.message?.includes('Bucket not found')) {
+        // Continue with error handling below
+      }
+
       if (error) {
         console.error('Avatar upload error:', error)
-        throw new Error(`Upload failed: ${error.message}`)
+        console.error('Error details:', {
+          message: error.message,
+          name: error.name,
+          fullError: JSON.stringify(error, null, 2)
+        })
+
+        // Handle specific error types
+        if (error.message?.includes('row-level security policy')) {
+          console.error('RLS Policy Error - this suggests storage bucket policies are not set up correctly')
+          throw new Error('Storage access denied. Please contact support to set up storage policies.')
+        } else if (error.message?.includes('Bucket not found')) {
+          throw new Error('Storage bucket not found. Please ensure storage buckets are set up.')
+        } else {
+          throw new Error(`Upload failed: ${error.message || 'Unknown error'}`)
+        }
       }
+
+      if (!data) {
+        throw new Error('Upload succeeded but no data returned')
+      }
+
 
       // Get public URL
       const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(data.path)
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to generate public URL')
+      }
+
 
       return {
         url: urlData.publicUrl,
@@ -326,26 +436,26 @@ export class SupabaseFileUploadService {
   }
 
   /**
-   * Check if file is an image
+   * Check if file type is an image
    */
   static isImageFile(fileType: string): boolean {
     return this.ALLOWED_IMAGE_TYPES.includes(fileType)
   }
 
   /**
-   * Check if file is a document
+   * Check if file type is a document
    */
   static isDocumentFile(fileType: string): boolean {
     return this.ALLOWED_DOCUMENT_TYPES.includes(fileType)
   }
 
   /**
-   * Get file type category
+   * Get file category
    */
-  static getFileCategory(fileType: string): 'image' | 'document' | 'unknown' {
+  static getFileCategory(fileType: string): 'image' | 'document' | 'other' {
     if (this.isImageFile(fileType)) return 'image'
     if (this.isDocumentFile(fileType)) return 'document'
-    return 'unknown'
+    return 'other'
   }
 
   /**

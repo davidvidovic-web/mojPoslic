@@ -6,7 +6,6 @@ export async function PUT(request: NextRequest) {
   try {
     // Check for Authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('Profile API PUT: Authorization header:', authHeader ? 'present' : 'missing')
     
     // Create Supabase client with request cookies and auth header
     const supabase = createServerClient<Database>(
@@ -37,7 +36,7 @@ export async function PUT(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('Profile API PUT: Auth failed:', authError)
+      console.error('Profile API PUT: Auth failed:', authError)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -51,11 +50,6 @@ export async function PUT(request: NextRequest) {
       experience,
       preferredJobTypes,
       avatarUrl,
-      // Privacy settings (embedded)
-      privacyEmailVisible,
-      privacyPhoneVisible,
-      privacyProfileVisible,
-      privacyContactFormEnabled,
       // resumeUrl, // TODO: Enable after adding column to database
     } = await request.json();
 
@@ -71,7 +65,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Base update data - only allow changes to basic fields if profile setup is not completed
-    const baseUpdateData: Record<string, string | boolean | null> = {};
+    const baseUpdateData: Record<string, string | boolean | string[] | null> = {};
 
     // If profile setup is not completed, allow basic field updates
     if (!currentUser.profile_setup_completed) {
@@ -97,7 +91,16 @@ export async function PUT(request: NextRequest) {
     // Only include professional fields for non-client roles
     if (currentUser.role !== "client") {
       if (bio !== undefined) baseUpdateData.bio = bio;
-      if (skills !== undefined) baseUpdateData.skills = skills;
+      
+      // Handle skills array conversion - convert comma-separated string to array
+      if (skills !== undefined) {
+        baseUpdateData.skills = Array.isArray(skills)
+          ? skills
+          : typeof skills === 'string'
+            ? skills.split(',').map(s => s.trim()).filter(Boolean)
+            : null;
+      }
+      
       if (experience !== undefined) baseUpdateData.experience = experience;
 
       // Handle preferred job types array conversion
@@ -145,6 +148,7 @@ export async function PUT(request: NextRequest) {
     // Convert field names and preferred job types for frontend consumption
     const userWithArrayJobTypes = {
       ...updatedUser,
+      skills: updatedUser.skills || [],
       preferredJobTypes: updatedUser.preferred_job_types
         ? updatedUser.preferred_job_types.split(", ")
         : [],
@@ -185,7 +189,6 @@ export async function GET(request: NextRequest) {
   try {
     // Check for Authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('Profile API GET: Authorization header:', authHeader ? 'present' : 'missing')
     
     // Create Supabase client with request cookies and auth header
     const supabase = createServerClient<Database>(
@@ -216,7 +219,7 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('Profile API GET: Auth failed:', authError)
+      console.error('Profile API GET: Auth failed:', authError)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -252,6 +255,7 @@ export async function GET(request: NextRequest) {
     // Convert field names and preferred job types for frontend consumption
     const userWithArrayJobTypes = {
       ...userData,
+      skills: userData.skills || [],
       preferredJobTypes: userData.preferred_job_types
         ? userData.preferred_job_types.split(", ")
         : [],

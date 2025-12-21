@@ -23,12 +23,12 @@ export async function GET(request: Request) {
     const { data: applications, error: applicationsError } = await supabase
       .from('applications')
       .select(`
-        id,
-        status,
-        applied_at,
-        cover_letter,
-        job_id,
-        user_id,
+        applications.id,
+        applications.status,
+        applications.applied_at,
+        applications.cover_letter,
+        applications.job_id,
+        applications.user_id,
         job_listings!applications_job_id_fkey (
           id,
           title,
@@ -68,8 +68,9 @@ export async function GET(request: Request) {
       );
     }
 
-    // Transform the data to match expected frontend format with enhanced data
-    const transformedApplications = (applications || []).map(app => ({
+    // Transform applications to match frontend interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedApplications = (applications || []).map((app: any) => ({
       id: app.id,
       status: app.status,
       appliedAt: app.applied_at,

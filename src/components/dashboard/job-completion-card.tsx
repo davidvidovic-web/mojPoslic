@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +36,7 @@ interface JobCompletionCardProps {
 }
 
 export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobCompletionCardProps) {
+  const t = useTranslations('dashboard')
   const [completionNotes, setCompletionNotes] = useState('')
   const [clientNotes, setClientNotes] = useState('')
   const [loading, setLoading] = useState(false)
@@ -57,12 +59,12 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
         throw new Error(errorData.error || 'Failed to mark work as completed')
       }
 
-      toast.success('Work marked as completed! Waiting for client confirmation.')
+      toast.success(t('jobCompletion.workMarkedComplete'))
       setCompletionNotes('')
       onUpdate?.()
     } catch (error) {
       console.error('Error marking work as completed:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to mark work as completed')
+      toast.error(error instanceof Error ? error.message : t('jobCompletion.markCompleteFailed'))
     } finally {
       setLoading(false)
     }
@@ -86,12 +88,12 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
         throw new Error(errorData.error || 'Failed to confirm work completion')
       }
 
-      toast.success('Work completion confirmed! The job is now completed and you can rate each other.')
+      toast.success(t('jobCompletion.workCompleteConfirmed'))
       setClientNotes('')
       onUpdate?.()
     } catch (error) {
       console.error('Error confirming work completion:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to confirm work completion')
+      toast.error(error instanceof Error ? error.message : t('jobCompletion.confirmCompleteFailed'))
     } finally {
       setLoading(false)
     }
@@ -100,15 +102,15 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending Acceptance</Badge>
+        return <Badge className="bg-yellow-100 text-yellow-800 border-0 rounded-full px-2 py-1 text-xs font-medium">Pending Acceptance</Badge>
       case 'ACCEPTED':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Work in Progress</Badge>
+        return <Badge className="bg-blue-100 text-blue-800 border-0 rounded-full px-2 py-1 text-xs font-medium">Work in Progress</Badge>
       case 'WORK_COMPLETED':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Work Completed (Awaiting Confirmation)</Badge>
+        return <Badge className="bg-orange-100 text-orange-800 border-0 rounded-full px-2 py-1 text-xs font-medium">Work Completed (Awaiting Confirmation)</Badge>
       case 'COMPLETED':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Job Completed</Badge>
+        return <Badge className="bg-green-100 text-green-800 border-0 rounded-full px-2 py-1 text-xs font-medium">Job Completed</Badge>
       default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">{status}</Badge>
+        return <Badge className="bg-gray-100 text-gray-800 border-0 rounded-full px-2 py-1 text-xs font-medium">{status}</Badge>
     }
   }
 
@@ -142,7 +144,7 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
               className="w-full"
             >
               <Flag className="h-4 w-4 mr-2" />
-              {loading ? 'Marking Complete...' : 'Mark Work as Completed'}
+              {loading ? t('jobCompletion.markingComplete') : t('jobCompletion.markComplete')}
             </Button>
           </div>
         )}
@@ -167,7 +169,7 @@ export function JobCompletionCard({ jobAssignment, userRole, onUpdate }: JobComp
               className="w-full"
             >
               <ThumbsUp className="h-4 w-4 mr-2" />
-              {loading ? 'Confirming...' : 'Confirm Work is Completed'}
+              {loading ? t('jobCompletion.confirming') : t('jobCompletion.confirmComplete')}
             </Button>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { geocodeCache } from './geocode-cache';
+import { reverseGeocodeClient } from './client-geocoding';
 
 export interface GeolocationPosition {
   coords: {
@@ -20,6 +21,8 @@ export const GEOLOCATION_ERRORS = {
 } as const
 
 export class GeolocationService {
+  private static _lastErrorLogged: number | null = null
+
   static isSupported(): boolean {
     return 'geolocation' in navigator
   }
@@ -52,7 +55,7 @@ export class GeolocationService {
           let message = 'Unable to retrieve your location'
           switch (error.code) {
             case GEOLOCATION_ERRORS.PERMISSION_DENIED:
-              message = 'Location access denied by user'
+              message = 'Location access denied by user or blocked by browser policy'
               break
             case GEOLOCATION_ERRORS.POSITION_UNAVAILABLE:
               message = 'Location information is unavailable'
@@ -60,6 +63,11 @@ export class GeolocationService {
             case GEOLOCATION_ERRORS.TIMEOUT:
               message = 'Location request timed out'
               break
+          }
+          // Only log the error once per session to avoid spam
+          if (!this._lastErrorLogged || this._lastErrorLogged !== error.code) {
+            console.warn('Geolocation error:', message, error);
+            this._lastErrorLogged = error.code;
           }
           reject({ code: error.code, message })
         },
@@ -98,38 +106,61 @@ export class GeolocationService {
       // Continue to API lookup
     }
     
-    // Try to get address via our proxy API
+    // Use client-side geocoding for best results
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const { reverseGeocodeClient } = await import('@/lib/client-geocoding');
+      const geocodeResult = await reverseGeocodeClient(roundedLat, roundedLng);
       
-      try {
-        const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data && data.display_name) {
-            // Cache and return the address
-            geocodeCache.set(roundedLat, roundedLng, data.display_name, 'google');
-            return data.display_name;
-          }
-        }
-      } catch (error) {
-        console.warn('Geocoding API error:', error);
-      } finally {
-        clearTimeout(timeoutId);
+      if (geocodeResult && geocodeResult.display_name) {
+        // Cache and return the address
+        const cacheSource = geocodeResult.source === 'google' ? 'google' : 'fallback';
+        geocodeCache.set(roundedLat, roundedLng, geocodeResult.display_name, cacheSource);
+        return geocodeResult.display_name;
       }
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.warn('Client-side geocoding error:', error);
     }
     
-    // Fallback to coordinate string if everything else fails
-    const fallbackAddress = `${roundedLat}, ${roundedLng}`;
+    // Enhanced fallback: try to estimate city based on proximity to known cities
+    try {
+      const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+      
+      // Find the closest city (within 30km for reasonable approximation)
+      let closestCity = null;
+      let minDistance = Infinity;
+      
+      for (const [, city] of Object.entries(CITY_COORDINATES)) {
+        // More accurate distance calculation using Haversine approximation
+        const latDiff = city.lat - roundedLat;
+        const lngDiff = city.lng - roundedLng;
+        
+        // Simple distance calculation in km (rough approximation for small distances)
+        const a = Math.sin(latDiff * Math.PI / 180 / 2) ** 2 + 
+                  Math.cos(roundedLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) *
+                  Math.sin(lngDiff * Math.PI / 180 / 2) ** 2;
+        const distance = 2 * 6371 * Math.asin(Math.sqrt(a)); // Distance in km
+        
+        if (distance < minDistance && distance < 30) { // 30km radius
+          minDistance = distance;
+          closestCity = city;
+        }
+      }
+      
+      if (closestCity) {
+        // If very close (within 2km), just use the city name
+        // Otherwise, show "near" the city
+        const approximateAddress = minDistance < 2 
+          ? `${closestCity.name}, Bosnia and Herzegovina`
+          : `Near ${closestCity.name}, Bosnia and Herzegovina`;
+        geocodeCache.set(roundedLat, roundedLng, approximateAddress, 'fallback');
+        return approximateAddress;
+      }
+    } catch (error) {
+      console.warn('City approximation error:', error);
+    }
+    
+    // Final fallback to coordinate string with better formatting
+    const fallbackAddress = `Location: ${roundedLat}°N, ${roundedLng}°E`;
     geocodeCache.set(roundedLat, roundedLng, fallbackAddress, 'fallback');
     return fallbackAddress;
   }
@@ -163,14 +194,51 @@ export class GeolocationService {
       console.warn('City lookup error:', cityError);
     }
     
-    // Try to get detailed address via our proxy API
+    // Use client-side geocoding for best results (bypasses referrer restrictions)
+    try {
+      const geocodeResult = await reverseGeocodeClient(roundedLat, roundedLng);
+      
+      if (geocodeResult && geocodeResult.display_name) {
+        const result = {
+          address: geocodeResult.display_name,
+          city: geocodeResult.address?.city || geocodeResult.address?.town || geocodeResult.address?.village,
+          cityKey: undefined as string | undefined
+        };
+        
+        // Try to match the found city to our city list
+        if (result.city) {
+          try {
+            const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+            for (const [cityKey, cityData] of Object.entries(CITY_COORDINATES)) {
+              if (cityData.name.toLowerCase().includes(result.city.toLowerCase()) ||
+                  result.city.toLowerCase().includes(cityData.name.toLowerCase())) {
+                result.cityKey = cityKey;
+                break;
+              }
+            }
+          } catch (error) {
+            console.warn('City matching error:', error);
+          }
+        }
+        
+        return result;
+      }
+    } catch (error) {
+      console.warn('Client-side geocoding error:', error);
+    }
+    
+    // Fallback to server-side API (may have limited functionality due to referrer restrictions)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // Shorter timeout for fallback
       
       try {
         const response = await fetch(`/api/geocode?lat=${roundedLat}&lng=${roundedLng}`, {
-          signal: controller.signal
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
         });
         
         clearTimeout(timeoutId);
@@ -205,17 +273,70 @@ export class GeolocationService {
           }
         }
       } catch (error) {
-        console.warn('Detailed geocoding API error:', error);
+        console.warn('Server-side geocoding API error:', error);
       } finally {
         clearTimeout(timeoutId);
       }
     } catch (error) {
-      console.error('Detailed geocoding error:', error);
+      console.error('Fallback geocoding error:', error);
     }
     
-    // Fallback
+    // Fallback to basic reverse geocoding
+    try {
+      const basicAddress = await this.reverseGeocode(roundedLat, roundedLng);
+      if (basicAddress && basicAddress !== `${roundedLat}, ${roundedLng}`) {
+        return {
+          address: basicAddress
+        };
+      }
+    } catch (error) {
+      console.warn('Basic reverse geocoding failed:', error);
+    }
+    
+    // Enhanced fallback: try to find nearest city
+    try {
+      const { CITY_COORDINATES } = await import('@/lib/city-coordinates');
+      
+      // Find the closest city within a reasonable distance
+      let closestCity = null;
+      let minDistance = Infinity;
+      
+      for (const [cityKey, city] of Object.entries(CITY_COORDINATES)) {
+        // More accurate distance calculation using Haversine approximation
+        const latDiff = city.lat - roundedLat;
+        const lngDiff = city.lng - roundedLng;
+        
+        // Simple distance calculation in km (rough approximation for small distances)
+        const a = Math.sin(latDiff * Math.PI / 180 / 2) ** 2 + 
+                  Math.cos(roundedLat * Math.PI / 180) * Math.cos(city.lat * Math.PI / 180) *
+                  Math.sin(lngDiff * Math.PI / 180 / 2) ** 2;
+        const distance = 2 * 6371 * Math.asin(Math.sqrt(a)); // Distance in km
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCity = { ...city, cityKey };
+        }
+      }
+      
+      // If within 30km, provide a meaningful address
+      if (closestCity && minDistance < 30) {
+        const approximateAddress = minDistance < 2
+          ? `${closestCity.name}, Bosnia and Herzegovina` // Very close to city center
+          : `Near ${closestCity.name}, Bosnia and Herzegovina`; // Nearby
+          
+        return {
+          address: approximateAddress,
+          city: closestCity.name,
+          cityKey: closestCity.cityKey
+        };
+      }
+    } catch (error) {
+      console.warn('City approximation error in detailed geocoding:', error);
+    }
+    
+    // Final fallback - better formatted coordinates with Bosnia context
     return {
-      address: `${roundedLat}, ${roundedLng}`
+      address: `Location in Bosnia and Herzegovina (${roundedLat}°N, ${roundedLng}°E)`
     };
   }
 }

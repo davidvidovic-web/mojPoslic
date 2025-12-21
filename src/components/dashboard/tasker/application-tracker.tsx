@@ -1,159 +1,190 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useApplications, useWithdrawApplication } from '@/hooks/use-applications'
-import { ApplicationStatus, JobApplication } from '@/types/application'
-import { 
+import React, { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useApplications,
+  useUpdateApplication,
+} from "@/hooks/use-applications";
+import { ApplicationStatus } from "@/types/application";
+import {
   Briefcase,
   Search,
-  MapPin,
   DollarSign,
   Clock,
   CheckCircle,
   XCircle,
-  Star,
-  Eye,
-  MessageSquare,
-  X
-} from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
+  MessageCircle,
+  X,
+} from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
 
 export function TaskerApplicationTracker() {
-  const t = useTranslations('dashboard.applications')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('all')
+  const t = useTranslations("dashboard.applications");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
   const { data: applications = [], isLoading } = useApplications({
-    search: searchQuery || undefined
-  })
+    search: searchQuery || undefined,
+  });
 
   // For now, calculate basic stats from the applications
-  const stats = {
-    total: applications.length,
-    pending: applications.filter(app => app.status === ApplicationStatus.PENDING).length,
-    reviewed: applications.filter(app => app.status === ApplicationStatus.REVIEWED).length,
-    shortlisted: applications.filter(app => app.status === ApplicationStatus.SHORTLISTED).length,
-    selected: applications.filter(app => app.status === ApplicationStatus.SELECTED).length,
-    rejected: applications.filter(app => app.status === ApplicationStatus.REJECTED).length,
-  }
+  const stats = useMemo(() => {
+    // Exclude withdrawn and rejected applications from stats
+    const visibleApplications = applications.filter(
+      (app) => app.status !== ApplicationStatus.WITHDRAWN && app.status !== ApplicationStatus.REJECTED
+    );
+    return {
+      total: visibleApplications.length,
+      pending: visibleApplications.filter(
+        (app) => app.status === ApplicationStatus.PENDING
+      ).length,
+      selected: visibleApplications.filter(
+        (app) => app.status === ApplicationStatus.SELECTED
+      ).length,
+      rejected: applications.filter(
+        (app) => app.status === ApplicationStatus.REJECTED
+      ).length,
+    };
+  }, [applications]);
 
-  const withdrawMutation = useWithdrawApplication()
+  const updateApplicationMutation = useUpdateApplication();
 
   // Filter applications by status
-  const filteredApplications = applications.filter(app => {
-    if (activeTab === 'all') return true
-    if (activeTab === 'pending') return app.status === ApplicationStatus.PENDING
-    if (activeTab === 'reviewed') return app.status === ApplicationStatus.REVIEWED
-    if (activeTab === 'shortlisted') return app.status === ApplicationStatus.SHORTLISTED
-    if (activeTab === 'selected') return app.status === ApplicationStatus.SELECTED
-    if (activeTab === 'rejected') return app.status === ApplicationStatus.REJECTED
-    return true
-  })
+  const filteredApplications = useMemo(() => {
+    // Exclude withdrawn and rejected applications from display
+    const filtered = applications.filter((app) => {
+      // Never show withdrawn or rejected applications
+      if (app.status === ApplicationStatus.WITHDRAWN || app.status === ApplicationStatus.REJECTED) return false;
+
+      if (activeTab === "pending")
+        return app.status === ApplicationStatus.PENDING;
+      if (activeTab === "selected")
+        return app.status === ApplicationStatus.SELECTED;
+      return true;
+    });
+
+    // Apply search filter
+    return filtered.filter(
+      (app) =>
+        app.job?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.job?.posted_by?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [applications, activeTab, searchQuery]);
 
   const handleWithdraw = async (applicationId: string) => {
-    if (confirm(t('confirmWithdraw'))) {
+    if (confirm(t("confirmWithdraw"))) {
       try {
-        await withdrawMutation.mutateAsync(applicationId)
+        await updateApplicationMutation.mutateAsync({
+          applicationId,
+          updates: {
+            status: ApplicationStatus.WITHDRAWN,
+          },
+        });
       } catch (error) {
-        console.error('Withdraw error:', error)
+        console.error("Withdraw error:", error);
       }
     }
-  }
+  };
 
   const getStatusBadge = (status: ApplicationStatus) => {
-    const colors = {
-      [ApplicationStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
-      [ApplicationStatus.REVIEWED]: 'bg-blue-100 text-blue-800',
-      [ApplicationStatus.SHORTLISTED]: 'bg-purple-100 text-purple-800',
-      [ApplicationStatus.SELECTED]: 'bg-green-100 text-green-800',
-      [ApplicationStatus.REJECTED]: 'bg-red-100 text-red-800',
-      [ApplicationStatus.WITHDRAWN]: 'bg-gray-100 text-gray-800'
-    }
+    const colors: Record<ApplicationStatus, string> = {
+      [ApplicationStatus.PENDING]: "bg-yellow-100 text-yellow-800",
+      [ApplicationStatus.REVIEWED]: "bg-blue-100 text-blue-800",
+      [ApplicationStatus.SHORTLISTED]: "bg-purple-100 text-purple-800",
+      [ApplicationStatus.SELECTED]: "bg-green-100 text-green-800",
+      [ApplicationStatus.REJECTED]: "bg-red-100 text-red-800",
+      [ApplicationStatus.WITHDRAWN]: "bg-gray-100 text-gray-800",
+      [ApplicationStatus.INTERVIEW_SCHEDULED]: "bg-purple-100 text-purple-800",
+    };
 
-    const icons = {
+    const icons: Record<ApplicationStatus, React.ElementType> = {
       [ApplicationStatus.PENDING]: Clock,
-      [ApplicationStatus.REVIEWED]: Eye,
-      [ApplicationStatus.SHORTLISTED]: Star,
+      [ApplicationStatus.REVIEWED]: Clock,
+      [ApplicationStatus.SHORTLISTED]: Clock,
       [ApplicationStatus.SELECTED]: CheckCircle,
       [ApplicationStatus.REJECTED]: XCircle,
-      [ApplicationStatus.WITHDRAWN]: X
-    }
+      [ApplicationStatus.WITHDRAWN]: X,
+      [ApplicationStatus.INTERVIEW_SCHEDULED]: Clock,
+    };
 
-    const Icon = icons[status]
+    const statusText: Record<ApplicationStatus, string> = {
+      [ApplicationStatus.PENDING]: "Pending",
+      [ApplicationStatus.REVIEWED]: "Reviewed",
+      [ApplicationStatus.SHORTLISTED]: "Shortlisted",
+      [ApplicationStatus.SELECTED]: "Selected",
+      [ApplicationStatus.REJECTED]: "Cancelled by Client",
+      [ApplicationStatus.WITHDRAWN]: "Withdrawn",
+      [ApplicationStatus.INTERVIEW_SCHEDULED]: "Interview Scheduled",
+    };
+
+    const Icon = icons[status];
+
+    // Only show simplified statuses for taskers
+    if (
+      status === ApplicationStatus.REVIEWED ||
+      status === ApplicationStatus.SHORTLISTED
+    ) {
+      return getStatusBadge(ApplicationStatus.PENDING);
+    }
 
     return (
-      <Badge className={colors[status]}>
+      <Badge
+        className={`${colors[status]} border-0 rounded-full px-2 py-1 text-xs font-medium`}
+      >
         <Icon className="h-3 w-3 mr-1" />
-        {status.toLowerCase()}
+        {statusText[status]}
       </Badge>
-    )
-  }
+    );
+  };
 
-  const getStatusTimeline = (application: JobApplication) => {
-    const timeline = []
-    
-    if (application.appliedAt) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getStatusTimeline = (application: any) => {
+    const timeline = [];
+
+    if (application.applied_at) {
       timeline.push({
-        status: 'Applied',
-        date: application.appliedAt,
+        status: "Applied",
+        date: application.applied_at,
         icon: Briefcase,
-        color: 'text-blue-600'
-      })
+        color: "text-blue-600",
+      });
     }
-    
-    if (application.reviewedAt) {
+
+    if (application.selected_at) {
       timeline.push({
-        status: 'Reviewed',
-        date: application.reviewedAt,
-        icon: Eye,
-        color: 'text-blue-600'
-      })
-    }
-    
-    if (application.shortlistedAt) {
-      timeline.push({
-        status: 'Shortlisted',
-        date: application.shortlistedAt,
-        icon: Star,
-        color: 'text-purple-600'
-      })
-    }
-    
-    if (application.selectedAt) {
-      timeline.push({
-        status: 'Selected',
-        date: application.selectedAt,
+        status: "Selected",
+        date: application.selected_at,
         icon: CheckCircle,
-        color: 'text-green-600'
-      })
+        color: "text-green-600",
+      });
     }
-    
+
     if (application.rejectedAt) {
       timeline.push({
-        status: 'Rejected',
+        status: "Rejected",
         date: application.rejectedAt,
         icon: XCircle,
-        color: 'text-red-600'
-      })
-    }
-    
-    if (application.withdrawnAt) {
-      timeline.push({
-        status: 'Withdrawn',
-        date: application.withdrawnAt,
-        icon: X,
-        color: 'text-gray-600'
-      })
+        color: "text-red-600",
+      });
     }
 
-    return timeline
-  }
+    if (application.withdrawnAt) {
+      timeline.push({
+        status: "Withdrawn",
+        date: application.withdrawnAt,
+        icon: X,
+        color: "text-gray-600",
+      });
+    }
+
+    return timeline;
+  };
 
   if (isLoading) {
     return (
@@ -164,46 +195,43 @@ export function TaskerApplicationTracker() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.total || 0}
+            </div>
             <div className="text-sm text-gray-600">Total</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending || 0}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.pending || 0}
+            </div>
             <div className="text-sm text-gray-600">Pending</div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.reviewed || 0}</div>
-            <div className="text-sm text-gray-600">Reviewed</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.selected || 0}
+            </div>
+                        <div className="text-sm text-gray-600">Selected</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.shortlisted || 0}</div>
-            <div className="text-sm text-gray-600">Shortlisted</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.selected || 0}</div>
-            <div className="text-sm text-gray-600">Selected</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{stats.rejected || 0}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.rejected || 0}
+            </div>
             <div className="text-sm text-gray-600">Rejected</div>
           </CardContent>
         </Card>
@@ -223,7 +251,7 @@ export function TaskerApplicationTracker() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder={t('searchPlaceholder')}
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -233,13 +261,10 @@ export function TaskerApplicationTracker() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
-              <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
-              <TabsTrigger value="shortlisted">Shortlisted</TabsTrigger>
               <TabsTrigger value="selected">Selected</TabsTrigger>
-              <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-6">
@@ -247,18 +272,20 @@ export function TaskerApplicationTracker() {
                 <div className="text-center py-12">
                   <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">
-                    {searchQuery 
-                      ? 'No applications match your search'
-                      : activeTab === 'all' 
-                        ? 'No applications yet'
-                        : `No ${activeTab} applications`
-                    }
+                    {searchQuery
+                      ? "No applications match your search"
+                      : activeTab === "all"
+                        ? "No applications yet"
+                        : `No ${activeTab} applications`}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {filteredApplications.map((application) => (
-                    <Card key={application.id} className="border border-gray-200">
+                    <Card
+                      key={application.id}
+                      className="border border-gray-200"
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -267,38 +294,37 @@ export function TaskerApplicationTracker() {
                                 <h3 className="text-lg font-semibold">
                                   {application.job?.title}
                                 </h3>
-                                <p className="text-gray-600 font-medium">
-                                  {application.job?.company}
-                                </p>
-                                
+                                {application.job?.posted_by?.name && (
+                                  <p className="text-gray-600 font-medium">
+                                    {application.job.posted_by.name}
+                                  </p>
+                                )}
+
                                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                                  {application.job?.city && (
-                                    <div className="flex items-center gap-1">
-                                      <MapPin className="h-4 w-4" />
-                                      {application.job.city.nameEN}
-                                    </div>
-                                  )}
-                                  {application.job?.type && (
+                                  {application.job?.job_type && (
                                     <div className="flex items-center gap-1">
                                       <Briefcase className="h-4 w-4" />
-                                      {application.job.type}
+                                      {application.job.job_type}
                                     </div>
                                   )}
-                                  {(application.job?.salaryMin || application.job?.salary) && (
+                                  {application.job?.salary_min && (
                                     <div className="flex items-center gap-1">
                                       <DollarSign className="h-4 w-4" />
-                                      {application.job.salary || 
-                                        `${application.job.salaryMin}${application.job.salaryMax ? `-${application.job.salaryMax}` : '+'} BAM`
-                                      }
+                                      {`${application.job.salary_min}${application.job.salary_max ? `-${application.job.salary_max}` : ""} BAM`}
                                     </div>
                                   )}
                                 </div>
                               </div>
-                              
+
                               <div className="text-right">
-                                {getStatusBadge(application.status)}
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {getStatusBadge(application.status as any)}
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Applied {formatDistanceToNow(new Date(application.appliedAt))} ago
+                                  Applied{" "}
+                                  {formatDistanceToNow(
+                                    new Date(application.applied_at)
+                                  )}{" "}
+                                  ago
                                 </p>
                               </div>
                             </div>
@@ -309,31 +335,47 @@ export function TaskerApplicationTracker() {
                                 Application Timeline
                               </p>
                               <div className="flex items-center gap-4 overflow-x-auto">
-                                {getStatusTimeline(application).map((item, index) => (
-                                  <div key={index} className="flex items-center gap-2 whitespace-nowrap">
-                                    <item.icon className={`h-4 w-4 ${item.color}`} />
-                                    <div className="text-xs">
-                                      <div className="font-medium">{item.status}</div>
-                                      <div className="text-gray-500">
-                                        {format(new Date(item.date), 'MMM d, yyyy')}
+                                {getStatusTimeline(application).map(
+                                  (item, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center gap-2 whitespace-nowrap"
+                                    >
+                                      <item.icon
+                                        className={`h-4 w-4 ${item.color}`}
+                                      />
+                                      <div className="text-xs">
+                                        <div className="font-medium">
+                                          {item.status}
+                                        </div>
+                                        <div className="text-gray-500">
+                                          {format(
+                                            new Date(item.date),
+                                            "MMM d, yyyy"
+                                          )}
+                                        </div>
                                       </div>
+                                      {index <
+                                        getStatusTimeline(application).length -
+                                          1 && (
+                                        <div className="w-4 h-px bg-gray-300 mx-2" />
+                                      )}
                                     </div>
-                                    {index < getStatusTimeline(application).length - 1 && (
-                                      <div className="w-4 h-px bg-gray-300 mx-2" />
-                                    )}
-                                  </div>
-                                ))}
+                                  )
+                                )}
                               </div>
                             </div>
 
                             {/* Feedback */}
-                            {application.feedback && (
-                              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                                <p className="text-sm font-medium text-blue-800 mb-1">
-                                  Employer Feedback:
-                                </p>
-                                <p className="text-sm text-blue-700">
-                                  {application.feedback}
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            {(application as any).feedback && (
+                              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                <h4 className="font-medium mb-1">
+                                  Feedback
+                                </h4>
+                                <p className="text-sm text-gray-700">
+                                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                  {(application as any).feedback}
                                 </p>
                               </div>
                             )}
@@ -341,20 +383,20 @@ export function TaskerApplicationTracker() {
                             {/* Actions */}
                             <div className="flex items-center gap-2 mt-4">
                               <Button size="sm" variant="outline">
-                                <Eye className="h-4 w-4 mr-1" />
+                                <Briefcase className="h-4 w-4 mr-1" />
                                 View Job
                               </Button>
                               <Button size="sm" variant="outline">
-                                <MessageSquare className="h-4 w-4 mr-1" />
+                                <MessageCircle className="h-4 w-4 mr-1" />
                                 Message Employer
                               </Button>
-                              {(application.status === ApplicationStatus.PENDING || 
-                                application.status === ApplicationStatus.REVIEWED) && (
+                              {application.status ===
+                                ApplicationStatus.PENDING && (
                                 <Button
                                   size="sm"
                                   variant="destructive"
                                   onClick={() => handleWithdraw(application.id)}
-                                  disabled={withdrawMutation.isPending}
+                                  disabled={updateApplicationMutation.isPending}
                                 >
                                   <X className="h-4 w-4 mr-1" />
                                   Withdraw
@@ -373,5 +415,5 @@ export function TaskerApplicationTracker() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

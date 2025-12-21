@@ -5,9 +5,11 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Car } from "lucide-react"
+import { MapPin, Calendar, ExternalLink, DollarSign, Building2, Car, User } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Image from 'next/image'
 import { Job } from "@/types/job"
-import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName } from "@/lib/job-utils"
+import { formatJobType, getJobTypeBadgeVariant, formatTransportation, formatClientName, formatSalary } from "@/lib/job-utils"
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 
 interface JobCardListProps {
@@ -24,37 +26,7 @@ export function JobCardList({ job }: JobCardListProps) {
   // Check if the current user owns this job
   const isOwner = user && job.posted_by === user.id
 
-  const formatSalary = (job: Job) => {
-    // If we have structured salary data
-    if (job.salaryMin && job.salaryMax && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const max = job.salaryMax.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
-      return `${min}-${max} BAM${type}`
-    }
-    
-    // If we only have minimum salary
-    if (job.salaryMin && job.salaryType) {
-      const min = job.salaryMin.toLocaleString()
-      const type = job.salaryType === 'hourly' ? '/hr' : 
-                   job.salaryType === 'daily' ? '/day' :
-                   job.salaryType === 'weekly' ? '/week' :
-                   job.salaryType === 'monthly' ? '/month' : ''
-      
-      // Don't show "From" for fixed prices
-      if (job.salaryType === 'fixed') {
-        return `${min} BAM`
-      }
-      
-      return `From ${min} BAM${type}`
-    }
-    
-    // Fallback to legacy salary field
-    return job.salary || null
-  }
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -87,11 +59,34 @@ export function JobCardList({ job }: JobCardListProps) {
         {/* Header Section */}
         <div className="flex items-start gap-4 mb-5">
           {/* Company Avatar */}
-          <div className="w-14 h-14 rounded-[var(--radius)] bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center ring-1 ring-primary/10 shrink-0">
-            <span className="text-lg font-bold text-primary">
-              {formatClientName(job.company).charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <Avatar className="h-14 w-14 ring-1 ring-primary/10 shrink-0">
+            {job.postedBy?.avatar_url ? (
+              <AvatarImage 
+                src={job.postedBy.avatar_url}
+                alt={job.postedBy?.name || formatClientName(job.company) || 'User avatar'}
+                asChild
+              >
+                <Image
+                  src={job.postedBy.avatar_url}
+                  alt={job.postedBy?.name || formatClientName(job.company) || 'User avatar'}
+                  width={56}
+                  height={56}
+                  className="object-cover"
+                />
+              </AvatarImage>
+            ) : (
+              <AvatarFallback className="text-lg bg-gradient-to-br from-primary/10 to-primary/20 text-primary">
+                {formatClientName(job.company) 
+                  ? formatClientName(job.company).charAt(0).toUpperCase()
+                  : job.postedBy?.name 
+                    ? job.postedBy.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                    : job.poster_name
+                      ? job.poster_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                      : <User className="h-6 w-6" />
+                }
+              </AvatarFallback>
+            )}
+          </Avatar>
           
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-xl leading-tight mb-2 text-foreground group-hover:text-primary transition-colors">
@@ -135,12 +130,18 @@ export function JobCardList({ job }: JobCardListProps) {
         {/* Tags and Badges */}
         <div className="flex flex-wrap gap-2 mb-5">
           <Badge variant={getJobTypeBadgeVariant(job.type)} className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-primary/10 text-primary hover:bg-primary/20">
-            {formatJobType(job.type)}
+            {formatJobType(job.type, locale)}
           </Badge>
           
           {job.category && (
             <Badge variant="secondary" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border-0 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
               {locale === 'bs' ? job.category.name_bs || job.category.name : job.category.name_en || job.category.name}
+            </Badge>
+          )}
+
+          {job.subcategory && (
+            <Badge variant="outline" className="text-xs px-2.5 py-1 rounded-[var(--radius)] border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400">
+              {locale === 'bs' ? job.subcategory.name_bs || job.subcategory.name : job.subcategory.name_en || job.subcategory.name}
             </Badge>
           )}
           

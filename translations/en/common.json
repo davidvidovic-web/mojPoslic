@@ -57,6 +57,7 @@
     "findingLocation": "Finding...",
     "locationError": "Unable to get your location",
     "locationPermissionDenied": "Location access denied",
+    "locationPermissionMessage": "To use this feature, please allow location access in your browser. You can do this by clicking the location icon in the address bar or going to your browser settings.",
     "outsideBosniaWarning": "We currently only operate in Bosnia & Herzegovina",
     "cityMismatchTitle": "Different location detected",
     "cityMismatchMessage": "It seems like you are far away from your selected city ({selectedCity}). Your current location appears to be in {currentCity}. Are you sure you want to use your current location?",
@@ -66,7 +67,8 @@
     "keepSelected": "Keep Selected City",
     "understood": "Understood",
     "noResults": "No locations found for your search",
-    "searchError": "Unable to search for location. Please try again."
+    "searchError": "Unable to search for location. Please try again.",
+    "geocodingFailed": "We couldn't find an exact address for your location. Please enter the address manually."
   },
   "messages": {
     "notSpecified": "Not specified",

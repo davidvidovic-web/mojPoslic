@@ -1,8 +1,5 @@
 {
   "recommendations": [
-    "bradlc.vscode-tailwindcss",
-    "ms-vscode.vscode-typescript-next",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-eslint"
+    "denoland.vscode-deno"
   ]
 }

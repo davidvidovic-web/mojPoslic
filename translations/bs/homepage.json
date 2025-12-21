@@ -1,16 +1,16 @@
 {
   "hero": {
     "title": "Objavite ili pronađite",
-    "subtitle": "Povežite se s prilikama koje odgovaraju vašim vještinama i vremenu",
+    "subtitle": "Platforma za male poslove",
     "searchPlaceholder": "Pretraži poslove, kompanije ili vještine...",
     "browseJobs": "Pregledaj poslove",
-    "postJob": "Objavi poslić",
+    "postJob": "Objavi posao",
     "badge": "Brzo • Sigurno • Jednostavno",
-    "titleHighlight": "svoje posliće",
+    "titleHighlight": "svoje poslove",
     "registerButton": "Registruj se besplatno"
   },
   "browseJobs": {
-    "title": "Pregledaj dostupne posliće",
+    "title": "Pregledaj dostupne poslove",
     "subtitle": "Otkrijte prilike koje odgovaraju vašim vještinama i vremenu"
   },
   "siteStats": {
@@ -50,7 +50,7 @@
     "learnMore": "Saznajte više"
   },
   "footer": {
-    "description": "Povežite se s prilikama koje odgovaraju vašim vještinama i aspiracijama",
+    "description": "Platforma za male poslove u Bosni i Hercegovini",
     "forWorkers": {
       "title": "Za radnike",
       "findJobs": "Pronađi poslove",
@@ -59,7 +59,7 @@
     },
     "forClients": {
       "title": "Za klijente",
-      "postJobs": "Objavi poslić",
+      "postJobs": "Objavi posao",
       "findWorkers": "Pronađi radnike",
       "free": "Besplatno"
     },

@@ -1,29 +1,27 @@
 "use client";
 
+import {
+  LogIn,
+  LogOut,
+  Settings,
+  User,
+  LayoutDashboard,
+  UserPlus,
+  Coins
+} from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from 'next-intl';
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { useDialogStore } from "@/stores/dialog-store";
-import { useOptimizedMessaging } from "@/hooks/use-optimized-messaging";
-import { OptimizedNotificationCenter } from "./optimized-notification-center";
 import { OptimizedJobPostDialog } from "./optimized-job-post-dialog";
 import { HeaderLoadingSkeleton, AuthenticatedHeaderSkeleton } from "./header-skeleton";
-import { MessagingDialog } from "@/components/dashboard/messaging/messaging-dialog";
+import { ModernMessagingButton } from "@/components/messaging/modern-messaging-button";
+import { HeaderNotifications } from "@/components/notifications/header-notifications";
 import { Button } from "@/components/ui/button";
 import { AnimatedHamburger } from "@/components/ui/animated-hamburger";
 import { useHamburgerAnimation } from "@/hooks/useHamburgerAnimation";
-import { LanguageSwitcher } from "@/components/common/language-switcher";
-import {
-  LogIn,
-  LogOut,
-  User,
-  Settings,
-  LayoutDashboard,
-  UserPlus,
-  MessageSquare,
-} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,15 +37,9 @@ export const Header = React.memo(function Header() {
     closeJobPostDialog, 
     isMobileMenuOpen, 
     toggleMobileMenu,
-    closeMobileMenu,
-    openMessagingDialog
+    closeMobileMenu
   } = useDialogStore();
   const { loading, user, signOut } = useSupabaseAuth();
-  const { 
-    totalUnreadCount, 
-    isLoading: isMessagingLoading, 
-    hasNotifications
-  } = useOptimizedMessaging();
   const pathname = usePathname();
   
   // Scroll detection state
@@ -73,12 +65,11 @@ export const Header = React.memo(function Header() {
   const tAuth = useTranslations('auth');
   const tHeader = useTranslations('header');
   const tNavigation = useTranslations('navigation.main');
-  const tBreadcrumb = useTranslations('navigation.breadcrumb');
 
   // Throttled scroll handler for better performance
   const handleScroll = useCallback(() => {
     const scrollTop = window.scrollY;
-    setIsScrolled(scrollTop > 100);
+    setIsScrolled(scrollTop > 50);
   }, []);
 
   // Scroll detection effect with throttling
@@ -220,6 +211,15 @@ export const Header = React.memo(function Header() {
                     </Link>
 
                     <Link
+                      href="/connections"
+                      className={getMobileMenuItemClass('/connections')}
+                      onClick={handleCloseMobileMenu}
+                    >
+                      <Coins className="mr-4 h-6 w-6" />
+                      {tNavigation('connections')}
+                    </Link>
+
+                    <Link
                       href="/settings"
                       className={getMobileMenuItemClass('/settings')}
                       onClick={handleCloseMobileMenu}
@@ -309,11 +309,6 @@ export const Header = React.memo(function Header() {
                 {/* Auth.js Authentication Components */}
                 {!user ? (
                   <div className="flex items-center gap-2">
-                    {/* Language Switcher - visible on all screen sizes */}
-                    <div className="flex items-center">
-                      <LanguageSwitcher />
-                    </div>
-                    
                     {/* Desktop: Full buttons with text and icons */}
                     <div className="hidden sm:flex items-center gap-2">
                       <Link href="/auth/signin">
@@ -362,21 +357,16 @@ export const Header = React.memo(function Header() {
                   </div>
                 ) : (
                   <>
-                    {/* Messaging Button - Show OptimizedNotificationCenter if there are notifications, otherwise show regular button */}
-                    {(totalUnreadCount > 0 || hasNotifications) ? (
-                      <OptimizedNotificationCenter />
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="relative h-9 w-9 rounded-full"
-                        title={tBreadcrumb('messages')}
-                        onClick={openMessagingDialog}
-                        disabled={isMessagingLoading}
-                      >
-                        <MessageSquare className="h-7 w-7" />
-                      </Button>
-                    )}
+                    {/* Header Notifications - always show */}
+                    <HeaderNotifications />
+
+                    {/* Messaging Button - Always show ModernMessagingButton */}
+                    <ModernMessagingButton 
+                      variant="ghost"
+                      size="sm"
+                      className="relative h-9 w-9 rounded-full"
+                      iconOnly={true}
+                    />
 
                     {/* Desktop Menu */}
                     <div className="hidden md:block">
@@ -405,6 +395,12 @@ export const Header = React.memo(function Header() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href="/connections" className={getMenuItemClass('/connections')}>
+                              <Coins className="mr-2 h-6 w-6" />
+                              {tNavigation('connections')}
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href="/settings" className={getMenuItemClass('/settings')}>
                               <Settings className="mr-2 h-6 w-6" />
@@ -441,9 +437,6 @@ export const Header = React.memo(function Header() {
         </div>
       </div>
     </header>
-    
-    {/* Messaging Dialog */}
-    {user && <MessagingDialog />}
     </>
   );
 });

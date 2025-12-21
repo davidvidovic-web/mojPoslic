@@ -25,7 +25,6 @@ export function AvatarUpload({
   const { user, refreshUser } = useSupabaseAuth()
   const t = useTranslations('profile.avatar')
   const [isUploading, setIsUploading] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatarUrl || null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sizeClasses = {
@@ -53,14 +52,7 @@ export function AvatarUpload({
         return
       }
 
-      // Create preview
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-
-      // Upload file
+      // Upload file immediately (no preview)
       handleUpload(file)
     } catch (error) {
       console.error('File validation error:', error)
@@ -77,8 +69,15 @@ export function AvatarUpload({
     setIsUploading(true)
 
     try {
+      // Test storage connection first
+      const isConnected = await SupabaseFileUploadService.testStorageConnection()
+      if (!isConnected) {
+        throw new Error('Storage service is not available. Please try again later.')
+      }
+
       // Upload to Supabase Storage
       const result = await SupabaseFileUploadService.uploadAvatar(file, user.id)
+
 
       // Get session for auth header
       const { supabase } = await import("@/lib/supabase")
@@ -105,20 +104,41 @@ export function AvatarUpload({
         throw new Error('Failed to update profile')
       }
 
-      // Refresh user data to get updated avatar
-      await refreshUser()
-
-      // Call callback if provided
+      // Call callback first (this will refresh user data in parent)
       onAvatarUploaded?.(result.url)
+
+      // Don't refresh here to avoid double refresh
 
       toast.success(t('uploadSuccess'))
     } catch (error) {
       console.error('Avatar upload error:', error)
-      toast.error(t('errors.uploadFailed'))
-      // Reset preview on error
-      setPreviewUrl(currentAvatarUrl || null)
+
+      // Provide more specific error messages
+      let errorMessage = t('errors.uploadFailed')
+      if (error instanceof Error) {
+        if (error.message.includes('Storage service unavailable')) {
+          errorMessage = 'Storage service is temporarily unavailable. Please try again later.'
+        } else if (error.message.includes('Avatars storage bucket does not exist')) {
+          errorMessage = 'Storage configuration error. Please contact support.'
+        } else if (error.message.includes('Authentication failed')) {
+          errorMessage = 'Please sign in again to upload files.'
+        } else if (error.message.includes('file size')) {
+          errorMessage = 'File is too large. Please choose a smaller image.'
+        } else if (error.message.includes('file type')) {
+          errorMessage = 'Invalid file type. Please choose a valid image file.'
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+      }
+
+      toast.error(errorMessage)
+      // Reset to current avatar on error - no state to manage
     } finally {
       setIsUploading(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -153,8 +173,8 @@ export function AvatarUpload({
         throw new Error('Failed to update profile')
       }
 
-      // Clear preview
-      setPreviewUrl(null)
+      // Clear avatar from display - no state to manage
+      // The parent component will handle the UI update through refreshUser()
 
       // Refresh user data
       await refreshUser()
@@ -201,7 +221,7 @@ export function AvatarUpload({
       <div className="relative group">
         <Avatar className={`${sizeClasses[size]} cursor-pointer transition-opacity group-hover:opacity-80`}>
           <AvatarImage 
-            src={previewUrl || currentAvatarUrl} 
+            src={currentAvatarUrl} 
             alt={user?.name || 'Profile'} 
           />
           <AvatarFallback className="text-lg font-semibold">
@@ -225,6 +245,7 @@ export function AvatarUpload({
       {/* Action buttons */}
       <div className="flex gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
           onClick={openFileDialog}
@@ -238,13 +259,14 @@ export function AvatarUpload({
           ) : (
             <>
               <Upload className="w-4 h-4 mr-2" />
-              {t('upload')}
+              {currentAvatarUrl ? t('change') : t('upload')}
             </>
           )}
         </Button>
 
-        {(previewUrl || currentAvatarUrl) && (
+        {currentAvatarUrl && (
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleRemoveAvatar}

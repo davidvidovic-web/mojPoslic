@@ -8,7 +8,7 @@ interface EmailOptions {
   from?: string;
 }
 
-class EmailService {
+export class EmailService {
   private resend: Resend | null;
   private readonly fromEmail: string;
 
@@ -75,14 +75,7 @@ class EmailService {
       const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.RESEND_API_KEY;
       
       if (isDevelopment) {
-        // Simple console log for development
-        console.log('');
-        console.log('🔐 DEVELOPMENT MODE - EMAIL VERIFICATION');
-        console.log('📧 Email:', email);
-        console.log('� Verification Code:', code);
-        console.log('⏰ Code expires in 15 minutes');
-        console.log('');
-        
+        // Return verification code in development mode
         return {
           success: true,
           data: { id: 'dev-mode' },
@@ -238,8 +231,15 @@ ${content.ignore}
       }
 
       const isBosnian = locale === 'bs';
-      const baseUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || 'http://localhost:3000';
-      const resetUrl = `${baseUrl}/${locale}/auth/reset-password?token=${resetToken}`;
+      // Determine the correct base URL based on locale for domain-based routing
+      let baseUrl: string;
+      if (process.env.NODE_ENV === 'development') {
+        baseUrl = locale === 'en' ? 'http://en.localhost:3000' : 'http://localhost:3000';
+      } else {
+        baseUrl = locale === 'en' ? 'https://en.mojposlic.com' : 'https://mojposlic.com';
+      }
+      
+      const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
 
       const greeting = name 
         ? (isBosnian ? `Zdravo ${name}!` : `Hello ${name}!`)

@@ -51,5 +51,7 @@
     "saving": "Saving...",
     "saved": "Packages saved successfully!",
     "error": "Error saving packages"
-  }
+  },
+  "loadingUsers": "Loading users...",
+  "refresh": "Refresh"
 } 

@@ -3,7 +3,7 @@
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { SavedJobsSection } from '@/components/dashboard/tasker/saved-jobs-section'
 import { RecommendedJobsSection } from '@/components/dashboard/tasker/recommended-jobs-section'
-import { TaskerApplicationManager } from '@/components/dashboard/tasker/tasker-application-manager'
+import TaskerApplicationManager from '@/components/dashboard/tasker/tasker-application-manager'
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout'
 import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -38,7 +38,7 @@ export default function JobsPage() {
     <DashboardLayout 
       title={t('title')} 
       subtitle={t('subtitle')}
-      userRole={user?.role}
+      userRole={user?.role as 'admin' | 'client' | 'tasker' | 'company' | undefined}
     >
       <div className="space-y-8 max-w-6xl">
         <Tabs defaultValue="active" className="w-full">
@@ -59,8 +59,6 @@ export default function JobsPage() {
               <CardContent>
                 <TaskerApplicationManager 
                   showOnlyHistorical={false}
-                  title=""
-                  description=""
                 />
               </CardContent>
             </Card>
@@ -77,8 +75,6 @@ export default function JobsPage() {
               <CardContent>
                 <TaskerApplicationManager 
                   showOnlyHistorical={true}
-                  title=""
-                  description=""
                 />
               </CardContent>
             </Card>
@@ -94,7 +90,7 @@ export default function JobsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <SavedJobsSection savedJobs={savedJobs} />
+                  <SavedJobsSection savedJobs={savedJobs as never} />
                 </CardContent>
               </Card>
 
@@ -106,7 +102,7 @@ export default function JobsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecommendedJobsSection recommendedJobs={recommendedJobs} />
+                  <RecommendedJobsSection recommendedJobs={recommendedJobs as never} />
                 </CardContent>
               </Card>
             </div>

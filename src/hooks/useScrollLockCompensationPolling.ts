@@ -17,7 +17,6 @@ export function useScrollLockCompensationPolling() {
     
     // Calculate scrollbar width once
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    console.log('ScrollLockPolling: Scrollbar width:', scrollbarWidth);
 
     const checkBodyOverflow = () => {
       const body = document.body;
@@ -30,7 +29,6 @@ export function useScrollLockCompensationPolling() {
         return;
       }
       
-      console.log('ScrollLockPolling: Overflow changed from', lastOverflowState, 'to', currentOverflow);
       lastOverflowState = currentOverflow;
       
       if (currentOverflow === 'hidden') {
@@ -39,14 +37,12 @@ export function useScrollLockCompensationPolling() {
           originalPaddingRight = html.style.paddingRight || '';
           html.style.paddingRight = `${scrollbarWidth}px`;
           isCompensating = true;
-          console.log('ScrollLockPolling: Applied HTML compensation, padding:', scrollbarWidth + 'px');
         }
       } else {
         // Remove compensation
         if (isCompensating) {
           html.style.paddingRight = originalPaddingRight;
           isCompensating = false;
-          console.log('ScrollLockPolling: Removed HTML compensation, restored padding:', originalPaddingRight);
         }
       }
     };
@@ -63,7 +59,6 @@ export function useScrollLockCompensationPolling() {
       if (isCompensating) {
         document.documentElement.style.paddingRight = originalPaddingRight;
       }
-      console.log('ScrollLockPolling: Cleanup completed');
     };
   }, []);
 }

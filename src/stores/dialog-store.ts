@@ -13,6 +13,7 @@ interface DialogState {
   // Data for dialogs
   deletingJobId: string | null
   editingJob: Job | null
+  currentConversationId: string | null
   
   // Actions
   openJobPostDialog: () => void
@@ -23,7 +24,7 @@ interface DialogState {
   closeDeleteConfirm: () => void
   toggleMobileMenu: () => void
   closeMobileMenu: () => void
-  openMessagingDialog: () => void
+  openMessagingDialog: (conversationId?: string) => void
   closeMessagingDialog: () => void
   openConnectionPurchase: () => void
   closeConnectionPurchase: () => void
@@ -42,6 +43,7 @@ export const useDialogStore = create<DialogState>((set) => ({
   isConnectionPurchaseOpen: false,
   deletingJobId: null,
   editingJob: null,
+  currentConversationId: null,
   
   // Job posting dialog
   openJobPostDialog: () => set({ isJobPostDialogOpen: true }),
@@ -74,8 +76,14 @@ export const useDialogStore = create<DialogState>((set) => ({
   closeMobileMenu: () => set({ isMobileMenuOpen: false }),
   
   // Messaging dialog
-  openMessagingDialog: () => set({ isMessagingDialogOpen: true }),
-  closeMessagingDialog: () => set({ isMessagingDialogOpen: false }),
+  openMessagingDialog: (conversationId) => set({ 
+    isMessagingDialogOpen: true,
+    currentConversationId: conversationId || null
+  }),
+  closeMessagingDialog: () => set({ 
+    isMessagingDialogOpen: false,
+    currentConversationId: null
+  }),
   
   // Connection purchase
   openConnectionPurchase: () => set({ isConnectionPurchaseOpen: true }),
@@ -91,5 +99,6 @@ export const useDialogStore = create<DialogState>((set) => ({
     isConnectionPurchaseOpen: false,
     deletingJobId: null,
     editingJob: null,
+    currentConversationId: null,
   }),
 }))

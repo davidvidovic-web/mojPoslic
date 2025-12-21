@@ -39,6 +39,9 @@ export function useJobs(filters: JobFilters = {}) {
       if (filters.type && filters.type !== 'all') params.append('type', filters.type)
       if (filters.subcategory) params.append('subcategory', filters.subcategory)
 
+      // Add cache busting parameter to ensure fresh data
+      params.append('_t', Date.now().toString())
+
       const response = await fetch(`/api/jobs?${params.toString()}`)
       
       if (!response.ok) {
@@ -60,7 +63,7 @@ export function useJobs(filters: JobFilters = {}) {
         error: error instanceof Error ? error.message : 'Failed to fetch jobs'
       }))
     }
-  }, [filters.search, filters.city, filters.category, filters.type, filters.subcategory])
+  }, [filters])
 
   const refetch = useCallback(() => {
     fetchJobs()
@@ -69,6 +72,33 @@ export function useJobs(filters: JobFilters = {}) {
   useEffect(() => {
     fetchJobs()
   }, [fetchJobs])
+
+  // Auto-refresh data when page becomes visible (user returns from job detail)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Refetch with a small delay to allow for any pending updates
+        setTimeout(() => {
+          refetch()
+        }, 500)
+      }
+    }
+
+    const handleFocus = () => {
+      // Refetch when window regains focus
+      setTimeout(() => {
+        refetch()
+      }, 500)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [refetch])
 
   return {
     ...state,

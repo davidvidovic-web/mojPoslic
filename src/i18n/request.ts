@@ -43,6 +43,8 @@ export default getRequestConfig(async ({requestLocale}) => {
   await loadTranslation('messageTemplates');
   await loadTranslation('theme');
   await loadTranslation('purchase');
+  await loadTranslation('support');
+  await loadTranslation('documentation');
 
   return {
     locale,

@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2 } from 'lucide-react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface SupabaseAuthFormProps {
   defaultTab?: 'signin' | 'signup'
@@ -28,6 +29,7 @@ export function SupabaseAuthForm({
   redirectTo = '/',
   showProviders = true 
 }: SupabaseAuthFormProps) {
+  const t = useTranslations('auth')
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
@@ -51,12 +53,12 @@ export function SupabaseAuthForm({
       } else {
         // Sign up
         if (password !== confirmPassword) {
-          toast.error('Passwords do not match')
+          toast.error(t('toast.passwordsDoNotMatch'))
           return
         }
 
         if (password.length < 6) {
-          toast.error('Password must be at least 6 characters')
+          toast.error(t('toast.passwordTooShort'))
           return
         }
 
@@ -68,12 +70,12 @@ export function SupabaseAuthForm({
         })
 
         if (!error) {
-          toast.success('Check your email for the confirmation link!')
+          toast.success(t('toast.checkEmailConfirmation'))
         }
       }
     } catch (error) {
       console.error('Auth error:', error)
-      toast.error('An unexpected error occurred')
+      toast.error(t('toast.unexpectedError'))
     } finally {
       setIsLoading(false)
     }
@@ -85,7 +87,7 @@ export function SupabaseAuthForm({
       await signInWithProvider(provider)
     } catch (error) {
       console.error('Provider auth error:', error)
-      toast.error('Authentication failed')
+      toast.error(t('toast.authenticationFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -93,7 +95,7 @@ export function SupabaseAuthForm({
 
   const handlePasswordReset = async () => {
     if (!email) {
-      toast.error('Please enter your email address')
+      toast.error(t('toast.enterEmailAddress'))
       return
     }
 

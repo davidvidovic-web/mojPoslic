@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { LocationPicker } from '@/components/ui/location-picker'
 import { CitiesFilter } from '@/components/filters/cities-filter'
 import { CreateJobData } from '@/types/job'
-import { validateLocationInCity, cleanMapAddress } from '@/lib/location-utils'
+import { validateLocationInCity, cleanMapAddress } from '@/lib/location/validation'
 import { CITY_COORDINATES } from '@/lib/city-coordinates'
 import { MapPin as MapPinIcon } from 'lucide-react'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
@@ -169,13 +169,13 @@ export function LocationSection({ formData, onChange, onLocationValidationChange
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+      <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2">
         <MapPinIcon className="h-5 w-5" />
         {t('title')}
       </h3>
       
       <div className="space-y-2">
-        <Label htmlFor="city">{t('cityRequired')}</Label>
+        <Label htmlFor="city" className="text-base md:text-sm">{t('cityRequired')}</Label>
         <CitiesFilter
           value={formData.city_id ? cities.find(c => c.id === formData.city_id)?.key || '' : ''}
           onChange={(cityKey: string) => {

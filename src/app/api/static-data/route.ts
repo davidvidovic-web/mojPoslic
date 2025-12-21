@@ -72,7 +72,6 @@ function processCategories(categories: Category[]): Category[] {
 export async function GET() {
   try {
     const publicDir = path.join(process.cwd(), 'public')
-    console.log('Loading static data from filesystem via API, publicDir:', publicDir)
     
     const [citiesData, categoriesData, metadataData] = await Promise.all([
       fs.promises.readFile(path.join(publicDir, 'static', 'cities.json'), 'utf8')
@@ -84,7 +83,6 @@ export async function GET() {
         .catch(() => null) // metadata is optional
     ])
     
-    console.log('Successfully loaded static data from filesystem via API')
     
     const result: StaticDataCache = {
       cities: citiesData.cities,

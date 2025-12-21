@@ -7,39 +7,13 @@ import { useEffect, useState } from 'react'
 import { ProfileSettingsCard } from '@/components/settings/profile-settings-card'
 import { AccountInfoCard } from '@/components/settings/account-info-card'
 import { SecurityCard } from '@/components/settings/security-card'
-import { PrivacySettingsCard } from '@/components/settings/privacy-settings-card'
+// import { PrivacySettingsCard } from '@/components/settings/privacy-settings-card'
 import { AppearanceCard } from '@/components/settings/appearance-card'
 import { HelpSupportCard } from '@/components/settings/help-support-card'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { NextIntlClientProvider } from 'next-intl'
-
-// Helper function to load all translation messages for a given locale
-const loadMessages = async (locale: string) => {
-  const messages: Record<string, unknown> = {};
-  
-  // List of all translation namespaces
-  const namespaces = [
-    'common', 'dashboard', 'jobs', 'jobPost', 'navigation', 'auth', 'messaging', 
-    'profile', 'homepage', 'header', 'filters', 'notifications', 'jobCard', 
-    'errors', 'greetings', 'jobApplication', 'settings', 'skills', 'roleSelection', 
-    'admin', 'messageTemplates', 'theme', 'purchase'
-  ];
-  
-  // Load all translation files
-  for (const namespace of namespaces) {
-    try {
-      const translation = await import(`../../../translations/${locale}/${namespace}.json`);
-      messages[namespace] = translation.default;
-    } catch {
-      // Silently ignore missing translation files
-      console.warn(`Missing translation file: ${locale}/${namespace}.json`);
-    }
-  }
-  
-  return messages;
-};
+import { useTranslations } from 'next-intl'
 
 interface DeletionRequest {
   scheduledDeletion: string
@@ -48,41 +22,11 @@ interface DeletionRequest {
 export default function SettingsPage() {
   const { user, loading } = useSupabaseAuth()
   const router = useRouter()
-  const [messages, setMessages] = useState<Record<string, unknown>>({});
-  const [translationsLoaded, setTranslationsLoaded] = useState(false);
   const [deletionRequest, setDeletionRequest] = useState<DeletionRequest | null>(null)
 
-  // Detect locale from domain or default to Bosnian
-  const locale = typeof window !== 'undefined' && window.location.hostname.startsWith('en.') ? 'en' : 'bs';
-
-  // Load translations on component mount
-  useEffect(() => {
-    const loadTranslations = async () => {
-      try {
-        const loadedMessages = await loadMessages(locale);
-        setMessages(loadedMessages);
-        setTranslationsLoaded(true);
-      } catch (error) {
-        console.error('Failed to load translations:', error);
-        setTranslationsLoaded(true); // Still set to true to avoid infinite loading
-      }
-    };
-    
-    loadTranslations();
-  }, [locale]);
-
-  // Helper functions to access translations
-  const t = (key: string) => {
-    const keys = key.split('.');
-    let value: Record<string, unknown> = messages;
-    for (const k of keys) {
-      value = (value?.[k] as Record<string, unknown>) || {};
-    }
-    return (typeof value === 'string' ? value : key);
-  };
-
-  const tSettings = (key: string) => t(`settings.${key}`);
-  const tCommon = (key: string) => t(`common.${key}`);
+  const t = useTranslations()
+  const tSettings = (key: string) => t(`settings.${key}`)
+  const tCommon = (key: string) => t(`common.buttons.${key}`)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -111,8 +55,8 @@ export default function SettingsPage() {
     }
   }, [user])
 
-  // Show loading while translations are loading or auth is loading
-  if (loading || !translationsLoaded) {
+  // Show loading while auth is loading
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -128,7 +72,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <NextIntlClientProvider messages={messages} locale={locale}>
+    <>
       <ConditionalHeader />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -157,16 +101,16 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <ProfileSettingsCard />
               <AccountInfoCard />
-              <SecurityCard />
+              <SecurityCard deletionRequest={deletionRequest} />
             </div>
             <div className="space-y-6">
-              <PrivacySettingsCard />
+              {/* <PrivacySettingsCard /> */}
               <AppearanceCard />
               <HelpSupportCard />
             </div>
           </div>
         </div>
       </div>
-    </NextIntlClientProvider>
+    </>
   )
 }

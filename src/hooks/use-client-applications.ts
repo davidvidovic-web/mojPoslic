@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { JobApplication } from '@/types/application'
+import { supabase } from '@/lib/supabase'
 
 // Custom hook to get all applications for a client's jobs
 export function useClientApplications(jobIds: string[], jobs?: Array<{ id: string; title: string }>) {
@@ -9,14 +10,27 @@ export function useClientApplications(jobIds: string[], jobs?: Array<{ id: strin
     queryFn: async (): Promise<JobApplication[]> => {
       if (!jobIds.length) return []
       
+      // Get session token for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        throw new Error('Not authenticated')
+      }
+      
       // Fetch applications for all jobs in parallel
       const applicationPromises = jobIds.map(async (jobId) => {
-        const response = await fetch(`/api/jobs/${jobId}/applications`)
+        const response = await fetch(`/api/jobs/${jobId}/applications`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        })
         if (!response.ok) {
-          throw new Error(`Failed to fetch applications for job ${jobId}`)
+          const errorData = await response.json()
+          throw new Error(errorData.error || `Failed to fetch applications for job ${jobId}`)
         }
         const data = await response.json()
-        return data.applications || []
+        return data.data || []
       })
 
       const allApplicationsArrays = await Promise.all(applicationPromises)

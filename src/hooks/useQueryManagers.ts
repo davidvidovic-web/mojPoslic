@@ -1,10 +1,11 @@
 'use client'
 
+import { useMemo, useCallback } from 'react'
 import { useJobs } from '@/hooks/use-jobs'
-import { useApplications as useApplicationsQuery, useApplyToJob as useCreateApplicationMutation, useUpdateApplication as useUpdateApplicationMutation } from './use-applications'
+import { useUserApplications as useUserApplicationsQuery, useApplyToJob as useCreateApplicationMutation, useUpdateApplication as useUpdateApplicationMutation } from './use-applications'
 import { useCities, useCategories } from '@/hooks/use-static-data'
 import { useFilterStore } from '@/stores/filter-store'
-import { useRealtimeJobs, useRealtimeJobApplications } from './queries/useRealtimeJobs'
+import { useRealtimeJobs, useRealtimeJobApplications, useRealtimeUserApplications } from './queries/useRealtimeJobs'
 import type { JobFilters } from '@/types/job'
 
 /**
@@ -16,28 +17,30 @@ export function useJobManager() {
     jobSearch, 
     jobCityFilter, 
     jobCategoryFilter, 
+    jobSubcategoryFilter,
     jobTypeFilter,
     currentPage,
     itemsPerPage
   } = useFilterStore()
 
   // Map the filter store types to JobFilters type
-  const mapJobType = (type: string): 'quick_job' | 'full_time' | 'part_time' | 'remote' | 'all' | undefined => {
+  const mapJobType = useCallback((type: string): 'quick_job' | 'full_time' | 'part_time' | 'remote' | 'all' | undefined => {
     if (type === 'all') return 'all';
     if (type === 'quick-job') return 'quick_job';
     if (type === 'full-time') return 'full_time';
     if (type === 'part-time') return 'part_time';
     if (type === 'remote') return 'remote';
     return undefined;
-  };
+  }, [])
 
   // Build filters from Zustand store
-  const filters: JobFilters = {
+  const filters: JobFilters = useMemo(() => ({
     search: jobSearch || undefined,
     city: jobCityFilter !== 'all' ? jobCityFilter : undefined,
     category: jobCategoryFilter !== 'all' ? jobCategoryFilter : undefined,
+    subcategory: jobSubcategoryFilter !== 'all' ? jobSubcategoryFilter : undefined,
     type: mapJobType(jobTypeFilter),
-  }
+  }), [jobSearch, jobCityFilter, jobCategoryFilter, jobSubcategoryFilter, jobTypeFilter, mapJobType])
 
   // Use our optimized Supabase-based hooks
   const { jobs, loading, error, refetch } = useJobs(filters)
@@ -70,13 +73,17 @@ export function useJobManager() {
 /**
  * Application Manager Hook - Enhanced with real-time features
  */
-export function useApplicationManager(jobId?: string) {
-  const applicationsQuery = useApplicationsQuery() // No parameters since it takes ApplicationFilters
+export function useApplicationManager(jobId?: string, userId?: string) {
+  // Always use user-specific applications query for better performance and data isolation
+  const applicationsQuery = useUserApplicationsQuery(userId) 
   const applyMutation = useCreateApplicationMutation()
   const updateMutation = useUpdateApplicationMutation()
 
   // Enable real-time updates for job applications (always call hook, but conditionally subscribe)
   useRealtimeJobApplications(jobId || '')
+  
+  // Enable real-time updates for user applications (to catch deletions/updates across all jobs)
+  useRealtimeUserApplications()
 
   return {
     // Query data

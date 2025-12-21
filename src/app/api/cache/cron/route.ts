@@ -17,7 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the cache update endpoint
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_SITE_URL 
+      || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
     const updateUrl = `${baseUrl}/api/cache/update`
     
     const response = await fetch(updateUrl, {

@@ -1,32 +1,110 @@
 {
   "title": "Poruke",
   "subtitle": "Ostanite povezani sa svojim klijentima",
-  "startConversation": "Započni razgovor",
-  "noConversations": "Nema razgovora",
-  "noConversationsDesc": "Započnite razgovor s klijentom ili radnikom",
-  "newConversation": "Novi razgovor",
-  "searchConversations": "Pretraži razgovore",
-  "allConversations": "Svi razgovori",
-  "unreadMessages": "Nepročitane poruke",
-  "recentMessages": "Nedavne poruke",
-  "archivedConversations": "Arhivirani razgovori",
-  "startNew": "Započni novi razgovor",
+  "auth": {
+    "signInRequired": "Molimo prijavite se da pristupite porukama"
+  },
+  "error": {
+    "general": "Dogodila se greška"
+  },
+  "actions": {
+    "close": "Zatvori",
+    "tryAgain": "Pokušaj ponovo",
+    "markAsRead": "Označi kao pročitano",
+    "markAsUnread": "Označi kao nepročitano",
+    "archive": "Arhiviraj",
+    "unarchive": "Ukloni iz arhive",
+    "delete": "Obriši",
+    "deleteMessage": "Obriši poruku",
+    "deleteMessageForMe": "Obriši za mene",
+    "deleteConversation": "Obriši Razgovor",
+    "clearMessages": "Očisti Poruke",
+    "clearConversation": "Očisti razgovor za mene",
+    "block": "Blokiraj",
+    "unblock": "Odblokiraj",
+    "report": "Prijavi"
+  },
+  "deleteMessageDialog": {
+    "title": "Obrisati poruku?",
+    "description": "Ova poruka će biti obrisana samo iz vašeg prikaza. Drugi učesnici će je i dalje vidjeti.",
+    "warning": "Ova akcija se ne može poništiti. Poruka će biti trajno uklonjena iz vašeg prikaza.",
+    "confirm": "Obriši za mene",
+    "cancel": "Otkaži",
+    "success": "Poruka obrisana",
+    "error": "Neuspjelo brisanje poruke"
+  },
+  "clearConversationDialog": {
+    "title": "Očisti Poruke",
+    "description": "Sve poruke u ovom razgovoru će biti obrisane samo iz vašeg prikaza. Drugi učesnici će ih i dalje vidjeti.",
+    "warning": "Ova akcija se ne može poništiti. Sve poruke će biti trajno očišćene iz vašeg prikaza.",
+    "confirm": "Očisti Poruke",
+    "cancel": "Vrati se",
+    "clearing": "Čišćenje...",
+    "success": "Poruke očišćene",
+    "error": "Neuspjelo čišćenje poruka"
+  },
+  "deleteConversationDialog": {
+    "title": "Obriši Razgovor",
+    "description": "Ovo će ukloniti razgovor iz vaše liste. Poruke će ostati u bazi podataka i mogu biti ponovo pristupne ako drugi učesnik pošalje novu poruku.",
+    "warning": "Ovaj razgovor će biti uklonjen iz vašeg prikaza, ali sve poruke ostaju u bazi podataka.",
+    "confirm": "Obriši Razgovor",
+    "cancel": "Vrati se",
+    "deleting": "Brisanje...",
+    "success": "Razgovor obrisan",
+    "error": "Neuspjelo brisanje razgovora"
+  },
+  "conversation": {
+    "defaultTitle": "Razgovor"
+  },
+  "conversations": {
+    "title": "Razgovori",
+    "noConversations": "Nema razgovora. Počnite razmjenjivati poruke preko vaših prijava za posao.",
+    "noConversationsDesc": "Započnite razgovor s klijentom ili radnikom",
+    "startConversation": "Započni razgovor",
+    "searchConversations": "Pretraži razgovore",
+    "allConversations": "Svi razgovori",
+    "unreadMessages": "Nepročitane poruke",
+    "recentMessages": "Nedavne poruke",
+    "archivedConversations": "Arhivirani razgovori",
+    "startNew": "Započni novi razgovor"
+  },
   "messages": {
     "title": "Poruke",
-    "noMessages": "Nema poruka",
-    "sendMessage": "Pošalji poruku",
-    "messagePlaceholder": "Napišite svoju poruku...",
+    "noMessages": "Nema poruka. Počnite razgovor!",
+    "noMessagesDesc": "Pošaljite prvu poruku da započnete razgovor",
+    "typeMessage": "Napišite svoju poruku...",
+    "send": "Pošalji",
+    "attachFile": "Priloži datoteku",
+    "removeAttachment": "Ukloni prilog",
+    "fileTooLarge": "Datoteka je prevelika",
+    "unsupportedFileType": "Nepodržan tip datoteke",
+    "loadingMessages": "Učitavam poruke...",
+    "loadMoreMessages": "Učitaj više poruka",
+    "messageSent": "Poruka poslana",
+    "messageFailed": "Neuspješno slanje poruke",
+    "typing": {
+      "single": "Neko kuca...",
+      "multiple": "{count} osoba kuca..."
+    },
+    "online": "online",
+    "offline": "offline",
+    "lastSeen": "Zadnji put viđen {time}",
+    "today": "danas",
+    "yesterday": "jučer",
+    "justNow": "Upravo sada",
+    "minutesAgo": "prije {count}min",
+    "hoursAgo": "prije {count}h",
+    "timeFormat": "{hour}:{minute}",
+    "dateFormat": "{day}. {month}",
+    "weekdayFormat": "{weekday}"
+  },
+  "conversationTypes": {
+    "jobChat": "Razgovor o prijavi za posao",
     "groupChat": "Grupni razgovor",
     "directMessage": "Direktna poruka",
     "unknown": "Nepoznato",
     "direct": "Direktna poruka",
     "group": "Grupni razgovor"
-  },
-  "conversationTypes": {
-    "jobChat": "Razgovor o poslu",
-    "groupChat": "Grupni razgovor",
-    "directMessage": "Direktna poruka",
-    "unknown": "Nepoznato"
   },
   "attachments": {
     "title": "Prilozi",
@@ -36,18 +114,9 @@
     "audio": "Audio",
     "attachFile": "Priloži fajl",
     "removeAttachment": "Ukloni prilog",
-    "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 10MB.",
+    "fileTooLarge": "Fajl je prevelik. Maksimalna veličina je 2MB.",
     "invalidFileType": "Neispravan tip fajla. Molimo odaberite ispravan fajl.",
     "dropFilesHere": "Pustite fajlove ovde"
-  },
-  "actions": {
-    "send": "Pošalji",
-    "reply": "Odgovori",
-    "forward": "Proslijedi",
-    "delete": "Obriši",
-    "archive": "Arhiviraj",
-    "markAsRead": "Označi kao pročitano",
-    "markAsUnread": "Označi kao nepročitano"
   },
   "status": {
     "sending": "Slanje...",

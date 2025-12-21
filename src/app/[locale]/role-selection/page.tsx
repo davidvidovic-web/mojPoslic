@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,12 +9,119 @@ import {
   Building2, 
   Briefcase, 
   ArrowRight, 
-  CheckCircle
+  CheckCircle,
+  Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
-import { useTranslations } from 'next-intl'
+import { NextIntlClientProvider } from 'next-intl';
 import { useRouter } from 'next/navigation'
+
+// Static messages for role selection pages to avoid server-side complications
+const getRoleSelectionMessages = (locale: string = 'bs') => {
+  if (locale === 'en') {
+    return {
+    roleSelection: {
+      selectRole: "Select Your Account Type",
+      chooseRole: "Choose how you want to use mojPoslić",
+      welcomeMessage: "Welcome! You've selected to join as a {role}",
+      continue: "Continue as {role}",
+      continueAsUser: "Select your role to continue",
+      updating: "Updating...",
+      canChangeRole: "You can change your role later in settings",
+      errors: {
+        pleaseSelectRole: "Please select your account type",
+        pleaseSignInAgain: "Please sign in again to continue",
+        roleUpdateSuccess: "Role updated successfully!",
+        failedToUpdateRole: "Failed to update your role"
+      },
+      tasker: {
+          title: "Job Seeker",
+          description: "Looking for work opportunities",
+          badge: "Most Popular",
+          features: {
+            findJobs: "Find and apply for jobs",
+            createProfile: "Create your professional profile",
+            messaging: "Direct messaging with employers",
+            notifications: "Get notified about new opportunities"
+          }
+        },
+        client: {
+          title: "Employer",
+          description: "Looking to hire workers",
+          features: {
+            postJobs: "Post job listings",
+            findWorkers: "Browse worker profiles",
+            messaging: "Direct messaging with candidates", 
+            management: "Manage your job postings"
+          }
+        },
+        company: {
+          title: "Company",
+          description: "Enterprise hiring solutions",
+          badge: "Coming Soon",
+          features: {
+            enterprise: "Enterprise-grade hiring tools",
+            analytics: "Advanced analytics and reporting",
+            branding: "Company branding on job posts",
+            support: "Dedicated account support"
+          }
+        }
+      }
+    };
+  }
+  
+  // Bosnian (default)
+  return {
+    roleSelection: {
+      selectRole: "Odaberite Tip Vašeg Računa",
+      chooseRole: "Odaberite kako želite koristiti mojPoslić",
+      welcomeMessage: "Dobrodošli! Odabrali ste da se pridružite kao {role}",
+      continue: "Nastavi kao {role}",
+      continueAsUser: "Odaberite svoju ulogu da nastavite",
+      updating: "Ažuriram...",
+      canChangeRole: "Možete promijeniti svoju ulogu kasnije u postavkama",
+      errors: {
+        pleaseSelectRole: "Molimo odaberite tip vašeg računa",
+        pleaseSignInAgain: "Molimo prijavite se ponovo da nastavite",
+        roleUpdateSuccess: "Uloga je uspješno ažurirana!",
+        failedToUpdateRole: "Neuspješno ažuriranje vaše uloge"
+      },
+      tasker: {
+        title: "Tražim Posao",
+        description: "Tražim prilike za rad",
+        badge: "Najpopularnije",
+        features: {
+          findJobs: "Pronađi i prijavi se za poslove",
+          createProfile: "Stvori svoj profesionalni profil",
+          messaging: "Direktno porukovanje sa poslodavcima",
+          notifications: "Budi obaviješten o novim prilikama"
+        }
+      },
+      client: {
+        title: "Poslodavac",
+        description: "Tražim radnike za posao",
+        features: {
+          postJobs: "Objavi oglase za posao",
+          findWorkers: "Pregledaj profile radnika",
+          messaging: "Direktno porukovanje sa kandidatima",
+          management: "Upravljaj svojimi oglasima"
+        }
+      },
+      company: {
+        title: "Kompanija",
+        description: "Napredna rješenja za zapošljavanje",
+        badge: "Uskoro",
+        features: {
+          enterprise: "Napredni alati za zapošljavanje",
+          analytics: "Napredne analitike i izvještaji",
+          branding: "Brendiranje kompanije na oglasima",
+          support: "Dedicirana podrška za račun"
+        }
+      }
+    }
+  };
+};
 
 interface RoleOption {
   id: 'tasker' | 'client' | 'company'
@@ -53,198 +159,86 @@ const roleOptions: RoleOption[] = [
 ]
 
 export default function RoleSelectionPage() {
-  const t = useTranslations('roleSelection')
-  const router = useRouter()
   const { user, loading, refreshUser } = useSupabaseAuth()
-  const searchParams = useSearchParams()
+  const router = useRouter()
   const [selectedRole, setSelectedRole] = useState<'tasker' | 'client' | 'company' | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [waitingForSession, setWaitingForSession] = useState(false)
-  const [initialCheckDone, setInitialCheckDone] = useState(false)
 
-  // Check if user just verified email
-  const isVerified = searchParams.get('verified') === 'true'
-  const verifyToken = searchParams.get('token') // This indicates fresh verification
-
-  console.log('RoleSelection: Component rendered with state:', {
-    loading,
-    user: user ? { id: user.id, email: user.email } : null,
-    isVerified,
-    verifyToken,
-    waitingForSession,
-    initialCheckDone
-  })
-
-  // CRITICAL: Immediate detection and waiting state setup
-  useEffect(() => {
-    if (isVerified && verifyToken) {
-      console.log('RoleSelection: Fresh verification detected, setting up waiting state')
-      setWaitingForSession(true)
-      // Give the auth context some time to initialize, then start refreshing
-      setTimeout(() => {
-        console.log('RoleSelection: Starting session refresh attempts')
-        let attempts = 0
-        const maxAttempts = 30 // Increased attempts
-        
-        const tryRefresh = async () => {
-          attempts++
-          console.log(`RoleSelection: Refresh attempt ${attempts}/${maxAttempts}`)
-          
-          try {
-            await refreshUser()
-            
-            // Check if we need to continue
-            if (attempts < maxAttempts) {
-              setTimeout(tryRefresh, 800) // Longer delay between attempts
-            } else {
-              console.log('RoleSelection: Max attempts reached, stopping')
-              setWaitingForSession(false)
-              setInitialCheckDone(true)
-            }
-          } catch (error) {
-            console.error('RoleSelection: Error in refresh:', error)
-            if (attempts < maxAttempts) {
-              setTimeout(tryRefresh, 1000) // Even longer delay on error
-            } else {
-              setWaitingForSession(false)
-              setInitialCheckDone(true)
-            }
-          }
-        }
-        
-        tryRefresh()
-      }, 1500) // Increased initial wait time
-    } else {
-      // Not a fresh verification, proceed normally
-      setTimeout(() => {
-        setInitialCheckDone(true)
-      }, 500)
-    }
-  }, [isVerified, verifyToken, refreshUser])
-
-  // Monitor for successful user detection
-  useEffect(() => {
-    if (waitingForSession && user) {
-      console.log('RoleSelection: User detected! Session established successfully')
-      setWaitingForSession(false)
-      setInitialCheckDone(true)
-    }
-  }, [waitingForSession, user])
-
-  // Debug auth state
-  useEffect(() => {
-    console.log('Role selection - Auth state:', { 
-      loading, 
-      user: user ? { id: user.id, email: user.email, role: user.role } : null, 
-      isVerified 
-    })
-  }, [loading, user, isVerified])
-
-  // Pre-select user's current role if they have one
-  useEffect(() => {
-    if (user && user.role && !selectedRole) {
-      setSelectedRole(user.role as 'tasker' | 'client' | 'company')
-    }
-  }, [user, selectedRole])
-
-  // Handle redirects with proper flow tracking
-  useEffect(() => {
-    // Don't do any redirects until initial check is done
-    if (!initialCheckDone) {
-      console.log('RoleSelection: Initial check not done yet, waiting...')
-      return
+  // Detect locale from domain or default to Bosnian
+  const locale = typeof window !== 'undefined' && window.location.hostname.startsWith('en.') ? 'en' : 'bs';
+  const messages = getRoleSelectionMessages(locale);
+  
+  // Helper functions to access translations
+  const t = (key: string, params?: Record<string, string>): string => {
+    const keys = key.split('.');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let value: any = messages.roleSelection;
+    for (const k of keys) {
+      value = value?.[k];
     }
     
-    console.log('RoleSelection: Redirect logic check:', { 
-      loading, 
-      user: !!user, 
-      waitingForSession, 
-      isVerified, 
-      verifyToken,
-      initialCheckDone,
-      userDetails: user ? {
-        email: user.email,
-        role: user.role,
-        profileSetupCompleted: user.profileSetupCompleted,
-        emailVerified: user.emailVerified,
-      } : null,
-      'decision': (() => {
-        if (waitingForSession) return 'WAIT - waitingForSession=true'
-        if (loading) return 'WAIT - still loading'
-        if (!user && !isVerified) return 'REDIRECT - no user, not verified'
-        if (user && user.profileSetupCompleted) return 'REDIRECT - profile complete'
-        if (user && !user.profileSetupCompleted) return 'CONTINUE - show role selection'
-        return 'CONTINUE - default case'
-      })()
-    })
-    
-    // Don't redirect if we're waiting for session to establish
-    if (waitingForSession) {
-      console.log('RoleSelection: Waiting for session to establish, not redirecting yet...')
-      return
+    if (typeof value === 'string' && params) {
+      return value.replace(/\{(\w+)\}/g, (match, key) => params[key] || match);
     }
     
-    // Don't redirect if still loading
-    if (loading) {
-      console.log('RoleSelection: Still loading, not redirecting yet...')
-      return
+    return (typeof value === 'string' ? value : key);
+  };
+  
+  // Helper to get feature objects
+  const getFeatures = (key: string): Record<string, string> => {
+    const keys = key.split('.');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let value: any = messages.roleSelection;
+    for (const k of keys) {
+      value = value?.[k];
     }
-    
-    // Only redirect to signin if we're sure there's no user and we're not in a verification flow
-    if (!user && !isVerified) {
-      console.log('RoleSelection: No user found and not in verification flow, redirecting to sign in')
+    return typeof value === 'object' ? value : {};
+  };
+
+  // Handle navigation based on auth state
+  useEffect(() => {
+    // Don't redirect while loading
+    if (loading) return
+
+    // Redirect to signin if not authenticated
+    if (!user) {
       router.push('/auth/signin')
       return
     }
-    
-    // Special case: if we were expecting a user from verification but still don't have one
-    if (!user && isVerified && verifyToken) {
-      console.log('RoleSelection: Expected user from verification but none found, redirecting to signin with error')
-      router.push('/auth/signin?error=verification_session_failed')
-      return
-    }
 
-    // If user exists and profile is complete, redirect to dashboard
-    if (user && user.profileSetupCompleted) {
-      console.log('RoleSelection: User profile already completed, redirecting to dashboard')
+    // Redirect if already has completed profile setup
+    if (user.profileSetupCompleted) {
       router.push('/dashboard')
       return
     }
-    
-    // If user exists but profile not complete, stay on role selection
-    if (user && !user.profileSetupCompleted) {
-      console.log('RoleSelection: User found, profile incomplete, showing role selection interface')
-      // This is the correct state - user should select role here (role might be null)
-    }
-    
-    console.log('RoleSelection: All checks passed, showing role selection interface')
-  }, [user, loading, router, isVerified, verifyToken, waitingForSession, initialCheckDone])
+  }, [user, loading, router])
 
-  // Show loading if auth is still loading or if user just verified and we're waiting for session
-  if (loading || waitingForSession || (isVerified && verifyToken && !user)) {
+  // Show loading if auth is still loading
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">
-            {waitingForSession ? 'Setting up your account...' : 
-             isVerified && verifyToken ? 'Finalizing email verification...' : 
-             'Loading...'}
-          </p>
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading...</p>
+          </div>
         </div>
-      </div>
+      </NextIntlClientProvider>
     )
   }
 
-  // Show loading while redirecting (but not for verified users who might still be establishing session)
-  if (!isVerified && (!user || user.profileSetupCompleted)) {
+  // Show loading while redirecting
+  if (!user || user.profileSetupCompleted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Redirecting...</p>
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            {/* Hardcoded in Bosnian - redirect page */}
+            <p className="mt-2 text-muted-foreground">Preusmjeravanje...</p>
+          </div>
         </div>
-      </div>
+      </NextIntlClientProvider>
     )
   }
 
@@ -258,7 +252,7 @@ export default function RoleSelectionPage() {
 
   const handleContinue = async () => {
     if (!selectedRole) {
-      toast.error('Please select your account type')
+      toast.error(t('errors.pleaseSelectRole'))
       return
     }
 
@@ -271,7 +265,7 @@ export default function RoleSelectionPage() {
       
       if (sessionError || !session) {
         console.error('No valid session found:', sessionError)
-        toast.error('Please sign in again to continue')
+        toast.error(t('errors.pleaseSignInAgain'))
         router.push('/auth/signin')
         return
       }
@@ -289,118 +283,133 @@ export default function RoleSelectionPage() {
       })
       
       if (response.ok) {
-        toast.success('Role updated successfully!')
+        toast.success(t('errors.roleUpdateSuccess'))
         await refreshUser()
         router.push('/profile-setup')
       } else {
         const errorData = await response.json()
-        toast.error(errorData.error || 'Failed to update your role')
+        toast.error(errorData.error || t('errors.failedToUpdateRole'))
       }
     } catch (error) {
       console.error('Error updating role:', error)
-      toast.error('Failed to update your role')
+      toast.error(t('errors.failedToUpdateRole'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">{t('selectRole')}</h1>
-          <p className="text-muted-foreground text-lg">
-            {selectedRole ? t('welcomeMessage', { role: t(`${selectedRole}.title`) }) : t('chooseRole')}
-          </p>
-        </div>
-
-        {/* Role Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {roleOptions.map((role) => (
-            <Card
-              key={role.id}
-              className={`relative transition-all duration-300 ${
-                role.id === 'company'
-                  ? 'opacity-50 cursor-not-allowed'
-                  : selectedRole === role.id
-                  ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer'
-                  : 'hover:shadow-md border-border cursor-pointer'
-              }`}
-              onClick={() => handleRoleSelect(role.id)}
-            >
-              {role.badgeKey && (
-                <Badge 
-                  className="absolute -top-2 left-4 bg-primary text-primary-foreground"
-                  variant="default"
-                >
-                  {t(role.badgeKey)}
-                </Badge>
-              )}
-              
-              {selectedRole === role.id && role.id !== 'company' && (
-                <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
-                  <CheckCircle className="h-4 w-4 text-primary-foreground" />
-                </div>
-              )}
-
-              <CardHeader className="text-center">
-                <div className="flex justify-center mb-3">
-                  <div className={`p-3 rounded-full transition-colors ${
-                    selectedRole === role.id && role.id !== 'company'
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {role.icon}
-                  </div>
-                </div>
-                <CardTitle className="text-xl">{t(role.titleKey)}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {t(role.descriptionKey)}
-                </p>
-              </CardHeader>
-
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  {Object.values(t.raw(role.featuresKey) || {}).map((feature, index: number) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      {String(feature)}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {/* Continue Button */}
-        <div className="text-center">
-          <Button
-            onClick={handleContinue}
-            disabled={!selectedRole || isSubmitting}
-            size="lg"
-            className="px-8 py-3 text-lg font-medium"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                {t('updating')}
-              </>
-            ) : (
-              <>
-                {selectedRole ? t('continue', { role: t(`${selectedRole}.title`) }) : t('continueAsUser')}
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </>
-            )}
-          </Button>
-          
-          {selectedRole && (
-            <p className="text-sm text-muted-foreground mt-3">
-              {t('canChangeRole')}
+    <NextIntlClientProvider messages={messages} locale={locale}>
+      <div className="min-h-[calc(100vh-4rem)] bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">{t('selectRole')}</h1>
+            <p className="text-muted-foreground text-lg">
+              {selectedRole ? t('welcomeMessage', { role: t(`${selectedRole}.title`) }) : t('chooseRole')}
             </p>
-          )}
+          </div>
+
+          {/* Role Cards */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {roleOptions.map((role) => (
+              <Card
+                key={role.id}
+                className={`relative transition-all duration-300 ${
+                  role.id === 'company'
+                    ? 'opacity-60 cursor-not-allowed border-muted'
+                    : selectedRole === role.id
+                    ? 'ring-2 ring-primary shadow-lg bg-primary/5 border-primary cursor-pointer'
+                    : 'hover:shadow-md border-border cursor-pointer'
+                }`}
+                onClick={() => handleRoleSelect(role.id)}
+              >
+                {/* Lock icon for unavailable roles */}
+                {role.id === 'company' && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/40 backdrop-blur-sm rounded-lg">
+                    <div className="bg-background/90 p-4 rounded-full border-2 border-muted shadow-lg">
+                      <Lock className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                )}
+                
+                {role.badgeKey && (
+                  <Badge 
+                    className={`absolute -top-2 left-4 ${
+                      role.id === 'company' 
+                        ? 'bg-muted text-muted-foreground'
+                        : 'bg-primary text-primary-foreground'
+                    }`}
+                    variant="default"
+                  >
+                    {t(role.badgeKey)}
+                  </Badge>
+                )}
+                
+                {selectedRole === role.id && role.id !== 'company' && (
+                  <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
+                    <CheckCircle className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+
+                <CardHeader className="text-center">
+                  <div className="flex justify-center mb-3">
+                    <div className={`p-3 rounded-full transition-colors ${
+                      selectedRole === role.id && role.id !== 'company'
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {role.icon}
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl">{t(role.titleKey)}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {t(role.descriptionKey)}
+                  </p>
+                </CardHeader>
+
+                <CardContent>
+                  <ul className="space-y-2 text-sm">
+                    {Object.values(getFeatures(role.featuresKey) || {}).map((feature, index: number) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        {String(feature)}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {/* Continue Button */}
+          <div className="text-center">
+            <Button
+              onClick={handleContinue}
+              disabled={!selectedRole || isSubmitting}
+              size="lg"
+              className="px-8 py-3 text-lg font-medium"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  {t('updating')}
+                </>
+              ) : (
+                <>
+                  {selectedRole ? t('continue', { role: t(`${selectedRole}.title`) }) : t('continueAsUser')}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
+            </Button>
+            
+            {selectedRole && (
+              <p className="text-sm text-muted-foreground mt-3">
+                {t('canChangeRole')}
+              </p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </NextIntlClientProvider>
   )
 }

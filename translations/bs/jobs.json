@@ -39,19 +39,21 @@
     "edit": "Uredi",
     "delete": "Obriši",
     "apply": "Prijavi se",
+    "applyForJob": "Prijavi se za posao",
     "save": "Sačuvaj posao",
-    "feature": "Istakni",
-    "unfeature": "Ukloni istaknutost",
-    "backToJobs": "Nazad na poslove"
+    "feature": "Promoviši",
+    "unfeature": "Ukloni promociju",
+    "backToJobs": "Nazad na poslove",
+    "openInNewWindow": "Otvori u novom prozoru"
   },
   "emptyStates": {
-    "noJobs": "Nema pronađenih poslića",
+    "noJobs": "Nema pronađenih poslova",
     "noJobsDescription": "Pokušajte prilagoditi svoje filtere ili pojmove za pretragu",
     "noSavedJobs": "Nema sačuvanih poslova",
     "noSavedJobsDescription": "Sačuvajte poslove koji vas zanimaju da ih vidite ovdje"
   },
   "list": {
-    "noJobs": "Nema pronađenih poslića",
+    "noJobs": "Nema pronađenih poslova",
     "noJobsMessage": "Trenutno nema dostupnih oglasa za posao. Provjerite kasnije za nove prilike.",
     "noJobsWithFiltersMessage": "Nijedan posao ne odgovara vašim trenutnim filterima. Pokušajte prilagoditi kriterije pretrage.",
     "clearAllFilters": "Očisti sve filtere"
@@ -61,24 +63,33 @@
     "yesterday": "Juče",
     "daysAgo": "prije {count} dana",
     "weeksAgo": "prije {count} nedjelja",
-    "monthsAgo": "prije {count} mjeseci"
+    "monthsAgo": "prije {count} mjeseci",
+    "unknown": "Nepoznato"
   },
   "card": {
     "readMore": "Pročitaj više",
     "readLess": "Pročitaj manje",
     "posted": "Objavljeno",
     "expires": "Ističe",
-    "salary": "Plata",
+    "salary": "Budžet",
     "location": "Lokacija",
     "type": "Tip",
     "experience": "Iskustvo",
-    "featured": "Istaknuto",
-    "applied": "Prijavljeno",
+    "featured": "Promovisano",
+        "applied": "Aplicirao",
     "viewJob": "Pogledaj posao",
     "viewDetails": "Pogledaj detalje",
-    "viewApplication": "Pogledaj prijavu"
+    "viewApplication": "Pogledaj prijavu",
+    "view": "pregled",
+    "views": "pregleda",
+    "application": "prijava",
+    "applications": "prijave",
+    "timePosted": "Vrijeme objave:"
   },
   "form": {
+    "requirements": "Zahtjevi",
+    "benefits": "Prednosti",
+    "createJobPosting": "Kreiraj oglas za posao",
     "sections": {
       "basicInformation": "Osnovne informacije",
       "jobDetails": "Detalji posla",
@@ -92,14 +103,14 @@
       "category": "Kategorija",
       "description": "Opis",
       "requirements": "Zahtjevi",
-      "salary": "Plata",
+      "salary": "Budžet",
       "paymentType": "Tip plaćanja",
-      "salaryType": "Tip plate",
-      "salaryMin": "Minimalna plata",
-      "salaryMax": "Maksimalna plata",
+      "salaryType": "Tip budžeta",
+      "salaryMin": "Minimalni budžet",
+      "salaryMax": "Maksimalni budžet",
       "location": "Lokacija",
-      "transportation": "Prijevoz",
-      "transportationNotProvided": "Prijevoz nije osiguran",
+      "transportation": "Prevoz",
+      "transportationNotProvided": "Prevoz nije osiguran",
       "contactName": "Ime za kontakt",
       "contactEmail": "Email za kontakt",
       "contactPhone": "Telefon za kontakt",
@@ -111,9 +122,9 @@
       "startDate": "Datum početka",
       "startTime": "Vrijeme početka",
       "duration": "Trajanje",
-      "expires": "Istječe",
+      "expires": "Ističe",
       "parking": "Parking",
-      "publicTransport": "Javni prijevoz",
+      "publicTransport": "Javni prevoz",
       "address": "Adresa",
       "email": "Email",
       "phone": "Telefon",
@@ -127,9 +138,20 @@
       "postedBy": "Objavio",
       "primaryContact": "Primarni kontakt",
       "links": "Linkovi",
-      "transportationAndLocation": "Prijevoz i lokacija",
+      "transportationAndLocation": "Prevoz i lokacija",
       "contactInformation": "Kontakt informacije",
-      "scheduleAndTimeline": "Raspored i vremenski okvir"
+      "scheduleAndTimeline": "Raspored i vrijeme",
+      "locationMap": "Mapa lokacije",
+      "transportationProvided": "Osigurava klijent",
+      "transportationCompensated": "Kompenzovano",
+      "applicationDeadline": "Rok za prijavu",
+      "priority": "Prioritet",
+      "urgent": "Hitno",
+      "negotiable": "Po dogovoru",
+      "performanceBonus": "Bonus za performanse",
+      "oneDay": "1 dan",
+      "multipleDays": "{days} dana",
+      "exactLocation": "Tačna lokacija"
     },
     "placeholders": {
       "jobTitleExample": "npr., Web Developer, Graphic Designer",
@@ -151,13 +173,36 @@
   "messages": {
     "loadingJobDetails": "Učitavanje detalja posla...",
     "jobNotFound": "Posao nije pronađen",
-    "errorLoadingJob": "Greška pri učitavanju detalja posla"
+    "errorLoadingJob": "Greška pri učitavanju detalja posla",
+    "jobFeaturedSuccess": "Oglas \"{jobTitle}\" je uspješno promovisan! 6 konekcija je oduzeto sa vašeg računa.",
+    "jobFeatureRemovedSuccess": "Promocija oglasa \"{jobTitle}\" je uspješno uklonjena!",
+    "jobUpdatedWithFeature": "Oglas je uspješno ažuriran! 6 konekcija je oduzeto za promociju.",
+    "jobUpdatedSuccess": "Oglas je uspješno ažuriran!",
+    "insufficientConnections": "Nemate dovoljno konekcija. Potrebno vam je 6 konekcija da promovirate oglas.",
+    "connectionCheckFailed": "Neuspješna provjera stanja konekcija",
+    "connectionDeductFailed": "Neuspješno oduzimanje konekcija",
+    "authRequired": "Potrebna je autentifikacija",
+    "featureJobFailed": "Neuspješno ažuriranje statusa promocije oglasa",
+    "yourConnections": "Vaše konekcije: {connections}",
+    "requiredConnections": "Potrebno: 6 konekcija",
+    "noConnectionCost": "Nema troška konekcija za uklanjanje promocije",
+    "insufficientConnectionsWarning": "Nemate dovoljno konekcija da promovirate ovaj oglas.",
+    "success": {
+      "jobPosted": "Posao uspješno objavljen!",
+      "jobUpdated": "Posao uspješno ažuriran!",
+      "jobDeleted": "Posao uspješno obrisan!",
+      "jobFinished": "Posao označen kao završen! Majstor će biti obaviješten.",
+      "redirecting": "Preusmjeravanje na vaš posao..."
+    }
   },
   "errors": {
     "jobNotFound": "Posao nije pronađen",
     "loadFailed": "Greška pri učitavanju detalja posla",
     "cannotApplyToOwnJob": "Ne možete se prijaviti na svoj vlastiti posao",
-    "alreadyApplied": "Već ste se prijavili na ovaj posao"
+    "alreadyApplied": "Već ste se prijavili na ovaj posao",
+    "clientCannotApply": "Klijenti se ne mogu prijaviti na poslove. Prebacite se na ulogu tražitelja posla da se prijavite za pozicije.",
+    "deleteError": "Greška pri brisanju posla. Pokušajte ponovo.",
+    "finishError": "Greška pri završavanju posla. Pokušajte ponovo."
   },
   "details": {
     "jobDetails": "Detalji posla",
@@ -167,7 +212,8 @@
     "startDate": "Datum početka",
     "expires": "Ističe",
     "payment": "Plaćanje",
-    "salary": "Plata",
+    "compensation": "Kompenzacija",
+    "salary": "Budžet",
     "transportation": "Prevoz",
     "address": "Adresa",
     "byAgreement": "Po dogovoru"
@@ -183,6 +229,7 @@
     "startDate": "Datum početka",
     "expectedDuration": "Očekivano trajanje",
     "applicationDeadline": "Rok za prijave",
+    "jobExpiration": "Oglas ističe",
     "at": "u",
     "byAgreement": "Po dogovoru",
     "timeByAgreement": "vrijeme po dogovoru"
@@ -195,6 +242,7 @@
     "contactHidden": "Skriveno",
     "addressHidden": "Skriveno",
     "mapHidden": "Mapa skrivena zbog privatnosti",
+    "locationRestricted": "Detalji lokacije su ograničeni",
     "availableAfterSelection": "Dostupno nakon dodjeljivanja posla"
   },
   "statusManager": {
@@ -242,8 +290,8 @@
       "addressPlaceholder": "Unesite specifičnu adresu gdje će se rad obavljati"
     },
     "salary": {
-      "title": "Plata i plaćanje",
-      "amount": "Iznos plate",
+      "title": "Budžet i plaćanje",
+      "amount": "Iznos budžeta",
       "salaryPlaceholder": "Unesite iznos",
       "salaryType": "Tip plaćanja",
       "type": "Tip plaćanja",
@@ -252,8 +300,8 @@
       "hourly": "Satnica",
       "daily": "Dnevnica",
       "weekly": "Nedeljnica",
-      "monthly": "Mjesečna plata",
-      "range": "Raspon plate",
+      "monthly": "Mjesečni budžet",
+      "range": "Raspon budžeta",
       "minSalary": "Minimum",
       "maxSalary": "Maksimum",
       "enterAmount": "Unesite iznos",
@@ -261,7 +309,7 @@
       "maxPlaceholder": "Maksimalni iznos",
       "hourlyPlaceholder": "Satnica",
       "dailyPlaceholder": "Dnevnica",
-      "monthlyPlaceholder": "Mjesečna plata",
+      "monthlyPlaceholder": "Mjesečni budžet",
       "enterMaxAmount": "Unesite maksimalni iznos",
       "salaryTextExample": "npr., 2000-3000 BAM ili po dogovoru",
       "types": {
@@ -269,7 +317,7 @@
         "hourly": "Satnica",
         "daily": "Dnevnica",
         "weekly": "Nedeljnica",
-        "monthly": "Mjesečna plata"
+        "monthly": "Mjesečni budžet"
       }
     },
     "contact": {
@@ -291,19 +339,18 @@
       "titleTooShort": "Naziv posla mora imati najmanje 5 karaktera",
       "titleTooLong": "Naziv posla mora imati manje od 100 karaktera",
       "descriptionTooShort": "Opis posla mora imati najmanje 50 karaktera",
-      "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera"
-    },
-    "success": {
-      "jobPosted": "Posao uspješno objavljen!",
-      "jobUpdated": "Posao uspješno ažuriran!",
-      "redirecting": "Preusmjeravanje na vaš posao..."
+      "descriptionTooLong": "Opis posla mora imati manje od 5000 karaktera",
+      "deleteError": "Greška prilikom brisanja posla. Molimo pokušajte ponovo."
     }
   },
   "sections": {
-    "compensationTransportation": "Kompenzacija i transport"
+    "compensationTransportation": "Kompenzacija i transport",
+    "featuredJobs": "Promovisani Oglasi ({count})",
+    "regularJobs": "Svi Oglasi ({count})",
+    "allJobs": "Svi Oglasi ({count})"
   },
   "labels": {
-    "salary": "Plata"
+    "salary": "Budžet"
   },
   "review": {
     "title": "Pregledaj Svoj Oglas",
@@ -317,12 +364,13 @@
       "locationSchedule": "Lokacija i raspored",
       "contactInformation": "Kontakt informacije"
     },
-    "featureYourJob": "Istaknite Vaš Oglas",
-    "makeJobFeatured": "Učinite ovaj oglas istaknutim",
-    "featuredJobsAppear": "Istaknuti oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
+    "featureYourJob": "Promoviši Vaš Oglas",
+    "makeJobFeatured": "Učinite ovaj oglas promovisanim",
+    "featuredJobsAppear": "Promovisani oglasi se pojavljuju na vrhu rezultata pretrage i dobijaju veću vidljivost",
     "willCostConnections": "Ovo će koštati {connections} konekcija",
-    "willBeFeatured": "Ovaj oglas će biti istaknut 7 dana",
+    "willBeFeatured": "Ovaj oglas će biti promovisan 7 dana",
     "readyToPost": "Spremno za Objavu",
+    "postedBy": "Objavio",
     "jobLooksGreat": "Vaš oglas za posao izgleda odlično! Kliknite na dugme za objavljivanje da ga objavite i počnete primati prijave.",
     "connectionCostNotice": "Obavještenje o Trošku Konekcija",
     "alreadyPostedToday": "Već ste objavili {count} posao{plural} danas.",
@@ -335,6 +383,7 @@
     "updating": "Ažuriranje...",
     "alternateContact": "alternativni kontakt",
     "applicationUrl": "URL za prijavu",
+    "insufficientConnections": "Nedovoljno konekcija. Imate {current} konekcija, a potrebno je {required} da promovirate oglas. Nedostaje vam još {needed} konekcija.",
     "success": {
       "jobPosted": "Oglas za posao je uspješno objavljen!",
       "jobUpdated": "Oglas za posao je uspješno ažuriran!"
@@ -344,6 +393,39 @@
     "postJobDialog": "Objavi Novi Posao",
     "postJobDescription": "Kreirajte novi oglas za posao da pronađete kvalifikovane kandidate.",
     "editJobDialog": "Uredi Oglas za Posao",
-    "editJobDescription": "Ažurirajte detalje vašeg oglasa za posao."
+    "editJobDescription": "Ažurirajte detalje vašeg oglasa za posao.",
+    "featureJobDialog": "Promoviši Oglas",
+    "removeFeatureDialog": "Uklonite Promociju",
+    "featureJobDescription": "Jeste li sigurni da želite promovisati \"{jobTitle}\"? Promovisani oglasi su označeni i prikazani su prominentnije potencijalnim kandidatima.\n\nOvo će koštati 6 konekcija.",
+    "removeFeatureDescription": "Jeste li sigurni da želite ukloniti promociju oglasa \"{jobTitle}\"? Ovaj oglas više neće biti označen za potencijalne kandidate.",
+    "featureJobConfirm": "Promoviši Oglas",
+    "removeFeatureConfirm": "Ukloni Promociju",
+    "deleteJobDialog": "Obriši Oglas za Posao",
+    "deleteJobDescription": "Jeste li sigurni da želite obrisati \"{jobTitle}\"? Ova akcija se ne može poništiti i trajno će ukloniti oglas za posao i sve povezane prijave.",
+    "deleteJobConfirm": "Obriši Oglas",
+    "finishJobDialog": "Završi Posao i Ostavi Recenziju",
+    "finishJobDescription": "Označite \"{jobTitle}\" kao završen i recenzirajte {taskerName}.",
+    "rateTasker": "Ocijenite rad majstora",
+    "ratingRequired": "Molimo izaberite ocjenu",
+    "reviewComment": "Recenzija (opciono)",
+    "reviewPlaceholder": "Podijelite svoje iskustvo rada sa ovim majstorom...",
+    "reviewNote": "Vaša recenzija će biti vidljiva drugim klijentima i majstor može odgovoriti na nju.",
+    "finishJobNote": "Napomena:",
+    "finishJobNoteText": "Nakon šta pošaljete ovu recenziju, majstor će biti obaviješten i može ostaviti recenziju za vas. Posao će biti označen kao završen.",
+    "finishing": "Završavanje...",
+    "finishJobConfirm": "Završi Posao i Pošalji Recenziju",
+    "reviewClientDialog": "Recenzirajte Klijenta",
+    "reviewClientDescription": "Podijelite svoje iskustvo rada sa {clientName} na \"{jobTitle}\".",
+    "rateClient": "Ocijenite klijenta",
+    "reviewClientPlaceholder": "Podijelite svoje iskustvo rada sa ovim klijentom...",
+    "reviewClientNote": "Vaša recenzija će biti vidljiva drugim majstorima i klijentu.",
+    "reviewClientInfoTitle": "Napomena:",
+    "reviewClientInfoText": "Ova recenzija će pomoći drugim majstorima da donesu informisane odluke o radu sa ovim klijentom.",
+    "submitReview": "Pošalji Recenziju",
+    "submitting": "Slanje...",
+    "noReviewsYet": "Još nema recenzija",
+    "star": "zvjezdica",
+    "stars": "zvjezdice",
+    "cancel": "Otkaži"
   }
-} 
+}

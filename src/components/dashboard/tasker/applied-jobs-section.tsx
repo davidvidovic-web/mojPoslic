@@ -14,11 +14,11 @@ import {
   MapPin,
   Calendar,
   User,
-  MessageSquare,
+  MessageCircle,
   Eye
 } from 'lucide-react'
 import { Job } from '@/types/job'
-import { formatClientName } from '@/lib/job-utils'
+import { formatClientName, formatSalary } from '@/lib/job-utils'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
@@ -26,7 +26,7 @@ interface JobApplication {
   id: string
   job_id: string
   appliedAt: string
-  status: 'PENDING' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
+  status: 'PENDING' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN'
   job: Job
   message?: string
   feedback?: string
@@ -42,9 +42,6 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING': return 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
-      case 'REVIEWED': return 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
-      case 'SHORTLISTED': return 'bg-purple-500/10 text-purple-600 border border-purple-500/20'
-      case 'INTERVIEW_SCHEDULED': return 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20'
       case 'SELECTED': return 'bg-green-500/10 text-green-600 border border-green-500/20'
       case 'REJECTED': return 'bg-red-500/10 text-red-600 border border-red-500/20'
       case 'WITHDRAWN': return 'bg-gray-500/10 text-gray-600 border border-gray-500/20'
@@ -55,8 +52,6 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'PENDING': return <Clock className="h-4 w-4" />
-      case 'REVIEWED': return <Eye className="h-4 w-4" />
-      case 'SHORTLISTED': return <Star className="h-4 w-4" />
       case 'SELECTED': return <CheckCircle className="h-4 w-4" />
       case 'REJECTED': return <XCircle className="h-4 w-4" />
       case 'WITHDRAWN': return <XCircle className="h-4 w-4" />
@@ -67,11 +62,8 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'PENDING': return t('status.pending')
-      case 'REVIEWED': return t('status.reviewed')
-      case 'SHORTLISTED': return t('status.shortlisted')
-      case 'INTERVIEW_SCHEDULED': return t('status.interviewScheduled')
       case 'SELECTED': return t('status.selected')
-      case 'REJECTED': return t('status.rejected')
+      case 'REJECTED': return 'Cancelled by Client'
       case 'WITHDRAWN': return t('status.withdrawn')
       default: return status
     }
@@ -83,11 +75,11 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
 
   // Separate applications into categories
   const appliedJobs = applications.filter(app => 
-    ['PENDING', 'REVIEWED', 'REJECTED', 'WITHDRAWN'].includes(app.status)
+    ['PENDING', 'REJECTED', 'WITHDRAWN'].includes(app.status)
   )
   
   const activeJobs = applications.filter(app => 
-    ['SHORTLISTED', 'SELECTED'].includes(app.status)
+    ['SELECTED'].includes(app.status)
   )
 
   const renderJobCard = (application: JobApplication) => (
@@ -120,9 +112,9 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
                   <Calendar className="h-3 w-3" />
                   {t('applied')} {formatDate(application.appliedAt)}
                 </div>
-                {application.job.salary && (
+                {formatSalary(application.job) && (
                   <div className="font-medium text-foreground">
-                    {application.job.salary}
+                    {formatSalary(application.job)}
                   </div>
                 )}
               </div>
@@ -147,7 +139,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
         </div>
         
         <div className="flex flex-col items-end gap-2 ml-4">
-          <Badge className={getStatusColor(application.status)}>
+          <Badge className={`${getStatusColor(application.status)} rounded-full px-2 py-1 text-xs font-medium`}>
             {getStatusIcon(application.status)}
             <span className="ml-1">{getStatusText(application.status)}</span>
           </Badge>
@@ -161,9 +153,10 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
               </Link>
             </Button>
             
-            {(application.status === 'SHORTLISTED' || application.status === 'SELECTED') && (
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {((application.status as any) === 'SHORTLISTED' || (application.status as any) === 'SELECTED') && (
               <Button variant="outline" size="sm">
-                <MessageSquare className="h-3 w-3 mr-1" />
+                <MessageCircle className="h-3 w-3 mr-1" />
                 {t('message')}
               </Button>
             )}
@@ -199,7 +192,7 @@ export function AppliedJobsSection({ applications }: AppliedJobsSectionProps) {
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
           {t('title')}
-          <Badge variant="secondary">{applications.length}</Badge>
+          <Badge variant="secondary" className="rounded-full px-2 py-1 text-xs font-medium">{applications.length}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>

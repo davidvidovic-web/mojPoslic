@@ -1,0 +1,826 @@
+'use client'
+
+import { useCallback, useEffect, useState, useRef } from 'react'
+import { RealtimeChannel } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+
+export interface Message {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  message_type: 'text' | 'image' | 'file'
+  sender_name: string
+  sender_avatar_url?: string
+  read_by: string[]
+  deleted_by_users?: string[] // Track which users deleted this message from their view
+  created_at: string
+}
+
+export interface Conversation {
+  id: string
+  title?: string
+  job_id?: string
+  application_id?: string
+  created_by_id: string
+  participant_ids: string[]
+  participant_names: string[]
+  participant_avatars?: (string | null)[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  unread_count?: number
+  last_message_preview?: string
+  last_message_at?: string
+  last_sender_id?: string
+  message_count?: number
+}
+
+// Database types for realtime payloads
+interface ConversationRecord {
+  id: string
+  title?: string
+  job_id?: string
+  application_id?: string
+  created_by_id: string
+  participant_ids: string[]
+  participant_names: string[]
+  participant_avatars?: (string | null)[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  last_message_at?: string
+  last_message_preview?: string
+  last_sender_id?: string
+  hidden_for_users?: string[]
+  message_count?: number
+}
+
+interface MessageRecord {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  message_type: string
+  sender_name: string
+  sender_avatar_url?: string
+  read_by: string[]
+  created_at: string
+  deleted_by_users?: string[]
+}
+
+interface UseSupabaseRealtimeChatProps {
+  conversationId?: string
+  enabled?: boolean
+}
+
+/**
+ * Modern Supabase Realtime Chat Hook
+ * Follows latest Supabase documentation patterns for postgres_changes
+ * Reference: https://supabase.com/docs/guides/realtime/postgres-changes
+ */
+export function useSupabaseRealtimeChat({
+  conversationId,
+  enabled = true
+}: UseSupabaseRealtimeChatProps) {
+  const { user } = useSupabaseAuth()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [typingUsers, setTypingUsers] = useState<string[]>([])
+  
+  const channelRef = useRef<RealtimeChannel | null>(null)
+  const conversationsChannelRef = useRef<RealtimeChannel | null>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Clear error function
+  const clearError = useCallback(() => setError(null), [])
+
+  // Clear conversation - mark all messages as deleted for current user
+  const clearConversation = useCallback(async (conversationId: string) => {
+    if (!user?.id) return
+
+    try {
+      // Get all messages in the conversation
+      const { data: messages, error: fetchError } = await supabase
+        .from('messages')
+        .select('id, deleted_by_users')
+        .eq('conversation_id', conversationId)
+
+      if (fetchError) throw fetchError
+
+      // Update each message to add current user to deleted_by_users
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const message of (messages || []) as any[]) {
+        const deletedBy = message.deleted_by_users || []
+        if (!deletedBy.includes(user.id)) {
+          deletedBy.push(user.id)
+          
+          await supabase
+            .from('messages')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .update({ deleted_by_users: deletedBy } as any)
+            .eq('id', message.id)
+        }
+      }
+
+      // Clear messages from local state for this conversation
+      setMessages(prev => prev.filter(msg => msg.conversation_id !== conversationId))
+      
+    } catch (err) {
+      console.error('Failed to clear conversation:', err)
+      setError(err instanceof Error ? err.message : 'Failed to clear conversation')
+      throw err
+    }
+  }, [user?.id])
+
+  // Delete conversation - hide it for current user
+  const deleteConversation = useCallback(async (conversationId: string) => {
+    if (!user?.id) return
+
+    try {
+      // Get current hidden_for_users array
+      const { data: conversation, error: fetchError } = await supabase
+        .from('conversations')
+        .select('hidden_for_users')
+        .eq('id', conversationId)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hiddenFor = (conversation as any)?.hidden_for_users || []
+      if (!hiddenFor.includes(user.id)) {
+        hiddenFor.push(user.id)
+        
+        const { error: updateError } = await supabase
+          .from('conversations')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .update({ hidden_for_users: hiddenFor } as any)
+          .eq('id', conversationId)
+
+        if (updateError) throw updateError
+      }
+
+      // Remove from local state
+      setConversations(prev => prev.filter(conv => conv.id !== conversationId))
+      
+    } catch (err) {
+      console.error('Failed to delete conversation:', err)
+      setError(err instanceof Error ? err.message : 'Failed to delete conversation')
+      throw err
+    }
+  }, [user?.id])
+
+  // Delete individual message - mark as deleted for current user
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!user?.id) return
+
+    try {
+      // Get current deleted_by_users array
+      const { data: message, error: fetchError } = await supabase
+        .from('messages')
+        .select('deleted_by_users')
+        .eq('id', messageId)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const deletedBy = (message as any)?.deleted_by_users || []
+      if (!deletedBy.includes(user.id)) {
+        deletedBy.push(user.id)
+        
+        const { error: updateError } = await supabase
+          .from('messages')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .update({ deleted_by_users: deletedBy } as any)
+          .eq('id', messageId)
+
+        if (updateError) throw updateError
+      }
+
+      // Remove from local state
+      setMessages(prev => prev.filter(msg => msg.id !== messageId))
+      
+    } catch (err) {
+      console.error('Failed to delete message:', err)
+      setError(err instanceof Error ? err.message : 'Failed to delete message')
+      throw err
+    }
+  }, [user?.id])
+
+  // Helper function to get user display name
+  const getUserDisplayName = useCallback(() => {
+    if (!user) return 'Unknown User'
+    if (user.name) return user.name
+    if (user.user_metadata?.full_name) return user.user_metadata.full_name as string
+    if (user.user_metadata?.name) return user.user_metadata.name as string
+    if (user.username) return user.username
+    return user.email || 'Unknown User'
+  }, [user])
+
+  // Load conversations for user
+  const loadConversations = useCallback(async () => {
+    if (!user?.id || !enabled) return
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: fetchError } = await supabase
+        .from('conversations')
+        .select('*')
+        .contains('participant_ids', [user.id])
+        .order('updated_at', { ascending: false })
+
+      if (fetchError) throw fetchError
+
+      // Calculate unread counts for each conversation
+      const conversationsWithUnread = await Promise.all(
+        (data || [])
+          .filter(conv => {
+            // Filter out conversations hidden by current user
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const hiddenForUsers = (conv as any).hidden_for_users || []
+            return !hiddenForUsers.includes(user.id)
+          })
+          .map(async (conv) => {
+            // Count messages where the current user is NOT in the read_by array
+            const { count } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('conversation_id', conv.id)
+              .neq('sender_id', user.id) // Exclude messages sent by current user
+              .not('read_by', 'cs', `{${user.id}}`) // Where read_by does NOT contain user.id
+
+            return {
+              ...conv,
+              title: conv.title || undefined,
+              unread_count: count || 0
+            }
+          })
+      )
+
+      setConversations(conversationsWithUnread as Conversation[])
+    } catch (err) {
+      console.error('Failed to load conversations:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load conversations')
+    } finally {
+      setLoading(false)
+    }
+  }, [user?.id, enabled])
+
+  // Load messages for specific conversation
+  const loadMessages = useCallback(async (convId: string) => {
+    if (!user?.id || !enabled) return
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: fetchError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: true })
+
+      if (fetchError) throw fetchError
+
+      // Filter and convert to proper Message type
+      const filteredMessages = (data || [])
+        .filter(msg => {
+          // Filter out messages where current user has deleted them
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const deletedByUsers = (msg as any).deleted_by_users || []
+          const isDeletedByCurrentUser = deletedByUsers.includes(user.id)
+          
+          return msg.conversation_id && 
+                 msg.sender_id && 
+                 msg.created_at && 
+                 !isDeletedByCurrentUser
+        })
+        .map(msg => ({
+          id: msg.id,
+          conversation_id: msg.conversation_id!,
+          sender_id: msg.sender_id!,
+          content: msg.content,
+          message_type: (msg.message_type as 'text' | 'image' | 'file') || 'text',
+          sender_name: msg.sender_name,
+          sender_avatar_url: msg.sender_avatar_url || undefined,
+          read_by: msg.read_by || [],
+          created_at: msg.created_at!
+        }))
+
+      setMessages(filteredMessages)
+
+      // Mark messages as read and clear unread count
+      if (filteredMessages.length > 0) {
+        const unreadMessages = filteredMessages.filter(msg => 
+          msg.sender_id !== user.id && 
+          !msg.read_by?.includes(user.id)
+        )
+
+        if (unreadMessages.length > 0) {
+          await Promise.all(
+            unreadMessages.map(message =>
+              supabase
+                .from('messages')
+                .update({ 
+                  read_by: [...(message.read_by || []), user.id] 
+                })
+                .eq('id', message.id)
+            )
+          )
+          
+          // Immediately clear the conversation's unread count in local state
+          setConversations(prev => prev.map(conv => 
+            conv.id === convId 
+              ? { ...conv, unread_count: 0 }
+              : conv
+          ))
+          
+          // Reload conversations to ensure accuracy (but async to not block UI)
+          loadConversations()
+        } else {
+          // Even if no unread messages, ensure unread count is 0 when opening conversation
+          setConversations(prev => prev.map(conv => 
+            conv.id === convId 
+              ? { ...conv, unread_count: 0 }
+              : conv
+          ))
+        }
+      } else {
+        // No messages yet, but still clear unread count when opening conversation
+        setConversations(prev => prev.map(conv => 
+          conv.id === convId 
+            ? { ...conv, unread_count: 0 }
+            : conv
+        ))
+      }
+    } catch (err) {
+      console.error('Failed to load messages:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load messages')
+    } finally {
+      setLoading(false)
+    }
+  }, [user?.id, enabled, loadConversations])
+
+  // Send message with optimistic updates
+  const sendMessage = useCallback(async (content: string, convId?: string) => {
+    const targetConversationId = convId || conversationId
+    if (!user?.id || !targetConversationId || !content.trim() || !enabled) {
+      console.error('Cannot send message - missing required data:', {
+        hasUser: !!user?.id,
+        hasConversationId: !!targetConversationId,
+        hasContent: !!content.trim(),
+        enabled
+      })
+      return
+    }
+
+    const tempMessage: Message = {
+      id: `temp-${Date.now()}-${Math.random()}`,
+      conversation_id: targetConversationId,
+      sender_id: user.id,
+      content: content.trim(),
+      message_type: 'text',
+      sender_name: getUserDisplayName(),
+      sender_avatar_url: user.user_metadata?.avatar_url as string | undefined,
+      read_by: [user.id],
+      created_at: new Date().toISOString()
+    }
+
+    // Optimistic update
+    setMessages(prev => [...prev, tempMessage])
+
+    try {
+      // Insert into database - this will trigger realtime for other users
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: targetConversationId,
+          sender_id: user.id,
+          content: content.trim(),
+          message_type: 'text',
+          sender_name: getUserDisplayName(),
+          sender_avatar_url: user.user_metadata?.avatar_url as string | undefined,
+          read_by: [user.id]
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('❌ Database error inserting message:', {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        })
+        throw error
+      }
+
+      // Replace temp message with real message
+      if (data) {
+        const realMessage: Message = {
+          id: data.id,
+          conversation_id: data.conversation_id!,
+          sender_id: data.sender_id!,
+          content: data.content,
+          message_type: (data.message_type as 'text' | 'image' | 'file') || 'text',
+          sender_name: data.sender_name,
+          sender_avatar_url: data.sender_avatar_url || undefined,
+          read_by: data.read_by || [],
+          created_at: data.created_at!
+        }
+
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempMessage.id ? realMessage : msg
+        ))
+      }
+
+      // Update conversation's last_message_at
+      const { error: updateError } = await supabase
+        .from('conversations')
+        .update({ 
+          updated_at: new Date().toISOString(),
+          last_message_at: new Date().toISOString(),
+          last_message_preview: content.trim().substring(0, 100),
+          last_sender_id: user.id
+        })
+        .eq('id', targetConversationId)
+
+      if (updateError) {
+        console.warn('Failed to update conversation:', updateError)
+      }
+
+    } catch (err) {
+      console.error('Failed to send message:', {
+        error: err,
+        errorType: typeof err,
+        errorKeys: err && typeof err === 'object' ? Object.keys(err) : [],
+        errorMessage: err instanceof Error ? err.message : JSON.stringify(err),
+        conversationId: targetConversationId,
+        userId: user.id
+      })
+      // Remove temp message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
+      setError(err instanceof Error ? err.message : 'Failed to send message')
+    }
+  }, [user?.id, getUserDisplayName, user?.user_metadata?.avatar_url, conversationId, enabled])
+
+  // Send typing indicator
+  const sendTyping = useCallback(async (typing: boolean) => {
+    if (!user?.id || !conversationId || !enabled || !channelRef.current) return
+
+    await channelRef.current.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { 
+        user_id: user.id, 
+        typing, 
+        user_name: getUserDisplayName()
+      }
+    })
+  }, [user?.id, getUserDisplayName, conversationId, enabled])
+
+  // Start typing (with auto-stop after 3 seconds)
+  const startTyping = useCallback(() => {
+    sendTyping(true)
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTyping(false)
+    }, 3000)
+  }, [sendTyping])
+
+  // Stop typing
+  const stopTyping = useCallback(() => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
+    }
+    sendTyping(false)
+  }, [sendTyping])
+
+  // Set up realtime subscription for conversation messages using Broadcast
+  useEffect(() => {
+    if (!user?.id || !conversationId || !enabled) {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+      return
+    }
+
+    const setupChannel = async () => {
+      // Set auth for private channel
+      await supabase.realtime.setAuth()
+
+      // Create channel with broadcast topic naming
+      const channel = supabase.channel(`topic:${conversationId}`, {
+        config: {
+          broadcast: { self: false },
+          private: true
+        }
+      })
+      channelRef.current = channel
+
+      channel
+        // Listen for new messages via broadcast
+        .on('broadcast', { event: 'INSERT' }, (payload) => {
+          const dbMessage = payload.payload?.record as MessageRecord
+          
+          // Add message if it's not from current user (optimistic updates handle own messages)
+          if (dbMessage?.sender_id !== user.id && dbMessage?.conversation_id && dbMessage?.sender_id && dbMessage?.created_at) {
+            const newMessage: Message = {
+              id: dbMessage.id,
+              conversation_id: dbMessage.conversation_id,
+              sender_id: dbMessage.sender_id,
+              content: dbMessage.content,
+              message_type: (dbMessage.message_type as 'text' | 'image' | 'file') || 'text',
+              sender_name: dbMessage.sender_name,
+              sender_avatar_url: dbMessage.sender_avatar_url || undefined,
+              read_by: dbMessage.read_by || [],
+              created_at: dbMessage.created_at
+            }
+
+            setMessages(prev => {
+              // Prevent duplicates
+              const exists = prev.find(msg => msg.id === newMessage.id)
+              if (exists) return prev
+              return [...prev, newMessage]
+            })
+          }
+        })
+        
+        // Listen for message updates (read status, etc.) via broadcast
+        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+          const dbMessage = payload.payload?.record as MessageRecord
+          
+          if (dbMessage?.conversation_id && dbMessage?.sender_id && dbMessage?.created_at) {
+            // Check if message was deleted by current user
+            const deletedByUsers = dbMessage.deleted_by_users || []
+            if (deletedByUsers.includes(user.id)) {
+              // Remove from local state if deleted by current user
+              setMessages(prev => prev.filter(msg => msg.id !== dbMessage.id))
+              return
+            }
+            
+            const updatedMessage: Message = {
+              id: dbMessage.id,
+              conversation_id: dbMessage.conversation_id,
+              sender_id: dbMessage.sender_id,
+              content: dbMessage.content,
+              message_type: (dbMessage.message_type as 'text' | 'image' | 'file') || 'text',
+              sender_name: dbMessage.sender_name,
+              sender_avatar_url: dbMessage.sender_avatar_url || undefined,
+              read_by: dbMessage.read_by || [],
+              created_at: dbMessage.created_at
+            }
+
+            setMessages(prev => prev.map(msg => 
+              msg.id === updatedMessage.id ? updatedMessage : msg
+            ))
+          }
+        })
+        
+        // Listen for typing indicators via broadcast
+        .on('broadcast', { event: 'typing' }, (payload) => {
+          const { user_id, typing } = payload.payload
+          
+          if (user_id !== user.id) { // Don't show own typing
+            setTypingUsers(prev => {
+              if (typing) {
+                return prev.includes(user_id) ? prev : [...prev, user_id]
+              } else {
+                return prev.filter(id => id !== user_id)
+              }
+            })
+          }
+        })
+        
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            // Successfully connected
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Message realtime error:', err)
+            setError(`Realtime connection failed: ${err?.message || 'Unknown error'}`)
+          } else if (status === 'TIMED_OUT') {
+            console.error('⏰ Message realtime timed out')
+            setError('Realtime connection timed out')
+          }
+        })
+    }
+
+    setupChannel()
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+        typingTimeoutRef.current = null
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+      setTypingUsers([])
+    }
+  }, [user?.id, conversationId, enabled])
+
+  // Set up realtime subscription for conversations list using Broadcast
+  useEffect(() => {
+    if (!user?.id || !enabled) {
+      if (conversationsChannelRef.current) {
+        supabase.removeChannel(conversationsChannelRef.current)
+        conversationsChannelRef.current = null
+      }
+      return
+    }
+
+    let retryTimeout: NodeJS.Timeout | null = null
+
+    const setupConversationsSubscription = async () => {
+      // Clean up existing channel
+      if (conversationsChannelRef.current) {
+        supabase.removeChannel(conversationsChannelRef.current)
+        conversationsChannelRef.current = null
+      }
+
+      // Set auth for private channel
+      await supabase.realtime.setAuth()
+
+      // Create channel for conversations with broadcast topic naming
+      const channel = supabase.channel(`topic:conversations:user:${user.id}`, {
+        config: {
+          broadcast: { self: false },
+          private: true
+        }
+      })
+      conversationsChannelRef.current = channel
+
+      channel
+        .on('broadcast', { event: 'INSERT' }, (payload) => {
+          const newConversation = payload.payload?.record as ConversationRecord
+          
+          // Only process if user is a participant
+          if (Array.isArray(newConversation?.participant_ids) && 
+              newConversation.participant_ids.includes(user.id)) {
+            loadConversations() // Reload to get proper data
+          }
+        })
+        
+        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+          const updatedConversation = payload.payload?.record as ConversationRecord
+          
+          // Only process if user is a participant
+          if (Array.isArray(updatedConversation?.participant_ids) && 
+              updatedConversation.participant_ids.includes(user.id)) {
+            
+            // Check if conversation was hidden by current user
+            const hiddenForUsers = updatedConversation.hidden_for_users || []
+            if (hiddenForUsers.includes(user.id)) {
+              // Remove from local state if hidden by current user
+              setConversations(prev => prev.filter(conv => conv.id !== updatedConversation.id))
+              return
+            }
+            
+            // Update conversation in state directly instead of reloading
+            setConversations(prev => prev.map(conv => {
+              if (conv.id === updatedConversation.id) {
+                return {
+                  ...conv,
+                  last_message_at: updatedConversation.last_message_at || conv.last_message_at,
+                  last_message_preview: updatedConversation.last_message_preview || conv.last_message_preview,
+                  last_sender_id: updatedConversation.last_sender_id || conv.last_sender_id,
+                  updated_at: updatedConversation.updated_at,
+                  message_count: updatedConversation.message_count || conv.message_count,
+                  is_active: updatedConversation.is_active
+                }
+              }
+              return conv
+            }))
+          }
+        })
+        
+        .subscribe((status, err) => {
+          if (err) {
+            console.error('📡 Conversations realtime error details:', {
+              error: err,
+              message: err?.message,
+              userId: user.id,
+              channelName: `topic:conversations:user:${user.id}`,
+              timestamp: new Date().toISOString()
+            })
+          }
+          if (status === 'SUBSCRIBED') {
+            // Clear any pending retry
+            if (retryTimeout) {
+              clearTimeout(retryTimeout)
+              retryTimeout = null
+            }
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Conversations realtime error:', {
+              error: err,
+              userId: user.id,
+              channelName: `topic:conversations:user:${user.id}`
+            })
+            
+            // Retry after 3 seconds if not already retrying
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                setupConversationsSubscription()
+              }, 3000)
+            }
+          } else if (status === 'TIMED_OUT') {
+            console.error('⏰ Conversations realtime timed out:', {
+              userId: user.id,
+              channelName: `topic:conversations:user:${user.id}`
+            })
+            
+            // Retry after 5 seconds if not already retrying
+            if (!retryTimeout) {
+              retryTimeout = setTimeout(() => {
+                setupConversationsSubscription()
+              }, 5000)
+            }
+          }
+        })
+    }
+
+    // Initial setup
+    setupConversationsSubscription()
+
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout)
+      }
+      if (conversationsChannelRef.current) {
+        supabase.removeChannel(conversationsChannelRef.current)
+        conversationsChannelRef.current = null
+      }
+    }
+  }, [user?.id, enabled, loadConversations])
+
+  // Load conversations on mount
+  useEffect(() => {
+    if (enabled) {
+      loadConversations()
+    }
+  }, [loadConversations, enabled])
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (conversationId && enabled) {
+      loadMessages(conversationId)
+    } else {
+      setMessages([])
+    }
+  }, [conversationId, loadMessages, enabled])
+
+  // Clear typing users when conversation changes
+  useEffect(() => {
+    setTypingUsers([])
+  }, [conversationId])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+      }
+      if (conversationsChannelRef.current) {
+        supabase.removeChannel(conversationsChannelRef.current)
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const totalUnreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0)
+
+  return {
+    messages,
+    conversations,
+    loading,
+    error,
+    typingUsers,
+    totalUnreadCount,
+    sendMessage,
+    startTyping,
+    stopTyping,
+    clearError,
+    loadConversations,
+    loadMessages,
+    clearConversation,
+    deleteConversation,
+    deleteMessage
+  }
+}

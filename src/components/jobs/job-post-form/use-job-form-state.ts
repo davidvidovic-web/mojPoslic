@@ -244,6 +244,7 @@ export function useJobFormState({ initialData }: UseJobFormStateProps) {
       city_id: '',
       category_id: '',
       type: defaultJobType,
+      job_type: defaultJobType,
       description: '',
       requirements: '',
       benefits: '',

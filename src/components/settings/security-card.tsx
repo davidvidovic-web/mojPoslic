@@ -27,13 +27,12 @@ export function SecurityCard({ deletionRequest }: SecurityCardProps) {
   const handleDeleteAccount = async (reason?: string) => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/user/delete-request', {
+      const response = await fetch('/api/user/request-deletion', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          confirmationText: user?.name || user?.email?.split('@')[0],
           reason,
         }),
       })
@@ -58,7 +57,7 @@ export function SecurityCard({ deletionRequest }: SecurityCardProps) {
   const handleCancelDeletion = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/user/delete-request', {
+      const response = await fetch('/api/user/request-deletion', {
         method: 'DELETE',
       })
 

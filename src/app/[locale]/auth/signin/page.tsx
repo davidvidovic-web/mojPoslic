@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { OTPInput } from "@/components/ui/otp-input"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { showToast } from "@/lib/toast"
@@ -25,7 +26,8 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
   const [otp, setOtp] = useState('')
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
+    website: "" // honeypot field
   })
 
   // Get the return URL from search params
@@ -66,16 +68,25 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
     e.preventDefault()
     setLoading(true)
 
+    // Honeypot check - if filled, it's likely a bot
+    if (formData.website) {
+      console.log('Honeypot triggered in signin - potential bot submission')
+      setLoading(false)
+      return
+    }
+
     try {
       // This would use the signIn function from context for password auth
       // For now using supabase directly since we need both password and OTP auth
       const { supabase } = await import("@/lib/supabase")
+      
       const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       })
 
       if (error) {
+        console.error('🔐 Signin error details:', error)
         if (error.message.includes('Email not confirmed')) {
           showToast.error(t('emailNotVerified'))
           window.location.href = `/${locale}/auth/verify-email?email=${encodeURIComponent(formData.email)}`
@@ -89,7 +100,8 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
         const redirectTo = returnUrl || `/${locale}/dashboard`
         window.location.href = redirectTo
       }
-    } catch {
+    } catch (catchError) {
+      console.error('🔐 Signin catch error:', catchError)
       showToast.error(t('signInFailed'))
     } finally {
       setLoading(false)
@@ -100,13 +112,24 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
     e.preventDefault()
     setLoading(true)
 
+    // Honeypot check - if filled, it's likely a bot
+    if (formData.website) {
+      console.log('Honeypot triggered in OTP login - potential bot submission')
+      setLoading(false)
+      return
+    }
+
     try {
       const { error } = await signInWithOtp(formData.email, {
         shouldCreateUser: false
       })
 
       if (error) {
-        showToast.error(error.message || t('signInFailed'))
+        if (error.message && error.message.toLowerCase().includes('signups not allowed')) {
+          showToast.error(t('signupsNotAllowed') || 'OTP authentication is currently disabled. Please use password login.')
+        } else {
+          showToast.error(error.message || t('signInFailed'))
+        }
       } else {
         setOtpSent(true)
         showToast.success(t('otpSent') || 'Verification code sent to your email')
@@ -158,7 +181,7 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
         </div>
       </div>
     )
@@ -175,7 +198,7 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
-              {otpSent ? (t('verifyEmail') || 'Verify Your Email') : t('signIn')}
+              {otpSent ? (t('verifyEmail.title') || 'Verify Your Email') : t('signIn')}
             </CardTitle>
             <CardDescription className="text-center">
               {otpSent 
@@ -190,17 +213,12 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="otp">{t('verificationCode') || 'Verification Code'}</Label>
-                  <Input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    placeholder={t('enterSixDigitCode') || 'Enter 6-digit code'}
+                  <OTPInput
+                    length={6}
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    required
+                    onChange={setOtp}
                     disabled={loading}
-                    maxLength={6}
-                    className="text-center text-lg tracking-widest"
+                    autoFocus
                   />
                 </div>
 
@@ -271,6 +289,20 @@ export default function SignInPage({ params }: { params: Promise<{ locale: strin
                 </div>
 
                 <form onSubmit={useOtp ? handleOtpLogin : handleEmailSignIn} className="space-y-4">
+                  {/* Honeypot field - hidden from users */}
+                  <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      type="text"
+                      id="website"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="email">{t('email')}</Label>
                     <Input

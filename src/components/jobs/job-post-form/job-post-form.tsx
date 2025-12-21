@@ -1,6 +1,7 @@
 'use client'
 
 import { CreateJobData } from '@/types/job'
+import { StaticCategory } from '@/types/static-data'
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context"
 import { toast } from 'sonner'
 import { JobFormBase } from './job-form-base'
@@ -25,10 +26,23 @@ export function JobPostForm({
   const { user } = useSupabaseAuth()
   const { cities, categories } = useData()
   const createJobMutation = useCreateJobMutation()
-  const t = useTranslations('jobs.review')
+  const t = useTranslations('jobPost')
 
   const handleSubmit = async (formData: CreateJobData) => {
     try {
+      // Check if user has enough connections for featured job
+      if (formData.is_featured) {
+        const userConnections = (user as unknown as { connections?: number })?.connections || 0
+        if (userConnections < 6) {
+          toast.error(t('insufficientConnections', { 
+            required: 6, 
+            current: userConnections,
+            needed: 6 - userConnections 
+          }))
+          return
+        }
+      }
+
       // Convert city_id to city key
       const selectedCity = formData.city_id ? cities.find(c => c.id === formData.city_id) : null
       const cityKey = selectedCity?.key
@@ -48,8 +62,11 @@ export function JobPostForm({
         } else {
           // Search in subcategories
           for (const cat of categories) {
-            if (cat.children) {
-              const subcat = cat.children.find(sub => sub.id === formData.category_id)
+            // Handle both 'subcategories' (JSON) and 'children' (TypeScript type)
+            const catWithSubs = cat as StaticCategory & { subcategories?: StaticCategory[] }
+            const subcats = catWithSubs.subcategories || cat.children
+            if (subcats) {
+              const subcat = subcats.find((sub: StaticCategory) => sub.id === formData.category_id)
               if (subcat) {
                 categoryKey = subcat.key
                 break
@@ -78,14 +95,22 @@ export function JobPostForm({
         job_address: requestData.job_address || undefined,
         job_latitude: requestData.job_latitude || undefined,
         job_longitude: requestData.job_longitude || undefined,
+        start_date: requestData.start_date || undefined,
+        start_time: requestData.start_time || undefined,
+        duration: requestData.duration || undefined,
+        duration_days: requestData.duration_days || undefined,
+        transportation: requestData.transportation || undefined,
+        transportation_amount: requestData.transportation_amount || undefined,
+        has_parking: requestData.has_parking ?? undefined,
+        public_transport_info: requestData.public_transport_info || undefined,
+        application_deadline: requestData.application_deadline || undefined,
+        is_urgent: requestData.is_urgent ?? undefined,
+        tags: requestData.tags || undefined,
         posted_by_id: user?.id || ''
       }
 
       // Use the Supabase-based mutation
       await createJobMutation.mutateAsync(supabaseData)
-      
-      // Show success message
-      toast.success(t('jobPosted'))
       
       // Add a small delay to ensure backend transaction is complete
       setTimeout(() => {
@@ -105,8 +130,6 @@ export function JobPostForm({
       initialData={initialData}
       onSubmit={handleSubmit}
       onCancel={onCancel}
-      submitButtonText={t('submitJobPosting')}
-      submittingText={t('submitting')}
       showCard={showCard}
     />
   )

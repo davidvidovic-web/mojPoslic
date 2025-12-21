@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
-import { ApplicationStatus } from '@prisma/client'
+import { ApplicationStatus } from '@/types/application'
 import ApplicationManager from '@/components/dashboard/application-manager'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -161,7 +161,8 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
       return {
         ...prev,
         applications: prev.applications.map(app =>
-          applicationIds.includes(app.id) ? { ...app, status } : app
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          applicationIds.includes(app.id) ? { ...app, status: status as any } : app
         )
       }
     })
@@ -172,18 +173,14 @@ export default function ManageApplicationsPage({ params }: ManageApplicationsPag
   }
 
   const refreshApplications = async () => {
-    console.log('refreshApplications called with jobId:', jobId)
     if (!jobId) return
     
     try {
       const response = await fetch(`/api/jobs/${jobId}/applications`)
-      console.log('Refresh API response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Refresh API response data:', data)
         setApplicationsData(data)
-        console.log('Applications data updated')
       } else {
         console.error('Refresh API failed with status:', response.status)
       }

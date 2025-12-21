@@ -86,7 +86,7 @@
       "whenStart": "When do you want to start this job?",
       "dontKnowExactTime": "I don't know the exact time",
       "startDate": "Start Date *",
-      "startTime": "Start Time (Optional)",
+      "startTime": "Start Time *",
       "duration": "Expected Duration",
       "durationOptions": {
         "1_hour": "1 hour",
@@ -208,6 +208,22 @@
         "clearStructure": "Clear compensation structure reduces negotiation time"
       }
     },
+    "settings": {
+      "title": "Job Settings",
+      "urgentJob": "Mark as urgent job",
+      "urgentJobHelp": "Urgent jobs appear with a special indicator and get priority placement in search results",
+      "applicationDeadline": "Application Deadline (Optional)",
+      "applicationDeadlineHelp": "Set when you want to stop accepting applications. Leave empty for no deadline.",
+      "selectDeadline": "Select application deadline",
+      "deadlineError": "Application deadline cannot be in the past",
+      "tips": {
+        "title": "Job Settings Tips",
+        "urgentJobs": "Urgent jobs get more visibility and attract faster responses",
+        "applicationDeadline": "Setting a deadline creates urgency and faster responses",
+        "urgentVisibility": "Urgent jobs appear at the top of search results",
+        "deadlineHelp": "Consider giving enough time for quality candidates to see and apply"
+      }
+    },
     "messages": {
       "categorySelectedNoSubcategories": "Selected category has no subcategories available.",
       "descriptionTimeline": "Your job description will be reviewed and published within 24 hours."
@@ -220,8 +236,14 @@
     "fullTimeCost": "Full-time Job Posting",
     "remoteCost": "Remote Job Posting",
     "freeForLimitedTime": "Free for limited time",
-    "currency": "BAM"
+    "currency": "BAM",
+    "connectionCost": "Connection Cost",
+    "freeJobPosting": "Free Job Posting",
+    "alreadyPosted": "You have already posted {count} job(s) today.",
+    "additionalCost": "This job will cost {cost} connections.",
+    "firstJobFree": "Your first job posting today is free!"
   },
+  "insufficientConnections": "Insufficient connections. You have {current} connections but need {required} to post this job. You need {needed} more connection(s).",
   "validation": {
     "titleRequired": "Job title is required",
     "titleTooShort": "Job title must be at least 5 characters",

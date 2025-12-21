@@ -91,7 +91,7 @@ export function useAIJobMatching({
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, enabled, criteria, supabase])
+  }, [user?.id, enabled, criteria])
 
   // Update matching criteria
   const updateCriteria = useCallback((newCriteria: Partial<MatchingCriteria>) => {
@@ -113,7 +113,8 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
-      const { error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
         .from('saved_jobs')
         .upsert({
           user_id: user.id,
@@ -132,7 +133,7 @@ export function useAIJobMatching({
     } catch (err) {
       console.error('Failed to save job:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Apply to job directly from matches
   const applyToJob = useCallback(async (jobId: string, applicationData: {
@@ -143,7 +144,8 @@ export function useAIJobMatching({
     if (!user?.id) return
 
     try {
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('applications')
         .insert({
           job_id: jobId,
@@ -170,14 +172,15 @@ export function useAIJobMatching({
       console.error('Failed to apply to job:', err)
       throw err
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
   // Track job view for analytics
   const trackJobView = useCallback(async (jobId: string) => {
     if (!user?.id) return
 
     try {
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('job_views')
         .insert({
           job_id: jobId,
@@ -188,38 +191,37 @@ export function useAIJobMatching({
       // Silent fail for analytics
       console.debug('Analytics tracking failed:', err)
     }
-  }, [user?.id, supabase])
+  }, [user?.id])
 
-  // Set up real-time updates for new jobs
+  // Set up real-time updates for new jobs using Broadcast
   useEffect(() => {
     if (!enabled || !user?.id) return
 
-    const channel = supabase
-      .channel(`job_matching_${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'job_listings',
-        filter: 'status=eq.active'
-      }, () => {
-        // Refresh matches when new jobs are posted
-        getJobMatches()
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'users',
-        filter: `id=eq.${user.id}`
-      }, () => {
-        // Refresh matches when user profile updates
-        getJobMatches()
-      })
-      .subscribe()
+    const setupChannel = async () => {
+      // Set auth for private channel
+      await supabase.realtime.setAuth()
 
-    return () => {
-      channel.unsubscribe()
+      const channel = supabase
+        .channel(`topic:applications:user:${user.id}`, {
+          config: { private: true }
+        })
+        .on('broadcast', { event: 'INSERT' }, () => {
+          // Refresh matches when new application is created
+          getJobMatches()
+        })
+        .on('broadcast', { event: 'UPDATE' }, () => {
+          // Refresh matches when application is updated
+          getJobMatches()
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [enabled, user?.id, getJobMatches, supabase])
+
+    setupChannel()
+  }, [enabled, user?.id, getJobMatches])
 
   // Set up auto-refresh
   useEffect(() => {
@@ -255,7 +257,7 @@ export function useAIJobMatching({
           .single()
 
         if (userProfile) {
-          const userSkills = userProfile.skills?.split(',') || []
+          const userSkills = (typeof userProfile.skills === 'string' ? (userProfile.skills as string).split(',') : userProfile.skills) || []
           const jobTypes = userProfile.preferred_job_types?.split(',') || []
 
           setCriteria({
@@ -276,7 +278,7 @@ export function useAIJobMatching({
     }
 
     loadUserPreferences()
-  }, [user?.id, enabled, supabase, getJobMatches])
+  }, [user?.id, enabled, getJobMatches])
 
   return {
     // Data

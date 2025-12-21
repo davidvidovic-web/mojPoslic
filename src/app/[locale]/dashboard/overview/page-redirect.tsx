@@ -15,7 +15,8 @@ export default function DashboardOverview() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">Redirecting to dashboard...</p>
+        {/* Hardcoded in Bosnian - redirect page without translation context */}
+        <p className="text-muted-foreground">Preusmjeravanje na panel...</p>
       </div>
     </div>
   )

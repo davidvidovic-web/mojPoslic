@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { RealtimeChannel } from '@supabase/supabase-js'
-import { toast } from 'sonner'
+import { useState, useEffect, useCallback } from 'react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { supabase } from '@/lib/supabase'
 
@@ -116,7 +114,8 @@ export function useRealtimeAnalytics({
           .select('id, created_at, connections, last_login_at'),
           
         // Job views statistics
-        supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
           .from('job_views')
           .select('id, job_id, user_id, ip_address, viewed_at'),
           
@@ -137,7 +136,8 @@ export function useRealtimeAnalytics({
       const jobs = jobsData.data || []
       const applications = applicationsData.data || []
       const users = usersData.data || []
-      const views = jobViewsData.data || []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const views = jobViewsData.data as any[] || []
       const connections = connectionsData.data || []
 
       const now = new Date()
@@ -187,15 +187,16 @@ export function useRealtimeAnalytics({
             applications: jobApplicationCounts[jobId] || 0
           }
         })
-        .sort((a, b) => (b.views + b.applications * 2) - (a.views + a.applications * 2))
+        .sort((a, b) => ((b.views as number) + b.applications * 2) - ((a.views as number) + a.applications * 2))
         .slice(0, 5)
 
       setJobStats({
         totalViews: views.length,
-        uniqueViews: Object.values(uniqueJobViews).reduce((sum, set) => sum + set.size, 0),
+        uniqueViews: Object.values(uniqueJobViews as Record<string, Set<string>>).reduce((sum: number, set: Set<string>) => sum + set.size, 0),
         applicationsCount: applications.length,
         averageApplicationsPerJob: applications.length / Math.max(jobs.length, 1),
-        topPerformingJobs: topJobs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        topPerformingJobs: topJobs as any
       })
 
       // Process user engagement
@@ -226,7 +227,7 @@ export function useRealtimeAnalytics({
     } finally {
       setIsLoading(false)
     }
-  }, [enabled, supabase])
+  }, [enabled])
 
   // Get user-specific analytics (for regular users)
   const fetchUserAnalytics = useCallback(async () => {
@@ -252,12 +253,14 @@ export function useRealtimeAnalytics({
       const userApplications = userApplicationsData.data || []
 
       // Get views for user's jobs
-      const { data: userJobViews } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: userJobViews } = await (supabase as any)
         .from('job_views')
         .select('job_id, viewed_at')
         .in('job_id', userJobs.map(j => j.id))
 
-      const viewCounts = (userJobViews || []).reduce((acc, view) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const viewCounts = (userJobViews as any[] || []).reduce((acc, view) => {
         acc[view.job_id] = (acc[view.job_id] || 0) + 1
         return acc
       }, {} as Record<string, number>)
@@ -280,7 +283,7 @@ export function useRealtimeAnalytics({
     } catch (err) {
       console.error('Failed to fetch user analytics:', err)
     }
-  }, [user?.id, enabled, supabase])
+  }, [user?.id, enabled])
 
   // Set up real-time subscriptions for live updates
   useEffect(() => {
@@ -317,7 +320,7 @@ export function useRealtimeAnalytics({
     return () => {
       channel.unsubscribe()
     }
-  }, [enabled, fetchLiveStats, supabase])
+  }, [enabled, fetchLiveStats])
 
   // Set up periodic refresh
   useEffect(() => {

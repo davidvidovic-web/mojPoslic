@@ -2,11 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CreateJobData } from '@/types/job'
 import { Rocket, Star, Zap } from 'lucide-react'
 import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
 import { useEffect, useState } from 'react'
-import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone } from 'lucide-react'
+import { MapPin, Calendar, DollarSign, Mail, Globe, Briefcase, Phone, Settings } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useTranslations, useLocale } from 'next-intl'
 import { useData } from '@/hooks/use-data'
@@ -29,6 +30,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
   const tSchedule = useTranslations('jobPost.types.schedule')
   const tDuration = useTranslations('jobPost.types.schedule.durationOptions')
   const tTransportation = useTranslations('jobPost.types.transportation.options')
+  const tSettings = useTranslations('jobPost.types.settings')
   const locale = useLocale()
   const { cities, categories } = useData()
   const [city, setCity] = useState<City | null>(null)
@@ -67,7 +69,8 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
   useEffect(() => {
     if (formData.city_id) {
       const foundCity = cities.find(c => c.id === formData.city_id)
-      setCity(foundCity || null)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setCity((foundCity || null) as any)
     }
 
     if (formData.category_id) {
@@ -237,6 +240,20 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
           <CardContent className="space-y-3">
             <div>
               <h4 className="font-medium text-lg">{formData.title}</h4>
+              <div className="flex items-center gap-2 mt-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage 
+                    src={user?.avatarUrl}
+                    alt={user?.name || user?.email || 'User avatar'}
+                  />
+                  <AvatarFallback className="text-sm bg-gradient-to-br from-primary/10 to-primary/20 text-primary">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-muted-foreground">
+                  {t('review.postedBy')}: {user?.name || user?.email}
+                </span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">{t(`types.${getJobTypeTranslationKey(formData.type)}`)}</Badge>
@@ -369,6 +386,35 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
           </CardContent>
         </Card>
 
+        {/* Job Settings */}
+        {(formData.is_urgent || formData.application_deadline) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                {tSettings('title')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {formData.is_urgent && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-sm font-medium">{tSettings('urgentJob')}</span>
+                </div>
+              )}
+              {formData.application_deadline && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{tSettings('applicationDeadline')}: </span>
+                  <span className="text-sm">
+                    {new Date(formData.application_deadline).toLocaleDateString(locale === 'bs' ? 'bs-BA' : 'en-US')}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Contact Information */}
         <Card>
           <CardHeader className="pb-3">
@@ -426,7 +472,8 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
         </Card>
       </div>
 
-      {/* Feature Job Option - only show for creating new jobs */}
+      {/* Feature Job Option - ONLY show when creating new jobs, NOT in edit mode */}
+      {/* Featured status should be managed through dedicated feature/unfeature actions in dashboard */}
       {!isEditMode && (
         <Card className="border-2 border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20">
           <CardHeader className="pb-3">
@@ -443,7 +490,7 @@ export function ReviewStep({ formData, onValidation, onChange, isEditMode = fals
                   {t('review.featuredJobsAppear')}
                 </p>
                 <p className="text-xs font-medium text-yellow-600 mt-1">
-                  {t('review.willCostConnections', { connections: 5 })}
+                  {t('review.willCostConnections', { connections: 6 })}
                 </p>
               </div>
               <Switch

@@ -104,15 +104,18 @@ export async function checkUsernameAvailability(username: string): Promise<boole
   try {
     // Check if we're in a server environment (Node.js)
     if (typeof window === 'undefined') {
-      // Server-side: use Prisma directly
-      const { PrismaClient } = await import('@prisma/client')
-      const prisma = new PrismaClient()
+      // Server-side: use Supabase directly
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+      const supabase = createClient(supabaseUrl, supabaseServiceKey)
       
-      const existingUser = await prisma.user.findUnique({
-        where: { username }
-      })
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .single()
       
-      await prisma.$disconnect()
       return !existingUser
     } else {
       // Client-side: use fetch

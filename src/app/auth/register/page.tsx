@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 
-export default function AuthRegisterFallback() {
-  // This should not be reached with proper i18n routing,
-  // but serves as a fallback in case of routing issues
-  redirect('/auth/register')
+export default async function RegisterRedirect() {
+  // Get the host to determine locale based on domain
+  const headersList = await headers()
+  const host = headersList.get('host') || ''
+  
+  // Use domain-based locale detection
+  const locale = host.startsWith('en.') ? 'en' : 'bs'
+  
+  // Redirect to the localized version
+  redirect(`/${locale}/auth/register`)
 }

@@ -51,5 +51,7 @@
     "saving": "Čuva se...",
     "saved": "Paketi su uspješno sačuvani!",
     "error": "Greška pri čuvanju paketa"
-  }
+  },
+  "loadingUsers": "Učitavanje korisnika...",
+  "refresh": "Osveži"
 } 

@@ -14,9 +14,14 @@ import {
   ChevronDown,
   ChevronUp,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  MessageCircle
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { useTranslations } from 'next-intl'
+import { useDialogStore } from '@/stores/dialog-store'
+import { useSupabaseAuth } from '@/contexts/supabase-auth-context'
+import { supabase } from '@/lib/supabase'
 
 interface ClientApplicationManagerProps {
   showOnlyActive?: boolean
@@ -29,6 +34,10 @@ export function ClientApplicationManager({
   title = "Application Management",
   description = "Manage applications to your job postings"
 }: ClientApplicationManagerProps) {
+  const tDashboard = useTranslations('dashboard')
+  const t = useTranslations('dashboard.applicationManagement')
+  const { user } = useSupabaseAuth()
+  const { openMessagingDialog } = useDialogStore()
   // Use Supabase hooks instead of manual state management
   const { applications, isLoading, updateApplication } = useApplicationManager()
   
@@ -50,8 +59,8 @@ export function ClientApplicationManager({
     // Apply search and filter criteria
     filtered = filtered.filter(app => {
       const matchesSearch = searchTerm === '' || 
-        app.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.applicant_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.job?.title?.toLowerCase().includes(searchTerm.toLowerCase())
       
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter
@@ -66,7 +75,7 @@ export function ClientApplicationManager({
         case 'oldest':
           return new Date(a.applied_at || '').getTime() - new Date(b.applied_at || '').getTime()
         case 'name':
-          return (a.user?.name || '').localeCompare(b.user?.name || '')
+          return (a.applicant_name || '').localeCompare(b.applicant_name || '')
         case 'newest':
         default:
           return new Date(b.applied_at || '').getTime() - new Date(a.applied_at || '').getTime()
@@ -113,12 +122,72 @@ export function ClientApplicationManager({
     }
   }
 
+  const handleMessage = async (application: { id: string; user_id: string | null; job_id?: string | null; job?: { title?: string } | null }) => {
+    if (!user || !application.user_id) return
+    
+    try {
+      // Check if a conversation already exists for this application
+      const { data: existingConversation, error: fetchError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('application_id', application.id)
+        .single()
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 means no rows returned, which is expected if no conversation exists
+        console.error('Error checking for existing conversation:', fetchError)
+        openMessagingDialog()
+        return
+      }
+
+      if (existingConversation) {
+        // Open existing conversation
+        openMessagingDialog(existingConversation.id)
+        return
+      }
+
+      // Create new conversation if none exists
+      const { data: newConversation, error: createError } = await supabase
+        .from('conversations')
+        .insert({
+          application_id: application.id,
+          job_id: application.job_id,
+          created_by_id: user.id,
+          title: `Application Discussion - ${application.job?.title || 'Job'}`,
+          is_active: true
+        })
+        .select('id')
+        .single()
+
+      if (createError) {
+        console.error('Error creating conversation:', createError)
+        openMessagingDialog()
+        return
+      }
+
+      if (newConversation) {
+        // Add participants to the conversation - Note: conversation_participants might not exist in current schema
+        // For now, conversations are created and participants are managed differently
+        
+        // Open the newly created conversation
+        openMessagingDialog(newConversation.id)
+      } else {
+        // Fallback to general messaging
+        openMessagingDialog()
+      }
+    } catch (error) {
+      console.error('Error handling message:', error)
+      // Fallback to general messaging
+      openMessagingDialog()
+    }
+  }
+
   if (isLoading) {
     return (
       <Card className="p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading applications...</p>
+          <p className="text-muted-foreground">{tDashboard('applications.loading')}</p>
         </div>
       </Card>
     )
@@ -210,17 +279,17 @@ export function ClientApplicationManager({
                   <div className="flex items-start space-x-4">
                     <Avatar className="h-12 w-12">
                       <AvatarFallback>
-                        {application.user?.name ? application.user.name.charAt(0).toUpperCase() : 'U'}
+                        {application.applicant_name ? application.applicant_name.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center space-x-3">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {application.user?.name || 'Unknown User'}
+                          {application.applicant_name || 'Unknown User'}
                         </h3>
                         {getStatusBadge(application.status || 'PENDING')}
                       </div>
-                      <p className="text-sm text-gray-600">{application.user?.email}</p>
+                      <p className="text-sm text-gray-600">{application.applicant_email}</p>
                       <p className="text-sm font-medium text-gray-900">{application.job?.title}</p>
                       <p className="text-xs text-gray-500">
                         Applied {formatDistanceToNow(new Date(application.applied_at || ''), { addSuffix: true })}
@@ -237,7 +306,7 @@ export function ClientApplicationManager({
                           variant="outline"
                           className="text-green-600 hover:text-green-700"
                           onClick={() => updateApplication({ 
-                            id: application.id, 
+                            applicationId: application.id, 
                             updates: { status: 'SHORTLISTED' }
                           })}
                         >
@@ -247,9 +316,18 @@ export function ClientApplicationManager({
                         <Button
                           size="sm"
                           variant="outline"
+                          className="text-green-600 hover:text-green-700"
+                          onClick={() => handleMessage(application)}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          {t('message')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="text-red-600 hover:text-red-700"
                           onClick={() => updateApplication({ 
-                            id: application.id, 
+                            applicationId: application.id, 
                             updates: { status: 'REJECTED' }
                           })}
                         >
@@ -285,17 +363,12 @@ export function ClientApplicationManager({
                       </div>
                     )}
 
-                    {application.user?.skills && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-1">Skills</h4>
-                        <p className="text-sm text-gray-600">{application.user.skills}</p>
-                      </div>
-                    )}
 
-                    {application.user?.location && (
+
+                    {application.applicant_location && (
                       <div>
                         <h4 className="text-sm font-medium text-gray-900 mb-1">Location</h4>
-                        <p className="text-sm text-gray-600">{application.user.location}</p>
+                        <p className="text-sm text-gray-600">{application.applicant_location}</p>
                       </div>
                     )}
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pagination } from '@/components/ui/pagination'
 import { History, Search, Filter, ArrowUpDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 
 interface ConnectionHistoryEntry {
   id: string
@@ -30,6 +31,7 @@ interface ConnectionGrantHistoryProps {
 }
 
 export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProps) {
+  const td = useTranslations('dashboard')
   const [history, setHistory] = useState<ConnectionHistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -38,11 +40,7 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  useEffect(() => {
-    fetchConnectionHistory()
-  }, [])
-
-  const fetchConnectionHistory = async () => {
+  const fetchConnectionHistory = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch('/api/admin/connection-history')
@@ -53,11 +51,15 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
       setHistory(data)
     } catch (error) {
       console.error('Error fetching connection history:', error)
-      toast.error('Failed to load connection history')
+      toast.error(td('toast.connectionHistoryLoadFailed'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [td])
+
+  useEffect(() => {
+    void fetchConnectionHistory()
+  }, [fetchConnectionHistory])
 
   const getActionBadgeVariant = (action: string) => {
     switch (action) {
@@ -152,7 +154,8 @@ export function ConnectionGrantHistory({ className }: ConnectionGrantHistoryProp
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading connection history...</p>
+              {/* Hardcoded in Bosnian - admin component without translation setup */}
+              <p className="text-muted-foreground">Učitavanje historije konekcija...</p>
             </div>
           </div>
         </CardContent>
